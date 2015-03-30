@@ -3,20 +3,32 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 (function (global) {
 	"use strict";
 
-	// An agent is in state0 and does action0
-	// environment then assigns reward0 and provides new state, state1
-	// Experience nodes store all this information, which is used in the
-	// Q-learning update step
+	/**
+	 * An agent is in state0 and does action0 environment then assigns reward0
+	 * and provides the new state state1
+	 * Experience nodes store all this information, which is used in the Q-learning update step
+	 * @param {Number} state0
+	 * @param {Number} action0
+	 * @param {Number} reward0
+	 * @param {Number} state1
+	 * @returns {deepqlearn_L3.Experience}
+	 */
 	var Experience = function (state0, action0, reward0, state1) {
 		this.state0 = state0;
 		this.action0 = action0;
 		this.reward0 = reward0;
 		this.state1 = state1;
-	}
+	};
 
-	// A Brain object does all the magic.
-	// over time it receives some inputs and some rewards
-	// and its job is to set the outputs to maximize the expected reward
+	/**
+	 * A Brain object does all the magic.
+	 * Over time it receives some inputs and some rewards and its job is to set
+	 * the outputs to maximize the expected reward
+	 * @param {Number} num_states
+	 * @param {Number} num_actions
+	 * @param {Object} opt
+	 * @returns {deepqlearn_L3.Brain}
+	 */
 	var Brain = function (num_states, num_actions, opt) {
 		var opt = opt || {};
 		// in number of time steps, of temporal memory
@@ -128,7 +140,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		this.average_reward_window = new cnnutil.Window(1000, 10);
 		this.average_loss_window = new cnnutil.Window(1000, 10);
 		this.learning = true;
-	}
+	};
+
 	Brain.prototype = {
 		random_action: function () {
 			// a bit of a helper function. It returns a random action
@@ -296,9 +309,10 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 
 			element.appendChild(brainvis);
 		}
-	}
+	};
 
 	global.Brain = Brain;
+	
 })(deepqlearn);
 
 (function (lib) {

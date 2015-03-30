@@ -16,11 +16,43 @@ var Eye = function (angle) {
  * @returns {Agent}
  */
 var Agent = function () {
-	// Positional information
-	this.pos = new Vec(50, 50);
-	this.oldPos = this.pos; // Its old position
-	this.angle = 0; // The direction it's facing
+	// Remember the Agent's old position
+	this.oldPos = this.pos;
 
+	// The Agent's size
+	this.rad = 5;
+
+	// Positional information
+	this.pos = new Vec(this.rad, this.rad);
+
+	// The direction the Agent is facing
+	this.angle = 0;
+
+	// The number of item types the Agent's eys can see (wall, green, red thing proximity)
+	this.numTypes = 3;
+
+	// The number of Agent's eyes
+	this.numEyes = 9;
+
+	// The number of Agent's eyes, each one sees the number of knownTypes
+	this.numInputs = this.numEyes * this.numTypes;
+
+	// The number of possible angles the Agent can turn
+	this.numActions = 5;
+
+	// Amount of temporal memory. 0 = agent lives in-the-moment :)
+	this.temporalWindow = 1;
+
+	// Size of the network
+	this.networkSize = this.numInputs * this.temporalWindow + this.numActions * this.temporalWindow + this.numInputs;
+
+	// The Agent's eyes
+	this.eyes = [];
+	for (var k = 0; k < this.numEyes; k++) {
+		this.eyes.push(new Eye((k - this.numTypes) * 0.25));
+	}
+
+	// The Agent's actions
 	this.actions = [];
 	this.actions.push([1, 1]);
 	this.actions.push([0.8, 1]);

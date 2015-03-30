@@ -1,57 +1,24 @@
-var canvas, ctx;
-
-/**
- * Wall is made up of two Vectors
- * @param {Vec} v1
- * @param {Vec} v2
- * @returns {Wall}
- */
-var Wall = function (v1, v2) {
-	this.v1 = v1;
-	this.v2 = v2;
-};
-
 /**
  * Make a World
+ * @param {Maze} environment
+ * @param {Agent} agents
  * @returns {World}
  */
-var World = function () {
-	this.agents = [];
-	this.walls = [];
-
+var World = function (environment, agents) {
 	this.W = canvas.width;
 	this.H = canvas.height;
-	this.clock = 0;
 
-	var pad = 10;
-	// e.g. [Current Walls, Xloc, Yloc, Width, Height]
-	utilAddBox(this.walls, pad, pad, this.W - pad * 2, this.H - pad * 2); // Initial wall
-	// utilAddBox(this.walls, 100, 100, 200, 300); // Left wall
-	// this.walls.pop();
-	// utilAddBox(this.walls, 130, 130, 140, 240); // Left inner wall
-	// this.walls.pop();
-	// utilAddBox(this.walls, 160, 160, 80, 180); // Left inner wall
-	// this.walls.pop();
-	// utilAddBox(this.walls, 400, 100, 200, 300); // Right wall
-	// this.walls.pop();
-	// utilAddBox(this.walls, 430, 130, 140, 240); // Right inner wall
-	// this.walls.pop();
-	// utilAddBox(this.walls, 460, 160, 80, 180); // Right inner wall
-	// this.walls.pop();
-
-	// set up food and poison
+	environment.generate();
+	this.walls = environment.draw();
+	this.agents = agents;
 	this.items = [];
-	for (var k = 0; k < 30; k++) {
-		var x = convnetjs.randf(20, this.W - 20),
-				y = convnetjs.randf(20, this.H - 20),
-				type = convnetjs.randi(1, 3), // food or poison (1 and 2)
-				item = new Item(x, y, type);
-		this.items.push(item);
-	}
+
+	this.clock = 0;
+	this.numItems = 30;
 };
 
 /**
- *
+ * World
  * @type type
  */
 World.prototype = {
@@ -61,7 +28,6 @@ World.prototype = {
 	 * @param {Vec} v2
 	 * @param {Boolean} checkWalls
 	 * @param {Boolean} checkItems
-	 * @returns {linePointIntersect.learninatorAnonym$1|resultld.prototype.collisionCheck.res|lineIntersect.learninatorAnonym$0|Boolean|minResprototype.collisionCheck.minres}
 	 */
 	collisionCheck: function (v1, v2, checkWalls, checkItems) {
 		var minRes = false;
@@ -69,17 +35,17 @@ World.prototype = {
 		// Collide with walls
 		if (checkWalls) {
 			for (var i = 0, n = this.walls.length; i < n; i++) {
-				var wall = this.walls[i],
-						result = lineIntersect(v1, v2, wall.v1, wall.v2);
-				if (result) {
-					result.type = 0; // 0 is wall
+				var wall = this.walls[i];
+				var wResult = lineIntersect(v1, v2, wall.v1, wall.v2);
+				if (wResult) {
+					wResult.type = 0; // 0 is wall
 					if (!minRes) {
-						minRes = result;
+						minRes = wResult;
 					} else {
 						// Check if it's closer
-						if (result.vecX < minRes.vecX) {
+						if (wResult.vecX < minRes.vecX) {
 							// If yes, replace it
-							minRes = result;
+							minRes = wResult;
 						}
 					}
 				}
@@ -90,14 +56,14 @@ World.prototype = {
 		if (checkItems) {
 			for (var i = 0, n = this.items.length; i < n; i++) {
 				var item = this.items[i],
-						result = linePointIntersect(v1, v2, item.pos, item.rad);
-				if (result) {
-					result.type = item.type; // Store type of item
+					iResult = linePointIntersect(v1, v2, item.pos, item.rad);
+				if (iResult) {
+					iResult.type = item.type; // Store type of item
 					if (!minRes) {
-						minRes = result;
+						minRes = iResult;
 					} else {
-						if (result.vecX < minRes.vecX) {
-							minRes = result;
+						if (iResult.vecX < minRes.vecX) {
+							minRes = iResult;
 						}
 					}
 				}
@@ -108,7 +74,6 @@ World.prototype = {
 	},
 	/**
 	 * Tick the environment
-	 * @returns {undefined}
 	 */
 	tick: function () {
 		this.clock++;
@@ -117,20 +82,20 @@ World.prototype = {
 		this.collpoints = [];
 		for (var i = 0, n = this.agents.length; i < n; i++) {
 			var agent = this.agents[i];
-			for (var ei = 0, ne = agent.eyes.length; ei < ne; ei++) {
-				var e = agent.eyes[ei],
-						X = agent.pos.x + e.maxRange * Math.sin(agent.angle + e.angle),
-						Y = agent.pos.y + e.maxRange * Math.cos(agent.angle + e.angle),
-						// We have a line from p to p->eyep
-						eyep = new Vec(X, Y),
-						result = this.collisionCheck(agent.pos, eyep, true, true);
+			for (var ei = 0, ne = agent.numEyes; ei < ne; ei++) {
+				var eye = agent.eyes[ei],
+					X = agent.pos.x + eye.maxRange * Math.sin(agent.angle + eye.angle),
+					Y = agent.pos.y + eye.maxRange * Math.cos(agent.angle + eye.angle),
+					// We have a line from agent.pos to p->eyep
+					eyep = new Vec(X, Y),
+					result = this.collisionCheck(agent.pos, eyep, true, true);
 				if (result) {
 					// eye collided with wall
-					e.sensedProximity = result.vecI.distFrom(agent.pos);
-					e.sensedType = result.type;
+					eye.sensedProximity = result.vecI.distFrom(agent.pos);
+					eye.sensedType = result.type;
 				} else {
-					e.sensedProximity = e.maxRange;
-					e.sensedType = -1;
+					eye.sensedProximity = eye.maxRange;
+					eye.sensedType = -1;
 				}
 			}
 		}
@@ -149,15 +114,15 @@ World.prototype = {
 
 			// Steer the agent according to outputs of wheel velocities
 			var v = new Vec(0, agent.rad / 2.0),
-					v = v.rotate(agent.angle + Math.PI / 2),
-					w1pos = agent.pos.add(v), // Positions of wheel 1
-					w2pos = agent.pos.sub(v), // Positions of wheel 2
-					vv = agent.pos.sub(w2pos),
-					vv = vv.rotate(-agent.rot1),
-					vv2 = agent.pos.sub(w1pos),
-					vv2 = vv2.rotate(agent.rot2),
-					newPos = w2pos.add(vv),
-					newPos2 = w1pos.add(vv2);
+				v = v.rotate(agent.angle + Math.PI / 2),
+				w1pos = agent.pos.add(v), // Positions of wheel 1
+				w2pos = agent.pos.sub(v), // Positions of wheel 2
+				vv = agent.pos.sub(w2pos),
+				vv = vv.rotate(-agent.rot1),
+				vv2 = agent.pos.sub(w1pos),
+				vv2 = vv2.rotate(agent.rot2),
+				newPos = w2pos.add(vv),
+				newPos2 = w1pos.add(vv2);
 
 			newPos.scale(0.5);
 			newPos2.scale(0.5);
@@ -172,8 +137,7 @@ World.prototype = {
 				agent.angle -= 2 * Math.PI;
 
 			// The agent is trying to move from pos to oPos so we need to check walls
-			var result = this.collisionCheck(agent.oldPos, agent.pos, true, false);
-			if (result) {
+			if (this.collisionCheck(agent.oldPos, agent.pos, true, false)) {
 				// The agent derped! Wall collision! Reset their position
 				agent.pos = agent.oldPos;
 			}
@@ -201,8 +165,7 @@ World.prototype = {
 						d = agent.pos.distFrom(item.pos);
 				if (d < item.rad + agent.rad) {
 					// Check if it's on the other side of a wall
-					var rescheck = this.collisionCheck(agent.pos, item.pos, true, false);
-					if (!rescheck) {
+					if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
 						// Nom Noms!
 						if (item.type === 1)
 							agent.digestionSignal += 5.0; // The sweet meats
@@ -235,15 +198,25 @@ World.prototype = {
 
 		if (this.items.length < 30 && this.clock % 10 === 0 && convnetjs.randf(0, 1) < 0.25) {
 			var newItemX = convnetjs.randf(20, this.W - 20),
-					newItemY = convnetjs.randf(20, this.H - 20),
-					newItemType = convnetjs.randi(1, 3), // Noms or Gnars (1 || 2)
-					newItem = new Item(newItemX, newItemY, newItemType);
+				newItemY = convnetjs.randf(20, this.H - 20),
+				newItemType = convnetjs.randi(1, 3), // Noms or Gnars (1 || 2)
+				newItem = new Item(newItemX, newItemY, newItemType);
 			this.items.push(newItem);
 		}
 
-		// This is where the agents learns based on the feedback of their actions on theenvironment
+		// This is where the agents learns based on the feedback of their
+		// actions on the environment
 		for (var i = 0, n = this.agents.length; i < n; i++) {
 			this.agents[i].backward();
+		}
+	},
+	populate: function () {
+		for (var k = 0; k < this.numItems; k++) {
+			var x = convnetjs.randf(20, this.W - 20),
+				y = convnetjs.randf(20, this.H - 20),
+				type = convnetjs.randi(1, 3), // food or poison (1 and 2)
+				item = new Item(x, y, type);
+			this.items.push(item);
 		}
 	}
 };
