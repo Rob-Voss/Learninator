@@ -3,293 +3,6 @@
 var simspeed = 2;
 
 /**
- *
- * @returns {undefined}
- */
-function goveryfast() {
-	window.clearInterval(current_interval_id);
-	current_interval_id = setInterval(tick, 0);
-	skipdraw = true;
-	simspeed = 3;
-}
-
-/**
- *
- * @returns {undefined}
- */
-function gofast() {
-	window.clearInterval(current_interval_id);
-	current_interval_id = setInterval(tick, 0);
-	skipdraw = false;
-	simspeed = 2;
-}
-
-/**
- *
- * @returns {undefined}
- */
-function gonormal() {
-	window.clearInterval(current_interval_id);
-	current_interval_id = setInterval(tick, 30);
-	skipdraw = false;
-	simspeed = 1;
-}
-
-/**
- *
- * @returns {undefined}
- */
-function goslow() {
-	window.clearInterval(current_interval_id);
-	current_interval_id = setInterval(tick, 200);
-	skipdraw = false;
-	simspeed = 0;
-}
-
-/**
- * Download the brains
- * @returns {undefined}
- */
-function save() {
-	var net = '[';
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		var j = w.agents[i].brain.value_net.toJSON(),
-				t = JSON.stringify(j);
-		net = net + t;
-		if (n - 1 !== i) {
-			net = net + ',';
-		}
-	}
-	document.getElementById('tt').value = net + ']';
-}
-
-/**
- * Load the brains
- * @returns {undefined}
- */
-function load() {
-	var t = document.getElementById('tt').value,
-			j = JSON.parse(t);
-	for (var i = 0, n = j.length; i < n; i++) {
-		w.agents[i].brain.value_net.fromJSON(j[i]);
-	}
-	stoplearn(); // also stop learning
-	gonormal();
-}
-
-/**
- * Get to learninating
- * @returns {undefined}
- */
-function start() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = true;
-	}
-}
-
-/**
- * Stop learninating
- * @returns {undefined}
- */
-function stop() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = false;
-	}
-}
-
-/**
- *
- * @returns {undefined}
- */
-function draw_net() {
-	if (simspeed <= 1) {
-		// we will always draw at these speeds
-	} else {
-		if (w.clock % 50 !== 0)
-			return;  // do this sparingly
-	}
-
-	var canvas = document.getElementById("net_canvas"),
-			ctx = canvas.getContext("2d"),
-			W = canvas.width,
-			H = canvas.height,
-			L = w.agents[0].brain.value_net.layers,
-			dx = (W - 50) / L.length,
-			X = 10,
-			Y = 40;
-
-	ctx.clearRect(0, 0, W, H);
-	ctx.font = "12px Verdana";
-	ctx.fillStyle = "rgb(0,0,0)";
-	ctx.fillText("Value Function Approximating Neural Network:", 10, 14);
-	for (var k = 0; k < L.length; k++) {
-		if (typeof (L[k].out_act) === 'undefined') {
-			continue; // maybe not yet ready
-		}
-		var kw = L[k].out_act.w,
-				n = kw.length,
-				dy = (H - 50) / n;
-
-		ctx.fillStyle = "rgb(0,0,0)";
-		ctx.fillText(L[k].layer_type + "(" + n + ")", X, 35);
-		for (var q = 0; q < n; q++) {
-			var v = Math.floor(kw[q] * 100);
-			if (v >= 0)
-				ctx.fillStyle = "rgb(0,0," + v + ")";
-			if (v < 0)
-				ctx.fillStyle = "rgb(" + (-v) + ",0,0)";
-			ctx.fillRect(X, Y, 10, 10);
-			Y += 12;
-			if (Y > H - 25) {
-				Y = 40;
-				X += 12;
-			}
-		}
-		X += 50;
-		Y = 40;
-	}
-}
-
-/**
- * Draw the graphs
- * @returns {undefined}
- */
-function draw_stats() {
-	var canvas = document.getElementById("vis_canvas"),
-			ctx = canvas.getContext("2d"),
-			W = canvas.width,
-			H = canvas.height,
-			agent = w.agents[0],
-			brain = agent.brain,
-			netin = brain.last_input_array;
-
-	ctx.clearRect(0, 0, W, H);
-	ctx.strokeStyle = "rgb(0,0,0)";
-	ctx.font = "12px Verdana";
-	ctx.fillText("Current state:", 10, 10);
-	ctx.lineWidth = 10;
-	ctx.beginPath();
-
-	for (var k = 0, n = netin.length; k < n; k++) {
-		ctx.moveTo(10 + k * 12, 120);
-		ctx.lineTo(10 + k * 12, 120 - netin[k] * 100);
-	}
-	ctx.stroke();
-
-	if (w.clock % 200 === 0) {
-		reward_graph.add(w.clock / 200, brain.average_reward_window.get_average());
-		var gcanvas = document.getElementById("graph_canvas");
-		reward_graph.drawSelf(gcanvas);
-	}
-}
-
-/**
- * World object contains many agents and walls and food and stuff
- * @param {List} lst
- * @param {Number} x
- * @param {Number} y
- * @param {Number} w
- * @param {Number} h
- * @returns {List}
- */
-var utilAddBox = function (lst, x, y, w, h) {
-	var xw = x + w,
-			yh = y + h;
-	lst.push(new Wall(new Vec(x, y), new Vec(xw, y)));
-	lst.push(new Wall(new Vec(xw, y), new Vec(xw, yh)));
-	lst.push(new Wall(new Vec(xw, yh), new Vec(x, yh)));
-	lst.push(new Wall(new Vec(x, yh), new Vec(x, y)));
-
-	return lst;
-};
-
-/**
- * Draw ALL TEH THINGS!!
- * @returns {undefined}
- */
-function draw() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.lineWidth = 1;
-	var agents = w.agents,
-			maze = w.maze;
-	maze.draw();
-	// Draw the walls in environment
-// 	ctx.strokeStyle = "rgb(0,0,0)";
-// 	ctx.beginPath();
-// 	for (var i = 0, n = w.walls.length; i < n; i++) {
-// 		var q = w.walls[i];
-// 		ctx.moveTo(q.v1.x, q.v1.y);
-// 		ctx.lineTo(q.v2.x, q.v2.y);
-// 	}
-// 	ctx.stroke();
-
-	// Draw the agents
-	for (var i = 0, n = agents.length; i < n; i++) {
-		var agent = agents[i],
-				brain = agent.brain,
-				// Color the agents based on the reward it is experiencing at the moment
-				reward = Math.floor(brain.latest_reward * 200),
-				r = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-				avg = brain.average_reward_window.get_average().toFixed(4),
-				loc = ((i * 100) + n) + 10;
-
-		ctx.fillStyle = "rgb(" + r + ", 150, 150)";
-		ctx.strokeStyle = "rgb(0,0,0)";
-
-		ctx.font = "10px Courier";
-		ctx.fillText(i + " Avg: " + avg, loc, 8);
-
-		// Draw agents body
-		ctx.beginPath();
-		ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.rad, 0, Math.PI * 2, true);
-		ctx.fill();
-		ctx.fillText(i, 0, 0);
-		ctx.stroke();
-
-		// Draw agents sight
-		for (var ei = 0, ne = agent.eyes.length; ei < ne; ei++) {
-			var e = agent.eyes[ei],
-					sr = e.sensedProximity;
-			// Is it wall or nothing?
-			if (e.sensedType === -1 || e.sensedType === 0) {
-				ctx.strokeStyle = "rgb(0,0,0)";
-			}
-			// It is noms
-			if (e.sensedType === 1) {
-				ctx.strokeStyle = "rgb(255,150,150)";
-			}
-			// It is gnar gnar
-			if (e.sensedType === 2) {
-				ctx.strokeStyle = "rgb(150,255,150)";
-			}
-			ctx.beginPath();
-			ctx.moveTo(agent.oldPos.x, agent.oldPos.y);
-			ctx.lineTo(agent.oldPos.x + sr * Math.sin(agent.oldAngle + e.angle),
-					agent.oldPos.y + sr * Math.cos(agent.oldAngle + e.angle));
-			ctx.stroke();
-		}
-	}
-
-	// Draw items
-	ctx.strokeStyle = "rgb(0,0,0)";
-	for (var i = 0, n = w.items.length; i < n; i++) {
-		var item = w.items[i];
-		if (item.type === 1)
-			ctx.fillStyle = "rgb(255, 150, 150)";
-		if (item.type === 2)
-			ctx.fillStyle = "rgb(150, 255, 150)";
-		ctx.beginPath();
-		ctx.arc(item.pos.x, item.pos.y, item.rad, 0, Math.PI * 2, true);
-		ctx.fill();
-		ctx.stroke();
-	}
-
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.visSelf(document.getElementById('brain_info_div_' + i));
-	}
-}
-
-/**
  * Line intersection helper function: line segment (v1,v2) intersect segment (v3,v4)
  * @param {Vec} v1
  * @param {Vec} v2
@@ -372,6 +85,26 @@ var linePointIntersect = function (v1, v2, v0, rad) {
 		};
 	}
 	return false;
+};
+
+/**
+ * World object contains many agents and walls and food and stuff
+ * @param {List} lst
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} w
+ * @param {Number} h
+ * @returns {List}
+ */
+var utilAddBox = function (lst, x, y, w, h) {
+	var xw = x + w,
+			yh = y + h;
+	lst.push(new Wall(new Vec(x, y), new Vec(xw, y)));
+	lst.push(new Wall(new Vec(xw, y), new Vec(xw, yh)));
+	lst.push(new Wall(new Vec(xw, yh), new Vec(x, yh)));
+	lst.push(new Wall(new Vec(x, yh), new Vec(x, y)));
+
+	return lst;
 };
 
 /**

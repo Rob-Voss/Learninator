@@ -2,14 +2,14 @@
  *
  * @returns {Maze.MazeAnonym$0}
  */
-var Maze = function () {
+var Maze = function (horizCells, vertCells) {
 	this.canvas = canvas;
 	this.ctx = ctx;
 
 	this.width = canvas.width;
 	this.height = canvas.height;
-	this.horizCells = 30;
-	this.vertCells = 30;
+	this.horizCells = horizCells;
+	this.vertCells = vertCells;
 	this.generator = new MazeGenerator(this.horizCells, this.vertCells);
 	this.vW = this.width / this.horizCells;
 	this.vH = this.height / this.vertCells;
@@ -32,12 +32,14 @@ Maze.prototype = {
 		this.generator.generate();
 	},
 	draw: function () {
+		this.generator.generate();
 		this.drawBorders();
 		this.drawMaze();
 
 		return this.walls;
 	},
 	solve: function () {
+		skipdraw = true;
 		this.generator.solve();
 		this.drawSolution();
 	},
@@ -49,7 +51,7 @@ Maze.prototype = {
 	},
     drawSolution: function() {
       var path = this.generator.path;
-      
+
       for(var i = 0; i < path.length; i++) {
           var V = path[i];
 		  var vW = this.vW;
@@ -58,7 +60,7 @@ Maze.prototype = {
           var vY = V.y;
         (function () {
           setTimeout(function() {
-            self.ctx.fillRect(vX, vY, self.vW, self.vH);
+            self.ctx.fillRect(vX, vY, vW, vH);
           }, 80 * i);
         })();
       }

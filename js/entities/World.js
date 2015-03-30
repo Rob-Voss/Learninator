@@ -8,13 +8,12 @@ var World = function (environment, agents) {
 	this.W = canvas.width;
 	this.H = canvas.height;
 
-	environment.generate();
 	this.walls = environment.draw();
 	this.agents = agents;
 	this.items = [];
 
 	this.clock = 0;
-	this.numItems = 30;
+	this.numItems = 100;
 };
 
 /**
@@ -162,7 +161,7 @@ World.prototype = {
 			// Did the agent find teh noms?
 			for (var j = 0, m = this.agents.length; j < m; j++) {
 				var agent = this.agents[j],
-						d = agent.pos.distFrom(item.pos);
+					d = agent.pos.distFrom(item.pos);
 				if (d < item.rad + agent.rad) {
 					// Check if it's on the other side of a wall
 					if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
