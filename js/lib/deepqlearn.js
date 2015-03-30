@@ -7,10 +7,10 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	 * An agent is in state0 and does action0 environment then assigns reward0
 	 * and provides the new state state1
 	 * Experience nodes store all this information, which is used in the Q-learning update step
-	 * @param {type} state0
-	 * @param {type} action0
-	 * @param {type} reward0
-	 * @param {type} state1
+	 * @param {Number} state0
+	 * @param {Number} action0
+	 * @param {Number} reward0
+	 * @param {Number} state1
 	 * @returns {deepqlearn_L3.Experience}
 	 */
 	var Experience = function (state0, action0, reward0, state1) {
@@ -32,8 +32,9 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	var Brain = function (num_states, num_actions, opt) {
 		var opt = opt || {};
 		// in number of time steps, of temporal memory
-		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by current x
-		// so to have no information from previous time step going into value function, set to 0.
+		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
+		// current x so to have no information from previous time step going into value
+		// function, set to 0.
 		this.temporal_window = typeof opt.temporal_window !== 'undefined' ? opt.temporal_window : 1;
 		// size of experience replay memory
 		this.experience_size = typeof opt.experience_size !== 'undefined' ? opt.experience_size : 30000;
@@ -108,21 +109,35 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 			}
 		} else {
 			// create a very simple neural net by default
-			layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.net_inputs});
+			layer_defs.push({
+				type: 'input',
+				out_sx: 1,
+				out_sy: 1,
+				out_depth: this.net_inputs});
 			if (typeof opt.hidden_layer_sizes !== 'undefined') {
 				// allow user to specify this via the option, for convenience
 				var hl = opt.hidden_layer_sizes;
 				for (var k = 0; k < hl.length; k++) {
-					layer_defs.push({type: 'fc', num_neurons: hl[k], activation: 'relu'}); // relu by default
+					layer_defs.push({
+						type: 'fc',
+						num_neurons: hl[k],
+						activation: 'relu'}); // relu by default
 				}
 			}
-			layer_defs.push({type: 'regression', num_neurons: num_actions}); // value function output
+			layer_defs.push({
+				type: 'regression',
+				num_neurons: num_actions}); // value function output
 		}
 		this.value_net = new convnetjs.Net();
 		this.value_net.makeLayers(layer_defs);
 
 		// and finally we need a Temporal Difference Learning trainer!
-		var tdtrainer_options = {learning_rate: 0.01, momentum: 0.0, batch_size: 64, l2_decay: 0.01};
+		var tdtrainer_options = {
+			learning_rate: 0.01,
+			momentum: 0.0,
+			batch_size: 64,
+			l2_decay: 0.01
+		};
 		if (typeof opt.tdtrainer_options !== 'undefined') {
 			tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
 		}
@@ -299,8 +314,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 			// basic information
 			var desc = document.createElement('div');
 			var t = '';
-//			t += 'experience replay size: ' + this.experience.length + '<br>';
-//			t += 'exploration epsilon: ' + this.epsilon + '<br>';
+			t += 'experience replay size: ' + this.experience.length + '<br>';
+			t += 'exploration epsilon: ' + this.epsilon + '<br>';
 			t += 'Age: ' + this.age + '<br>';
 			t += 'Avg Loss: ' + this.average_loss_window.get_average() + '<br />';
 			t += 'Avg Reward: ' + this.average_reward_window.get_average() + '<br />';
@@ -312,7 +327,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	};
 
 	global.Brain = Brain;
-	
+
 })(deepqlearn);
 
 (function (lib) {

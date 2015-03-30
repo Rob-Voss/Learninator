@@ -1,17 +1,19 @@
 /**
  * Make a World
+ * @param {Maze} environment
+ * @param {Agent} agents
  * @returns {World}
  */
 var World = function (environment, agents) {
 	this.W = canvas.width;
 	this.H = canvas.height;
 
-	this.walls = environment.generate();
+	this.walls = environment.draw();
 	this.agents = agents;
 	this.items = [];
 
 	this.clock = 0;
-	this.numItems = 30;
+	this.numItems = 100;
 };
 
 /**
@@ -32,8 +34,8 @@ World.prototype = {
 		// Collide with walls
 		if (checkWalls) {
 			for (var i = 0, n = this.walls.length; i < n; i++) {
-				var wall = this.walls[i],
-					wResult = lineIntersect(v1, v2, wall.v1, wall.v2);
+				var wall = this.walls[i];
+				var wResult = lineIntersect(v1, v2, wall.v1, wall.v2);
 				if (wResult) {
 					wResult.type = 0; // 0 is wall
 					if (!minRes) {
@@ -159,7 +161,7 @@ World.prototype = {
 			// Did the agent find teh noms?
 			for (var j = 0, m = this.agents.length; j < m; j++) {
 				var agent = this.agents[j],
-						d = agent.pos.distFrom(item.pos);
+					d = agent.pos.distFrom(item.pos);
 				if (d < item.rad + agent.rad) {
 					// Check if it's on the other side of a wall
 					if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
