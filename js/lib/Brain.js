@@ -1,4 +1,4 @@
-var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
+var Brain = Brain || {REVISION: '0.1'};
 
 (function (global) {
 	"use strict";
@@ -11,7 +11,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	 * @param {Number} action0
 	 * @param {Number} reward0
 	 * @param {Number} state1
-	 * @returns {deepqlearn_L3.Experience}
+	 * @returns {undefined}
 	 */
 	var Experience = function (state0, action0, reward0, state1) {
 		this.state0 = state0;
@@ -24,13 +24,13 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	 * A Brain object does all the magic.
 	 * Over time it receives some inputs and some rewards and its job is to set
 	 * the outputs to maximize the expected reward
-	 * @param {Number} num_states
-	 * @param {Number} num_actions
-	 * @param {Object} opt
-	 * @returns {deepqlearn_L3.Brain}
+	 * @param {Number} numStates
+	 * @param {Number} numActions
+	 * @param {Object} options
+	 * @returns {Brain}
 	 */
-	var Brain = function (num_states, num_actions, opt) {
-		var opt = opt || {};
+	Brain = function (numStates, numActions, options) {
+		var opt = options || {};
 		// in number of time steps, of temporal memory
 		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
 		// current x so to have no information from previous time step going into value
@@ -57,7 +57,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		if (typeof opt.random_action_distribution !== 'undefined') {
 			// this better sum to 1 by the way, and be of length this.num_actions
 			this.random_action_distribution = opt.random_action_distribution;
-			if (this.random_action_distribution.length !== num_actions) {
+			if (this.random_action_distribution.length !== numActions) {
 				console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
 			}
 			var a = this.random_action_distribution;
@@ -76,9 +76,9 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		// x0,a0,x1,a1,x2,a2,...xt
 		// this variable controls the size of that temporal window. Actions are
 		// encoded as 1-of-k hot vectors
-		this.net_inputs = num_states * this.temporal_window + num_actions * this.temporal_window + num_states;
-		this.num_states = num_states;
-		this.num_actions = num_actions;
+		this.net_inputs = numStates * this.temporal_window + numActions * this.temporal_window + numStates;
+		this.num_states = numStates;
+		this.num_actions = numActions;
 		this.window_size = Math.max(this.temporal_window, 2); // must be at least 2, but if we want more context even more
 		this.state_window = new Array(this.window_size);
 		this.action_window = new Array(this.window_size);
@@ -126,7 +126,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 			}
 			layer_defs.push({
 				type: 'regression',
-				num_neurons: num_actions}); // value function output
+				num_neurons: numActions}); // value function output
 		}
 		this.value_net = new convnetjs.Net();
 		this.value_net.makeLayers(layer_defs);
@@ -152,8 +152,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		this.epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
 		this.latest_reward = 0;
 		this.last_input_array = [];
-		this.average_reward_window = new cnnutil.Window(1000, 10);
-		this.average_loss_window = new cnnutil.Window(1000, 10);
+		this.avgRewardWindow = new Window(1000, 10);
+		this.avgLossWindow = new Window(1000, 10);
 		this.learning = true;
 	};
 
@@ -257,7 +257,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		},
 		backward: function (reward) {
 			this.latest_reward = reward;
-			this.average_reward_window.add(reward);
+			this.avgRewardWindow.add(reward);
 			this.reward_window.shift();
 			this.reward_window.push(reward);
 
@@ -302,13 +302,13 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 					avcost += loss.loss;
 				}
 				avcost = avcost / this.tdtrainer.batch_size;
-				this.average_loss_window.add(avcost);
+				this.avgLossWindow.add(avcost);
 			}
 		},
 		visSelf: function (element) {
-			element.innerHTML = ''; // erase elt first
+			element.innerHTML = ''; // erase element first
 
-			// elt is a DOM element that this function fills with brain-related information
+			// element is a DOM element that this function fills with brain-related information
 			var brainvis = document.createElement('div');
 
 			// basic information
@@ -317,8 +317,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 			t += 'experience replay size: ' + this.experience.length + '<br>';
 			t += 'exploration epsilon: ' + this.epsilon + '<br>';
 			t += 'Age: ' + this.age + '<br>';
-			t += 'Avg Loss: ' + this.average_loss_window.get_average() + '<br />';
-			t += 'Avg Reward: ' + this.average_reward_window.get_average() + '<br />';
+			t += 'Avg Loss: ' + this.avgLossWindow.getAverage() + '<br />';
+			t += 'Avg Reward: ' + this.avgRewardWindow.getAverage() + '<br />';
 			desc.innerHTML = t;
 			brainvis.appendChild(desc);
 
@@ -328,13 +328,4 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 
 	global.Brain = Brain;
 
-})(deepqlearn);
-
-(function (lib) {
-	"use strict";
-	if (typeof module === "undefined" || typeof module.exports === "undefined") {
-		window.deepqlearn = lib; // in ordinary browser attach library to window
-	} else {
-		module.exports = lib; // in nodejs
-	}
-})(deepqlearn);
+})(this);
