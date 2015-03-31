@@ -1,0 +1,46 @@
+var Window = Window || {REVISION: '0.1'};
+
+(function (global) {
+	"use strict";
+
+	/**
+	 * A window stores _size_ number of values and returns averages. Useful for
+	 * keeping running track of validation or training accuracy during SGD
+	 * @param {Number} size
+	 * @param {Number} minSize
+	 * @returns {undefined}
+	 */
+	Window = function (size, minSize) {
+		this.v = [];
+		this.size = typeof (size) === 'undefined' ? 100 : size;
+		this.minsize = typeof (minSize) === 'undefined' ? 20 : minSize;
+		this.sum = 0;
+	};
+
+	/**
+	 *
+	 */
+	Window.prototype = {
+		add: function (x) {
+			this.v.push(x);
+			this.sum += x;
+			if (this.v.length > this.size) {
+				var xold = this.v.shift();
+				this.sum -= xold;
+			}
+		},
+		getAverage: function () {
+			if (this.v.length < this.minsize) {
+				return -1;
+			} else {
+				return this.sum / this.v.length;
+			}
+		},
+		reset: function (x) {
+			this.v = [];
+			this.sum = 0;
+		}
+	};
+
+	global.Window = Window;
+}(this));

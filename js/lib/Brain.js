@@ -1,4 +1,4 @@
-var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
+var Brain = Brain || {REVISION: '0.1'};
 
 (function (global) {
 	"use strict";
@@ -29,7 +29,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 	 * @param {Object} opt
 	 * @returns {deepqlearn_L3.Brain}
 	 */
-	var Brain = function (num_states, num_actions, opt) {
+	Brain = function (num_states, num_actions, opt) {
 		var opt = opt || {};
 		// in number of time steps, of temporal memory
 		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
@@ -152,8 +152,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		this.epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
 		this.latest_reward = 0;
 		this.last_input_array = [];
-		this.average_reward_window = new cnnutil.Window(1000, 10);
-		this.average_loss_window = new cnnutil.Window(1000, 10);
+		this.avgRewardWindow = new Window(1000, 10);
+		this.avgLossWindow = new Window(1000, 10);
 		this.learning = true;
 	};
 
@@ -257,7 +257,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		},
 		backward: function (reward) {
 			this.latest_reward = reward;
-			this.average_reward_window.add(reward);
+			this.avgRewardWindow.add(reward);
 			this.reward_window.shift();
 			this.reward_window.push(reward);
 
@@ -302,13 +302,13 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 					avcost += loss.loss;
 				}
 				avcost = avcost / this.tdtrainer.batch_size;
-				this.average_loss_window.add(avcost);
+				this.avgLossWindow.add(avcost);
 			}
 		},
 		visSelf: function (element) {
-			element.innerHTML = ''; // erase elt first
+			element.innerHTML = ''; // erase element first
 
-			// elt is a DOM element that this function fills with brain-related information
+			// element is a DOM element that this function fills with brain-related information
 			var brainvis = document.createElement('div');
 
 			// basic information
@@ -317,8 +317,8 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 			t += 'experience replay size: ' + this.experience.length + '<br>';
 			t += 'exploration epsilon: ' + this.epsilon + '<br>';
 			t += 'Age: ' + this.age + '<br>';
-			t += 'Avg Loss: ' + this.average_loss_window.get_average() + '<br />';
-			t += 'Avg Reward: ' + this.average_reward_window.get_average() + '<br />';
+			t += 'Avg Loss: ' + this.avgLossWindow.getAverage() + '<br />';
+			t += 'Avg Reward: ' + this.avgRewardWindow.getAverage() + '<br />';
 			desc.innerHTML = t;
 			brainvis.appendChild(desc);
 
@@ -328,13 +328,4 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 
 	global.Brain = Brain;
 
-})(deepqlearn);
-
-(function (lib) {
-	"use strict";
-	if (typeof module === "undefined" || typeof module.exports === "undefined") {
-		window.deepqlearn = lib; // in ordinary browser attach library to window
-	} else {
-		module.exports = lib; // in nodejs
-	}
-})(deepqlearn);
+})(this);
