@@ -313,9 +313,7 @@ var Brain = Brain || {REVISION: '0.1'};
 
 			// basic information
 			var desc = document.createElement('div');
-			var t = '';
-			t += 'experience replay size: ' + this.experience.length + '<br>';
-			t += 'exploration epsilon: ' + this.epsilon + '<br>';
+			var t = '<br>';
 			t += 'Age: ' + this.age + '<br>';
 			t += 'Avg Loss: ' + this.avgLossWindow.getAverage() + '<br />';
 			t += 'Avg Reward: ' + this.avgRewardWindow.getAverage() + '<br />';
