@@ -50,7 +50,7 @@ function start() {
 	w.agents = agents;
 	w.memoryBank = document.getElementById('memoryBank').value;
 	w.brainSpecs = document.getElementById('brainSpecs').value;
-	w.rewardGraph = new Graph();
+	w.rewardGraph = new MultiGraph([0,1]);
 
 	go('mid');
 }

@@ -48,8 +48,12 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 					this.maxy = this.maxy_forced;
 				if (typeof this.miny_forced !== 'undefined')
 					this.miny = this.miny_forced;
-
-				this.pts.push({step: step, time: time, yl: yl});
+				var added = {
+						step: step,
+						time: time,
+						yl: yl
+					};
+				this.pts.push(added);
 				if (step > this.step_horizon)
 					this.step_horizon *= 2;
 			},
@@ -69,12 +73,14 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 				var ng = 10;
 				for (var i = 0; i <= ng; i++) {
 					var xpos = i / ng * (W - 2 * pad) + pad;
+
 					graphCtx.moveTo(xpos, pad);
 					graphCtx.lineTo(xpos, H - pad);
 					graphCtx.fillText(f2t(i / ng * this.step_horizon / 1000) + 'k', xpos, H - pad + 14);
 				}
 				for (var i = 0; i <= ng; i++) {
 					var ypos = i / ng * (H - 2 * pad) + pad;
+
 					graphCtx.moveTo(pad, ypos);
 					graphCtx.lineTo(W - pad, ypos);
 					graphCtx.fillText(f2t((ng - i) / ng * (this.maxy - this.miny) + this.miny), 0, ypos);
@@ -94,9 +100,12 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 
 				// Draw the actual curve
 				var t = function (x, y, s) {
-					var tx = x / s.step_horizon * (W - pad * 2) + pad;
-					var ty = H - ((y - s.miny) / (s.maxy - s.miny) * (H - pad * 2) + pad);
-					return {tx: tx, ty: ty};
+					var tx = x / s.step_horizon * (W - pad * 2) + pad,
+						ty = H - ((y - s.miny) / (s.maxy - s.miny) * (H - pad * 2) + pad);
+					return {
+						tx: tx,
+						ty: ty
+					};
 				};
 
 				for (var k = 0; k < this.numlines; k++) {
@@ -104,8 +113,8 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 					graphCtx.beginPath();
 					for (var i = 0; i < N; i++) {
 						// draw line from i-1 to i
-						var p = this.pts[i];
-						var pt = t(p.step, p.yl[k], this);
+						var p = this.pts[i],
+							pt = t(p.step, p.yl[k], this);
 						if (i === 0)
 							graphCtx.moveTo(pt.tx, pt.ty);
 						else
@@ -118,5 +127,5 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 		};
 
 	global.MultiGraph = MultiGraph;
-	
+
 }(this));
