@@ -73,6 +73,7 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 						searchCell = cell;
 					}
 				});
+			var merp = 'derp';
 			}
 		},
 		generate: function () {
