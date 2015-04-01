@@ -48,8 +48,8 @@ function start() {
 	w = new World(worldCanvas, maze, agents);
 	w.maze = maze;
 	w.agents = agents;
-	w.memoryBank = document.getElementById('memoryBank').value;
-	w.brainSpecs = document.getElementById('brainSpecs').value;
+	w.memoryBank = document.getElementById('memoryBank');
+	w.brainSpecs = document.getElementById('brainSpecs');
 	w.rewardGraph = new MultiGraph([0,1]);
 
 	go('mid');
@@ -111,7 +111,7 @@ function saveMemory() {
 			net = net + ',';
 		}
 	}
-	w.memoryBank = net + ']';
+	w.memoryBank.value = net + ']';
 }
 
 /**
@@ -119,7 +119,7 @@ function saveMemory() {
  * @returns {undefined}
  */
 function loadMemory() {
-	var t = w.memoryBank,
+	var t = w.memoryBank.value,
 		j = JSON.parse(t);
 
 	for (var i = 0, n = j.length; i < n; i++) {
