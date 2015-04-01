@@ -3,6 +3,12 @@ var Graph = Graph || {REVISION: '0.1'};
 (function (global) {
 	"use strict";
 
+	/**
+	 * Same as MultiGraph but draws a single line
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @returns {Graph}
+	 */
 	Graph = function (width, height) {
 		this.width = width;
 		this.height = height;
@@ -107,6 +113,6 @@ var Graph = Graph || {REVISION: '0.1'};
 	};
 
 	global.Graph = Graph;
-	
+
 }(this));
 

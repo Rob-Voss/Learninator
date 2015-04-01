@@ -5,13 +5,14 @@ var World = World || {REVISION: '0.1'};
 
 	/**
 	 * Make a World
+	 * @param {Graph} canvas
 	 * @param {Maze} environment
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	World = function (environment, agents) {
-		this.W = worldCanvas.width;
-		this.H = worldCanvas.height;
+	World = function (canvas, environment, agents) {
+		this.W = canvas.width;
+		this.H = canvas.height;
 
 		this.walls = environment.draw();
 		this.agents = agents;
@@ -226,5 +227,5 @@ var World = World || {REVISION: '0.1'};
 	};
 
 	global.World = World;
-	
+
 }(this));

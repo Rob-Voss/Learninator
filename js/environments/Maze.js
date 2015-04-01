@@ -5,16 +5,17 @@ var Maze = Maze || {REVISION: '0.1'};
 
 	/**
 	 * A maze
+	 * @param {Graph} canvas
 	 * @param {Number} horizCells
 	 * @param {Number} vertCells
 	 * @returns {undefined}
 	 */
-	Maze = function (horizCells, vertCells) {
-		this.canvas = worldCanvas;
-		this.ctx = worldCtx;
+	Maze = function (canvas, horizCells, vertCells) {
+		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d");
 
-		this.width = this.canvas.width;
-		this.height = this.canvas.height;
+		this.width = canvas.width;
+		this.height = canvas.height;
 		this.horizCells = horizCells;
 		this.vertCells = vertCells;
 		this.generator = new MazeGenerator(this.horizCells, this.vertCells);
@@ -144,5 +145,5 @@ var Maze = Maze || {REVISION: '0.1'};
 	};
 
 	global.Maze = Maze;
-	
+
 }(this));

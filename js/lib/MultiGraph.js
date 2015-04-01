@@ -5,8 +5,8 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 
 		/**
 		 * Same as graph but draws multiple lines
-		 * @param {type} legend
-		 * @param {type} options
+		 * @param {Array} legend
+		 * @param {Object} options
 		 * @returns {MultiGraph_L3.MultiGraph}
 		 */
 		MultiGraph = function (legend, options) {
@@ -118,4 +118,5 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 		};
 
 	global.MultiGraph = MultiGraph;
+	
 }(this));
