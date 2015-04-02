@@ -48,12 +48,13 @@ var MultiGraph = MultiGraph || {REVISION: '0.1'};
 					this.maxy = this.maxy_forced;
 				if (typeof this.miny_forced !== 'undefined')
 					this.miny = this.miny_forced;
-				var added = {
+
+				this.pts.push({
 						step: step,
 						time: time,
 						yl: yl
-					};
-				this.pts.push(added);
+					});
+
 				if (step > this.step_horizon)
 					this.step_horizon *= 2;
 			},
