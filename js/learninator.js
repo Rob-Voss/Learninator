@@ -125,9 +125,6 @@ function loadMemory() {
 	for (var i = 0, n = j.length; i < n; i++) {
 		w.agents[i].brain.value_net.fromJSON(j[i]);
 	}
-
-	stopLearnin(); // also stop learning
-	go('mid');
 }
 
 /**
@@ -314,7 +311,7 @@ function drawStats(graphElement, visElement) {
 		var agent = w.agents[i],
 			brain = agent.brain,
 			netin = brain.last_input_array;
-		
+
 		visCtx.beginPath();
 		for (var k = 0, nl = netin.length; k < nl; k++) {
 			visCtx.moveTo(10 + k * 12, 120);
@@ -328,5 +325,5 @@ function drawStats(graphElement, visElement) {
 		w.rewardGraph.drawSelf(graphCanvas);
 	}
 
-	
+
 }
