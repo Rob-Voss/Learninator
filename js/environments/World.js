@@ -41,7 +41,7 @@ var World = World || {REVISION: '0.1'};
 			if (checkWalls) {
 				for (var i = 0, n = this.walls.length; i < n; i++) {
 					var wall = this.walls[i];
-					var wResult = lineIntersect(v1, v2, wall.v1, wall.v2);
+					var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 					if (wResult) {
 						wResult.type = 0; // 0 is wall
 						if (!minRes) {
@@ -61,7 +61,7 @@ var World = World || {REVISION: '0.1'};
 			if (checkItems) {
 				for (var i = 0, n = this.items.length; i < n; i++) {
 					var item = this.items[i],
-						iResult = linePointIntersect(v1, v2, item.pos, item.rad);
+						iResult = Utility.linePointIntersect(v1, v2, item.pos, item.rad);
 					if (iResult) {
 						iResult.type = item.type; // Store type of item
 						if (!minRes) {

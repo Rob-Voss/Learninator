@@ -43,4 +43,5 @@ var Window = Window || {REVISION: '0.1'};
 	};
 
 	global.Window = Window;
+	
 }(this));
