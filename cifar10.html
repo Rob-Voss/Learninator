@@ -98,12 +98,12 @@ body {
 <script src="js/lib/underscore-min.js"></script>
 <script src="js/lib/jquery-1.11.2.min.js"></script>
 
+<script src="js/entities/Brain.js"></script>
+<script src="js/entities/Window.js"></script>
+
 <script src="js/lib/Graph.js"></script>
 <script src="js/lib/MultiGraph.js"></script>
-<script src="js/lib/Window.js"></script>
-<script src="js/lib/Brain.js"></script>
 <script src="js/lib/Utility.js"></script>
-<script src="js/lib/vis.js"></script>
 
 <script src="js/lib/cifar10_labels.js"></script>
 
@@ -262,8 +262,8 @@ var load_data_batch = function(batch_num) {
 // END MNIST SPECIFIC STUFF
 // ------------------------
 
-var maxmin = maxmin;
-var f2t = f2t;
+var maxmin = Utilty.maxmin;
+var f2t = Utilty.flt2str;
 
 // elt is the element to add all the canvas activation drawings into
 // A is the Vol() to use
@@ -476,12 +476,12 @@ var visualize_activations = function(net, elt) {
 
     // find min, max activations and display them
     var mma = maxmin(L.out_act.w);
-    var t = 'max activation: ' + f2t(mma.maxv) + ', min: ' + f2t(mma.minv);
+    var t = 'max activation: ' + Utilty.flt2str(mma.maxv) + ', min: ' + Utilty.flt2str(mma.minv);
     layer_div.appendChild(document.createTextNode(t));
     layer_div.appendChild(document.createElement('br'));
 
     var mma = maxmin(L.out_act.dw);
-    var t = 'max gradient: ' + f2t(mma.maxv) + ', min: ' + f2t(mma.minv);
+    var t = 'max gradient: ' + Utilty.flt2str(mma.maxv) + ', min: ' + Utilty.flt2str(mma.minv);
     layer_div.appendChild(document.createTextNode(t));
     layer_div.appendChild(document.createElement('br'));
 
@@ -618,16 +618,16 @@ var step = function(sample) {
   var t = 'Backprop time per example: ' + stats.bwd_time + 'ms';
   train_elt.appendChild(document.createTextNode(t));
   train_elt.appendChild(document.createElement('br'));
-  var t = 'Classification loss: ' + f2t(xLossWindow.getAverage());
+  var t = 'Classification loss: ' + Utilty.flt2str(xLossWindow.getAverage());
   train_elt.appendChild(document.createTextNode(t));
   train_elt.appendChild(document.createElement('br'));
-  var t = 'L2 Weight decay loss: ' + f2t(wLossWindow.getAverage());
+  var t = 'L2 Weight decay loss: ' + Utilty.flt2str(wLossWindow.getAverage());
   train_elt.appendChild(document.createTextNode(t));
   train_elt.appendChild(document.createElement('br'));
-  var t = 'Training accuracy: ' + f2t(trainAccWindow.getAverage());
+  var t = 'Training accuracy: ' + Utilty.flt2str(trainAccWindow.getAverage());
   train_elt.appendChild(document.createTextNode(t));
   train_elt.appendChild(document.createElement('br'));
-  var t = 'Validation accuracy: ' + f2t(valAccWindow.getAverage());
+  var t = 'Validation accuracy: ' + Utilty.flt2str(valAccWindow.getAverage());
   train_elt.appendChild(document.createTextNode(t));
   train_elt.appendChild(document.createElement('br'));
   var t = 'Examples seen: ' + step_num;

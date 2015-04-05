@@ -302,25 +302,31 @@ function drawStats(graphElement, visElement) {
 		visCtx = visCanvas.getContext("2d"),
 		W = visCanvas.width,
 		H = visCanvas.height,
-		agent = w.agents[0],
-		brain = agent.brain,
-		netin = brain.last_input_array;
+		avgWins = [];
 
 	visCtx.clearRect(0, 0, W, H);
 	visCtx.strokeStyle = "rgb(0,0,0)";
 	visCtx.font = "12px Verdana";
 	visCtx.fillText("Current state:", 10, 10);
 	visCtx.lineWidth = 10;
-	visCtx.beginPath();
 
-	for (var k = 0, n = netin.length; k < n; k++) {
-		visCtx.moveTo(10 + k * 12, 120);
-		visCtx.lineTo(10 + k * 12, 120 - netin[k] * 100);
+	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var agent = w.agents[i],
+			brain = agent.brain,
+			netin = brain.last_input_array;
+		
+		visCtx.beginPath();
+		for (var k = 0, nl = netin.length; k < nl; k++) {
+			visCtx.moveTo(10 + k * 12, 120);
+			visCtx.lineTo(10 + k * 12, 120 - netin[k] * 100);
+		}
+		visCtx.stroke();
+		avgWins.push(brain.avgRewardWindow.getAverage());
 	}
-	visCtx.stroke();
-
 	if (w.clock % 200 === 0) {
-		w.rewardGraph.add(w.clock / 200, brain.avgRewardWindow.getAverage());
+		w.rewardGraph.add(w.clock / 200, avgWins);
 		w.rewardGraph.drawSelf(graphCanvas);
 	}
+
+	
 }

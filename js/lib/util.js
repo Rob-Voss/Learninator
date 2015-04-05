@@ -45,14 +45,6 @@ var cnnutil = (function(exports){
     return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv:maxv-minv};
   }
 
-  // returns string representation of float
-  // but truncated to length of d digits
-  var f2t = function(x, d) {
-    if(typeof(d)==='undefined') { var d = 5; }
-    var dd = 1.0 * Math.pow(10, d);
-    return '' + Math.floor(x*dd)/dd;
-  }
-
   exports = exports || {};
   exports.Window = Window;
   exports.maxmin = maxmin;
