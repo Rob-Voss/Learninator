@@ -19,12 +19,12 @@ var Agent = Agent || {REVISION: '0.1'};
 	 * A single agent
 	 * @returns {Agent}
 	 */
-	Agent = function () {
+	Agent = function (radius) {
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
 
 		// The Agent's size
-		this.rad = 5;
+		this.rad = radius;
 
 		// Positional information
 		this.pos = new Vec(this.rad, this.rad);
@@ -73,48 +73,48 @@ var Agent = Agent || {REVISION: '0.1'};
 
 		this.previousActionix = -1;
 
-	/**
-	 * The value function network computes a value of taking any of the possible actions
-	 * given an input state.
-	 *
-	 * Here we specify one explicitly the hard way but we could also use
-	 * opt.hidden_layer_sizes = [20,20] instead to just insert simple relu hidden layers.
-	 * @type {Array}
-	 */
-	var layerDefs = [];
-		layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
-		layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-		layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-		layerDefs.push({type: 'regression', num_neurons: this.numActions});
+		/**
+		 * The value function network computes a value of taking any of the possible actions
+		 * given an input state.
+		 *
+		 * Here we specify one explicitly the hard way but we could also use
+		 * opt.hidden_layer_sizes = [20,20] instead to just insert simple relu hidden layers.
+		 * @type {Array}
+		 */
+		var layerDefs = [];
+			layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
+			layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+			layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+			layerDefs.push({type: 'regression', num_neurons: this.numActions});
 
-	/**
-	 * The options for the Temporal Difference learner that trains the above net
-	 * by backpropping the temporal difference learning rule.
-	 * @type {Object}
-	 */
-	var trainerOpts = {};
-		trainerOpts.learning_rate = 0.001;
-		trainerOpts.momentum = 0.0;
-		trainerOpts.batch_size = 64;
-		trainerOpts.l2_decay = 0.01;
+		/**
+		 * The options for the Temporal Difference learner that trains the above net
+		 * by backpropping the temporal difference learning rule.
+		 * @type {Object}
+		 */
+		var trainerOpts = {};
+			trainerOpts.learning_rate = 0.001;
+			trainerOpts.momentum = 0.0;
+			trainerOpts.batch_size = 64;
+			trainerOpts.l2_decay = 0.01;
 
-	/**
-	 * Options for the Brain
-	 * @type {Object}
-	 */
-	var brainOpts = {};
-		brainOpts.temporal_window = this.temporalWindow;
-		brainOpts.experience_size = 30000;
-		brainOpts.start_learn_threshold = 1000;
-		brainOpts.gamma = 0.7;
-		brainOpts.learning_steps_total = 200000;
-		brainOpts.learning_steps_burnin = 3000;
-		brainOpts.epsilon_min = 0.05;
-		brainOpts.epsilon_test_time = 0.05;
-		brainOpts.layer_defs = layerDefs;
-		brainOpts.tdtrainer_options = trainerOpts;
+		/**
+		 * Options for the Brain
+		 * @type {Object}
+		 */
+		var brainOpts = {};
+			brainOpts.temporal_window = this.temporalWindow;
+			brainOpts.experience_size = 30000;
+			brainOpts.start_learn_threshold = 1000;
+			brainOpts.gamma = 0.7;
+			brainOpts.learning_steps_total = 200000;
+			brainOpts.learning_steps_burnin = 3000;
+			brainOpts.epsilon_min = 0.05;
+			brainOpts.epsilon_test_time = 0.05;
+			brainOpts.layer_defs = layerDefs;
+			brainOpts.tdtrainer_options = trainerOpts;
 
-	this.brain = new Brain(this.numInputs, this.numActions, brainOpts); // woohoo
+		this.brain = new Brain(this.numInputs, this.numActions, brainOpts); // woohoo
 	};
 
 	/**
@@ -185,5 +185,6 @@ var Agent = Agent || {REVISION: '0.1'};
 	};
 
 	global.Agent = Agent;
+	
 }(this));
 

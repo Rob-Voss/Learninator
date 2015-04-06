@@ -41,18 +41,22 @@ function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	worldCtx = worldCanvas.getContext("2d");
 
-	var agents = [new Agent(), new Agent()];
-	var maze = new Maze(worldCanvas, 10, 10);
+	var agents = [new Agent(10), new Agent(10)];
 
-	// We are going to use a maze for the environment and give it one agent
-	w = new World(worldCanvas, maze, agents);
+	var maze = new Maze(worldCanvas, 5, 5);
+	maze.generate();
+	maze.draw();
+
+	// We are going to use a maze for the environment and give it two agents
+	w = new World(worldCanvas, maze.walls, agents);
+
 	w.maze = maze;
 	w.agents = agents;
 	w.memoryBank = document.getElementById('memoryBank');
 	w.brainSpecs = document.getElementById('brainSpecs');
 	w.rewardGraph = new MultiGraph([0,1]);
 
-	go('mid');
+	go('max');
 }
 
 /**
@@ -71,7 +75,7 @@ function tick() {
  * Reload, hit reset button on the world
  */
 function reload() {
-	w.agents = [new Agent(), new Agent()];
+	w.agents = [new Agent(10), new Agent(10)];
 	w.rewardGraph = new MultiGraph([0,1]);
 }
 
@@ -105,7 +109,7 @@ function saveMemory() {
 	var net = '[';
 	for (var i = 0, n = w.agents.length; i < n; i++) {
 		var j = w.agents[i].brain.value_net.toJSON(),
-				t = JSON.stringify(j);
+			t = JSON.stringify(j);
 		net = net + t;
 		if (n - 1 !== i) {
 			net = net + ',';
@@ -119,31 +123,41 @@ function saveMemory() {
  * @returns {undefined}
  */
 function loadMemory() {
-	var t = w.memoryBank.value,
-		j = JSON.parse(t);
-
-	for (var i = 0, n = j.length; i < n; i++) {
-		w.agents[i].brain.value_net.fromJSON(j[i]);
+	var m = JSON.parse(w.memoryBank.value);
+	stopLearnin();
+	for (var i = 0, n = m.length; i < n; i++) {
+		w.agents[i].brain.value_net.fromJSON(m[i]);
 	}
+	go('mid');
 }
 
 /**
  * Get to learninating
+ * @param {Number} id
  * @returns {undefined}
  */
-function startLearnin() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = true;
+function startLearnin(id) {
+	if (id === undefined) {
+		for (var i = 0, n = w.agents.length; i < n; i++) {
+			w.agents[i].brain.learning = true;
+		}
+	} else {
+		w.agents[id].brain.learning = true;
 	}
 }
 
 /**
  * Stop learninating
+ * @param {Number} id
  * @returns {undefined}
  */
-function stopLearnin() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = false;
+function stopLearnin(id) {
+	if (id === undefined) {
+		for (var i = 0, n = w.agents.length; i < n; i++) {
+			w.agents[i].brain.learning = false;
+		}
+	} else {
+		w.agents[id].brain.learning = false;
 	}
 }
 
@@ -172,17 +186,19 @@ function drawWorld() {
 			// Color the agents based on the reward it is experiencing at the moment
 			reward = Math.floor(brain.latest_reward * 200),
 			rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-			avgReward = brain.avgRewardWindow.getAverage().toFixed(2),
 			loc = ((i * 100) + n) + 10;
 
-		worldCtx.fillStyle = "rgb(" + rewardColor + ", 150, 150)";
+		var avgR = brain.avgRewardWindow.getAverage().toFixed(1),
+			avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
+
+		worldCtx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
 		worldCtx.strokeStyle = "rgb(0,0,0)";
 
 		// Draw agents body
 		worldCtx.beginPath();
 		worldCtx.arc(agent.oldPos.x, agent.oldPos.y, agent.rad, 0, Math.PI * 2, true);
 		worldCtx.fill();
-		worldCtx.fillText(i + " (" + avgReward + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
+		worldCtx.fillText(i + " (" + avgR + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
 		worldCtx.stroke();
 
 		// Draw agents sight
@@ -211,6 +227,7 @@ function drawWorld() {
 			worldCtx.lineTo(aEyeX, aEyeY);
 			worldCtx.stroke();
 		}
+		agent.brain.visSelf(document.getElementById('brain_info_div_' + i));
 	}
 
 	// Draw items
@@ -225,10 +242,6 @@ function drawWorld() {
 		worldCtx.arc(item.pos.x, item.pos.y, item.rad, 0, Math.PI * 2, true);
 		worldCtx.fill();
 		worldCtx.stroke();
-	}
-
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.visSelf(document.getElementById('brain_info_div_' + i));
 	}
 }
 
@@ -324,6 +337,4 @@ function drawStats(graphElement, visElement) {
 		w.rewardGraph.add(w.clock / 200, avgWins);
 		w.rewardGraph.drawSelf(graphCanvas);
 	}
-
-
 }
