@@ -66,8 +66,7 @@ function tick() {
 	w.tick();
 	if (!skipDraw || w.clock % 50 === 0) {
 		drawWorld();
-		drawStats("graph_canvas", "vis_canvas");
-		drawNet("net_canvas");
+//		drawStats("graph_canvas", "vis_canvas");
 	}
 }
 
@@ -186,9 +185,7 @@ function drawWorld() {
 			// Color the agents based on the reward it is experiencing at the moment
 			reward = Math.floor(brain.latest_reward * 200),
 			rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-			loc = ((i * 100) + n) + 10;
-
-		var avgR = brain.avgRewardWindow.getAverage().toFixed(1),
+			avgR = brain.avgRewardWindow.getAverage().toFixed(1),
 			avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
 
 		worldCtx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
@@ -258,45 +255,45 @@ function drawNet(netElement) {
 			return;  // do this sparingly
 	}
 
-	var netCanvas = document.getElementById(netElement),
+	var netCanvas = document.getElementById(netElement + "_"),
 		netCtx = netCanvas.getContext("2d"),
 		W = netCanvas.width,
 		H = netCanvas.height,
-		L = w.agents[0].brain.value_net.layers,
-		dx = (W - 50) / L.length,
 		X = 10,
 		Y = 40;
-
 	netCtx.clearRect(0, 0, W, H);
 	netCtx.font = "12px Verdana";
 	netCtx.fillStyle = "rgb(0,0,0)";
 	netCtx.fillText("Value Function Approximating Neural Network:", 10, 14);
 
-	for (var k = 0; k < L.length; k++) {
-		if (typeof (L[k].out_act) === 'undefined') {
-			continue; // maybe not yet ready
-		}
-		var kw = L[k].out_act.w,
-				n = kw.length,
-				dy = (H - 50) / n;
-
-		netCtx.fillStyle = "rgb(0,0,0)";
-		netCtx.fillText(L[k].layer_type + "(" + n + ")", X, 35);
-		for (var q = 0; q < n; q++) {
-			var v = Math.floor(kw[q] * 100);
-			if (v >= 0)
-				netCtx.fillStyle = "rgb(0,0," + v + ")";
-			if (v < 0)
-				netCtx.fillStyle = "rgb(" + (-v) + ",0,0)";
-			netCtx.fillRect(X, Y, 10, 10);
-			Y += 12;
-			if (Y > H - 25) {
-				Y = 40;
-				X += 12;
+	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var L = w.agents[i].brain.value_net.layers;
+		for (var k = 0; k < L.length; k++) {
+			if (typeof (L[k].out_act) === 'undefined') {
+				continue; // maybe not yet ready
 			}
+			var kw = L[k].out_act.w,
+					n = kw.length,
+					dy = (H - 50) / n;
+
+			netCtx.fillStyle = "rgb(0,0,0)";
+			netCtx.fillText(L[k].layer_type + "(" + n + ")", X, 35);
+			for (var q = 0; q < n; q++) {
+				var v = Math.floor(kw[q] * 100);
+				if (v >= 0)
+					netCtx.fillStyle = "rgb(0,0," + v + ")";
+				if (v < 0)
+					netCtx.fillStyle = "rgb(" + (-v) + ",0,0)";
+				netCtx.fillRect(X, Y, 10, 10);
+				Y += 12;
+				if (Y > H - 25) {
+					Y = 40;
+					X += 12;
+				}
+			}
+			X += 50;
+			Y = 40;
 		}
-		X += 50;
-		Y = 40;
 	}
 }
 
@@ -307,20 +304,19 @@ function drawNet(netElement) {
  * @returns {undefined}
  */
 function drawStats(graphElement, visElement) {
-	var visCanvas = document.getElementById(visElement),
-		graphCanvas = document.getElementById(graphElement),
-		visCtx = visCanvas.getContext("2d"),
-		W = visCanvas.width,
-		H = visCanvas.height,
-		avgWins = [];
-
-	visCtx.clearRect(0, 0, W, H);
-	visCtx.strokeStyle = "rgb(0,0,0)";
-	visCtx.font = "12px Verdana";
-	visCtx.fillText("Current state:", 10, 10);
-	visCtx.lineWidth = 10;
-
 	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var visCanvas = document.getElementById(visElement + '_' + i),
+			visCtx = visCanvas.getContext("2d"),
+			W = visCanvas.width,
+			H = visCanvas.height,
+			avgWins = [];
+
+		visCtx.clearRect(0, 0, W, H);
+		visCtx.strokeStyle = "rgb(0,0,0)";
+		visCtx.font = "12px Verdana";
+		visCtx.fillText("Current state:", 10, 10);
+		visCtx.lineWidth = 10;
+
 		var agent = w.agents[i],
 			brain = agent.brain,
 			netin = brain.last_input_array;
@@ -333,8 +329,9 @@ function drawStats(graphElement, visElement) {
 		visCtx.stroke();
 		avgWins.push(brain.avgRewardWindow.getAverage());
 	}
+
 	if (w.clock % 200 === 0) {
 		w.rewardGraph.add(w.clock / 200, avgWins);
-		w.rewardGraph.drawSelf(graphCanvas);
+		w.rewardGraph.drawSelf(document.getElementById(graphElement));
 	}
 }
