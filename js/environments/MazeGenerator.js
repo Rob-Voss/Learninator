@@ -73,11 +73,10 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 						searchCell = cell;
 					}
 				});
-			var merp = 'derp';
 			}
 		},
 		generate: function () {
-			var initialCell = this.graph.getVecAt(0, 0);
+			var initialCell = this.graph.getVecAt(1, 1);
 			this.recurse(initialCell);
 		}
 	};

@@ -3,6 +3,33 @@ var Utility = Utility || {REVISION: '0.1'};
 (function (global) {
 	"use strict";
 
+	// returns min, max and indeces of an array
+	Utility.maxmin = function (w) {
+		if (w.length === 0) {
+			return {};
+		} // ... ;s
+
+		var maxv = w[0], minv = w[0], maxi = 0, mini = 0;
+		
+		for (var i = 1; i < w.length; i++) {
+			if (w[i] > maxv) {
+				maxv = w[i];
+				maxi = i;
+			}
+			if (w[i] < minv) {
+				minv = w[i];
+				mini = i;
+			}
+		}
+		return {
+			maxi: maxi,
+			maxv: maxv,
+			mini: mini,
+			minv: minv,
+			dv: maxv - minv
+		};
+	};
+
 	/**
 	 * Returns string representation of float but truncated to length of d digits
 	 * @param {Number} x

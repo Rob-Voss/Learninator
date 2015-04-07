@@ -34,6 +34,9 @@ var Maze = Maze || {REVISION: '0.1'};
 	 * @type Maze
 	 */
 	Maze.prototype = {
+		walls: function () {
+			return this.walls;
+		},
 		width: function () {
 			return this.width;
 		},
@@ -42,22 +45,15 @@ var Maze = Maze || {REVISION: '0.1'};
 		},
 		generate: function () {
 			this.generator.generate();
-			this.drawBorders();
-			this.drawMaze();
-
-			return this.walls;
-		},
-		draw: function () {
-			this.generator.generate();
-			this.drawBorders();
-			this.drawMaze();
-
-			return this.walls;
 		},
 		solve: function () {
 			skipDraw = true;
 			this.generator.solve();
 			this.drawSolution();
+		},
+		draw: function () {
+			this.drawBorders();
+			this.drawMaze();
 		},
 		drawBorders: function () {
 			this.addWall(this.vW, 0, this.width, 0);
