@@ -6,15 +6,15 @@ var World = World || {REVISION: '0.1'};
 	/**
 	 * Make a World
 	 * @param {Graph} canvas
-	 * @param {Maze} environment
+	 * @param {Array} walls
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	World = function (canvas, environment, agents) {
+	World = function (canvas, walls, agents) {
 		this.W = canvas.width;
 		this.H = canvas.height;
 
-		this.walls = environment.draw();
+		this.walls = walls;
 		this.agents = agents;
 		this.items = [];
 

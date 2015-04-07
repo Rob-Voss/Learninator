@@ -36,19 +36,25 @@ var Brain = Brain || {REVISION: '0.1'};
 		// current x so to have no information from previous time step going into value
 		// function, set to 0.
 		this.temporal_window = typeof opt.temporal_window !== 'undefined' ? opt.temporal_window : 1;
+
 		// size of experience replay memory
 		this.experience_size = typeof opt.experience_size !== 'undefined' ? opt.experience_size : 30000;
+
 		// number of examples in experience replay memory before we begin learning
 		this.start_learn_threshold = typeof opt.start_learn_threshold !== 'undefined' ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
+
 		// gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
 		this.gamma = typeof opt.gamma !== 'undefined' ? opt.gamma : 0.8;
 
 		// number of steps we will learn for
 		this.learning_steps_total = typeof opt.learning_steps_total !== 'undefined' ? opt.learning_steps_total : 100000;
+
 		// how many steps of the above to perform only random actions (in the beginning)?
 		this.learning_steps_burnin = typeof opt.learning_steps_burnin !== 'undefined' ? opt.learning_steps_burnin : 3000;
+
 		// what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
 		this.epsilon_min = typeof opt.epsilon_min !== 'undefined' ? opt.epsilon_min : 0.05;
+
 		// what epsilon to use at test time? (i.e. when learning is disabled)
 		this.epsilon_test_time = typeof opt.epsilon_test_time !== 'undefined' ? opt.epsilon_test_time : 0.01;
 
@@ -79,7 +85,8 @@ var Brain = Brain || {REVISION: '0.1'};
 		this.net_inputs = numStates * this.temporal_window + numActions * this.temporal_window + numStates;
 		this.num_states = numStates;
 		this.num_actions = numActions;
-		this.window_size = Math.max(this.temporal_window, 2); // must be at least 2, but if we want more context even more
+		// must be at least 2, but if we want more context even more
+		this.window_size = Math.max(this.temporal_window, 2);
 		this.state_window = new Array(this.window_size);
 		this.action_window = new Array(this.window_size);
 		this.reward_window = new Array(this.window_size);
@@ -109,35 +116,42 @@ var Brain = Brain || {REVISION: '0.1'};
 			}
 		} else {
 			// create a very simple neural net by default
-			layer_defs.push({
-				type: 'input',
-				out_sx: 1,
-				out_sy: 1,
-				out_depth: this.net_inputs});
+			var inputLayer = {
+					type: 'input',
+					out_sx: 1,
+					out_sy: 1,
+					out_depth: this.net_inputs
+				};
+			layer_defs.push(inputLayer);
+
 			if (typeof opt.hidden_layer_sizes !== 'undefined') {
 				// allow user to specify this via the option, for convenience
 				var hl = opt.hidden_layer_sizes;
 				for (var k = 0; k < hl.length; k++) {
-					layer_defs.push({
-						type: 'fc',
-						num_neurons: hl[k],
-						activation: 'relu'}); // relu by default
+					var layer = {
+							type: 'fc',
+							num_neurons: hl[k],
+							activation: 'relu'
+						};
+					layer_defs.push(layer); // relu by default
 				}
 			}
-			layer_defs.push({
-				type: 'regression',
-				num_neurons: numActions}); // value function output
+			var regressionLayer = {
+					type: 'regression',
+					num_neurons: numActions
+				};
+			layer_defs.push(regressionLayer); // value function output
 		}
 		this.value_net = new convnetjs.Net();
 		this.value_net.makeLayers(layer_defs);
 
 		// and finally we need a Temporal Difference Learning trainer!
 		var tdtrainer_options = {
-			learning_rate: 0.01,
-			momentum: 0.0,
-			batch_size: 64,
-			l2_decay: 0.01
-		};
+				learning_rate: 0.01,
+				momentum: 0.0,
+				batch_size: 64,
+				l2_decay: 0.01
+			};
 		if (typeof opt.tdtrainer_options !== 'undefined') {
 			tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
 		}

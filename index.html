@@ -5,27 +5,6 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<title>Learninator</title>
 
-		<script src="js/lib/Array.js"></script>
-		<script src="js/lib/Graph.js"></script>
-		<script src="js/lib/MultiGraph.js"></script>
-		<script src="js/lib/Utility.js"></script>
-		<script src="js/lib/convnet-min.js"></script>
-		<script src="js/lib/underscore-min.js"></script>
-
-		<script src="js/entities/Agent.js"></script>
-		<script src="js/entities/Brain.js"></script>
-		<script src="js/entities/Item.js"></script>
-		<script src="js/entities/Vec.js"></script>
-		<script src="js/entities/Wall.js"></script>
-		<script src="js/entities/Window.js"></script>
-
-		<script src="js/environments/Maze.js"></script>
-		<script src="js/environments/MazeGenerator.js"></script>
-		<script src="js/environments/Simple.js"></script>
-		<script src="js/environments/World.js"></script>
-
-		<script src="js/learninator.js"></script>
-
 		<style type="text/css">
 			#wrap {
 				width:800px;
@@ -49,17 +28,43 @@
 				border: 1px solid white;
 			}
 		</style>
+
+		<script src="js/lib/Array.js"></script>
+		<script src="js/lib/Graph.js"></script>
+		<script src="js/lib/MultiGraph.js"></script>
+		<script src="js/lib/Utility.js"></script>
+		<script src="js/lib/convnet-min.js"></script>
+		<script src="js/lib/underscore-min.js"></script>
+
+		<script src="js/entities/Agent.js"></script>
+		<script src="js/entities/Brain.js"></script>
+		<script src="js/entities/Item.js"></script>
+		<script src="js/entities/Vec.js"></script>
+		<script src="js/entities/Wall.js"></script>
+		<script src="js/entities/Window.js"></script>
+
+		<script src="js/environments/Maze.js"></script>
+		<script src="js/environments/MazeGenerator.js"></script>
+		<script src="js/environments/Simple.js"></script>
+		<script src="js/environments/World.js"></script>
+
+		<script src="js/learninator.js"></script>
+
 	</head>
 	<body onload="start();">
 		<div id="wrap">
 			<h1>State Visualizations</h1>
 			<div>Average reward over time (this should go up as agent becomes better on average at collecting rewards)</div>
-			<canvas id="vis_canvas" width="350" height="150"></canvas>
 			<canvas id="graph_canvas" width="350" height="150"></canvas><br />
-			<canvas id="net_canvas" width="700" height="200"></canvas><br />
 			<canvas id="world_canvas" width="700" height="500"></canvas>
-			<div id="brain_info_div_0"></div>
-			<div id="brain_info_div_1"></div>
+
+			<div id="brain_info_div_0"></div><br />
+<!--			<canvas id="vis_canvas_0" width="350" height="150"></canvas>
+			<canvas id="net_canvas_0" width="700" height="200"></canvas><br />-->
+
+			<div id="brain_info_div_1"></div><br />
+<!--			<canvas id="vis_canvas_1" width="350" height="150"></canvas>
+			<canvas id="net_canvas_1" width="700" height="200"></canvas><br />-->
 
 			<h1>Controls</h1>
 			<button onclick="reload()">Reload</button>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Lifeinator</title>
+
+		<script src="js/lib/sylvester.js"></script>
+		<script src="js/environments/Life.js"></script>
+
+	</head>
+	<body >
+		<script type="text/javascript">
+			var view = new Life.Renderer();
+			view.init(new Worker("js/environments/Worker.js"));
+			document.body.appendChild(view.canvas);
+		</script>
+	</body>
+</html>

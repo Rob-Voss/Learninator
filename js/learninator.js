@@ -41,18 +41,22 @@ function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	worldCtx = worldCanvas.getContext("2d");
 
-	var agents = [new Agent(), new Agent()];
-	var maze = new Maze(worldCanvas, 10, 10);
+	var agents = [new Agent(10), new Agent(10)];
 
-	// We are going to use a maze for the environment and give it one agent
-	w = new World(worldCanvas, maze, agents);
+	var maze = new Maze(worldCanvas, 5, 5);
+	maze.generate();
+	maze.draw();
+
+	// We are going to use a maze for the environment and give it two agents
+	w = new World(worldCanvas, maze.walls, agents);
+
 	w.maze = maze;
 	w.agents = agents;
 	w.memoryBank = document.getElementById('memoryBank');
 	w.brainSpecs = document.getElementById('brainSpecs');
 	w.rewardGraph = new MultiGraph([0,1]);
 
-	go('mid');
+	go('max');
 }
 
 /**
@@ -62,8 +66,7 @@ function tick() {
 	w.tick();
 	if (!skipDraw || w.clock % 50 === 0) {
 		drawWorld();
-		drawStats("graph_canvas", "vis_canvas");
-		drawNet("net_canvas");
+//		drawStats("graph_canvas", "vis_canvas");
 	}
 }
 
@@ -71,7 +74,7 @@ function tick() {
  * Reload, hit reset button on the world
  */
 function reload() {
-	w.agents = [new Agent(), new Agent()];
+	w.agents = [new Agent(10), new Agent(10)];
 	w.rewardGraph = new MultiGraph([0,1]);
 }
 
@@ -105,7 +108,7 @@ function saveMemory() {
 	var net = '[';
 	for (var i = 0, n = w.agents.length; i < n; i++) {
 		var j = w.agents[i].brain.value_net.toJSON(),
-				t = JSON.stringify(j);
+			t = JSON.stringify(j);
 		net = net + t;
 		if (n - 1 !== i) {
 			net = net + ',';
@@ -119,34 +122,41 @@ function saveMemory() {
  * @returns {undefined}
  */
 function loadMemory() {
-	var t = w.memoryBank.value,
-		j = JSON.parse(t);
-
-	for (var i = 0, n = j.length; i < n; i++) {
-		w.agents[i].brain.value_net.fromJSON(j[i]);
+	var m = JSON.parse(w.memoryBank.value);
+	stopLearnin();
+	for (var i = 0, n = m.length; i < n; i++) {
+		w.agents[i].brain.value_net.fromJSON(m[i]);
 	}
-
-	stopLearnin(); // also stop learning
 	go('mid');
 }
 
 /**
  * Get to learninating
+ * @param {Number} id
  * @returns {undefined}
  */
-function startLearnin() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = true;
+function startLearnin(id) {
+	if (id === undefined) {
+		for (var i = 0, n = w.agents.length; i < n; i++) {
+			w.agents[i].brain.learning = true;
+		}
+	} else {
+		w.agents[id].brain.learning = true;
 	}
 }
 
 /**
  * Stop learninating
+ * @param {Number} id
  * @returns {undefined}
  */
-function stopLearnin() {
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.learning = false;
+function stopLearnin(id) {
+	if (id === undefined) {
+		for (var i = 0, n = w.agents.length; i < n; i++) {
+			w.agents[i].brain.learning = false;
+		}
+	} else {
+		w.agents[id].brain.learning = false;
 	}
 }
 
@@ -175,17 +185,17 @@ function drawWorld() {
 			// Color the agents based on the reward it is experiencing at the moment
 			reward = Math.floor(brain.latest_reward * 200),
 			rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-			avgReward = brain.avgRewardWindow.getAverage().toFixed(2),
-			loc = ((i * 100) + n) + 10;
+			avgR = brain.avgRewardWindow.getAverage().toFixed(1),
+			avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
 
-		worldCtx.fillStyle = "rgb(" + rewardColor + ", 150, 150)";
+		worldCtx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
 		worldCtx.strokeStyle = "rgb(0,0,0)";
 
 		// Draw agents body
 		worldCtx.beginPath();
 		worldCtx.arc(agent.oldPos.x, agent.oldPos.y, agent.rad, 0, Math.PI * 2, true);
 		worldCtx.fill();
-		worldCtx.fillText(i + " (" + avgReward + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
+		worldCtx.fillText(i + " (" + avgR + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
 		worldCtx.stroke();
 
 		// Draw agents sight
@@ -214,6 +224,7 @@ function drawWorld() {
 			worldCtx.lineTo(aEyeX, aEyeY);
 			worldCtx.stroke();
 		}
+		agent.brain.visSelf(document.getElementById('brain_info_div_' + i));
 	}
 
 	// Draw items
@@ -228,10 +239,6 @@ function drawWorld() {
 		worldCtx.arc(item.pos.x, item.pos.y, item.rad, 0, Math.PI * 2, true);
 		worldCtx.fill();
 		worldCtx.stroke();
-	}
-
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		w.agents[i].brain.visSelf(document.getElementById('brain_info_div_' + i));
 	}
 }
 
@@ -248,45 +255,45 @@ function drawNet(netElement) {
 			return;  // do this sparingly
 	}
 
-	var netCanvas = document.getElementById(netElement),
+	var netCanvas = document.getElementById(netElement + "_"),
 		netCtx = netCanvas.getContext("2d"),
 		W = netCanvas.width,
 		H = netCanvas.height,
-		L = w.agents[0].brain.value_net.layers,
-		dx = (W - 50) / L.length,
 		X = 10,
 		Y = 40;
-
 	netCtx.clearRect(0, 0, W, H);
 	netCtx.font = "12px Verdana";
 	netCtx.fillStyle = "rgb(0,0,0)";
 	netCtx.fillText("Value Function Approximating Neural Network:", 10, 14);
 
-	for (var k = 0; k < L.length; k++) {
-		if (typeof (L[k].out_act) === 'undefined') {
-			continue; // maybe not yet ready
-		}
-		var kw = L[k].out_act.w,
-				n = kw.length,
-				dy = (H - 50) / n;
-
-		netCtx.fillStyle = "rgb(0,0,0)";
-		netCtx.fillText(L[k].layer_type + "(" + n + ")", X, 35);
-		for (var q = 0; q < n; q++) {
-			var v = Math.floor(kw[q] * 100);
-			if (v >= 0)
-				netCtx.fillStyle = "rgb(0,0," + v + ")";
-			if (v < 0)
-				netCtx.fillStyle = "rgb(" + (-v) + ",0,0)";
-			netCtx.fillRect(X, Y, 10, 10);
-			Y += 12;
-			if (Y > H - 25) {
-				Y = 40;
-				X += 12;
+	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var L = w.agents[i].brain.value_net.layers;
+		for (var k = 0; k < L.length; k++) {
+			if (typeof (L[k].out_act) === 'undefined') {
+				continue; // maybe not yet ready
 			}
+			var kw = L[k].out_act.w,
+					n = kw.length,
+					dy = (H - 50) / n;
+
+			netCtx.fillStyle = "rgb(0,0,0)";
+			netCtx.fillText(L[k].layer_type + "(" + n + ")", X, 35);
+			for (var q = 0; q < n; q++) {
+				var v = Math.floor(kw[q] * 100);
+				if (v >= 0)
+					netCtx.fillStyle = "rgb(0,0," + v + ")";
+				if (v < 0)
+					netCtx.fillStyle = "rgb(" + (-v) + ",0,0)";
+				netCtx.fillRect(X, Y, 10, 10);
+				Y += 12;
+				if (Y > H - 25) {
+					Y = 40;
+					X += 12;
+				}
+			}
+			X += 50;
+			Y = 40;
 		}
-		X += 50;
-		Y = 40;
 	}
 }
 
@@ -297,24 +304,23 @@ function drawNet(netElement) {
  * @returns {undefined}
  */
 function drawStats(graphElement, visElement) {
-	var visCanvas = document.getElementById(visElement),
-		graphCanvas = document.getElementById(graphElement),
-		visCtx = visCanvas.getContext("2d"),
-		W = visCanvas.width,
-		H = visCanvas.height,
-		avgWins = [];
-
-	visCtx.clearRect(0, 0, W, H);
-	visCtx.strokeStyle = "rgb(0,0,0)";
-	visCtx.font = "12px Verdana";
-	visCtx.fillText("Current state:", 10, 10);
-	visCtx.lineWidth = 10;
-
 	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var visCanvas = document.getElementById(visElement + '_' + i),
+			visCtx = visCanvas.getContext("2d"),
+			W = visCanvas.width,
+			H = visCanvas.height,
+			avgWins = [];
+
+		visCtx.clearRect(0, 0, W, H);
+		visCtx.strokeStyle = "rgb(0,0,0)";
+		visCtx.font = "12px Verdana";
+		visCtx.fillText("Current state:", 10, 10);
+		visCtx.lineWidth = 10;
+
 		var agent = w.agents[i],
 			brain = agent.brain,
 			netin = brain.last_input_array;
-		
+
 		visCtx.beginPath();
 		for (var k = 0, nl = netin.length; k < nl; k++) {
 			visCtx.moveTo(10 + k * 12, 120);
@@ -323,10 +329,9 @@ function drawStats(graphElement, visElement) {
 		visCtx.stroke();
 		avgWins.push(brain.avgRewardWindow.getAverage());
 	}
+
 	if (w.clock % 200 === 0) {
 		w.rewardGraph.add(w.clock / 200, avgWins);
-		w.rewardGraph.drawSelf(graphCanvas);
+		w.rewardGraph.drawSelf(document.getElementById(graphElement));
 	}
-
-	
 }

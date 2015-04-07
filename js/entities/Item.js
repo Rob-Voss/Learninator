@@ -13,7 +13,7 @@ var Item = Item || {REVISION: '0.1'};
 	Item = function (x, y, type) {
 		this.pos = new Vec(x, y); // position
 		this.type = type; // type of item
-		this.rad = 5; // default radius
+		this.rad = 10; // default radius
 		this.age = 0;
 		this.cleanUp = false;
 	};
