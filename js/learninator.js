@@ -11,10 +11,10 @@ var w;
 var worldCanvas;
 
 /**
- * Canvas context
- * @type {Graph.context}
+ * Canvas
+ * @type {Canvas}
  */
-var worldCtx;
+var graphCanvas;
 
 /**
  * Interval id
@@ -39,17 +39,9 @@ var simSpeed = 2;
  */
 function start() {
 	worldCanvas = document.getElementById("world_canvas");
-	worldCtx = worldCanvas.getContext("2d");
-	worldCanvas.addEventListener('click', eventClick, false);
-
-	// canvas element cannot get focus by default. Requires to either set
-	// tabindex to 1 so that it's focusable, or we need to attach listeners
-	// to the document. Here we do the latter
-	document.addEventListener('keyup', eventKeyUp, true);
-	document.addEventListener('keydown', eventKeyDown, true);
+	graphCanvas = document.getElementById("graph_canvas");
 
 	var agents = [new Agent(10), new Agent(10)];
-
 	var maze = new Maze(worldCanvas, 5, 5);
 	maze.generate();
 	maze.draw();
@@ -57,31 +49,33 @@ function start() {
 	// We are going to use a maze for the environment and give it two agents
 	w = new World(worldCanvas, maze.cells, agents);
 
-	w.maze = maze;
-	w.agents = agents;
+	// Globals blech
 	w.memoryBank = document.getElementById('memoryBank');
 	w.brainSpecs = document.getElementById('brainSpecs');
-	w.rewardGraph = new MultiGraph([0,1]);
 
-	go('max');
+	w.rewardGraph = new Graph(graphCanvas.width, graphCanvas.height, [0,1]);
+
+	go('mid');
 }
 
-function mouseClick(x, y) {
+function mouseClick (x, y) {
+	w.drawBubble(x, y, 20, 20, 10);
+	console.log(x + ':' + y);
+};
 
-}
-
-function keyUp(key) {
+function keyUp (key) {
 	if (TICK === null) {
-		TICK = setInterval(NPGtick, 1000 / FPS);
+		TICK = setInterval(this.NPG.NPGtick, 1000 / this.NPG.FPS);
 	} else {
 		clearInterval(TICK);
 		TICK = null;
 	}
-}
+	console.log(key);
+};
 
-function keyDown(key) {
-
-}
+function keyDown (key) {
+	console.log(key);
+};
 
 /**
  * Tick the world
@@ -89,9 +83,8 @@ function keyDown(key) {
 function tick() {
 	w.tick();
 	if (!skipDraw || w.clock % 50 === 0) {
-		drawWorld();
-//		drawStats("graph_canvas", "vis_canvas");
-//		drawNet("net_canvas");
+		w.drawSelf();
+		drawStats();
 	}
 }
 
@@ -100,7 +93,6 @@ function tick() {
  */
 function reload() {
 	w.agents = [new Agent(10), new Agent(10)];
-	w.rewardGraph = new MultiGraph([0,1]);
 }
 
 /**
@@ -186,93 +178,10 @@ function stopLearnin(id) {
 }
 
 /**
- * Draw ALL TEH THINGS!!
- * @returns {undefined}
- */
-function drawWorld() {
-	worldCtx.clearRect(0, 0, worldCanvas.width, worldCanvas.height);
-	worldCtx.lineWidth = 1;
-
-	// Draw the walls in environment
- 	worldCtx.strokeStyle = "rgb(0,0,0)";
- 	worldCtx.beginPath();
- 	for (var i = 0, n = w.cells.length; i < n; i++) {
- 		var q = w.cells[i];
- 		worldCtx.moveTo(q.v1.x, q.v1.y);
- 		worldCtx.lineTo(q.v2.x, q.v2.y);
- 	}
- 	worldCtx.stroke();
-
-	// Draw the agents
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		var agent = w.agents[i],
-			brain = agent.brain,
-			// Color the agents based on the reward it is experiencing at the moment
-			reward = Math.floor(brain.latest_reward * 200),
-			rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-			avgR = brain.avgRewardWindow.getAverage().toFixed(1),
-			avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
-
-		worldCtx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
-		worldCtx.strokeStyle = "rgb(0,0,0)";
-
-		// Draw agents body
-		worldCtx.beginPath();
-		worldCtx.arc(agent.oldPos.x, agent.oldPos.y, agent.rad, 0, Math.PI * 2, true);
-		worldCtx.fill();
-		worldCtx.fillText(i + " (" + avgR + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
-		worldCtx.stroke();
-
-		// Draw agents sight
-		for (var ei = 0, nEye = agent.numEyes; ei < nEye; ei++) {
-			var eye = agent.eyes[ei],
-				eyeProx = eye.sensedProximity;
-			// Is it wall or nothing?
-			if (eye.sensedType === -1 || eye.sensedType === 0) {
-				worldCtx.strokeStyle = "rgb(0,0,0)";
-			}
-			// It is noms
-			if (eye.sensedType === 1) {
-				worldCtx.strokeStyle = "rgb(255,150,150)";
-			}
-			// It is gnar gnar
-			if (eye.sensedType === 2) {
-				worldCtx.strokeStyle = "rgb(150,255,150)";
-			}
-
-			var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle),
-				aEyeY = agent.oldPos.y + eyeProx * Math.cos(agent.oldAngle + eye.angle);
-
-			// Draw the agent's line of sights
-			worldCtx.beginPath();
-			worldCtx.moveTo(agent.oldPos.x, agent.oldPos.y);
-			worldCtx.lineTo(aEyeX, aEyeY);
-			worldCtx.stroke();
-		}
-		agent.brain.visSelf(document.getElementById('brain_info_div_' + i));
-	}
-
-	// Draw items
-	worldCtx.strokeStyle = "rgb(0,0,0)";
-	for (var i = 0, n = w.items.length; i < n; i++) {
-		var item = w.items[i];
-		if (item.type === 1)
-			worldCtx.fillStyle = "rgb(255, 150, 150)";
-		if (item.type === 2)
-			worldCtx.fillStyle = "rgb(150, 255, 150)";
-		worldCtx.beginPath();
-		worldCtx.arc(item.pos.x, item.pos.y, item.rad, 0, Math.PI * 2, true);
-		worldCtx.fill();
-		worldCtx.stroke();
-	}
-}
-
-/**
  * Draw the neural network representation
- * @param {String} netElement
  * @returns {undefined}
  */
-function drawNet(netElement) {
+function drawNet() {
 	if (simSpeed <= 1) {
 		// we will always draw at these speeds
 	} else {
@@ -280,19 +189,20 @@ function drawNet(netElement) {
 			return;  // do this sparingly
 	}
 
-	var netCanvas = document.getElementById(netElement + "_"),
-		netCtx = netCanvas.getContext("2d"),
-		W = netCanvas.width,
-		H = netCanvas.height,
-		X = 10,
-		Y = 40;
-	netCtx.clearRect(0, 0, W, H);
-	netCtx.font = "12px Verdana";
-	netCtx.fillStyle = "rgb(0,0,0)";
-	netCtx.fillText("Value Function Approximating Neural Network:", 10, 14);
-
 	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var netCanvas = document.getElementById("net_canvas_" + i),
+			netCtx = netCanvas.getContext("2d"),
+			W = netCanvas.width,
+			H = netCanvas.height,
+			X = 10,
+			Y = 40;
+		netCtx.clearRect(0, 0, W, H);
+		netCtx.font = "12px Verdana";
+		netCtx.fillStyle = "rgb(0,0,0)";
+		netCtx.fillText("Value Function Approximating Neural Network:", 10, 14);
+
 		var L = w.agents[i].brain.value_net.layers;
+
 		for (var k = 0; k < L.length; k++) {
 			if (typeof (L[k].out_act) === 'undefined') {
 				continue; // maybe not yet ready
@@ -324,17 +234,15 @@ function drawNet(netElement) {
 
 /**
  * Draw the graphs and visualizations
- * @param {String} graphElement
- * @param {String} visElement
  * @returns {undefined}
  */
-function drawStats(graphElement, visElement) {
+function drawStats() {
+	var pts = [];
 	for (var i = 0, n = w.agents.length; i < n; i++) {
-		var visCanvas = document.getElementById(visElement + '_' + i),
+		var visCanvas = document.getElementById("vis_canvas_" + i),
 			visCtx = visCanvas.getContext("2d"),
 			W = visCanvas.width,
-			H = visCanvas.height,
-			avgWins = [];
+			H = visCanvas.height;
 
 		visCtx.clearRect(0, 0, W, H);
 		visCtx.strokeStyle = "rgb(0,0,0)";
@@ -352,11 +260,11 @@ function drawStats(graphElement, visElement) {
 			visCtx.lineTo(10 + k * 12, 120 - netin[k] * 100);
 		}
 		visCtx.stroke();
-		avgWins.push(brain.avgRewardWindow.getAverage());
+		pts.push(brain.avgRewardWindow.getAverage());
 	}
 
 	if (w.clock % 200 === 0) {
-		w.rewardGraph.add(w.clock / 200, avgWins);
-		w.rewardGraph.drawSelf(document.getElementById(graphElement));
+		w.rewardGraph.add(w.clock / 200, pts);
+		w.rewardGraph.drawSelf(graphCanvas);
 	}
 }

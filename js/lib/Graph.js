@@ -5,21 +5,33 @@ var Graph = Graph || {REVISION: '0.1'};
 
 	/**
 	 * Same as MultiGraph but draws a single line
-	 * @param {Number} width
-	 * @param {Number} height
+	 * @param {Array} legend
 	 * @param {Object} options
 	 * @returns {Graph}
 	 */
-	var Graph = function (width, height, options) {
+	var Graph = function (width, height, legend, options) {
 		var options = options || {};
 		this.step_horizon = options.step_horizon || 1000;
+
+		if (typeof options.maxy !== 'undefined')
+			this.maxy_forced = options.maxy;
+		if (typeof options.miny !== 'undefined')
+			this.miny_forced = options.miny;
+
 		this.width = width;
 		this.height = height;
 		this.maxy = -9999;
 		this.miny = 9999;
+
 		this.cells = [];
-		this.pts = [];
 		this.removedEdges = [];
+
+		this.pts = [];
+		if (typeof legend !== 'undefined') {
+			this.numlines = legend.length;
+			this.legend = legend;
+			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
+		}
 		self = this;
 
 		for (var i = 0; i < this.width; i++) {
@@ -73,7 +85,7 @@ var Graph = Graph || {REVISION: '0.1'};
 			var f2t = function(x) {
 				var dd = 1.0 * Math.pow(10, 2);
 				return '' + Math.floor(x * dd) / dd;
-			}
+			};
 
 			ctx.strokeStyle = "#999";
 			ctx.beginPath();
@@ -96,6 +108,13 @@ var Graph = Graph || {REVISION: '0.1'};
 			if (N < 2)
 				return;
 
+			// Draw legend
+			for (var k = 0; k < this.numlines; k++) {
+				ctx.fillStyle = this.styles[k % this.styles.length];
+				ctx.fillText(this.legend[k], W - pad - 100, pad + 20 + k * 16);
+			}
+			ctx.fillStyle = "black";
+
 			// draw the actual curve
 			var t = function(x, y, s) {
 				var tx = x / s.step_horizon * (W - pad * 2) + pad,
@@ -105,20 +124,23 @@ var Graph = Graph || {REVISION: '0.1'};
 						ty:ty
 					};
 				return txty;
-			}
+			};
 
-			ctx.strokeStyle = "red";
-			ctx.beginPath()
-			for (var i = 0; i < N; i++) {
-				// draw line from i-1 to i
-				var p = this.pts[i];
-					var pt = t(p.step, p.y, this);
-					if (i === 0)
+			for (var k = 0; k < this.numlines; k++) {
+				ctx.strokeStyle = this.styles[k % this.styles.length];
+				ctx.beginPath();
+				for (var i = 0; i < N; i++) {
+					// Draw line from i-1 to i
+					var p = this.pts[i];
+					var pt = t(p.step, p.y[k], this);
+					if (i === 0) {
 						ctx.moveTo(pt.tx, pt.ty);
-					else
+					} else {
 						ctx.lineTo(pt.tx, pt.ty);
+					}
+				}
+				ctx.stroke();
 			}
-			ctx.stroke();
 		},
 		/**
 		 * Get a vector at a specific point
