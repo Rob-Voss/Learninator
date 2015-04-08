@@ -264,7 +264,7 @@ function drawStats() {
 	}
 
 	if (w.clock % 200 === 0) {
-		w.rewardGraph.add(w.clock / 200, pts);
-		w.rewardGraph.drawSelf(graphCanvas);
+		w.rewardGraph.addPoint(w.clock / 200, pts);
+		w.rewardGraph.drawPoints(graphCanvas);
 	}
 }
