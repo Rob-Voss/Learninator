@@ -6,20 +6,30 @@ var World = World || {REVISION: '0.1'};
 	/**
 	 * Make a World
 	 * @param {Graph} canvas
-	 * @param {Array} walls
+	 * @param {Array} cells
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	World = function (canvas, walls, agents) {
+	var World = function (canvas, cells, agents) {
+		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d");
 		this.W = canvas.width;
 		this.H = canvas.height;
 
-		this.walls = walls;
+		this.cells = cells;
 		this.agents = agents;
 		this.items = [];
 
 		this.clock = 0;
 		this.numItems = 100;
+		this.FPS = 60;
+
+		canvas.addEventListener('click', this.eventClick, false);
+		// Canvas can't get focus by default, so we need to attach listeners to the document.
+		document.addEventListener('keyup', this.eventKeyUp, true);
+		document.addEventListener('keydown', this.eventKeyDown, true);
+
+		setInterval(this.NPGtick, 1000 / this.FPS);
 	};
 
 	/**
@@ -27,23 +37,52 @@ var World = World || {REVISION: '0.1'};
 	 * @type World
 	 */
 	World.prototype = {
+		NPGtick: function() {
+
+		},
+		eventClick: function (e) {
+			var x, y;
+			if (e.pageX || e.pageY) {
+				x = e.pageX;
+				y = e.pageY;
+			} else {
+				x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+				y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+			}
+			x -= e.currentTarget.offsetLeft;
+			y -= e.currentTarget.offsetTop;
+
+			// call user-defined callback
+			mouseClick(x, y, e.shiftKey, e.ctrlKey);
+		},
+		eventKeyUp: function (e) {
+			/**
+			 * http://www.aspdotnetfaq.com/Faq/What-is-the-list-of-KeyCodes-for-JavaScript-KeyDown-KeyPress-and-KeyUp-events.aspx
+			 */
+			var keycode = ('which' in e) ? e.which : e.keyCode;
+			keyUp(keycode);
+		},
+		eventKeyDown: function (e) {
+			var keycode = ('which' in e) ? e.which : e.keyCode;
+			keyDown(keycode);
+		},
 		/**
-		 * A helper function to get closest colliding walls/items
+		 * A helper function to get closest colliding cells/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
-		 * @param {Boolean} checkWalls
+		 * @param {Boolean} checkCells
 		 * @param {Boolean} checkItems
 		 */
-		collisionCheck: function (v1, v2, checkWalls, checkItems) {
+		collisionCheck: function (v1, v2, checkCells, checkItems) {
 			var minRes = false;
 
-			// Collide with walls
-			if (checkWalls) {
-				for (var i = 0, n = this.walls.length; i < n; i++) {
-					var wall = this.walls[i];
-					var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
+			// Collide with cells
+			if (checkCells) {
+				for (var i = 0, n = this.cells.length; i < n; i++) {
+					var cell = this.cells[i];
+					var wResult = Utility.lineIntersect(v1, v2, cell.v1, cell.v2);
 					if (wResult) {
-						wResult.type = 0; // 0 is wall
+						wResult.type = 0; // 0 is cell
 						if (!minRes) {
 							minRes = wResult;
 						} else {
@@ -141,7 +180,7 @@ var World = World || {REVISION: '0.1'};
 				if (agent.angle > 2 * Math.PI)
 					agent.angle -= 2 * Math.PI;
 
-				// The agent is trying to move from pos to oPos so we need to check walls
+				// The agent is trying to move from pos to oPos so we need to check cells
 				if (this.collisionCheck(agent.oldPos, agent.pos, true, false)) {
 					// The agent derped! Wall collision! Reset their position
 					agent.pos = agent.oldPos;
@@ -215,6 +254,10 @@ var World = World || {REVISION: '0.1'};
 				this.agents[i].backward();
 			}
 		},
+		/**
+		 * Populate the World with Items
+		 * @returns {undefined}
+		 */
 		populate: function () {
 			for (var k = 0; k < this.numItems; k++) {
 				var x = convnetjs.randf(20, this.W - 20),
@@ -223,6 +266,116 @@ var World = World || {REVISION: '0.1'};
 					item = new Item(x, y, type);
 				this.items.push(item);
 			}
+		},
+		drawSelf: function () {
+			this.ctx.clearRect(0, 0, this.W, this.H);
+			this.ctx.lineWidth = 1;
+
+			// Draw the walls in environment
+			this.ctx.strokeStyle = "rgb(0,0,0)";
+			this.ctx.beginPath();
+			for (var i = 0, n = this.cells.length; i < n; i++) {
+				var q = this.cells[i];
+				this.ctx.moveTo(q.v1.x, q.v1.y);
+				this.ctx.lineTo(q.v2.x, q.v2.y);
+			}
+			this.ctx.stroke();
+
+			// Draw the agents
+			for (var i = 0, n = this.agents.length; i < n; i++) {
+				var agent = this.agents[i],
+					brain = agent.brain,
+					// Color the agents based on the reward it is experiencing at the moment
+					reward = Math.floor(brain.latest_reward * 200),
+					rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
+					avgR = brain.avgRewardWindow.getAverage().toFixed(1),
+					avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
+
+				this.ctx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
+				this.ctx.strokeStyle = "rgb(0,0,0)";
+
+				// Draw agents body
+				this.ctx.beginPath();
+				this.ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.rad, 0, Math.PI * 2, true);
+				this.ctx.fill();
+				this.ctx.fillText(i + " (" + avgR + ")", agent.oldPos.x + agent.rad * 2, agent.oldPos.y + agent.rad * 2);
+				this.ctx.stroke();
+
+				// Draw agents sight
+				for (var ei = 0, nEye = agent.numEyes; ei < nEye; ei++) {
+					var eye = agent.eyes[ei],
+						eyeProx = eye.sensedProximity;
+					// Is it wall or nothing?
+					if (eye.sensedType === -1 || eye.sensedType === 0) {
+						this.ctx.strokeStyle = "rgb(0,0,0)";
+					}
+					// It is noms
+					if (eye.sensedType === 1) {
+						this.ctx.strokeStyle = "rgb(255,150,150)";
+					}
+					// It is gnar gnar
+					if (eye.sensedType === 2) {
+						this.ctx.strokeStyle = "rgb(150,255,150)";
+					}
+
+					var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle),
+						aEyeY = agent.oldPos.y + eyeProx * Math.cos(agent.oldAngle + eye.angle);
+
+					// Draw the agent's line of sights
+					this.ctx.beginPath();
+					this.ctx.moveTo(agent.oldPos.x, agent.oldPos.y);
+					this.ctx.lineTo(aEyeX, aEyeY);
+					this.ctx.stroke();
+				}
+				agent.brain.visSelf(document.getElementById('brain_info_div_' + i));
+			}
+
+			// Draw items
+			this.ctx.strokeStyle = "rgb(0,0,0)";
+			for (var i = 0, n = this.items.length; i < n; i++) {
+				var item = this.items[i];
+				if (item.type === 1)
+					this.ctx.fillStyle = "rgb(255, 150, 150)";
+				if (item.type === 2)
+					this.ctx.fillStyle = "rgb(150, 255, 150)";
+				this.ctx.beginPath();
+				this.ctx.arc(item.pos.x, item.pos.y, item.rad, 0, Math.PI * 2, true);
+				this.ctx.fill();
+				this.ctx.stroke();
+			}
+		},
+		drawBubble: function(x, y, w, h, radius) {
+			var r = x + w;
+			var b = y + h;
+			this.ctx.beginPath();
+			this.ctx.strokeStyle = "black";
+			this.ctx.lineWidth = "2";
+			this.ctx.moveTo(x + radius, y);
+			this.ctx.lineTo(x + radius / 2, y - 10);
+			this.ctx.lineTo(x + radius * 2, y);
+			this.ctx.lineTo(r - radius, y);
+			this.ctx.quadraticCurveTo(r, y, r, y + radius);
+			this.ctx.lineTo(r, y + h - radius);
+			this.ctx.quadraticCurveTo(r, b, r - radius, b);
+			this.ctx.lineTo(x + radius, b);
+			this.ctx.quadraticCurveTo(x, b, x, b - radius);
+			this.ctx.lineTo(x, y + radius);
+			this.ctx.quadraticCurveTo(x, y, x + radius, y);
+			this.ctx.stroke();
+		},
+		drawRect: function(x, y, w, h) {
+			this.ctx.beginPath();
+			this.ctx.rect(x, y, w, h);
+			this.ctx.closePath();
+			this.ctx.fill();
+			this.ctx.stroke();
+		},
+		drawCircle: function(x, y, r) {
+			this.ctx.beginPath();
+			this.ctx.arc(x, y, r, 0, Math.PI * 2, true);
+			this.ctx.closePath();
+			this.ctx.stroke();
+			this.ctx.fill();
 		}
 	};
 

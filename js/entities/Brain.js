@@ -29,7 +29,7 @@ var Brain = Brain || {REVISION: '0.1'};
 	 * @param {Object} options
 	 * @returns {Brain}
 	 */
-	Brain = function (numStates, numActions, options) {
+	var Brain = function (numStates, numActions, options) {
 		var opt = options || {};
 		// in number of time steps, of temporal memory
 		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
@@ -117,11 +117,11 @@ var Brain = Brain || {REVISION: '0.1'};
 		} else {
 			// create a very simple neural net by default
 			var inputLayer = {
-					type: 'input',
-					out_sx: 1,
-					out_sy: 1,
-					out_depth: this.net_inputs
-				};
+				type: 'input',
+				out_sx: 1,
+				out_sy: 1,
+				out_depth: this.net_inputs
+			};
 			layer_defs.push(inputLayer);
 
 			if (typeof opt.hidden_layer_sizes !== 'undefined') {
@@ -129,10 +129,10 @@ var Brain = Brain || {REVISION: '0.1'};
 				var hl = opt.hidden_layer_sizes;
 				for (var k = 0; k < hl.length; k++) {
 					var layer = {
-							type: 'fc',
-							num_neurons: hl[k],
-							activation: 'relu'
-						};
+						type: 'fc',
+						num_neurons: hl[k],
+						activation: 'relu'
+					};
 					layer_defs.push(layer); // relu by default
 				}
 			}
@@ -147,11 +147,11 @@ var Brain = Brain || {REVISION: '0.1'};
 
 		// and finally we need a Temporal Difference Learning trainer!
 		var tdtrainer_options = {
-				learning_rate: 0.01,
-				momentum: 0.0,
-				batch_size: 64,
-				l2_decay: 0.01
-			};
+			learning_rate: 0.01,
+			momentum: 0.0,
+			batch_size: 64,
+			l2_decay: 0.01
+		};
 		if (typeof opt.tdtrainer_options !== 'undefined') {
 			tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
 		}
@@ -172,11 +172,13 @@ var Brain = Brain || {REVISION: '0.1'};
 	};
 
 	Brain.prototype = {
+		/**
+		 * Returns a random action
+		 * In the future we can set some actions to be more or less likely
+		 * at "rest"/default state.
+		 * @returns {Number}
+		 */
 		random_action: function () {
-			// a bit of a helper function. It returns a random action
-			// we are abstracting this away because in future we may want to
-			// do more sophisticated things. For example some actions could be more
-			// or less likely at "rest"/default state.
 			if (this.random_action_distribution.length === 0) {
 				return convnetjs.randi(0, this.num_actions);
 			} else {
@@ -191,25 +193,39 @@ var Brain = Brain || {REVISION: '0.1'};
 				}
 			}
 		},
+		/**
+		 * Compute the value of doing any action in this state and return the
+		 * argmax action and its value
+		 * @param {type} s
+		 * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
+		 */
 		policy: function (s) {
-			// compute the value of doing any action in this state
-			// and return the argmax action and its value
 			var svol = new convnetjs.Vol(1, 1, this.net_inputs);
 			svol.w = s;
-			var action_values = this.value_net.forward(svol);
-			var maxk = 0;
-			var maxval = action_values.w[0];
+
+			var action_values = this.value_net.forward(svol),
+				maxk = 0,
+				maxval = action_values.w[0];
 			for (var k = 1; k < this.num_actions; k++) {
 				if (action_values.w[k] > maxval) {
 					maxk = k;
 					maxval = action_values.w[k];
 				}
 			}
-			return {action: maxk, value: maxval};
+			var actionValue = {
+				action: maxk,
+				value: maxval
+			};
+
+			return actionValue;
 		},
+		/**
+		 * Return s = (x,a,x,a,x,a,xt) state vector.
+		 * It's a concatenation of last window_size (x,a) pairs and current state x
+		 * @param {type} xt
+		 * @returns {Array|@exp;Array}
+		 */
 		getNetInput: function (xt) {
-			// return s = (x,a,x,a,x,a,xt) state vector.
-			// It's a concatenation of last window_size (x,a) pairs and current state x
 			var w = [];
 			w = w.concat(xt); // start with current state
 			// and now go backwards and append states and actions from history temporal_window times
@@ -220,15 +236,20 @@ var Brain = Brain || {REVISION: '0.1'};
 				// action, encoded as 1-of-k indicator vector. We scale it up a bit because
 				// we dont want weight regularization to undervalue this information, as it only exists once
 				var action1ofk = new Array(this.num_actions);
-				for (var q = 0; q < this.num_actions; q++)
+				for (var q = 0; q < this.num_actions; q++) {
 					action1ofk[q] = 0.0;
+				}
 				action1ofk[this.action_window[n - 1 - k]] = 1.0 * this.num_states;
 				w = w.concat(action1ofk);
 			}
 			return w;
 		},
+		/**
+		 * Compute forward (behavior) pass given the input neuron signals from body
+		 * @param {Array} input_array
+		 * @returns {Number|maxact.action}
+		 */
 		forward: function (input_array) {
-			// compute forward (behavior) pass given the input neuron signals from body
 			this.forward_passes += 1;
 			this.last_input_array = input_array; // back this up
 
@@ -269,6 +290,11 @@ var Brain = Brain || {REVISION: '0.1'};
 
 			return action;
 		},
+		/**
+		 *
+		 * @param {Number} reward
+		 * @returns {undefined}
+		 */
 		backward: function (reward) {
 			this.latest_reward = reward;
 			this.avgRewardWindow.add(reward);
@@ -285,8 +311,8 @@ var Brain = Brain || {REVISION: '0.1'};
 			// it is time t+1 and we have to store (s_t, a_t, r_t, s_{t+1}) as new experience
 			// (given that an appropriate number of state measurements already exist, of course)
 			if (this.forward_passes > this.temporal_window + 1) {
-				var e = new Experience();
-				var n = this.window_size;
+				var e = new Experience(),
+					n = this.window_size;
 				e.state0 = this.net_window[n - 2];
 				e.action0 = this.action_window[n - 2];
 				e.reward0 = this.reward_window[n - 2];
@@ -305,14 +331,17 @@ var Brain = Brain || {REVISION: '0.1'};
 			if (this.experience.length > this.start_learn_threshold) {
 				var avcost = 0.0;
 				for (var k = 0; k < this.tdtrainer.batch_size; k++) {
-					var re = convnetjs.randi(0, this.experience.length);
-					var e = this.experience[re];
-					var x = new convnetjs.Vol(1, 1, this.net_inputs);
+					var re = convnetjs.randi(0, this.experience.length),
+						e = this.experience[re],
+						x = new convnetjs.Vol(1, 1, this.net_inputs);
 					x.w = e.state0;
-					var maxact = this.policy(e.state1);
-					var r = e.reward0 + this.gamma * maxact.value;
-					var ystruct = {dim: e.action0, val: r};
-					var loss = this.tdtrainer.train(x, ystruct);
+					var maxact = this.policy(e.state1),
+						r = e.reward0 + this.gamma * maxact.value,
+						yStruct = {
+							dim: e.action0,
+							val: r
+						},
+						loss = this.tdtrainer.train(x, yStruct);
 					avcost += loss.loss;
 				}
 				avcost = avcost / this.tdtrainer.batch_size;
@@ -323,11 +352,10 @@ var Brain = Brain || {REVISION: '0.1'};
 			element.innerHTML = ''; // erase element first
 
 			// element is a DOM element that this function fills with brain-related information
-			var brainvis = document.createElement('div');
-
-			// basic information
-			var desc = document.createElement('div');
-			var t = '<br>';
+			var brainvis = document.createElement('div'),
+				// basic information
+				desc = document.createElement('div'),
+				t = '<br>';
 			t += 'Age: ' + this.age + '<br>';
 			t += 'Avg Loss: ' + this.avgLossWindow.getAverage() + '<br />';
 			t += 'Avg Reward: ' + this.avgRewardWindow.getAverage() + '<br />';

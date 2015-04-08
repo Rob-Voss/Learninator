@@ -17,9 +17,10 @@ var Agent = Agent || {REVISION: '0.1'};
 
 	/**
 	 * A single agent
-	 * @returns {Agent}
+	 * @param {Number} radius
+	 * @returns {Agent_L3.Agent}
 	 */
-	Agent = function (radius) {
+	var Agent = function (radius) {
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
 
@@ -185,6 +186,6 @@ var Agent = Agent || {REVISION: '0.1'};
 	};
 
 	global.Agent = Agent;
-	
+
 }(this));
 

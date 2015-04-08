@@ -10,7 +10,7 @@ var Window = Window || {REVISION: '0.1'};
 	 * @param {Number} minSize
 	 * @returns {undefined}
 	 */
-	Window = function (size, minSize) {
+	var Window = function (size, minSize) {
 		this.v = [];
 		this.size = typeof (size) === 'undefined' ? 100 : size;
 		this.minsize = typeof (minSize) === 'undefined' ? 20 : minSize;
@@ -18,9 +18,14 @@ var Window = Window || {REVISION: '0.1'};
 	};
 
 	/**
-	 *
+	 * 
 	 */
 	Window.prototype = {
+		/**
+		 * Add a value
+		 * @param {type} x
+		 * @returns {undefined}
+		 */
 		add: function (x) {
 			this.v.push(x);
 			this.sum += x;
@@ -29,6 +34,10 @@ var Window = Window || {REVISION: '0.1'};
 				this.sum -= xold;
 			}
 		},
+		/**
+		 * Get the average of all
+		 * @returns {Window_L3.Window.v.length|Number}
+		 */
 		getAverage: function () {
 			if (this.v.length < this.minsize) {
 				return -1;
@@ -36,12 +45,16 @@ var Window = Window || {REVISION: '0.1'};
 				return this.sum / this.v.length;
 			}
 		},
-		reset: function (x) {
+		/**
+		 * Reset the Window
+		 * @returns {undefined}
+		 */
+		reset: function () {
 			this.v = [];
 			this.sum = 0;
 		}
 	};
 
 	global.Window = Window;
-	
+
 }(this));

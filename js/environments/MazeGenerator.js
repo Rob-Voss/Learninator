@@ -4,12 +4,12 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 	"use strict";
 
 	/**
-	 *
+	 * Maze Generator
 	 * @param {Number} rows
 	 * @param {Number} cols
 	 * @returns {MazeGenerator_L3.MazeGenerator}
 	 */
-	MazeGenerator = function (rows, cols) {
+	var MazeGenerator = function (rows, cols) {
 		this.graph = new Graph(rows, cols);
 		this.cellStack = [];
 		this.path = [];
@@ -20,6 +20,11 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 	 * @type Maze
 	 */
 	MazeGenerator.prototype = {
+		/**
+		 * Recurse through a Cell's neighboors
+		 * @param {Cell} cell
+		 * @returns {undefined}
+		 */
 		recurse: function (cell) {
 			cell.visit();
 			var neighbors = this.graph.unvisitedNeighbors(cell);
@@ -35,6 +40,10 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 				}
 			}
 		},
+		/**
+		 * Solve the Maze
+		 * @returns {undefined}
+		 */
 		solve: function () {
 			var closedSet = [],
 				// Top left cell
@@ -75,6 +84,10 @@ var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
 				});
 			}
 		},
+		/**
+		 * Build the maze
+		 * @returns {undefined}
+		 */
 		generate: function () {
 			var initialCell = this.graph.getVecAt(1, 1);
 			this.recurse(initialCell);

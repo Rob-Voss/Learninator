@@ -10,7 +10,7 @@ var Utility = Utility || {REVISION: '0.1'};
 		} // ... ;s
 
 		var maxv = w[0], minv = w[0], maxi = 0, mini = 0;
-		
+
 		for (var i = 1; i < w.length; i++) {
 			if (w[i] > maxv) {
 				maxv = w[i];
@@ -44,6 +44,7 @@ var Utility = Utility || {REVISION: '0.1'};
 
 		return '' + Math.floor(x * dd) / dd;
 	};
+
 	/**
 	 * Find the position of intersect between a line and a point
 	 * @param {Vec} v1
@@ -84,6 +85,7 @@ var Utility = Utility || {REVISION: '0.1'};
 		}
 		return false;
 	};
+
 	/**
 	 * Line intersection helper function: line segment (v1,v2) intersect segment (v3,v4)
 	 * @param {Vec} v1
@@ -127,6 +129,7 @@ var Utility = Utility || {REVISION: '0.1'};
 		}
 		return false;
 	};
+	
 	/**
 	 * Add a box
 	 * @param {List} lst
