@@ -40,6 +40,13 @@ var simSpeed = 2;
 function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	worldCtx = worldCanvas.getContext("2d");
+	worldCanvas.addEventListener('click', eventClick, false);
+
+	// canvas element cannot get focus by default. Requires to either set
+	// tabindex to 1 so that it's focusable, or we need to attach listeners
+	// to the document. Here we do the latter
+	document.addEventListener('keyup', eventKeyUp, true);
+	document.addEventListener('keydown', eventKeyDown, true);
 
 	var agents = [new Agent(10), new Agent(10)];
 
@@ -57,6 +64,23 @@ function start() {
 	w.rewardGraph = new MultiGraph([0,1]);
 
 	go('max');
+}
+
+function mouseClick(x, y) {
+
+}
+
+function keyUp(key) {
+	if (TICK === null) {
+		TICK = setInterval(NPGtick, 1000 / FPS);
+	} else {
+		clearInterval(TICK);
+		TICK = null;
+	}
+}
+
+function keyDown(key) {
+
 }
 
 /**
