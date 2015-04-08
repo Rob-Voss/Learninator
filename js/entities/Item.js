@@ -10,7 +10,7 @@ var Item = Item || {REVISION: '0.1'};
 	 * @param {Number} type
 	 * @returns {undefined}
 	 */
-	Item = function (x, y, type) {
+	var Item = function (x, y, type) {
 		this.pos = new Vec(x, y); // position
 		this.type = type; // type of item
 		this.rad = 10; // default radius

@@ -6,15 +6,15 @@ var World = World || {REVISION: '0.1'};
 	/**
 	 * Make a World
 	 * @param {Graph} canvas
-	 * @param {Array} walls
+	 * @param {Array} cells
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	World = function (canvas, walls, agents) {
+	var World = function (canvas, cells, agents) {
 		this.W = canvas.width;
 		this.H = canvas.height;
 
-		this.walls = walls;
+		this.cells = cells;
 		this.agents = agents;
 		this.items = [];
 
@@ -28,22 +28,22 @@ var World = World || {REVISION: '0.1'};
 	 */
 	World.prototype = {
 		/**
-		 * A helper function to get closest colliding walls/items
+		 * A helper function to get closest colliding cells/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
-		 * @param {Boolean} checkWalls
+		 * @param {Boolean} checkCells
 		 * @param {Boolean} checkItems
 		 */
-		collisionCheck: function (v1, v2, checkWalls, checkItems) {
+		collisionCheck: function (v1, v2, checkCells, checkItems) {
 			var minRes = false;
 
-			// Collide with walls
-			if (checkWalls) {
-				for (var i = 0, n = this.walls.length; i < n; i++) {
-					var wall = this.walls[i];
-					var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
+			// Collide with cells
+			if (checkCells) {
+				for (var i = 0, n = this.cells.length; i < n; i++) {
+					var cell = this.cells[i];
+					var wResult = Utility.lineIntersect(v1, v2, cell.v1, cell.v2);
 					if (wResult) {
-						wResult.type = 0; // 0 is wall
+						wResult.type = 0; // 0 is cell
 						if (!minRes) {
 							minRes = wResult;
 						} else {
@@ -141,7 +141,7 @@ var World = World || {REVISION: '0.1'};
 				if (agent.angle > 2 * Math.PI)
 					agent.angle -= 2 * Math.PI;
 
-				// The agent is trying to move from pos to oPos so we need to check walls
+				// The agent is trying to move from pos to oPos so we need to check cells
 				if (this.collisionCheck(agent.oldPos, agent.pos, true, false)) {
 					// The agent derped! Wall collision! Reset their position
 					agent.pos = agent.oldPos;
@@ -215,6 +215,10 @@ var World = World || {REVISION: '0.1'};
 				this.agents[i].backward();
 			}
 		},
+		/**
+		 * Populate the World with Items
+		 * @returns {undefined}
+		 */
 		populate: function () {
 			for (var k = 0; k < this.numItems; k++) {
 				var x = convnetjs.randf(20, this.W - 20),

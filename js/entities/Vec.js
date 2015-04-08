@@ -10,7 +10,7 @@ var Vec = Vec || {REVISION: '0.1'};
 	 * @param {Number} y
 	 * @returns {Vec}
 	 */
-	Vec = function (x, y) {
+	var Vec = function (x, y) {
 		this.x = x;
 		this.y = y;
 		this.visited = false;
@@ -53,8 +53,8 @@ var Vec = Vec || {REVISION: '0.1'};
 		 * @returns {Number}
 		 */
 		score: function () {
-			var total = 0;
-			var p = this.parent;
+			var total = 0,
+				p = this.parent;
 
 			while (p) {
 				++total;
@@ -67,8 +67,8 @@ var Vec = Vec || {REVISION: '0.1'};
 		 * @returns {Array}
 		 */
 		pathToOrigin: function () {
-			var path = [this];
-			var p = this.parent;
+			var path = [this],
+				p = this.parent;
 
 			while (p) {
 				path.push(p);
@@ -142,5 +142,5 @@ var Vec = Vec || {REVISION: '0.1'};
 	};
 
 	global.Vec = Vec;
-	
+
 }(this));

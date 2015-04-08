@@ -48,7 +48,7 @@ function start() {
 	maze.draw();
 
 	// We are going to use a maze for the environment and give it two agents
-	w = new World(worldCanvas, maze.walls, agents);
+	w = new World(worldCanvas, maze.cells, agents);
 
 	w.maze = maze;
 	w.agents = agents;
@@ -67,6 +67,7 @@ function tick() {
 	if (!skipDraw || w.clock % 50 === 0) {
 		drawWorld();
 //		drawStats("graph_canvas", "vis_canvas");
+//		drawNet("net_canvas");
 	}
 }
 
@@ -171,8 +172,8 @@ function drawWorld() {
 	// Draw the walls in environment
  	worldCtx.strokeStyle = "rgb(0,0,0)";
  	worldCtx.beginPath();
- 	for (var i = 0, n = w.walls.length; i < n; i++) {
- 		var q = w.walls[i];
+ 	for (var i = 0, n = w.cells.length; i < n; i++) {
+ 		var q = w.cells[i];
  		worldCtx.moveTo(q.v1.x, q.v1.y);
  		worldCtx.lineTo(q.v2.x, q.v2.y);
  	}
@@ -215,8 +216,8 @@ function drawWorld() {
 				worldCtx.strokeStyle = "rgb(150,255,150)";
 			}
 
-			var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle);
-			var aEyeY = agent.oldPos.y + eyeProx * Math.cos(agent.oldAngle + eye.angle);
+			var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle),
+				aEyeY = agent.oldPos.y + eyeProx * Math.cos(agent.oldAngle + eye.angle);
 
 			// Draw the agent's line of sights
 			worldCtx.beginPath();
