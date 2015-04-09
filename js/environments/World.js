@@ -22,14 +22,6 @@ var World = World || {REVISION: '0.1'};
 
 		this.clock = 0;
 		this.numItems = 100;
-		this.FPS = 60;
-
-		canvas.addEventListener('click', this.eventClick, false);
-		// Canvas can't get focus by default, so we need to attach listeners to the document.
-		document.addEventListener('keyup', this.eventKeyUp, true);
-		document.addEventListener('keydown', this.eventKeyDown, true);
-
-//		setInterval(this.NPGtick, 1000 / this.FPS);
 	};
 
 	/**
@@ -37,41 +29,13 @@ var World = World || {REVISION: '0.1'};
 	 * @type World
 	 */
 	World.prototype = {
-//		NPGtick: function() {
-//
-//		},
-		eventClick: function (e) {
-			var x, y;
-			if (e.pageX || e.pageY) {
-				x = e.pageX;
-				y = e.pageY;
-			} else {
-				x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-				y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-			}
-			x -= e.currentTarget.offsetLeft;
-			y -= e.currentTarget.offsetTop;
-
-			// call user-defined callback
-			mouseClick(x, y, e.shiftKey, e.ctrlKey);
-		},
-		eventKeyUp: function (e) {
-			/**
-			 * http://www.aspdotnetfaq.com/Faq/What-is-the-list-of-KeyCodes-for-JavaScript-KeyDown-KeyPress-and-KeyUp-events.aspx
-			 */
-			var keycode = ('which' in e) ? e.which : e.keyCode;
-			keyUp(keycode);
-		},
-		eventKeyDown: function (e) {
-			var keycode = ('which' in e) ? e.which : e.keyCode;
-			keyDown(keycode);
-		},
 		/**
 		 * A helper function to get closest colliding cells/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
 		 * @param {Boolean} checkCells
 		 * @param {Boolean} checkItems
+		 * @param {Boolean} checkAgents
 		 */
 		collisionCheck: function (v1, v2, checkCells, checkItems, checkAgents) {
 			var minRes = false;
@@ -115,7 +79,7 @@ var World = World || {REVISION: '0.1'};
 			}
 
 			// Collide with agents
-			if (checkAgents) {
+			if (typeof checkAgents !== 'undefined') {
 				for (var i = 0, n = this.agents.length; i < n; i++) {
 					var agent = this.agents[i],
 						iResult = Utility.linePointIntersect(v1, v2, agent.pos, agent.rad);

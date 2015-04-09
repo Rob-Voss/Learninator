@@ -39,20 +39,19 @@ var simSpeed = 2;
  */
 function start() {
 	worldCanvas = document.getElementById("world_canvas");
-	graphCanvas = document.getElementById("graph_canvas");
-
-	var agents = [new Agent(10), new Agent(10)];
 	var maze = new Maze(worldCanvas, 3, 4);
 	maze.generate();
 	maze.draw();
 
 	// We are going to use a maze for the environment and give it two agents
+	var agents = [new Agent(10), new Agent(10)];
 	w = new World(worldCanvas, maze.cells, agents);
 
 	// Globals blech
 	w.memoryBank = document.getElementById('memoryBank');
 	w.brainSpecs = document.getElementById('brainSpecs');
 
+	graphCanvas = document.getElementById("graph_canvas");
 	w.rewardGraph = new Graph(graphCanvas.width, graphCanvas.height, [0,1]);
 
 	go('mid');
@@ -72,12 +71,6 @@ function mouseClick (x, y) {
 };
 
 function keyUp (key) {
-	if (TICK === null) {
-		TICK = setInterval(this.NPG.NPGtick, 1000 / this.NPG.FPS);
-	} else {
-		clearInterval(TICK);
-		TICK = null;
-	}
 	console.log(key);
 };
 
@@ -125,6 +118,7 @@ function go(speed) {
 		simSpeed = 3;
 	}
 }
+
 /**
  * Download the brains to the field
  * @returns {undefined}

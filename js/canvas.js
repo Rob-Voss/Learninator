@@ -1,0 +1,1 @@
+var s = new CanvasState(document.getElementById('canvas1'));

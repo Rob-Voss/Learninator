@@ -120,7 +120,7 @@ var Graph = Graph || {REVISION: '0.1'};
 			};
 
 			ctx.strokeStyle = "red";
-			ctx.beginPath()
+			ctx.beginPath();
 			for (var i = 0; i < N; i++) {
 				// draw line from i-1 to i
 				var p = this.pts[i];
