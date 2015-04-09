@@ -182,6 +182,32 @@ var Agent = Agent || {REVISION: '0.1'};
 
 			// pass to brain for learning
 			this.brain.backward(reward);
+		},
+		eventClick: function (e) {
+			var x, y;
+			if (e.pageX || e.pageY) {
+				x = e.pageX;
+				y = e.pageY;
+			} else {
+				x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+				y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+			}
+			x -= e.currentTarget.offsetLeft;
+			y -= e.currentTarget.offsetTop;
+
+			// call user-defined callback
+			mouseClick(x, y, e.shiftKey, e.ctrlKey);
+		},
+		eventKeyUp: function (e) {
+			/**
+			 * http://www.aspdotnetfaq.com/Faq/What-is-the-list-of-KeyCodes-for-JavaScript-KeyDown-KeyPress-and-KeyUp-events.aspx
+			 */
+			var keycode = ('which' in e) ? e.which : e.keyCode;
+			keyUp(keycode);
+		},
+		eventKeyDown: function (e) {
+			var keycode = ('which' in e) ? e.which : e.keyCode;
+			keyDown(keycode);
 		}
 	};
 

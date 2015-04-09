@@ -29,7 +29,7 @@ var World = World || {REVISION: '0.1'};
 		document.addEventListener('keyup', this.eventKeyUp, true);
 		document.addEventListener('keydown', this.eventKeyDown, true);
 
-		setInterval(this.NPGtick, 1000 / this.FPS);
+//		setInterval(this.NPGtick, 1000 / this.FPS);
 	};
 
 	/**
@@ -37,9 +37,9 @@ var World = World || {REVISION: '0.1'};
 	 * @type World
 	 */
 	World.prototype = {
-		NPGtick: function() {
-
-		},
+//		NPGtick: function() {
+//
+//		},
 		eventClick: function (e) {
 			var x, y;
 			if (e.pageX || e.pageY) {
@@ -73,7 +73,7 @@ var World = World || {REVISION: '0.1'};
 		 * @param {Boolean} checkCells
 		 * @param {Boolean} checkItems
 		 */
-		collisionCheck: function (v1, v2, checkCells, checkItems) {
+		collisionCheck: function (v1, v2, checkCells, checkItems, checkAgents) {
 			var minRes = false;
 
 			// Collide with cells
@@ -101,6 +101,24 @@ var World = World || {REVISION: '0.1'};
 				for (var i = 0, n = this.items.length; i < n; i++) {
 					var item = this.items[i],
 						iResult = Utility.linePointIntersect(v1, v2, item.pos, item.rad);
+					if (iResult) {
+						iResult.type = item.type; // Store type of item
+						if (!minRes) {
+							minRes = iResult;
+						} else {
+							if (iResult.vecX < minRes.vecX) {
+								minRes = iResult;
+							}
+						}
+					}
+				}
+			}
+
+			// Collide with agents
+			if (checkAgents) {
+				for (var i = 0, n = this.agents.length; i < n; i++) {
+					var agent = this.agents[i],
+						iResult = Utility.linePointIntersect(v1, v2, agent.pos, agent.rad);
 					if (iResult) {
 						iResult.type = item.type; // Store type of item
 						if (!minRes) {

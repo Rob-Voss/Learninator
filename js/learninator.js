@@ -42,7 +42,7 @@ function start() {
 	graphCanvas = document.getElementById("graph_canvas");
 
 	var agents = [new Agent(10), new Agent(10)];
-	var maze = new Maze(worldCanvas, 5, 5);
+	var maze = new Maze(worldCanvas, 3, 4);
 	maze.generate();
 	maze.draw();
 
@@ -59,6 +59,14 @@ function start() {
 }
 
 function mouseClick (x, y) {
+	var lst = [];
+	for (var i = 0, n = w.agents.length; i < n; i++) {
+		var agentV = new Vec(w.agents[i].pos.x, w.agents[i].pos.y),
+			clickV = new Vec(x, y);
+		var derp = w.collisionCheck(agentV, clickV, false, false, true);
+		console.log(derp);
+	}
+
 	w.drawBubble(x, y, 20, 20, 10);
 	console.log(x + ':' + y);
 };
