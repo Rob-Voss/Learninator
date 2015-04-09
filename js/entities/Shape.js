@@ -3,57 +3,106 @@ var Shape = Shape || {REVISION: '0.1'};
 (function (global) {
 	"use strict";
 
-	var Shape = function (x, y, w, h, fill) {
-		this.x = x || 0;
-		this.y = y || 0;
-		this.w = w || 1;
-		this.h = h || 1;
+	/**
+	 * Create a shape
+	 * @param {String} t
+	 * @param {Vec} v1
+	 * @param {Number} w
+	 * @param {Number} h
+	 * @param {Number} r
+	 * @param {String} fill
+	 * @returns {Shape_L3.Shape}
+	 */
+	var Shape = function (t, v1, w, h, r, fill) {
+		this.x = v1.x || 0;
+		this.y = v1.y || 0;
+
+		this.type = t || undefined;
+		this.width = w || 0;
+		this.height = h || 0;
+		this.radius = r || 0;
+
 		this.fill = fill || '#AAAAAA';
 	};
 
 	/**
 	 *
-	 * @type type
+	 * @type Shape
 	 */
 	Shape.prototype = {
 		/**
 		 * Draws this shape to a given context
-		 * @param {type} ctx
+		 * @param {CanvasRenderingContext2D} ctx
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
 			ctx.fillStyle = this.fill;
-			ctx.fillRect(this.x, this.y, this.w, this.h);
+
+			if (this.type === 'rect' || this.type === 'undefined') {
+				ctx.beginPath();
+				ctx.rect(this.x, this.y, this.width, this.height);
+				ctx.closePath();
+				ctx.fill();
+				ctx.stroke();
+			} else if(this.type === 'circ') {
+				ctx.beginPath();
+				ctx.strokeStyle = "black";
+				ctx.lineWidth = "2";
+				ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.fill();
+			} else if(this.type === 'tria') {
+				ctx.beginPath();
+				ctx.strokeStyle = "black";
+				ctx.lineWidth = "2";
+				ctx.moveTo(this.x, this.y);
+				ctx.lineTo(this.x + this.width / 2, this.y + this.height);
+				ctx.lineTo(this.x - this.width / 2, this.y + this.height);
+				ctx.closePath();
+				ctx.stroke();
+				ctx.fill();
+			} else if(this.type === 'bubb') {
+				var r = this.x + this.width;
+				var b = this.y + this.height;
+
+				ctx.beginPath();
+				ctx.strokeStyle = "black";
+				ctx.lineWidth = "2";
+				ctx.moveTo(this.x + this.radius, this.y);
+				ctx.lineTo(this.x + this.radius / 2, this.y - 10);
+				ctx.lineTo(this.x + this.radius * 2, this.y);
+				ctx.lineTo(r - this.radius, this.y);
+				ctx.quadraticCurveTo(r, this.y, r, this.y + this.radius);
+				ctx.lineTo(r, this.y + this.height - this.radius);
+				ctx.quadraticCurveTo(r, b, r - this.radius, b);
+				ctx.lineTo(this.x + this.radius, b);
+				ctx.quadraticCurveTo(this.x, b, this.x, b - this.radius);
+				ctx.lineTo(this.x, this.y + this.radius);
+				ctx.quadraticCurveTo(this.x, this.y, this.x + this.radius, this.y);
+				ctx.stroke();
+			}
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
-		 * @param {type} mx
-		 * @param {type} my
+		 * @param {Number} mx
+		 * @param {Number} my
 		 * @returns {Boolean}
 		 */
 		contains: function (mx, my) {
-			// All we have to do is make sure the Mouse X,Y fall in the area between
-			// the shape's X and (X + Width) and its Y and (Y + Height)
-			return  (this.x <= mx) && (this.x + this.w >= mx) &&
-					(this.y <= my) && (this.y + this.h >= my);
+			if (this.type === 'rect') {
+				return  (this.x <= mx) && (this.x + this.width >= mx) &&
+						(this.y <= my) && (this.y + this.height >= my);
+			} else if (this.type === 'circ') {
+				var v1 = new Vec(mx,my),
+					v2 = new Vec(this.x,this.y),
+					dist = v1.distFrom(v2);
+
+				return dist < this.radius;
+			}
 		}
 	};
 
 	global.Shape = Shape;
 
 }(this));
-
-// If you dont want to use <body onLoad='init()'>
-// You could uncomment this init() reference and place the script reference inside the body tag
-//init();
-//
-//function init() {
-//  var s = new CanvasState(document.getElementById('canvas1'));
-//  s.addShape(new Shape(40,40,50,50)); // The default is gray
-//  s.addShape(new Shape(60,140,40,60, 'lightskyblue'));
-//  // Lets make some partially transparent
-//  s.addShape(new Shape(80,150,60,30, 'rgba(127, 255, 212, .5)'));
-//  s.addShape(new Shape(125,80,30,80, 'rgba(245, 222, 179, .7)'));
-//}
-
-// Now go make something amazing!

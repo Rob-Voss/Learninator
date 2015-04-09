@@ -4,10 +4,12 @@ var Graph = Graph || {REVISION: '0.1'};
 	"use strict";
 
 	/**
-	 * Same as MultiGraph but draws a single line
+	 * Graph "class"
+	 * @param {Number} width
+	 * @param {Number} height
 	 * @param {Array} legend
 	 * @param {Object} options
-	 * @returns {Graph}
+	 * @returns {Graph_L3.Graph}
 	 */
 	var Graph = function (width, height, legend, options) {
 		var options = options || {};
