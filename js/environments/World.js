@@ -19,10 +19,13 @@ var World = World || {REVISION: '0.1'};
 		this.cells = cells;
 		this.agents = agents;
 		this.items = [];
-		this.itemTypes = ['Wall','Nom','Gnar'];
 
 		this.clock = 0;
 		this.numItems = 100;
+		this.state = new CanvasState(canvas);
+		this.state.items = this.items;
+		this.state.addItem(this.agents[0]);
+		this.state.addItem(this.agents[1]);
 	};
 
 	/**
@@ -223,13 +226,14 @@ var World = World || {REVISION: '0.1'};
 				this.items = nt;
 			}
 
-			if (this.items.length < 30 && this.clock % 10 === 0 && convnetjs.randf(0, 1) < 0.25) {
+			if (this.items.length < this.numItems && this.clock % 10 === 0 && convnetjs.randf(0, 1) < 0.25) {
 				var x = convnetjs.randf(20, this.width - 20),
 					y = convnetjs.randf(20, this.height - 20),
+					r = convnetjs.randi(3, 10),
 					type = convnetjs.randi(1, 3), // Noms or Gnars (1 || 2)
 					v = new Vec(x, y);
-					
-				this.items.push(new Item(type, v, x, y));
+
+				this.items.push(new Item(type, v, 0, 0, r));
 			}
 
 			// This is where the agents learns based on the feedback of their
@@ -248,9 +252,8 @@ var World = World || {REVISION: '0.1'};
 					y = convnetjs.randf(20, this.height - 20),
 					r = convnetjs.randi(3, 10),
 					type = convnetjs.randi(1, 3), // food or poison (1 and 2)
-					v = new Vec(x, y),
-					item = new Item(type, v, 0, 0, r);
-				this.items.push(item);
+					v = new Vec(x, y);
+				this.items.push(new Item(type, v, 0, 0, r));
 			}
 		},
 		drawSelf: function () {

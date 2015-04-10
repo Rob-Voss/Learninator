@@ -26,7 +26,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		this.htmlLeft = html.offsetLeft;
 
 		this.valid = false; // When set to false, the canvas will redraw everything
-		this.shapes = []; // The collection of things to be drawn
+		this.items = []; // The collection of things to be drawn
 		this.dragging = false; // Keep track of when we are dragging
 		// Currently selected object. In the future an array for multiple selection
 		this.selection = null;
@@ -55,7 +55,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 			myState.mouseUp(e);
 		}, true);
 
-		// Double click for making new shapes
+		// Double click for making new items
 		canvas.addEventListener('dblclick', function (e) {
 			myState.doubleClick(e);
 		}, true);
@@ -100,18 +100,18 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		 */
 		mouseDown: function (e) {
 			var mouse = this.getMouse(e),
-				v = new Vec(mouse.x, mouse.y),
-				l = this.shapes.length;
-			for (var i = l - 1; i >= 0; i--) {
-				if (this.shapes[i].contains(v)) {
-					var mySel = this.shapes[i].pos;
+				v = new Vec(mouse.x, mouse.y);
+			for (var i = this.items.length - 1; i >= 0; i--) {
+				if (this.items[i].contains(v)) {
+					var mySel = this.items[i];
 					// Keep track of where in the object we clicked
 					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = v.x - mySel.x;
-					this.dragoff.y = v.y - mySel.y;
+					this.dragoff.x = v.x - mySel.pos.x;
+					this.dragoff.y = v.y - mySel.pos.y;
 					this.dragging = true;
-					this.selection = mySel;
+					this.selection = mySel.pos;
 					this.valid = false;
+					mySel.onClick(v);
 					return;
 				}
 			}
@@ -128,16 +128,18 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		 * @returns {undefined}
 		 */
 		doubleClick: function (e) {
-			var mouse = this.getMouse(e);
-			this.addShape(new Shape('rect', new Vec(mouse.x - 10, mouse.y - 10), 20, 20, 0, 'rgba(0,255,0,.6)'));
+			var mouse = this.getMouse(e),
+				type = convnetjs.randi(1, 3),
+				r = convnetjs.randi(3, 10);
+			this.addItem(new Item(type, new Vec(mouse.x - 10, mouse.y - 10), r, r, r, 'rgba(0,255,0,.6)'));
 		},
 		/**
-		 * Add a shape to the canvas
-		 * @param {Shape} shape
+		 * Add an item to the canvas
+		 * @param {Item} item
 		 * @returns {undefined}
 		 */
-		addShape: function (shape) {
-			this.shapes.push(shape);
+		addItem: function (item) {
+			this.items.push(item);
 			this.valid = false;
 		},
 		/**
@@ -156,27 +158,29 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 			// if our state is invalid, redraw and validate!
 			if (!this.valid) {
 				var ctx = this.ctx;
-				var shapes = this.shapes;
+				var items = this.items;
 				this.clear();
 
 				// ** Add stuff you want drawn in the background all the time here **
 
-				// Draw all shapes
-				var l = shapes.length;
+				// Draw all items
+				var l = items.length;
 				for (var i = 0; i < l; i++) {
-					var shape = shapes[i];
+					var item = items[i];
 					// We can skip the drawing of elements that have moved off the screen:
-					if (shape.pos.x > this.width ||
-							shape.pos.y > this.height ||
-							shape.pos.x + shape.width < 0 ||
-							shape.pos.y + shape.height < 0) {
+					if (item.pos.x > this.width ||
+							item.pos.y > this.height ||
+							item.pos.x + item.width < 0 ||
+							item.pos.y + item.height < 0) {
 						continue;
 					}
-					shapes[i].draw(ctx);
+					if (items[i].type !== 3) {
+						items[i].draw(ctx);
+					}
 				}
 
 				// Highlight the selection
-				// Right now this is just a stroke along the edge of the selected Shape
+				// Right now this is just a stroke along the edge of the selected Item
 				if (this.selection !== null) {
 					ctx.strokeStyle = this.selectionColor;
 					ctx.lineWidth = this.selectionWidth;
@@ -197,7 +201,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		 * @returns {CanvasState_L3.CanvasState.prototype.getMouse.CanvasStateAnonym$0}
 		 */
 		getMouse: function (e) {
-			var element = this.canvas, 
+			var element = this.canvas,
 				offset = new Vec(0,0);
 
 			// Compute the total offset
@@ -215,7 +219,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 
 			// We return a simple javascript object (a hash) with x and y defined
 			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
-			
+
 			return mouseLoc;
 		}
 	};

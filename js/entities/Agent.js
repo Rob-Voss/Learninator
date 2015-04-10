@@ -30,6 +30,11 @@ var Agent = Agent || {REVISION: '0.1'};
 		// Positional information
 		this.pos = new Vec(this.radius, this.radius);
 
+		// Set its type to Agent
+		this.type = 3;
+		this.agentTypes = [];
+		this.agentTypes[3] = 'Agent';
+
 		// The direction the Agent is facing
 		this.angle = 0;
 
@@ -182,6 +187,17 @@ var Agent = Agent || {REVISION: '0.1'};
 
 			// pass to brain for learning
 			this.brain.backward(reward);
+		},
+		/**
+		 * Determine if a point is inside the shape's bounds
+		 * @param {Vec} mV
+		 * @returns {Boolean}
+		 */
+		contains: function (mV) {
+			return this.pos.distFrom(mV) < this.radius;
+		},
+		onClick: function(v) {
+			console.log(this.agentTypes[this.type]);
 		}
 	};
 

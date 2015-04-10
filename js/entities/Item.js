@@ -17,11 +17,12 @@ var Item = Item || {REVISION: '0.1'};
 		this.pos = v; // position
 		this.width = w || 0; // width of item
 		this.height = h || 0; // height of item
-		this.type = type || 0; // type of item
+		this.type = type || 1; // type of item
 		this.radius = r || 10; // default radius
 		this.age = 0;
 		this.cleanUp = false;
 		this.fill = fill || '#AAAAAA';
+		this.itemTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
 	};
 
 	/**
@@ -87,10 +88,14 @@ var Item = Item || {REVISION: '0.1'};
 			if (this.type === 'rect') {
 				return  (this.pos.x <= mV.x) && (this.pos.x + this.width >= mV.x) &&
 						(this.pos.y <= mV.y) && (this.pos.y + this.height >= mV.y);
-			} else if (this.type === 'circ') {
-				var dist = this.pos.distFrom(mV);
-				return dist < this.radius;
+			} else if (this.type === 1 || this.type === 2 || this.type === 3) {
+				var result = this.pos.distFrom(mV) < this.radius;
+
+				return result;
 			}
+		},
+		onClick: function(v) {
+			console.log(this.itemTypes[this.type]);
 		}
 	};
 
