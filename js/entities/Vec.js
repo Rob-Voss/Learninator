@@ -23,7 +23,6 @@ var Vec = Vec || {REVISION: '0.1'};
 
 	/**
 	 * Vector utilities
-	 *
 	 * @type Vec
 	 */
 	Vec.prototype = {

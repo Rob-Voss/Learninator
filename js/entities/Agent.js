@@ -17,18 +17,18 @@ var Agent = Agent || {REVISION: '0.1'};
 
 	/**
 	 * A single agent
-	 * @param {Number} radius
+	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (radius) {
+	var Agent = function (r) {
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
 
 		// The Agent's size
-		this.rad = radius;
+		this.radius = r;
 
 		// Positional information
-		this.pos = new Vec(this.rad, this.rad);
+		this.pos = new Vec(this.radius, this.radius);
 
 		// The direction the Agent is facing
 		this.angle = 0;

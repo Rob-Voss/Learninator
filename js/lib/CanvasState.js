@@ -30,8 +30,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		this.dragging = false; // Keep track of when we are dragging
 		// Currently selected object. In the future an array for multiple selection
 		this.selection = null;
-		this.dragoffx = 0; // See mousedown and mousemove events for explanation
-		this.dragoffy = 0;
+		this.dragoff = new Vec(0,0); // See mousedown and mousemove events for explanation
 
 		var myState = this;
 
@@ -63,13 +62,13 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 
 		// **** Options! ****
 		this.selectionColor = '#CC0000';
-		this.selectionWidth = 2;
+		this.selectionWidth = 1;
 		this.interval = 30;
 
 		setInterval(function () {
 			myState.draw();
 		}, myState.interval);
-	}
+	};
 
 	CanvasState.prototype = {
 		/**
@@ -82,8 +81,7 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 				var mouse = this.getMouse(e);
 				// We don't want to drag the object by its top-left corner, we want to drag it
 				// from where we clicked. Thats why we saved the offset and use it here
-				this.selection.x = mouse.x - this.dragoffx;
-				this.selection.y = mouse.y - this.dragoffy;
+				this.selection = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
 				this.valid = false; // Something's dragging so we must redraw
 			}
 		},
@@ -101,18 +99,16 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		 * @returns {undefined}
 		 */
 		mouseDown: function (e) {
-			var mouse = this.getMouse(e);
-			var mx = mouse.x;
-			var my = mouse.y;
-			var shapes = this.shapes;
-			var l = shapes.length;
+			var mouse = this.getMouse(e),
+				v = new Vec(mouse.x, mouse.y),
+				l = this.shapes.length;
 			for (var i = l - 1; i >= 0; i--) {
-				if (shapes[i].contains(mx, my)) {
-					var mySel = shapes[i];
+				if (this.shapes[i].contains(v)) {
+					var mySel = this.shapes[i].pos;
 					// Keep track of where in the object we clicked
 					// so we can move it smoothly (see mousemove)
-					this.dragoffx = mx - mySel.x;
-					this.dragoffy = my - mySel.y;
+					this.dragoff.x = v.x - mySel.x;
+					this.dragoff.y = v.y - mySel.y;
 					this.dragging = true;
 					this.selection = mySel;
 					this.valid = false;
@@ -170,10 +166,10 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 				for (var i = 0; i < l; i++) {
 					var shape = shapes[i];
 					// We can skip the drawing of elements that have moved off the screen:
-					if (shape.x > this.width ||
-							shape.y > this.height ||
-							shape.x + shape.width < 0 ||
-							shape.y + shape.height < 0) {
+					if (shape.pos.x > this.width ||
+							shape.pos.y > this.height ||
+							shape.pos.x + shape.width < 0 ||
+							shape.pos.y + shape.height < 0) {
 						continue;
 					}
 					shapes[i].draw(ctx);
@@ -201,29 +197,25 @@ var CanvasState = CanvasState || {REVISION: '0.1'};
 		 * @returns {CanvasState_L3.CanvasState.prototype.getMouse.CanvasStateAnonym$0}
 		 */
 		getMouse: function (e) {
-			var element = this.canvas, offsetX = 0, offsetY = 0, mx, my;
+			var element = this.canvas, 
+				offset = new Vec(0,0);
 
 			// Compute the total offset
 			if (element.offsetParent !== undefined) {
 				do {
-					offsetX += element.offsetLeft;
-					offsetY += element.offsetTop;
+					offset.x += element.offsetLeft;
+					offset.y += element.offsetTop;
 				} while ((element = element.offsetParent));
 			}
 
 			// Add padding and border style widths to offset
 			// Also add the <html> offsets in case there's a position:fixed bar
-			offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
-			offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
-
-			mx = e.pageX - offsetX;
-			my = e.pageY - offsetY;
+			offset.x += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
+			offset.y += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
 
 			// We return a simple javascript object (a hash) with x and y defined
-			var mouseLoc = {
-				x: mx,
-				y: my
-			};
+			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
+			
 			return mouseLoc;
 		}
 	};
