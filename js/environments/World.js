@@ -20,12 +20,77 @@ var World = World || {REVISION: '0.1'};
 		this.agents = agents;
 		this.items = [];
 
+		this.simSpeed = 1;
 		this.clock = 0;
 		this.numItems = 100;
-		this.state = new CanvasState(canvas);
-		this.state.items = this.items;
-		this.state.addItem(this.agents[0]);
-		this.state.addItem(this.agents[1]);
+
+		// This complicates things a little but but fixes mouse co-ordinate problems
+		// when there's a border or padding. See getMouse for more detail
+		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+		if (document.defaultView && document.defaultView.getComputedStyle) {
+			this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingLeft'], 10) || 0;
+			this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingTop'], 10) || 0;
+			this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderLeftWidth'], 10) || 0;
+			this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderTopWidth'], 10) || 0;
+		}
+
+		// Some pages have fixed-position bars at the top or left of the page
+		// They will mess up mouse coordinates and this fixes that
+		var html = document.body.parentNode;
+		this.htmlTop = html.offsetTop;
+		this.htmlLeft = html.offsetLeft;
+
+		// When set to false, the canvas will redraw everything
+		this.valid = false;
+
+		// Keep track of when we are dragging
+		this.dragging = false;
+
+		// Currently selected object. In the future an array for multiple selection
+		this.selection = null;
+
+		// See mousedown and mousemove events for explanation
+		this.dragoff = new Vec(0,0);
+
+		// **** Options! ****
+		this.selectionColor = '#CC0000';
+		this.selectionWidth = 1;
+		this.interval = 30;
+
+		var myState = this;
+
+		// This fixes a problem where double clicking causes text to get selected on the canvas
+		this.canvas.addEventListener('selectstart', function (e) {
+			e.preventDefault();
+			return false;
+		}, false);
+
+		// Up, down, and move are for dragging
+		this.canvas.addEventListener('mousedown', function (e) {
+			myState.mouseDown(e);
+		}, true);
+
+		// Track the mouse movement
+		this.canvas.addEventListener('mousemove', function (e) {
+			myState.mouseMove(e);
+		}, true);
+
+		// Track when the mouse selection is let go of
+		this.canvas.addEventListener('mouseup', function (e) {
+			myState.mouseUp(e);
+		}, true);
+
+		// Double click for making new items
+		this.canvas.addEventListener('dblclick', function (e) {
+			myState.doubleClick(e);
+		}, true);
+
+		setInterval(function () {
+			myState.tick();
+			if (!this.valid || this.clock % 50 === 0) {
+				myState.drawSelf();
+			}
+		}, myState.interval);
 	};
 
 	/**
@@ -33,6 +98,22 @@ var World = World || {REVISION: '0.1'};
 	 * @type World
 	 */
 	World.prototype = {
+		/**
+		 * Add an item to the canvas
+		 * @param {Item} item
+		 * @returns {undefined}
+		 */
+		addItem: function (item) {
+			this.items.push(item);
+			this.valid = false;
+		},
+		/**
+		 * Clear the canvas
+		 * @returns {undefined}
+		 */
+		clear: function () {
+			this.ctx.clearRect(0, 0, this.width, this.height);
+		},
 		/**
 		 * A helper function to get closest colliding cells/items
 		 * @param {Vec} v1
@@ -101,6 +182,97 @@ var World = World || {REVISION: '0.1'};
 			}
 
 			return minRes;
+		},
+		/**
+		 * Creates an object with x and y defined, set to the mouse position relative
+		 * to the state's canvas. If you wanna be super-correct this can be tricky,
+		 * we have to worry about padding and borders
+		 * @param {MouseEvent} e
+		 * @returns {CanvasState_L3.CanvasState.prototype.getMouse.CanvasStateAnonym$0}
+		 */
+		getMouse: function (e) {
+			var element = this.canvas,
+				offset = new Vec(0,0);
+
+			// Compute the total offset
+			if (element.offsetParent !== undefined) {
+				do {
+					offset.x += element.offsetLeft;
+					offset.y += element.offsetTop;
+				} while ((element = element.offsetParent));
+			}
+
+			// Add padding and border style widths to offset
+			// Also add the <html> offsets in case there's a position:fixed bar
+			offset.x += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
+			offset.y += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
+
+			// We return a simple javascript object (a hash) with x and y defined
+			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
+
+			return mouseLoc;
+		},
+		/**
+		 * Mouse move
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		mouseMove: function (e) {
+			if (this.dragging) {
+				var mouse = this.getMouse(e);
+				// We don't want to drag the object by its top-left corner, we want to drag it
+				// from where we clicked. Thats why we saved the offset and use it here
+				this.selection = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+				this.valid = false; // Something's dragging so we must redraw
+			}
+		},
+		/**
+		 * Mouse release
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		mouseUp: function (e) {
+			this.dragging = false;
+		},
+		/**
+		 * Mouse click
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		mouseDown: function (e) {
+			var mouse = this.getMouse(e),
+				v = new Vec(mouse.x, mouse.y);
+			for (var i = this.items.length - 1; i >= 0; i--) {
+				if (this.items[i].contains(v)) {
+					var mySel = this.items[i];
+					// Keep track of where in the object we clicked
+					// so we can move it smoothly (see mousemove)
+					this.dragoff.x = v.x - mySel.pos.x;
+					this.dragoff.y = v.y - mySel.pos.y;
+					this.dragging = true;
+					this.selection = mySel.pos;
+					this.valid = false;
+					mySel.onClick(v);
+					return;
+				}
+			}
+			// If we haven't returned, it means that we have failed to select anything.
+			if (this.selection) {
+				// If there was an object selected, we deselect it
+				this.selection = null;
+				this.valid = false; // Need to clear the old selection border
+			}
+		},
+		/**
+		 * Double click with the mouse
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		doubleClick: function (e) {
+			var mouse = this.getMouse(e),
+				type = convnetjs.randi(1, 3),
+				r = convnetjs.randi(3, 10);
+			this.addItem(new Item(type, new Vec(mouse.x - 10, mouse.y - 10), r, r, r, 'rgba(0,255,0,.6)'));
 		},
 		/**
 		 * Tick the environment
@@ -198,9 +370,9 @@ var World = World || {REVISION: '0.1'};
 						if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
 							// Nom Noms!
 							if (item.type === 1)
-								agent.digestionSignal += 5.0; // The sweet meats
+								agent.digestionSignal += 5.0 * (item.radius/2); // The sweet meats
 							if (item.type === 2)
-								agent.digestionSignal += -6.0; // The gnar gnar meats
+								agent.digestionSignal += -6.0 * (item.radius/2); // The gnar gnar meats
 							item.cleanUp = true;
 							updateItems = true;
 							break; // Done consuming, move on
@@ -229,7 +401,7 @@ var World = World || {REVISION: '0.1'};
 			if (this.items.length < this.numItems && this.clock % 10 === 0 && convnetjs.randf(0, 1) < 0.25) {
 				var x = convnetjs.randf(20, this.width - 20),
 					y = convnetjs.randf(20, this.height - 20),
-					r = convnetjs.randi(3, 10),
+					r = convnetjs.randi(5, 10),
 					type = convnetjs.randi(1, 3), // Noms or Gnars (1 || 2)
 					v = new Vec(x, y);
 
@@ -250,10 +422,28 @@ var World = World || {REVISION: '0.1'};
 			for (var k = 0; k < this.numItems; k++) {
 				var x = convnetjs.randf(20, this.width - 20),
 					y = convnetjs.randf(20, this.height - 20),
-					r = convnetjs.randi(3, 10),
+					r = convnetjs.randi(5, 10),
 					type = convnetjs.randi(1, 3), // food or poison (1 and 2)
 					v = new Vec(x, y);
 				this.items.push(new Item(type, v, 0, 0, r));
+			}
+		},
+		go: function (speed) {
+			clearInterval(this.interval);
+			this.valid = false;
+			if (speed === 'min') {
+				this.interval = setInterval(this.tick(), 200);
+				this.simSpeed = 0;
+			} else if (speed === 'mid') {
+				this.interval = setInterval(this.tick(), 30);
+				this.simSpeed = 1;
+			} else if (speed === 'max') {
+				this.interval = setInterval(this.tick(), 0);
+				this.simSpeed = 2;
+			} else if (speed === 'max+') {
+				this.interval = setInterval(this.tick(), 0);
+				this.valid = true;
+				this.simSpeed = 3;
 			}
 		},
 		drawSelf: function () {
