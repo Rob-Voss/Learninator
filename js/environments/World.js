@@ -21,8 +21,9 @@ var World = World || {REVISION: '0.1'};
 		this.items = [];
 
 		this.simSpeed = 1;
+		this.interval = 60;
 		this.clock = 0;
-		this.numItems = 100;
+		this.numItems = 20;
 
 		// This complicates things a little but but fixes mouse co-ordinate problems
 		// when there's a border or padding. See getMouse for more detail
@@ -45,17 +46,16 @@ var World = World || {REVISION: '0.1'};
 
 		// Keep track of when we are dragging
 		this.dragging = false;
-
-		// Currently selected object. In the future an array for multiple selection
-		this.selection = null;
-
+	
 		// See mousedown and mousemove events for explanation
 		this.dragoff = new Vec(0,0);
+		
+		// Currently selected object. In the future an array for multiple selection
+		this.selection = null;
 
 		// **** Options! ****
 		this.selectionColor = '#CC0000';
 		this.selectionWidth = 1;
-		this.interval = 30;
 
 		var myState = this;
 
@@ -87,7 +87,7 @@ var World = World || {REVISION: '0.1'};
 
 		setInterval(function () {
 			myState.tick();
-			if (!this.valid || this.clock % 50 === 0) {
+			if (!myState.valid || myState.clock % 50 === 0) {
 				myState.drawSelf();
 			}
 		}, myState.interval);
@@ -240,19 +240,18 @@ var World = World || {REVISION: '0.1'};
 		 * @returns {undefined}
 		 */
 		mouseDown: function (e) {
-			var mouse = this.getMouse(e),
-				v = new Vec(mouse.x, mouse.y);
+			var mouse = this.getMouse(e);
 			for (var i = this.items.length - 1; i >= 0; i--) {
-				if (this.items[i].contains(v)) {
+				if (this.items[i].contains(mouse)) {
 					var mySel = this.items[i];
 					// Keep track of where in the object we clicked
 					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = v.x - mySel.pos.x;
-					this.dragoff.y = v.y - mySel.pos.y;
+					this.dragoff.x = mouse.x - mySel.pos.x;
+					this.dragoff.y = mouse.y - mySel.pos.y;
 					this.dragging = true;
 					this.selection = mySel.pos;
 					this.valid = false;
-					mySel.onClick(v);
+					mySel.onClick(mouse);
 					return;
 				}
 			}
@@ -271,8 +270,9 @@ var World = World || {REVISION: '0.1'};
 		doubleClick: function (e) {
 			var mouse = this.getMouse(e),
 				type = convnetjs.randi(1, 3),
-				r = convnetjs.randi(3, 10);
-			this.addItem(new Item(type, new Vec(mouse.x - 10, mouse.y - 10), r, r, r, 'rgba(0,255,0,.6)'));
+				r = convnetjs.randi(3, 10),
+				item = new Item(type, new Vec(mouse.x, mouse.y), 0, 0, r);
+			this.addItem(item);
 		},
 		/**
 		 * Tick the environment
@@ -356,7 +356,7 @@ var World = World || {REVISION: '0.1'};
 			}
 
 			// Tick ALL OF teh items!
-			var updateItems = false;
+			this.valid = false;
 			for (var i = 0, n = this.items.length; i < n; i++) {
 				var item = this.items[i];
 				item.age += 1;
@@ -374,7 +374,7 @@ var World = World || {REVISION: '0.1'};
 							if (item.type === 2)
 								agent.digestionSignal += -6.0 * (item.radius/2); // The gnar gnar meats
 							item.cleanUp = true;
-							updateItems = true;
+							this.valid = true;
 							break; // Done consuming, move on
 						}
 					}
@@ -383,11 +383,11 @@ var World = World || {REVISION: '0.1'};
 				if (item.age > 5000 && this.clock % 100 === 0 && convnetjs.randf(0, 1) < 0.1) {
 					// Keell it, it has been around way too long
 					item.cleanUp = true;
-					updateItems = true;
+					this.valid = true;
 				}
 			}
 
-			if (updateItems) {
+			if (this.valid) {
 				var nt = [];
 				for (var i = 0, n = this.items.length; i < n; i++) {
 					var item = this.items[i];
@@ -447,7 +447,7 @@ var World = World || {REVISION: '0.1'};
 			}
 		},
 		drawSelf: function () {
-			this.ctx.clearRect(0, 0, this.width, this.height);
+			this.clear();
 			this.ctx.lineWidth = 1;
 
 			// Draw the walls in environment

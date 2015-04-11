@@ -57,34 +57,11 @@ function start() {
 	go('mid');
 }
 
-function mouseClick (x, y) {
-	var lst = [];
-	for (var i = 0, n = w.agents.length; i < n; i++) {
-		var agentV = new Vec(w.agents[i].pos.x, w.agents[i].pos.y),
-			clickV = new Vec(x, y);
-		var derp = w.collisionCheck(agentV, clickV, false, false, true);
-		console.log(derp);
-	}
-
-	w.drawBubble(x, y, 20, 20, 10);
-	console.log(x + ':' + y);
-};
-
-function keyUp (key) {
-	console.log(key);
-};
-
-function keyDown (key) {
-	console.log(key);
-};
-
 /**
  * Tick the world
  */
 function tick() {
-	w.tick();
-	if (!skipDraw || w.clock % 50 === 0) {
-		w.drawSelf();
+	if (w.clock % 50 === 0) {
 		drawStats();
 	}
 }
