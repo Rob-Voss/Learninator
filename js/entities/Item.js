@@ -81,19 +81,24 @@ var Item = Item || {REVISION: '0.1'};
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} mV
+		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (mV) {
+		contains: function (v) {
 			if (this.type === 'rect') {
-				return  (this.pos.x <= mV.x) && (this.pos.x + this.width >= mV.x) &&
-						(this.pos.y <= mV.y) && (this.pos.y + this.height >= mV.y);
+				return  (this.pos.x <= v.x) && (this.pos.x + this.width >= v.x) &&
+						(this.pos.y <= v.y) && (this.pos.y + this.height >= v.y);
 			} else if (this.type === 1 || this.type === 2 || this.type === 3) {
-				var result = this.pos.distFrom(mV) < this.radius;
+				var result = this.pos.distFrom(v) < this.radius;
 
 				return result;
 			}
 		},
+		/**
+		 * What to do when clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
 		onClick: function(v) {
 			console.log(this.itemTypes[this.type]);
 		}

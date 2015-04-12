@@ -189,13 +189,50 @@ var Agent = Agent || {REVISION: '0.1'};
 			this.brain.backward(reward);
 		},
 		/**
+		 * Get to learninating
+		 * @returns {undefined}
+		 */
+		startLearnin: function () {
+			this.brain.learning = true;
+		},
+		/**
+		 * Stop learninating
+		 * @returns {undefined}
+		 */
+		stopLearnin: function () {
+			this.brain.learning = false;
+		},
+		/**
+		 * Download the brains to the field
+		 * @returns {undefined}
+		 */
+		saveMemory: function () {
+			var j = this.brain.value_net.toJSON();
+			this.memoryBank.value = JSON.stringify(j);
+		},
+		/**
+		 * Load the brains from the field
+		 * @returns {undefined}
+		 */
+		loadMemory: function () {
+			var m = JSON.parse(this.memoryBank.value);
+			this.stopLearnin();
+			this.brain.value_net.fromJSON(m);
+			this.go('mid');
+		},
+		/**
 		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} mV
+		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (mV) {
-			return this.pos.distFrom(mV) < this.radius;
+		contains: function (v) {
+			return this.pos.distFrom(v) < this.radius;
 		},
+		/**
+		 * What to do when clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
 		onClick: function(v) {
 			console.log(this.agentTypes[this.type]);
 		}

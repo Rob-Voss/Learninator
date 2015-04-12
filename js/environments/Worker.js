@@ -282,7 +282,6 @@ var Life = Life || {REVISION: '0.1'};
 					agent.spikeLength = g;
 				}
 
-
 				//Move bots
 				//$V is Sylvester vector library, Create a point on the diameter of bot
 				var v = $V([parameters.agent.size / 2, 0]);
@@ -392,14 +391,9 @@ var Life = Life || {REVISION: '0.1'};
 								agent2.spiked = true;
 							}
 						}
-
 					}
-
 				}
-
-
 			}
-
 		},
 		this.brainsTick = function () {
 			for (var id in _this.agents) {
@@ -456,7 +450,6 @@ var Life = Life || {REVISION: '0.1'};
 			}
 		},
 		this.draw = function (view, drawFood) {
-
 			if (drawFood) {
 				for (var x = 0; x < foodWidth; x++) {
 					for (var y = 0; y < foodWidth; y++) {
@@ -487,11 +480,10 @@ var Life = Life || {REVISION: '0.1'};
 	};
 
 	Life.Agent = function (parameters) {
-
 		//Initial position and angle
 		var _x = Math.floor(Math.random() * parameters.width),
-				_y = Math.floor(Math.random() * parameters.height),
-				_this = this;
+			_y = Math.floor(Math.random() * parameters.height),
+			_this = this;
 
 		this.selectFlag = false;
 
@@ -520,7 +512,6 @@ var Life = Life || {REVISION: '0.1'};
 		this.generationCount = 0;
 		this.hybrid = false;
 
-
 		this.clock1 = Math.random() * 95 + 5;
 		this.clock2 = Math.random() * 95 + 5;
 
@@ -539,7 +530,7 @@ var Life = Life || {REVISION: '0.1'};
 		}
 
 		this.repCounter = this.herbivore * ((Math.random() * 0.2) + parameters.agent.reproductionRate.herbivore - 0.1)
-				+ (1 - this.herbivore) * ((Math.random() * 0.2) + parameters.agent.reproductionRate.herbivore - 0.1);
+			+ (1 - this.herbivore) * ((Math.random() * 0.2) + parameters.agent.reproductionRate.herbivore - 0.1);
 
 		this.smellModifier = Math.random() * 0.4 + 0.1;
 		this.soundModifier = Math.random() * 0.4 + 0.2;
@@ -564,129 +555,127 @@ var Life = Life || {REVISION: '0.1'};
 		};
 
 		this.brain = new Life.Brain(parameters);
-
 		this.tick = function () {
 			if (_this.id == 0) {
 				//console.log(_this.id, _this.in, _this.out);
 			}
 			_this.brain.tick(_this.in, _this.out);
 		},
-				this.asexuallyReproduce = function (mutationRate1, mutationRate2) {
-					//Create a new agent
-					var agent = new Life.Agent(parameters);
+		this.asexuallyReproduce = function (mutationRate1, mutationRate2) {
+			//Create a new agent
+			var agent = new Life.Agent(parameters);
 
-					//Place it behind its parent
-					var fb = $V([parameters.agent.size / 2, 0]);
-					fb.rotate(-agent.angle);
-					agent.pos = _this.pos.add(fb).add($V([Math.random() * parameters.agent.size - parameters.agent.size, Math.random() * parameters.agent.size - parameters.agent.size]));
-					if (agent.pos.elements[0] < 0)
-						agent.pos.elements[0] = parameters.width + agent.pos.elements[0];
-					if (agent.pos.elements[0] > parameters.width)
-						agent.pos.elements[0] = agent.pos.elements[0] - parameters.width;
-					if (agent.pos.elements[1] < 0)
-						agent.pos.elements[1] = parameters.height + agent.pos.elements[1];
-					if (agent.pos.elements[1] > parameters.height)
-						agent.pos.elements[1] = agent.pos.elements[1] - parameters.height;
+			//Place it behind its parent
+			var fb = $V([parameters.agent.size / 2, 0]);
+			fb.rotate(-agent.angle);
+			agent.pos = _this.pos.add(fb).add($V([Math.random() * parameters.agent.size - parameters.agent.size, Math.random() * parameters.agent.size - parameters.agent.size]));
+			if (agent.pos.elements[0] < 0)
+				agent.pos.elements[0] = parameters.width + agent.pos.elements[0];
+			if (agent.pos.elements[0] > parameters.width)
+				agent.pos.elements[0] = agent.pos.elements[0] - parameters.width;
+			if (agent.pos.elements[1] < 0)
+				agent.pos.elements[1] = parameters.height + agent.pos.elements[1];
+			if (agent.pos.elements[1] > parameters.height)
+				agent.pos.elements[1] = agent.pos.elements[1] - parameters.height;
 
-					//Assign generation number and nutrient value for body
-					agent.generationCount = _this.generationCount + 1;
-					agent.repCounter = agent.herbivore * ((Math.random() * 0.2) + parameters.agent.reproductionRate.herbivore - 0.1)
-							+ (1 - agent.herbivore) * ((Math.random() * 0.2) + parameters.agent.reproductionRate.carnivore - 0.1);
+			//Assign generation number and nutrient value for body
+			agent.generationCount = _this.generationCount + 1;
+			agent.repCounter = agent.herbivore * ((Math.random() * 0.2) + parameters.agent.reproductionRate.herbivore - 0.1)
+				+ (1 - agent.herbivore) * ((Math.random() * 0.2) + parameters.agent.reproductionRate.carnivore - 0.1);
 
-					//Copy mutation rate from parent, randomised using normal distribution with sigma value from parameters
-					agent.mutationRate = _this.mutationRate;
-					if (Math.random() < 0.1)
-						agent.mutationRate[0] = Life.Utils.randomNormal(_this.mutationRate[0], parameters.mutationRate[0]);
-					if (Math.random() < 0.1)
-						agent.mutationRate[1] = Life.Utils.randomNormal(_this.mutationRate[1], parameters.mutationRate[1]);
-					if (_this.mutationRate[0] < 0.001)
-						_this.mutationRate[0] = 0.001;
-					if (_this.mutationRate[1] < 0.02)
-						_this.mutationRate[1] = 0.02;
+			//Copy mutation rate from parent, randomised using normal distribution with sigma value from parameters
+			agent.mutationRate = _this.mutationRate;
+			if (Math.random() < 0.1)
+				agent.mutationRate[0] = Life.Utils.randomNormal(_this.mutationRate[0], parameters.mutationRate[0]);
+			if (Math.random() < 0.1)
+				agent.mutationRate[1] = Life.Utils.randomNormal(_this.mutationRate[1], parameters.mutationRate[1]);
+			if (_this.mutationRate[0] < 0.001)
+				_this.mutationRate[0] = 0.001;
+			if (_this.mutationRate[1] < 0.02)
+				_this.mutationRate[1] = 0.02;
 
-					//Randomise food preference and body clocks from parent's values and mutation rate
-					agent.herbivore = Life.Utils.cap(Life.Utils.randomNormal(_this.herbivore, 0.03));
-					if (Math.random() < mutationRate1 * 5)
-						agent.clock1 = Life.Utils.randomNormal(agent.clock1, mutationRate2);
-					if (agent.clock1 < 2)
-						agent.clock1 = 2;
-					if (Math.random() < mutationRate1 * 5)
-						agent.clock2 = Life.Utils.randomNormal(agent.clock2, mutationRate2);
-					if (agent.clock2 < 2)
-						agent.clock2 = 2;
+			//Randomise food preference and body clocks from parent's values and mutation rate
+			agent.herbivore = Life.Utils.cap(Life.Utils.randomNormal(_this.herbivore, 0.03));
+			if (Math.random() < mutationRate1 * 5)
+				agent.clock1 = Life.Utils.randomNormal(agent.clock1, mutationRate2);
+			if (agent.clock1 < 2)
+				agent.clock1 = 2;
+			if (Math.random() < mutationRate1 * 5)
+				agent.clock2 = Life.Utils.randomNormal(agent.clock2, mutationRate2);
+			if (agent.clock2 < 2)
+				agent.clock2 = 2;
 
-					//Copy senses from parent
-					agent.smellModifier = _this.smellModifier;
-					agent.soundModifier = _this.soundModifier;
-					agent.hearingModifier = _this.hearingModifier;
-					agent.eyeSenseModifier = _this.eyeSenseModifier;
-					agent.bloodModifier = _this.bloodModifier;
+			//Copy senses from parent
+			agent.smellModifier = _this.smellModifier;
+			agent.soundModifier = _this.soundModifier;
+			agent.hearingModifier = _this.hearingModifier;
+			agent.eyeSenseModifier = _this.eyeSenseModifier;
+			agent.bloodModifier = _this.bloodModifier;
 
-					//Mutate senses
-					if (Math.random() < mutationRate1 * 5)
-						agent.smellModifier = Life.Utils.randomNormal(agent.smellModifier, mutationRate2);
-					if (Math.random() < mutationRate1 * 5)
-						agent.soundModifier = Life.Utils.randomNormal(agent.soundModifier, mutationRate2);
-					if (Math.random() < mutationRate1 * 5)
-						agent.hearingModifier = Life.Utils.randomNormal(agent.hearingModifier, mutationRate2);
-					if (Math.random() < mutationRate1 * 5)
-						agent.eyeSenseModifier = Life.Utils.randomNormal(agent.eyeSenseModifier, mutationRate2);
-					if (Math.random() < mutationRate1 * 5)
-						agent.bloodModifier = Life.Utils.randomNormal(agent.bloodModifier, mutationRate2);
+			//Mutate senses
+			if (Math.random() < mutationRate1 * 5)
+				agent.smellModifier = Life.Utils.randomNormal(agent.smellModifier, mutationRate2);
+			if (Math.random() < mutationRate1 * 5)
+				agent.soundModifier = Life.Utils.randomNormal(agent.soundModifier, mutationRate2);
+			if (Math.random() < mutationRate1 * 5)
+				agent.hearingModifier = Life.Utils.randomNormal(agent.hearingModifier, mutationRate2);
+			if (Math.random() < mutationRate1 * 5)
+				agent.eyeSenseModifier = Life.Utils.randomNormal(agent.eyeSenseModifier, mutationRate2);
+			if (Math.random() < mutationRate1 * 5)
+				agent.bloodModifier = Life.Utils.randomNormal(agent.bloodModifier, mutationRate2);
 
-					//Copy and mutate eyes
-					agent.eyeFov = _this.eyeFov;
-					agent.eyeDir = _this.eyeDir;
-					for (var i = 0; i < parameters.agent.numberEyes; i++) {
-						if (Math.random() < mutationRate1 * 5)
-							agent.eyeFov[i] = Life.Utils.randomNormal(agent.eyeFov[i], mutationRate2);
-						if (Math.random() < mutationRate1 * 5)
-							agent.eyeDir[i] = Life.Utils.randomNormal(agent.eyeDir[i], mutationRate2);
-						if (agent.eyeFov[i] < 0)
-							agent.eyeFov = 0;
-						if (agent.eyeDir[i] < 0)
-							agent.eyeDir = 0;
-						if (agent.eyeDir[i] > 2 * Math.PI)
-							agent.eyeDir = 2 * Math.PI;
-					}
+			//Copy and mutate eyes
+			agent.eyeFov = _this.eyeFov;
+			agent.eyeDir = _this.eyeDir;
+			for (var i = 0; i < parameters.agent.numberEyes; i++) {
+				if (Math.random() < mutationRate1 * 5)
+					agent.eyeFov[i] = Life.Utils.randomNormal(agent.eyeFov[i], mutationRate2);
+				if (Math.random() < mutationRate1 * 5)
+					agent.eyeDir[i] = Life.Utils.randomNormal(agent.eyeDir[i], mutationRate2);
+				if (agent.eyeFov[i] < 0)
+					agent.eyeFov = 0;
+				if (agent.eyeDir[i] < 0)
+					agent.eyeDir = 0;
+				if (agent.eyeDir[i] > 2 * Math.PI)
+					agent.eyeDir = 2 * Math.PI;
+			}
 
-					agent.temperaturePreference = Life.Utils.cap(Life.Utils.randomNormal(_this.temperaturePreference, 0.005));
-					agent.brain = _this.brain;
-					agent.brain.mutate(mutationRate1, mutationRate2);
+			agent.temperaturePreference = Life.Utils.cap(Life.Utils.randomNormal(_this.temperaturePreference, 0.005));
+			agent.brain = _this.brain;
+			agent.brain.mutate(mutationRate1, mutationRate2);
 
-					return agent;
-				},
-				this.crossover = function (partner) {
-					var agent = new Life.Agent(parameters);
-					agent.hybrid = true;
-					agent.generationCount = _this.generationCount;
-					if (partner.generationCount < agent.generationCount)
-						agent.generationCount = partner.generationCount;
+			return agent;
+		},
+		this.crossover = function (partner) {
+			var agent = new Life.Agent(parameters);
+			agent.hybrid = true;
+			agent.generationCount = _this.generationCount;
+			if (partner.generationCount < agent.generationCount)
+				agent.generationCount = partner.generationCount;
 
-					//Randomise which parent attributes are inherited from
-					agent.clock1 = Math.random() < 0.5 ? _this.clock1 : partner.clock1;
-					agent.clock2 = Math.random() < 0.5 ? _this.clock2 : partner.clock2;
-					agent.herbivore = Math.random() < 0.5 ? _this.herbivore : partner.herbivore;
-					agent.mutationRate = Math.random() < 0.5 ? _this.mutationRate : partner.mutationRate;
-					agent.temperaturePreference = Math.random() < 0.5 ? _this.temperaturePreference : partner.temperaturePreference;
+			//Randomise which parent attributes are inherited from
+			agent.clock1 = Math.random() < 0.5 ? _this.clock1 : partner.clock1;
+			agent.clock2 = Math.random() < 0.5 ? _this.clock2 : partner.clock2;
+			agent.herbivore = Math.random() < 0.5 ? _this.herbivore : partner.herbivore;
+			agent.mutationRate = Math.random() < 0.5 ? _this.mutationRate : partner.mutationRate;
+			agent.temperaturePreference = Math.random() < 0.5 ? _this.temperaturePreference : partner.temperaturePreference;
 
-					agent.smellModifier = Math.random() < 0.5 ? _this.smellModifier : partner.smellModifier;
-					agent.soundModifier = Math.random() < 0.5 ? _this.soundModifier : partner.soundModifier;
-					agent.hearingModifier = Math.random() < 0.5 ? _this.hearingModifier : partner.hearingModifier;
-					agent.eyeSenseModifier = Math.random() < 0.5 ? _this.eyeSenseModifier : partner.eyeSenseModifier;
-					agent.bloodModifier = Math.random() < 0.5 ? _this.bloodModifier : partner.bloodModifier;
+			agent.smellModifier = Math.random() < 0.5 ? _this.smellModifier : partner.smellModifier;
+			agent.soundModifier = Math.random() < 0.5 ? _this.soundModifier : partner.soundModifier;
+			agent.hearingModifier = Math.random() < 0.5 ? _this.hearingModifier : partner.hearingModifier;
+			agent.eyeSenseModifier = Math.random() < 0.5 ? _this.eyeSenseModifier : partner.eyeSenseModifier;
+			agent.bloodModifier = Math.random() < 0.5 ? _this.bloodModifier : partner.bloodModifier;
 
-					agent.eyeFov = Math.random() < 0.5 ? _this.eyeFov : partner.eyeFov;
-					agent.eyeDir = Math.random() < 0.5 ? _this.eyeDir : partner.eyeDir;
+			agent.eyeFov = Math.random() < 0.5 ? _this.eyeFov : partner.eyeFov;
+			agent.eyeDir = Math.random() < 0.5 ? _this.eyeDir : partner.eyeDir;
 
-					agent.brain = _this.brain.crossover(partner.brain);
+			agent.brain = _this.brain.crossover(partner.brain);
 
-					return agent;
-				};
+			return agent;
+		};
 	};
 
 	Life.Box = function (parameters) {
-
 		var _this = this;
 
 		this.weight = Array();
@@ -712,19 +701,15 @@ var Life = Life || {REVISION: '0.1'};
 
 			_this.type[i] = (Math.random() < 0.05) ? 1 : 0;
 		}
-
 	};
 
 	Life.Brain = function (parameters) {
-
 		var _this = this;
-
 		this.boxes = Array();
 
 		for (var i = 0; i < parameters.brain.size; i++) {
 			_this.boxes.push(new Life.Box(parameters));
 		}
-
 
 		this.tick = function (input, output) {
 			for (var i = 0; i < parameters.brain.inputSize; i++) {
@@ -733,7 +718,6 @@ var Life = Life || {REVISION: '0.1'};
 
 			for (var i = parameters.brain.inputSize; i < parameters.brain.size; i++) {
 				var box = _this.boxes[i];
-
 				var acc = 0;
 				for (var j = 0; j < parameters.brain.connections; j++) {
 					var index = box.id[j];
@@ -766,70 +750,69 @@ var Life = Life || {REVISION: '0.1'};
 				output[i] = _this.boxes[parameters.brain.size - 1 - i].output;
 			}
 		},
-				this.mutate = function (mutationRate1, mutationRate2) {
-					for (var i = 0; i < parameters.brain.size; i++) {
-						if (Math.random() < mutationRate1) {
-							_this.boxes[i].bias += Life.Utils.randomNormal(0, mutationRate2);
-						}
-
-						if (Math.random() < mutationRate1) {
-							_this.boxes[i].damper += Life.Utils.randomNormal(0, mutationRate2);
-							if (_this.boxes[i].damper < 0.001)
-								_this.boxes[i].damper = 0.001;
-							if (_this.boxes[i].damper > 1)
-								_this.boxes[i].damper = 1;
-						}
-
-						if (Math.random() < mutationRate1) {
-							_this.boxes[i].globalWeight += Life.Utils.randomNormal(0, mutationRate2);
-							if (_this.boxes[i].globalWeight < 0)
-								_this.boxes[i].globalWeight = 0;
-						}
-
-						if (Math.random() < mutationRate1) {
-							var rc = Math.round(Math.random() * parameters.brain.connections);
-							_this.boxes[i].weight[rc] += Life.Utils.randomNormal(0, mutationRate2);
-						}
-
-						if (Math.random() < mutationRate1) {
-							var rc = Math.round(Math.random() * parameters.brain.connections);
-							_this.boxes[i].type[rc] = 1 - _this.boxes[i].type[rc];
-						}
-
-						if (Math.random() < mutationRate1) {
-							var rc = Math.round(Math.random() * parameters.brain.connections);
-							var ri = Math.round(Math.random() * parameters.brain.size);
-							_this.boxes[i].id[rc] = ri;
-						}
-					}
-				},
-				this.crossover = function (partner) {
-					var brain = new Life.Brain(parameters);
-
-					for (var i = 0; i < brain.boxes.length; i++) {
-						if (Math.random() < 0.5) {
-							brain.boxes[i].bias = _this.boxes[i].bias;
-							brain.boxes[i].globalWeight = _this.boxes[i].globalWeight;
-							brain.boxes[i].damper = _this.boxes[i].damper;
-							for (var j = 0; j < brain.boxes[i].id.length; j++) {
-								brain.boxes[i].id[j] = _this.boxes[i].id[j];
-								brain.boxes[i].weight[j] = _this.boxes[i].weight[j];
-								brain.boxes[i].type[j] = _this.boxes[i].type[j];
-							}
-						} else {
-							brain.boxes[i].bias = partner.boxes[i].bias;
-							brain.boxes[i].globalWeight = partner.boxes[i].globalWeight;
-							brain.boxes[i].damper = partner.boxes[i].damper;
-							for (var j = 0; j < brain.boxes[i].id.length; j++) {
-								brain.boxes[i].id[j] = partner.boxes[i].id[j];
-								brain.boxes[i].weight[j] = partner.boxes[i].weight[j];
-								brain.boxes[i].type[j] = partner.boxes[i].type[j];
-							}
-						}
-					}
-					return brain;
+		this.mutate = function (mutationRate1, mutationRate2) {
+			for (var i = 0; i < parameters.brain.size; i++) {
+				if (Math.random() < mutationRate1) {
+					_this.boxes[i].bias += Life.Utils.randomNormal(0, mutationRate2);
 				}
 
+				if (Math.random() < mutationRate1) {
+					_this.boxes[i].damper += Life.Utils.randomNormal(0, mutationRate2);
+					if (_this.boxes[i].damper < 0.001)
+						_this.boxes[i].damper = 0.001;
+					if (_this.boxes[i].damper > 1)
+						_this.boxes[i].damper = 1;
+				}
+
+				if (Math.random() < mutationRate1) {
+					_this.boxes[i].globalWeight += Life.Utils.randomNormal(0, mutationRate2);
+					if (_this.boxes[i].globalWeight < 0)
+						_this.boxes[i].globalWeight = 0;
+				}
+
+				if (Math.random() < mutationRate1) {
+					var rc = Math.round(Math.random() * parameters.brain.connections);
+					_this.boxes[i].weight[rc] += Life.Utils.randomNormal(0, mutationRate2);
+				}
+
+				if (Math.random() < mutationRate1) {
+					var rc = Math.round(Math.random() * parameters.brain.connections);
+					_this.boxes[i].type[rc] = 1 - _this.boxes[i].type[rc];
+				}
+
+				if (Math.random() < mutationRate1) {
+					var rc = Math.round(Math.random() * parameters.brain.connections);
+					var ri = Math.round(Math.random() * parameters.brain.size);
+					_this.boxes[i].id[rc] = ri;
+				}
+			}
+		},
+		this.crossover = function (partner) {
+			var brain = new Life.Brain(parameters);
+
+			for (var i = 0; i < brain.boxes.length; i++) {
+				if (Math.random() < 0.5) {
+					brain.boxes[i].bias = _this.boxes[i].bias;
+					brain.boxes[i].globalWeight = _this.boxes[i].globalWeight;
+					brain.boxes[i].damper = _this.boxes[i].damper;
+					for (var j = 0; j < brain.boxes[i].id.length; j++) {
+						brain.boxes[i].id[j] = _this.boxes[i].id[j];
+						brain.boxes[i].weight[j] = _this.boxes[i].weight[j];
+						brain.boxes[i].type[j] = _this.boxes[i].type[j];
+					}
+				} else {
+					brain.boxes[i].bias = partner.boxes[i].bias;
+					brain.boxes[i].globalWeight = partner.boxes[i].globalWeight;
+					brain.boxes[i].damper = partner.boxes[i].damper;
+					for (var j = 0; j < brain.boxes[i].id.length; j++) {
+						brain.boxes[i].id[j] = partner.boxes[i].id[j];
+						brain.boxes[i].weight[j] = partner.boxes[i].weight[j];
+						brain.boxes[i].type[j] = partner.boxes[i].type[j];
+					}
+				}
+			}
+			return brain;
+		}
 	};
 
 	Life.Utils = {};

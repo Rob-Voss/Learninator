@@ -80,20 +80,28 @@ var Shape = Shape || {REVISION: '0.1'};
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} v1
+		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (v1) {
+		contains: function (v) {
 			if (this.type === 'rect' || this.type === 'bubb') {
-				var dist = (this.pos.x <= v1.x) && 
-						(this.pos.x + this.width >= v1.x) &&
-						(this.pos.y <= v1.y) && 
-						(this.pos.y + this.height >= v1.y);
+				var dist = (this.pos.x <= v.x) && 
+						(this.pos.x + this.width >= v.x) &&
+						(this.pos.y <= v.y) && 
+						(this.pos.y + this.height >= v.y);
 				return dist;
 			} else if (this.type === 'circ') {
-				var dist = v1.distFrom(this.pos) < this.radius;
+				var dist = v.distFrom(this.pos) < this.radius;
 				return dist;
 			}
+		},
+		/**
+		 * What to do when clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onClick: function(v) {
+			console.log(this.itemTypes[this.type]);
 		}
 	};
 

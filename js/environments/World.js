@@ -222,7 +222,7 @@ var World = World || {REVISION: '0.1'};
 				var mouse = this.getMouse(e);
 				// We don't want to drag the object by its top-left corner, we want to drag it
 				// from where we clicked. Thats why we saved the offset and use it here
-				this.selection = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
 				this.valid = false; // Something's dragging so we must redraw
 			} else {
 				console.log();
@@ -235,7 +235,9 @@ var World = World || {REVISION: '0.1'};
 		 */
 		mouseUp: function (e) {
 			var mouse = this.getMouse(e);
-			this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+			if (this.selection) {
+				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+			}
 			this.dragging = false;
 		},
 		/**
