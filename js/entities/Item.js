@@ -80,12 +80,31 @@ var Item = Item || {REVISION: '0.1'};
 			}
 		},
 		/**
+		 * Find the area
+		 * @param {Vec} v1
+		 * @param {Vec} v2
+		 * @param {Vec} v3
+		 * @returns {Number}
+		 */
+		area: function (v1, v2, v3) {
+			return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+		},
+		/**
 		 * Determine if a point is inside the shape's bounds
 		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
 		contains: function (v) {
-			if (this.type === 'rect') {
+			if (this.type === 'tria') {
+				var v1 = this.pos,
+					v2 = new Vec(this.pos.x + this.width / 2, this.pos.y + this.height),
+					v3 = new Vec(this.pos.x - this.width / 2, this.pos.y + this.height),
+					A = this.area(v1, v2, v3),
+					A1 = this.area(v, v2, v3),
+					A2 = this.area(v1, v, v3),
+					A3 = this.area(v1, v2, v);
+				return (A === A1 + A2 + A3);
+			} else if (this.type === 'rect') {
 				return  (this.pos.x <= v.x) && (this.pos.x + this.width >= v.x) &&
 						(this.pos.y <= v.y) && (this.pos.y + this.height >= v.y);
 			} else if (this.type === 1 || this.type === 2 || this.type === 3) {
