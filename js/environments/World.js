@@ -224,6 +224,8 @@ var World = World || {REVISION: '0.1'};
 				// from where we clicked. Thats why we saved the offset and use it here
 				this.selection = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
 				this.valid = false; // Something's dragging so we must redraw
+			} else {
+				console.log();
 			}
 		},
 		/**
@@ -232,6 +234,8 @@ var World = World || {REVISION: '0.1'};
 		 * @returns {undefined}
 		 */
 		mouseUp: function (e) {
+			var mouse = this.getMouse(e);
+			this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
 			this.dragging = false;
 		},
 		/**
@@ -249,9 +253,8 @@ var World = World || {REVISION: '0.1'};
 					this.dragoff.x = mouse.x - mySel.pos.x;
 					this.dragoff.y = mouse.y - mySel.pos.y;
 					this.dragging = true;
-					this.selection = mySel.pos;
+					this.selection = mySel;
 					this.valid = false;
-					mySel.onClick(mouse);
 					return;
 				}
 			}
@@ -300,17 +303,10 @@ var World = World || {REVISION: '0.1'};
 						eye.sensedType = -1;
 					}
 				}
-			}
-
-			// Let the agents behave in the world based on their input
-			for (var i = 0, n = this.agents.length; i < n; i++) {
-				this.agents[i].forward();
-			}
-
-			// Apply the outputs of agents on the environment
-			for (var i = 0, n = this.agents.length; i < n; i++) {
-				var agent = this.agents[i];
-
+				// Let the agents behave in the world based on their input
+				agent.forward();
+				
+				// Apply the outputs of agents on the environment
 				agent.oldPos = agent.pos; // Back up the old position
 				agent.oldAngle = agent.angle; // and angle
 
