@@ -1,4 +1,4 @@
-var CanvasState = CanvasState || {REVISION: '0.1'};
+var CanvasState = CanvasState || {};
 
 (function (global) {
 	"use strict";

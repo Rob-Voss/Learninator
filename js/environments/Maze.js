@@ -1,4 +1,4 @@
-var Maze = Maze || {REVISION: '0.1'};
+var Maze = Maze || {};
 
 (function (global) {
 	"use strict";

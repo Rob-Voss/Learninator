@@ -74,29 +74,6 @@ function reload() {
 }
 
 /**
- * Set the simulation speed
- * @param {String} speed
- */
-function go(speed) {
-	window.clearInterval(intervalId);
-	skipDraw = false;
-	if (speed === 'min') {
-		intervalId = setInterval(tick, 200);
-		simSpeed = 0;
-	} else if (speed === 'mid') {
-		intervalId = setInterval(tick, 30);
-		simSpeed = 1;
-	} else if (speed === 'max') {
-		intervalId = setInterval(tick, 0);
-		simSpeed = 2;
-	} else if (speed === 'max+') {
-		intervalId = setInterval(tick, 0);
-		skipDraw = true;
-		simSpeed = 3;
-	}
-}
-
-/**
  * Download the brains to the field
  * @returns {undefined}
  */

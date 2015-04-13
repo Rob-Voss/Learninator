@@ -65,13 +65,13 @@ var Life = Life || {REVISION: '0.1'};
 		};
 
 		var _this = this,
-				_canvas = document.createElement('canvas'),
-				_brainDiv = document.createElement('div'),
-				_canvasWidth = _params.width,
-				_canvasHeight = _params.height,
-				_context = _canvas.getContext('2d'),
-				_world = null,
-				_selectedAgent = null;
+			_canvas = document.createElement('canvas'),
+			_brainDiv = document.createElement('div'),
+			_canvasWidth = _params.width,
+			_canvasHeight = _params.height,
+			_context = _canvas.getContext('2d'),
+			_world = null,
+			_selectedAgent = null;
 
 		_canvas.width = _canvasWidth;
 		_canvas.height = _canvasHeight;
@@ -80,8 +80,6 @@ var Life = Life || {REVISION: '0.1'};
 		this.world = _world;
 		this.agent = _selectedAgent;
 		this.parameters = _params;
-
-
 
 		this.animate = function () {
 			requestAnimationFrame(_this.animate);
@@ -202,12 +200,27 @@ var Life = Life || {REVISION: '0.1'};
 				}
 				var val = (neuron.out < 1) ? neuron.out : 1;
 
-				var node = {"id": id, "name": id, data: {"$type": type, "$dim": "5", "$color": Life.Utils.rgbaToCss(1, neuron.output, neuron.output, 1)}, "adjacencies": []};
+				var node = {
+					"id": id,
+					"name": id,
+					data: {
+						"$type": type,
+						"$dim": "5",
+						"$color": Life.Utils.rgbaToCss(1, neuron.output, neuron.output, 1)
+					},
+					"adjacencies": []
+				};
 				for (var syn in neurons[id].id) {
 					var synapse = neurons[id].id[syn];
 					var width = neurons[id].weight[syn] + 3;
 					var color = (neurons[id].type[syn] > 0.5) ? Life.Utils.rgbaToCss(1, 1, 0, 0.3) : Life.Utils.rgbaToCss(0, 0, 0, 0.05);
-					node.adjacencies.push({"nodeTo": synapse, "data": {"$color": color, "weight": width / 2}});
+					node.adjacencies.push({
+						"nodeTo": synapse,
+						"data": {
+							"$color": color,
+							"weight": width / 2
+						}
+					});
 				}
 				graph.push(node);
 			}
@@ -233,6 +246,7 @@ var Life = Life || {REVISION: '0.1'};
 				window.requestAnimationFrame = window[ vendors[ x ] + 'RequestAnimationFrame' ];
 				window.cancelAnimationFrame = window[ vendors[ x ] + 'CancelAnimationFrame' ] || window[ vendors[ x ] + 'CancelRequestAnimationFrame' ];
 			}
+
 			if (!window.requestAnimationFrame) {
 				window.requestAnimationFrame = function (callback, element) {
 					var currTime = Date.now(), timeToCall = Math.max(0, 16 - (currTime - lastTime));
@@ -243,6 +257,7 @@ var Life = Life || {REVISION: '0.1'};
 					return id;
 				};
 			}
+
 			if (!window.cancelAnimationFrame) {
 				window.cancelAnimationFrame = function (id) {
 					clearTimeout(id);

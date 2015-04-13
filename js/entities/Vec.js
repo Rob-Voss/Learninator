@@ -1,4 +1,4 @@
-var Vec = Vec || {REVISION: '0.1'};
+var Vec = Vec || {};
 
 (function (global) {
 	"use strict";

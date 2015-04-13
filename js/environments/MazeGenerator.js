@@ -1,4 +1,4 @@
-var MazeGenerator = MazeGenerator || {REVISION: '0.1'};
+var MazeGenerator = MazeGenerator || {};
 
 (function (global) {
 	"use strict";

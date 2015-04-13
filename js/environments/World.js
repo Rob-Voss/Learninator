@@ -1,11 +1,11 @@
-var World = World || {REVISION: '0.1'};
+var World = World || {};
 
 (function (global) {
 	"use strict";
 
 	/**
 	 * Make a World
-	 * @param {Graph} canvas
+	 * @param {Canvas} canvas
 	 * @param {Array} cells
 	 * @param {Agent} agents
 	 * @returns {World}
@@ -46,10 +46,10 @@ var World = World || {REVISION: '0.1'};
 
 		// Keep track of when we are dragging
 		this.dragging = false;
-	
+
 		// See mousedown and mousemove events for explanation
 		this.dragoff = new Vec(0,0);
-		
+
 		// Currently selected object. In the future an array for multiple selection
 		this.selection = null;
 
@@ -207,7 +207,7 @@ var World = World || {REVISION: '0.1'};
 			offset.x += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
 			offset.y += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
 
-			// We return a simple javascript object (a hash) with x and y defined
+			// We return a Vec with x and y defined
 			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
 
 			return mouseLoc;
@@ -218,14 +218,13 @@ var World = World || {REVISION: '0.1'};
 		 * @returns {undefined}
 		 */
 		mouseMove: function (e) {
+			var mouse = this.getMouse(e);
 			if (this.dragging) {
-				var mouse = this.getMouse(e);
 				// We don't want to drag the object by its top-left corner, we want to drag it
 				// from where we clicked. Thats why we saved the offset and use it here
 				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-				this.valid = false; // Something's dragging so we must redraw
-			} else {
-				console.log();
+				// Something is being dragged so we must redraw
+				this.valid = false;
 			}
 		},
 		/**
@@ -307,7 +306,7 @@ var World = World || {REVISION: '0.1'};
 				}
 				// Let the agents behave in the world based on their input
 				agent.forward();
-				
+
 				// Apply the outputs of agents on the environment
 				agent.oldPos = agent.pos; // Back up the old position
 				agent.oldAngle = agent.angle; // and angle
@@ -429,19 +428,24 @@ var World = World || {REVISION: '0.1'};
 		go: function (speed) {
 			clearInterval(this.interval);
 			this.valid = false;
-			if (speed === 'min') {
-				this.interval = setInterval(this.tick(), 200);
-				this.simSpeed = 0;
-			} else if (speed === 'mid') {
-				this.interval = setInterval(this.tick(), 30);
-				this.simSpeed = 1;
-			} else if (speed === 'max') {
-				this.interval = setInterval(this.tick(), 0);
-				this.simSpeed = 2;
-			} else if (speed === 'max+') {
-				this.interval = setInterval(this.tick(), 0);
-				this.valid = true;
-				this.simSpeed = 3;
+			switch(speed) {
+				case 'min':
+					this.interval = setInterval(this.tick(), 200);
+					this.simSpeed = 0;
+					break;
+				case 'mid':
+					this.interval = setInterval(this.tick(), 30);
+					this.simSpeed = 1;
+					break;
+				case 'max':
+					this.interval = setInterval(this.tick(), 0);
+					this.simSpeed = 2;
+					break;
+				case 'max+':
+					this.interval = setInterval(this.tick(), 0);
+					this.valid = true;
+					this.simSpeed = 3;
+					break;
 			}
 		},
 		drawSelf: function () {
@@ -482,17 +486,20 @@ var World = World || {REVISION: '0.1'};
 				for (var ei = 0, nEye = agent.numEyes; ei < nEye; ei++) {
 					var eye = agent.eyes[ei],
 						eyeProx = eye.sensedProximity;
-					// Is it wall or nothing?
-					if (eye.sensedType === -1 || eye.sensedType === 0) {
-						this.ctx.strokeStyle = "rgb(0,0,0)";
-					}
-					// It is noms
-					if (eye.sensedType === 1) {
-						this.ctx.strokeStyle = "rgb(255,150,150)";
-					}
-					// It is gnar gnar
-					if (eye.sensedType === 2) {
-						this.ctx.strokeStyle = "rgb(150,255,150)";
+
+					switch (eye.sensedType) {
+						// Is it wall or nothing?
+						case -1:case 0:
+							this.ctx.strokeStyle = "rgb(0,0,0)";
+							break;
+						// It is noms
+						case 1:
+							this.ctx.strokeStyle = "rgb(255,150,150)";
+							break;
+						// It is gnar gnar
+						case 2:
+							this.ctx.strokeStyle = "rgb(150,255,150)";
+							break;
 					}
 
 					var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle),
@@ -504,7 +511,6 @@ var World = World || {REVISION: '0.1'};
 					this.ctx.lineTo(aEyeX, aEyeY);
 					this.ctx.stroke();
 				}
-				agent.brain.visSelf(document.getElementById('brain_info_div_' + i));
 			}
 
 			// Draw items

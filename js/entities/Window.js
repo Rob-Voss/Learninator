@@ -1,4 +1,4 @@
-var Window = Window || {REVISION: '0.1'};
+var Window = Window || {};
 
 (function (global) {
 	"use strict";
@@ -18,7 +18,7 @@ var Window = Window || {REVISION: '0.1'};
 	};
 
 	/**
-	 * 
+	 *
 	 */
 	Window.prototype = {
 		/**

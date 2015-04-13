@@ -1,4 +1,4 @@
-var Agent = Agent || {REVISION: '0.1'};
+var Agent = Agent || {};
 
 (function (global) {
 	"use strict";

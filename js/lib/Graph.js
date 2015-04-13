@@ -1,4 +1,4 @@
-var Graph = Graph || {REVISION: '0.1'};
+var Graph = Graph || {};
 
 (function (global) {
 	"use strict";

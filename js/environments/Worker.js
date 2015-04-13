@@ -1,5 +1,6 @@
 importScripts('../lib/sylvester.js');
-var Life = Life || {REVISION: '0.1'};
+
+var Life = Life || {};
 
 (function (global) {
 	"use strict";
@@ -557,7 +558,7 @@ var Life = Life || {REVISION: '0.1'};
 		this.brain = new Life.Brain(parameters);
 		this.tick = function () {
 			if (_this.id == 0) {
-				//console.log(_this.id, _this.in, _this.out);
+				console.log(_this.id, _this.in, _this.out);
 			}
 			_this.brain.tick(_this.in, _this.out);
 		},
@@ -879,7 +880,10 @@ var Life = Life || {REVISION: '0.1'};
 			agents.push(agent);
 		}
 
-		var world = {agents: agents, food: _world.food};
+		var world = {
+			agents: agents,
+			food: _world.food
+		};
 		self.postMessage(JSON.stringify({world: world, agent: _selectedAgent}));
 	}
 

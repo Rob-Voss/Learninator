@@ -1,4 +1,4 @@
-var Wall = Wall || {REVISION: '0.1'};
+var Wall = Wall || {};
 
 (function (global) {
 	"use strict";

@@ -1,4 +1,4 @@
-var Shape = Shape || {REVISION: '0.1'};
+var Shape = Shape || {};
 
 (function (global) {
 	"use strict";
@@ -85,9 +85,9 @@ var Shape = Shape || {REVISION: '0.1'};
 		 */
 		contains: function (v) {
 			if (this.type === 'rect' || this.type === 'bubb') {
-				var dist = (this.pos.x <= v.x) && 
+				var dist = (this.pos.x <= v.x) &&
 						(this.pos.x + this.width >= v.x) &&
-						(this.pos.y <= v.y) && 
+						(this.pos.y <= v.y) &&
 						(this.pos.y + this.height >= v.y);
 				return dist;
 			} else if (this.type === 'circ') {
