@@ -372,10 +372,10 @@ var World = World || {};
 							// Nom Noms!
 							switch (item.type) {
 								case 1:// The sweet meats
-									agent.digestionSignal += 5.0 * (item.radius / 2);
+									agent.digestionSignal += 5.0 + (item.radius / 2);
 									break;
 								case 2:// The gnar gnar meats
-									agent.digestionSignal += -6.0 * (item.radius / 2);
+									agent.digestionSignal += -6.0 + (item.radius / 2);
 									break;
 							}
 							item.cleanUp = true;
