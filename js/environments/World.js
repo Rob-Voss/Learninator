@@ -6,19 +6,22 @@ var World = World || {};
 	/**
 	 * Make a World
 	 * @param {Canvas} canvas
-	 * @param {Array} cells
+	 * @param {Array} walls
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	var World = function (canvas, cells, agents) {
+	var World = function (canvas, walls, agents) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 		this.width = canvas.width;
 		this.height = canvas.height;
 
-		this.cells = cells;
+		this.walls = walls;
 		this.agents = agents;
 		this.items = [];
+
+		this.randf = function(a, b) { return Math.random()*(b-a)+a; };
+		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
 
 		this.simSpeed = 1;
 		this.interval = 60;
@@ -57,40 +60,40 @@ var World = World || {};
 		this.selectionColor = '#CC0000';
 		this.selectionWidth = 1;
 
-		var myState = this;
+		var thisWorld = this;
 
 		// This fixes a problem where double clicking causes text to get selected on the canvas
-		this.canvas.addEventListener('selectstart', function (e) {
+		canvas.addEventListener('selectstart', function (e) {
 			e.preventDefault();
 			return false;
 		}, false);
 
 		// Up, down, and move are for dragging
-		this.canvas.addEventListener('mousedown', function (e) {
-			myState.mouseDown(e);
+		canvas.addEventListener('mousedown', function (e) {
+			thisWorld.mouseDown(e);
 		}, true);
 
 		// Track the mouse movement
-		this.canvas.addEventListener('mousemove', function (e) {
-			myState.mouseMove(e);
+		canvas.addEventListener('mousemove', function (e) {
+			thisWorld.mouseMove(e);
 		}, true);
 
 		// Track when the mouse selection is let go of
-		this.canvas.addEventListener('mouseup', function (e) {
-			myState.mouseUp(e);
+		canvas.addEventListener('mouseup', function (e) {
+			thisWorld.mouseUp(e);
 		}, true);
 
 		// Double click for making new items
-		this.canvas.addEventListener('dblclick', function (e) {
-			myState.doubleClick(e);
+		canvas.addEventListener('dblclick', function (e) {
+			thisWorld.doubleClick(e);
 		}, true);
 
 		setInterval(function () {
-			myState.tick();
-			if (!myState.valid || myState.clock % 50 === 0) {
-				myState.drawSelf();
+			thisWorld.tick();
+			if (!thisWorld.valid || thisWorld.clock % 50 === 0) {
+				thisWorld.drawSelf();
 			}
-		}, myState.interval);
+		}, thisWorld.interval);
 	};
 
 	/**
@@ -99,7 +102,18 @@ var World = World || {};
 	 */
 	World.prototype = {
 		/**
-		 * Add an item to the canvas
+		 * Randomly create an item at x, y
+		 * @param {type} x
+		 * @param {type} y
+		 * @returns {undefined}
+		 */
+		randItem: function(x, y) {
+			var type = this.randi(1, 3),
+				radius = this.randi(3, 15);
+			this.addItem(new Item(type, new Vec(x, y), 0, 0, radius));
+		},
+		/**
+		 * Add an item to the world canvas and set it to redraw
 		 * @param {Item} item
 		 * @returns {undefined}
 		 */
@@ -115,7 +129,7 @@ var World = World || {};
 			this.ctx.clearRect(0, 0, this.width, this.height);
 		},
 		/**
-		 * A helper function to get closest colliding cells/items
+		 * A helper function to get check for colliding walls/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
 		 * @param {Boolean} checkCells
@@ -127,9 +141,8 @@ var World = World || {};
 
 			// Collide with walls
 			if (checkCells) {
-				for (var i = 0, n = this.cells.length; i < n; i++) {
-					var cell = this.cells[i];
-					var wResult = Utility.lineIntersect(v1, v2, cell.v1, cell.v2);
+				for (var i = 0, wall; wall = this.walls[i++];) {
+					var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 					if (wResult) {
 						wResult.type = 0; // 0 is wall
 						if (!minRes) {
@@ -147,9 +160,8 @@ var World = World || {};
 
 			// Collide with items
 			if (checkItems) {
-				for (var i = 0, n = this.items.length; i < n; i++) {
-					var item = this.items[i],
-						iResult = Utility.linePointIntersect(v1, v2, item.pos, item.radius);
+				for (var i = 0, item; item = this.items[i++];) {
+					var iResult = Utility.linePointIntersect(v1, v2, item.pos, item.radius);
 					if (iResult) {
 						iResult.type = item.type; // Store type of item
 						if (!minRes) {
@@ -164,12 +176,11 @@ var World = World || {};
 			}
 
 			// Collide with agents
-			if (typeof checkAgents !== 'undefined') {
-				for (var i = 0, n = this.agents.length; i < n; i++) {
-					var agent = this.agents[i],
-						iResult = Utility.linePointIntersect(v1, v2, agent.pos, agent.radius);
+			if (checkAgents) {
+				for (var i = 0, agent; agent = this.agents[i++];) {
+					var iResult = Utility.linePointIntersect(v1, v2, agent.pos, agent.radius);
 					if (iResult) {
-						iResult.type = item.type; // Store type of item
+						iResult.type = 3; // Store type of item
 						if (!minRes) {
 							minRes = iResult;
 						} else {
@@ -218,8 +229,8 @@ var World = World || {};
 		 * @returns {undefined}
 		 */
 		mouseMove: function (e) {
-			var mouse = this.getMouse(e);
 			if (this.dragging) {
+				var mouse = this.getMouse(e);
 				// We don't want to drag the object by its top-left corner, we want to drag it
 				// from where we clicked. Thats why we saved the offset and use it here
 				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
@@ -233,10 +244,12 @@ var World = World || {};
 		 * @returns {undefined}
 		 */
 		mouseUp: function (e) {
-			var mouse = this.getMouse(e);
 			if (this.selection) {
+				var mouse = this.getMouse(e);
+				// Set the selection new position
 				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
 			}
+			// Reset the dragging flag
 			this.dragging = false;
 		},
 		/**
@@ -272,11 +285,8 @@ var World = World || {};
 		 * @returns {undefined}
 		 */
 		doubleClick: function (e) {
-			var mouse = this.getMouse(e),
-				type = convnetjs.randi(1, 3),
-				r = convnetjs.randi(3, 10),
-				item = new Item(type, new Vec(mouse.x, mouse.y), 0, 0, r);
-			this.addItem(item);
+			var mouse = this.getMouse(e);
+			this.randItem(mouse.x, mouse.y);
 		},
 		/**
 		 * Tick the environment
@@ -286,15 +296,12 @@ var World = World || {};
 
 			// Fix input to all agents based on environment and process their eyes
 			this.collpoints = [];
-			for (var i = 0, n = this.agents.length; i < n; i++) {
-				var agent = this.agents[i];
-				for (var ei = 0, ne = agent.numEyes; ei < ne; ei++) {
-					var eye = agent.eyes[ei],
-						X = agent.pos.x + eye.maxRange * Math.sin(agent.angle + eye.angle),
+			for (var i = 0, agent; agent = this.agents[i++];) {
+				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
+					var X = agent.pos.x + eye.maxRange * Math.sin(agent.angle + eye.angle),
 						Y = agent.pos.y + eye.maxRange * Math.cos(agent.angle + eye.angle),
 						// We have a line from agent.pos to p->eyep
-						eyep = new Vec(X, Y),
-						result = this.collisionCheck(agent.pos, eyep, true, true);
+						result = this.collisionCheck(agent.pos, new Vec(X, Y), true, true, true);
 					if (result) {
 						// eye collided with wall
 						eye.sensedProximity = result.vecI.distFrom(agent.pos);
@@ -335,7 +342,7 @@ var World = World || {};
 				if (agent.angle > 2 * Math.PI)
 					agent.angle -= 2 * Math.PI;
 
-				// The agent is trying to move from pos to oPos so we need to check cells
+				// The agent is trying to move from pos to oPos so we need to check walls
 				if (this.collisionCheck(agent.oldPos, agent.pos, true, false)) {
 					// The agent derped! Wall collision! Reset their position
 					agent.pos = agent.oldPos;
@@ -354,22 +361,23 @@ var World = World || {};
 
 			// Tick ALL OF teh items!
 			this.valid = false;
-			for (var i = 0, n = this.items.length; i < n; i++) {
-				var item = this.items[i];
+			for (var i = 0, item; item = this.items[i++];) {
 				item.age += 1;
 
 				// Did the agent find teh noms?
-				for (var j = 0, m = this.agents.length; j < m; j++) {
-					var agent = this.agents[j],
-						d = agent.pos.distFrom(item.pos);
-					if (d < item.radius + agent.radius) {
+				for (var j = 0, agent; agent = this.agents[j++];) {
+					if (agent.pos.distFrom(item.pos) < item.radius + agent.radius) {
 						// Check if it's on the other side of a wall
 						if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
 							// Nom Noms!
-							if (item.type === 1)
-								agent.digestionSignal += 5.0 * (item.radius/2); // The sweet meats
-							if (item.type === 2)
-								agent.digestionSignal += -6.0 * (item.radius/2); // The gnar gnar meats
+							switch (item.type) {
+								case 1:// The sweet meats
+									agent.digestionSignal += 5.0 * (item.radius / 2);
+									break;
+								case 2:// The gnar gnar meats
+									agent.digestionSignal += -6.0 * (item.radius / 2);
+									break;
+							}
 							item.cleanUp = true;
 							this.valid = true;
 							break; // Done consuming, move on
@@ -377,7 +385,7 @@ var World = World || {};
 					}
 				}
 
-				if (item.age > 5000 && this.clock % 100 === 0 && convnetjs.randf(0, 1) < 0.1) {
+				if (item.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
 					// Keell it, it has been around way too long
 					item.cleanUp = true;
 					this.valid = true;
@@ -386,8 +394,7 @@ var World = World || {};
 
 			if (this.valid) {
 				var nt = [];
-				for (var i = 0, n = this.items.length; i < n; i++) {
-					var item = this.items[i];
+				for (var i = 0, item; item = this.items[i++];) {
 					if (!item.cleanUp)
 						nt.push(item);
 				}
@@ -395,20 +402,16 @@ var World = World || {};
 				this.items = nt;
 			}
 
-			if (this.items.length < this.numItems && this.clock % 10 === 0 && convnetjs.randf(0, 1) < 0.25) {
-				var x = convnetjs.randf(20, this.width - 20),
-					y = convnetjs.randf(20, this.height - 20),
-					r = convnetjs.randi(5, 10),
-					type = convnetjs.randi(1, 3), // Noms or Gnars (1 || 2)
-					v = new Vec(x, y);
-
-				this.items.push(new Item(type, v, 0, 0, r));
+			if (this.items.length < this.numItems && this.clock % 10 === 0 && this.randf(0, 1) < 0.25) {
+				var x = this.randf(20, this.width - 20),
+					y = this.randf(20, this.height - 20);
+				this.randItem(x, y);
 			}
 
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
-			for (var i = 0, n = this.agents.length; i < n; i++) {
-				this.agents[i].backward();
+			for (var i = 0, agent; agent = this.agents[i++];) {
+				agent.backward();
 			}
 		},
 		/**
@@ -417,14 +420,16 @@ var World = World || {};
 		 */
 		populate: function () {
 			for (var k = 0; k < this.numItems; k++) {
-				var x = convnetjs.randf(20, this.width - 20),
-					y = convnetjs.randf(20, this.height - 20),
-					r = convnetjs.randi(5, 10),
-					type = convnetjs.randi(1, 3), // food or poison (1 and 2)
-					v = new Vec(x, y);
-				this.items.push(new Item(type, v, 0, 0, r));
+				var x = randf(20, this.width - 20),
+					y = randf(20, this.height - 20);
+				this.randItem(x, y);
 			}
 		},
+		/**
+		 * Set the speed of the world
+		 * @param {type} speed
+		 * @returns {undefined}
+		 */
 		go: function (speed) {
 			clearInterval(this.interval);
 			this.valid = false;
@@ -455,21 +460,15 @@ var World = World || {};
 			// Draw the walls in environment
 			this.ctx.strokeStyle = "rgb(0,0,0)";
 			this.ctx.beginPath();
-			for (var i = 0, n = this.cells.length; i < n; i++) {
-				var q = this.cells[i];
-				this.ctx.moveTo(q.v1.x, q.v1.y);
-				this.ctx.lineTo(q.v2.x, q.v2.y);
+			for (var i = 0, wall; wall = this.walls[i++];) {
+				this.ctx.moveTo(wall.v1.x, wall.v1.y);
+				this.ctx.lineTo(wall.v2.x, wall.v2.y);
 			}
 			this.ctx.stroke();
 
 			// Draw the agents
-			for (var i = 0, n = this.agents.length; i < n; i++) {
-				var agent = this.agents[i],
-					brain = agent.brain,
-					// Color the agents based on the reward it is experiencing at the moment
-					reward = Math.floor(brain.latest_reward * 200),
-					rewardColor = (reward > 255) ? 255 : ((reward < 0) ? 0 : reward),
-					avgR = brain.avgRewardWindow.getAverage().toFixed(1),
+			for (var i = 0, agent; agent = this.agents[i++];) {
+				var avgR = agent.brain.avgRewardWindow.getAverage().toFixed(1),
 					avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
 
 				this.ctx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
@@ -483,10 +482,7 @@ var World = World || {};
 				this.ctx.stroke();
 
 				// Draw agents sight
-				for (var ei = 0, nEye = agent.numEyes; ei < nEye; ei++) {
-					var eye = agent.eyes[ei],
-						eyeProx = eye.sensedProximity;
-
+				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
 					switch (eye.sensedType) {
 						// Is it wall or nothing?
 						case -1:case 0:
@@ -500,10 +496,14 @@ var World = World || {};
 						case 2:
 							this.ctx.strokeStyle = "rgb(150,255,150)";
 							break;
+						// Is it another Agent
+						case 3:
+							this.ctx.strokeStyle = "rgb(255,0,0)";
+							break;
 					}
 
-					var aEyeX = agent.oldPos.x + eyeProx * Math.sin(agent.oldAngle + eye.angle),
-						aEyeY = agent.oldPos.y + eyeProx * Math.cos(agent.oldAngle + eye.angle);
+					var aEyeX = agent.oldPos.x + eye.sensedProximity * Math.sin(agent.oldAngle + eye.angle),
+						aEyeY = agent.oldPos.y + eye.sensedProximity * Math.cos(agent.oldAngle + eye.angle);
 
 					// Draw the agent's line of sights
 					this.ctx.beginPath();
@@ -515,8 +515,7 @@ var World = World || {};
 
 			// Draw items
 			this.ctx.strokeStyle = "rgb(0,0,0)";
-			for (var i = 0, n = this.items.length; i < n; i++) {
-				var item = this.items[i];
+			for (var i = 0, item; item = this.items[i++];) {
 				if (item.type === 1)
 					this.ctx.fillStyle = "rgb(255, 150, 150)";
 				if (item.type === 2)

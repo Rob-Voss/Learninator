@@ -136,13 +136,13 @@ var Agent = Agent || {};
 			// Create input to brain
 			var inputArray = new Array(this.numEyes * this.numTypes);
 
-			for (var i = 0; i < this.numEyes; i++) {
-				var e = this.eyes[i];
+			for (var i = 0, e; e = this.eyes[i++];) {
 				inputArray[i * 3] = 1.0;
 				inputArray[i * 3 + 1] = 1.0;
 				inputArray[i * 3 + 2] = 1.0;
+				inputArray[i * 3 + 3] = 1.0;
 				if (e.sensedType !== -1) {
-					// sensedType is 0 for wall, 1 for food and 2 for poison.
+					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
 					// lets do a 1-of-k encoding into the input array
 					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
 				}
@@ -163,8 +163,7 @@ var Agent = Agent || {};
 		backward: function () {
 			// Compute the reward
 			var proximityReward = 0.0;
-			for (var i = 0; i < this.numEyes; i++) {
-				var e = this.eyes[i];
+			for (var i = 0, e; e = this.eyes[i++];) {
 				// Agents dont like to see walls, especially up close
 				proximityReward += e.sensedType === 0 ? e.sensedProximity / e.maxRange : 1.0;
 			}
@@ -218,7 +217,6 @@ var Agent = Agent || {};
 			var m = JSON.parse(this.memoryBank.value);
 			this.stopLearnin();
 			this.brain.value_net.fromJSON(m);
-			this.go('mid');
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds

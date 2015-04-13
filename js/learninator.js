@@ -54,7 +54,7 @@ function start() {
 	graphCanvas = document.getElementById("graph_canvas");
 	w.rewardGraph = new Graph(graphCanvas.width, graphCanvas.height, [0,1]);
 
-	go('mid');
+	w.go('mid');
 }
 
 /**
