@@ -29,7 +29,7 @@ var Item = Item || {};
 
 	/**
 	 *
-	 * @type Shape
+	 * @type Item
 	 */
 	Item.prototype = {
 		/**

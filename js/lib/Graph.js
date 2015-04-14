@@ -5,7 +5,7 @@ var Graph = Graph || {};
 
 	/**
 	 * Graph
-	 * @param {Canvas} canvas
+	 * @param {HTMLCanvasElement} canvas
 	 * @param {Array} legend
 	 * @param {Object} options
 	 * @returns {Graph_L3.Graph}
