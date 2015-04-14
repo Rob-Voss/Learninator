@@ -25,7 +25,7 @@ var Maze = Maze || {};
 		this.cellStack = [];
 		this.path = [];
 
-		this.graph = new Graph(canvas, null, graphOptions);
+		this.graph = new Graph(canvas, null, this.graphOptions);
 
 		var self = this;
 
