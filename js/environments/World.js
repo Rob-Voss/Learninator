@@ -523,17 +523,16 @@ var World = World || {};
 
 			// Draw the agents
 			for (var i = 0, agent; agent = this.agents[i++];) {
-				var avgR = agent.brain.avgRewardWindow.getAverage().toFixed(1),
-					avgRColor = (avgR > .8) ? 255 : ((avgR < .7) ? 0 : avgR);
+				var avgR = agent.brain.avgRewardWindow.getAverage().toFixed(1);
 
-				this.ctx.fillStyle = "rgb(" + avgRColor + ", 150, 150)";
+				this.ctx.fillStyle = "rgb(150,150,150)";
 				this.ctx.strokeStyle = "rgb(0,0,0)";
 
 				// Draw agents body
 				this.ctx.beginPath();
 				this.ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.radius, 0, Math.PI * 2, true);
 				this.ctx.fill();
-				this.ctx.fillText(agent.name + " (" + avgR + ")", agent.oldPos.x + agent.radius * 2, agent.oldPos.y + agent.radius * 2);
+				this.ctx.fillText(agent.name + " (" + avgR + ")", agent.oldPos.x + agent.radius, agent.oldPos.y + agent.radius);
 				this.ctx.stroke();
 
 				// Draw agents sight
