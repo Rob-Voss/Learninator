@@ -23,7 +23,6 @@
 		<script src="js/entities/Window.js"></script>
 
 		<script src="js/environments/Maze.js"></script>
-		<script src="js/environments/MazeGenerator.js"></script>
 		<script src="js/environments/World.js"></script>
 
 		<script src="js/learninator.js"></script>
@@ -45,12 +44,10 @@
 			<h1>Controls</h1>
 			<button onclick="reload()">Reload</button>
 			<button onclick="w.maze.generator.solve()">Solve</button>
-			<button onclick="go('max+')">Go very fast</button>
-			<button onclick="go('max')">Go fast</button>
-			<button onclick="go('mid')">Go normal speed</button>
-			<button onclick="go('min')">Go slow</button><br />
-			<button onclick="startLearnin()">Start Learning</button>
-			<button onclick="stopLearnin()">Stop Learning</button>
+			<button onclick="w.go('max+')">Go very fast</button>
+			<button onclick="w.go('max')">Go fast</button>
+			<button onclick="w.go('mid')">Go normal speed</button>
+			<button onclick="w.go('min')">Go slow</button><br />
 
 			<h1>I/O</h1>
 			<button onclick="saveMemory()">Save network to JSON</button>

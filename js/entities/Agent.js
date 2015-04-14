@@ -17,30 +17,31 @@ var Agent = Agent || {};
 
 	/**
 	 * A single agent
+	 * @param {Number} type
+	 * @param {Vec} v
+	 * @param {Number} w
+	 * @param {Number} h
 	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (r) {
-		this.selectFlag = false;
+	var Agent = function (type, v, w, h, r) {
+		this.type = type || 3; // type of agent
+		this.width = w || 0; // width of agent
+		this.height = h || 0; // height of agent
+		this.radius = r || 10; // default radius
+		this.pos = v || new Vec(this.radius, this.radius); // position
+
+		this.types = ['Ghost', 'Smart', 'Dumb', 'Killer'];
+		this.name = this.types[this.type];
+
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
-
-		// The Agent's size
-		this.radius = r;
-
-		// Positional information
-		this.pos = new Vec(this.radius, this.radius);
-
-		// Set its type to Agent
-		this.type = 3;
-		this.agentTypes = [];
-		this.agentTypes[3] = 'Agent';
 
 		// The direction the Agent is facing
 		this.angle = 0;
 
 		// The number of item types the Agent's eys can see (wall, green, red thing proximity)
-		this.numTypes = 3;
+		this.numTypes = 4;
 
 		// The number of Agent's eyes
 		this.numEyes = 9;
@@ -229,11 +230,35 @@ var Agent = Agent || {};
 		},
 		/**
 		 * What to do when clicked
-		 * @param {Vec} v
+		 * @param {Agent} i
 		 * @returns {undefined}
 		 */
-		onClick: function(v) {
-			console.log(this.agentTypes[this.type]);
+		onClick: function(i) {
+			console.log('Click:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Agent} i
+		 * @returns {undefined}
+		 */
+		onDoubleClick: function(i) {
+			console.log('DoubleClick:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Agent} i
+		 * @returns {undefined}
+		 */
+		onDrag: function(i) {
+			console.log('Drag:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Agent} i
+		 * @returns {undefined}
+		 */
+		onDrop: function(i) {
+			console.log('Drop:' + this.types[i.type]);
 		}
 	};
 

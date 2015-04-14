@@ -60,6 +60,8 @@ var World = World || {};
 		this.selectionColor = '#CC0000';
 		this.selectionWidth = 1;
 
+		this.rewardGraph = {};
+
 		var thisWorld = this;
 
 		// This fixes a problem where double clicking causes text to get selected on the canvas
@@ -68,25 +70,32 @@ var World = World || {};
 			return false;
 		}, false);
 
+		// Double click for making new items
+		canvas.addEventListener('dblclick', function (e) {
+			thisWorld.doubleClick(e);
+			if (thisWorld.selection && thisWorld.dragging)
+				thisWorld.selection.onDoubleClick(thisWorld.selection);
+		}, true);
+
 		// Up, down, and move are for dragging
 		canvas.addEventListener('mousedown', function (e) {
 			thisWorld.mouseDown(e);
-			thisWorld.selection.onClick();
-		}, true);
-
-		// Track the mouse movement
-		canvas.addEventListener('mousemove', function (e) {
-			thisWorld.mouseMove(e);
+			if (thisWorld.selection)
+				thisWorld.selection.onClick(thisWorld.selection);
 		}, true);
 
 		// Track when the mouse selection is let go of
 		canvas.addEventListener('mouseup', function (e) {
 			thisWorld.mouseUp(e);
+			if (thisWorld.selection && thisWorld.dragging)
+				thisWorld.selection.onDrop(thisWorld.selection);
 		}, true);
 
-		// Double click for making new items
-		canvas.addEventListener('dblclick', function (e) {
-			thisWorld.doubleClick(e);
+		// Track the mouse movement
+		canvas.addEventListener('mousemove', function (e) {
+			thisWorld.mouseMove(e);
+			if (thisWorld.selection && thisWorld.dragging)
+				thisWorld.selection.onDrag(thisWorld.selection);
 		}, true);
 
 		setInterval(function () {
@@ -121,25 +130,6 @@ var World = World || {};
 		addItem: function (item) {
 			this.items.push(item);
 			this.valid = false;
-		},
-		selectAgent: function (x, y) {
-			var minD = 1e10;
-			var minI = 1;
-			var d;
-
-			for (var i = 0; i < this.agents.length; i++) {
-				d = Math.pow(x - this.agents[i].pos.elements[0], 2) + Math.pow(y - this.agents[i].pos.elements[1], 2);
-				if (d < minD) {
-					minD = d;
-					minI = i;
-				}
-			}
-
-			for (var i = 0; i < this.agents.length; i++) {
-				this.agents[i].selectFlag = false;
-			}
-			this.agents[minI].selectFlag = true;
-			this.selection = this.agents[minI];
 		},
 		/**
 		 * Clear the canvas
@@ -200,7 +190,7 @@ var World = World || {};
 				for (var i = 0, agent; agent = this.agents[i++];) {
 					var iResult = Utility.linePointIntersect(v1, v2, agent.pos, agent.radius);
 					if (iResult) {
-						iResult.type = 3; // Store type of item
+						iResult.type = agent.type; // Store type of item
 						if (!minRes) {
 							minRes = iResult;
 						} else {
@@ -213,6 +203,20 @@ var World = World || {};
 			}
 
 			return minRes;
+		},
+		/**
+		 * Double click with the mouse
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		doubleClick: function (e) {
+			var mouse = this.getMouse(e);
+			if (this.selection) {
+				console.log('DoubleClicked:' + this.selection.name);
+			} else {
+				console.log('DoubleClickedWorld');
+				this.randItem(mouse.x, mouse.y);
+			}
 		},
 		/**
 		 * Creates an object with x and y defined, set to the mouse position relative
@@ -244,18 +248,74 @@ var World = World || {};
 			return mouseLoc;
 		},
 		/**
+		 * Mouse click
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		mouseDown: function (e) {
+			var mouse = this.getMouse(e);
+			// Check for affected items
+			for (var i = this.items.length - 1; i >= 0; i--) {
+				if (this.items[i].contains(mouse)) {
+					var mySel = this.items[i];
+					// Keep track of where in the object we clicked
+					// so we can move it smoothly (see mousemove)
+					this.dragoff.x = mouse.x - mySel.pos.x;
+					this.dragoff.y = mouse.y - mySel.pos.y;
+					this.dragging = true;
+					this.valid = false;
+					this.selection = mySel;
+					console.log('MouseDownItem:' + this.selection.name);
+					console.log('DraggingStart:' + this.selection.name);
+					return;
+				}
+			}
+
+			// Check for affected Agents
+			for (var i = this.agents.length - 1; i >= 0; i--) {
+				if (this.agents[i].contains(mouse)) {
+					var mySel = this.agents[i];
+					// Keep track of where in the object we clicked
+					// so we can move it smoothly (see mousemove)
+					this.dragoff.x = mouse.x - mySel.pos.x;
+					this.dragoff.y = mouse.y - mySel.pos.y;
+					// No dragging of Agents allowed
+					this.dragging = false;
+					this.valid = false;
+					this.selection = mySel;
+					console.log('MouseDownAgent:' + this.selection.name);
+					return;
+				}
+			}
+			// If we haven't returned, it means that we have failed to select anything.
+			if (this.selection) {
+				console.log('ResettingSelection:' + this.selection.name);
+				// If there was an object selected, we deselect it
+				this.selection = null;
+				this.valid = false; // Need to clear the old selection border
+			}
+		},
+		/**
 		 * Mouse move
 		 * @param {MouseEvent} e
 		 * @returns {undefined}
 		 */
 		mouseMove: function (e) {
-			if (this.dragging) {
+			if (this.selection) {
 				var mouse = this.getMouse(e);
-				// We don't want to drag the object by its top-left corner, we want to drag it
-				// from where we clicked. Thats why we saved the offset and use it here
-				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-				// Something is being dragged so we must redraw
-				this.valid = false;
+				if (this.dragging) {
+					// We don't want to drag the object by its top-left corner, we want to drag it
+					// from where we clicked. Thats why we saved the offset and use it here
+					this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+					// Something is being dragged so we must redraw
+					this.valid = false;
+					console.log('Dragging:' + this.selection.name);
+				} else {
+					console.log('NotDraggingSoDeselecting:' + this.selection.name);
+					this.selection = null;
+				}
+			} else {
+				console.log('MovingNoSelection');
 			}
 		},
 		/**
@@ -268,59 +328,11 @@ var World = World || {};
 				var mouse = this.getMouse(e);
 				// Set the selection new position
 				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
+				console.log('MouseRelease:' + this.selection.name);
 			}
 			// Reset the dragging flag
 			this.dragging = false;
-		},
-		/**
-		 * Mouse click
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		mouseDown: function (e) {
-			var mouse = this.getMouse(e);
-			for (var i = this.items.length - 1; i >= 0; i--) {
-				if (this.items[i].contains(mouse)) {
-					var mySel = this.items[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					this.dragging = true;
-					this.selection = mySel;
-					this.valid = false;
-					return;
-				}
-			}
-			
-			for (var i = this.agents.length - 1; i >= 0; i--) {
-				if (this.agents[i].contains(mouse)) {
-					var mySel = this.agents[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					this.dragging = true;
-					this.selection = mySel;
-					this.valid = false;
-					return;
-				}
-			}
-			// If we haven't returned, it means that we have failed to select anything.
-			if (this.selection) {
-				// If there was an object selected, we deselect it
-				this.selection = null;
-				this.valid = false; // Need to clear the old selection border
-			}
-		},
-		/**
-		 * Double click with the mouse
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		doubleClick: function (e) {
-			var mouse = this.getMouse(e);
-			this.randItem(mouse.x, mouse.y);
+			console.log('DraggingOff');
 		},
 		/**
 		 * Tick the environment
@@ -444,8 +456,15 @@ var World = World || {};
 
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
+			var pts = [];
 			for (var i = 0, agent; agent = this.agents[i++];) {
 				agent.backward();
+				pts.push(agent.brain.avgRewardWindow.getAverage());
+			}
+
+			if (this.clock % 200 === 0) {
+				this.rewardGraph.addPoint(this.clock / 200, pts);
+				this.rewardGraph.drawPoints();
 			}
 		},
 		/**
@@ -512,7 +531,7 @@ var World = World || {};
 				this.ctx.beginPath();
 				this.ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.radius, 0, Math.PI * 2, true);
 				this.ctx.fill();
-				this.ctx.fillText(i + " (" + avgR + ")", agent.oldPos.x + agent.radius * 2, agent.oldPos.y + agent.radius * 2);
+				this.ctx.fillText(agent.name + " (" + avgR + ")", agent.oldPos.x + agent.radius * 2, agent.oldPos.y + agent.radius * 2);
 				this.ctx.stroke();
 
 				// Draw agents sight

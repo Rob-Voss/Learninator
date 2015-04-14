@@ -14,15 +14,17 @@ var Item = Item || {};
 	 * @returns {undefined}
 	 */
 	var Item = function (type, v, w, h, r, fill) {
-		this.pos = v; // position
+		this.type = type || 1; // type of item
 		this.width = w || 0; // width of item
 		this.height = h || 0; // height of item
-		this.type = type || 1; // type of item
 		this.radius = r || 10; // default radius
+		this.pos = v || new Vec(this.radius, this.radius); // position
 		this.age = 0;
 		this.cleanUp = false;
 		this.fill = fill || '#AAAAAA';
-		this.itemTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
+
+		this.types = ['Wall', 'Nom', 'Gnar'];
+		this.name = this.types[this.type];
 	};
 
 	/**
@@ -115,11 +117,35 @@ var Item = Item || {};
 		},
 		/**
 		 * What to do when clicked
-		 * @param {Vec} v
+		 * @param {Item} i
 		 * @returns {undefined}
 		 */
-		onClick: function(v) {
-			console.log(this.itemTypes[this.type]);
+		onClick: function(i) {
+			console.log('Click:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Item} i
+		 * @returns {undefined}
+		 */
+		onDoubleClick: function(i) {
+			console.log('DoubleClick:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Item} i
+		 * @returns {undefined}
+		 */
+		onDrag: function(i) {
+			console.log('Drag:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Item} i
+		 * @returns {undefined}
+		 */
+		onDrop: function(i) {
+			console.log('Drop:' + this.types[i.type]);
 		}
 	};
 

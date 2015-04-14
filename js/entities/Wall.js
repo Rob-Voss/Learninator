@@ -12,6 +12,7 @@ var Wall = Wall || {};
 	var Wall = function (v1, v2) {
 		this.v1 = v1;
 		this.v2 = v2;
+		this.name = 'Wall';
 	};
 
 	global.Wall = Wall;
