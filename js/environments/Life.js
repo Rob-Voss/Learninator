@@ -87,7 +87,6 @@ var Life = Life || {REVISION: '0.1'};
 		},
 		this.render = function () {
 			if (_world) {
-
 				_context.clearRect(0, 0, _canvasWidth, _canvasHeight);
 				var drawFood = true;
 
@@ -184,7 +183,7 @@ var Life = Life || {REVISION: '0.1'};
 			_context.fillText(agent.repCounter.toFixed(2), agent.pos.elements[0] - _this.parameters.agent.size, agent.pos.elements[1] + _this.parameters.agent.size * 2 + 30);
 		},
 		this.drawFood = function (x, y, quantity) {
-			_context.fillStyle = Life.Utils.rgbaToCss(0.8, 1, 0.8, quantity);
+			_context.fillStyle = Life.Utils.rgbaToCss(0.5, 1, 0.5, quantity);
 			_context.fillRect(x * _this.parameters.cellSize, y * _this.parameters.cellSize, _this.parameters.cellSize, _this.parameters.cellSize);
 		},
 		this.getBrain = function () {

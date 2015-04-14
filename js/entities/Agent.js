@@ -21,6 +21,7 @@ var Agent = Agent || {};
 	 * @returns {Agent_L3.Agent}
 	 */
 	var Agent = function (r) {
+		this.selectFlag = false;
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
 

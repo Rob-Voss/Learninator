@@ -71,6 +71,7 @@ var World = World || {};
 		// Up, down, and move are for dragging
 		canvas.addEventListener('mousedown', function (e) {
 			thisWorld.mouseDown(e);
+			thisWorld.selection.onClick();
 		}, true);
 
 		// Track the mouse movement
@@ -109,7 +110,7 @@ var World = World || {};
 		 */
 		randItem: function(x, y) {
 			var type = this.randi(1, 3),
-				radius = this.randi(3, 15);
+				radius = this.randi(7, 11);
 			this.addItem(new Item(type, new Vec(x, y), 0, 0, radius));
 		},
 		/**
@@ -120,6 +121,25 @@ var World = World || {};
 		addItem: function (item) {
 			this.items.push(item);
 			this.valid = false;
+		},
+		selectAgent: function (x, y) {
+			var minD = 1e10;
+			var minI = 1;
+			var d;
+
+			for (var i = 0; i < this.agents.length; i++) {
+				d = Math.pow(x - this.agents[i].pos.elements[0], 2) + Math.pow(y - this.agents[i].pos.elements[1], 2);
+				if (d < minD) {
+					minD = d;
+					minI = i;
+				}
+			}
+
+			for (var i = 0; i < this.agents.length; i++) {
+				this.agents[i].selectFlag = false;
+			}
+			this.agents[minI].selectFlag = true;
+			this.selection = this.agents[minI];
 		},
 		/**
 		 * Clear the canvas
@@ -262,6 +282,20 @@ var World = World || {};
 			for (var i = this.items.length - 1; i >= 0; i--) {
 				if (this.items[i].contains(mouse)) {
 					var mySel = this.items[i];
+					// Keep track of where in the object we clicked
+					// so we can move it smoothly (see mousemove)
+					this.dragoff.x = mouse.x - mySel.pos.x;
+					this.dragoff.y = mouse.y - mySel.pos.y;
+					this.dragging = true;
+					this.selection = mySel;
+					this.valid = false;
+					return;
+				}
+			}
+			
+			for (var i = this.agents.length - 1; i >= 0; i--) {
+				if (this.agents[i].contains(mouse)) {
+					var mySel = this.agents[i];
 					// Keep track of where in the object we clicked
 					// so we can move it smoothly (see mousemove)
 					this.dragoff.x = mouse.x - mySel.pos.x;
