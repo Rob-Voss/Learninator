@@ -73,7 +73,7 @@ var World = World || {};
 		// Double click for making new items
 		canvas.addEventListener('dblclick', function (e) {
 			thisWorld.doubleClick(e);
-			if (thisWorld.selection && thisWorld.dragging)
+			if (thisWorld.selection)
 				thisWorld.selection.onDoubleClick(thisWorld.selection);
 		}, true);
 
@@ -89,6 +89,8 @@ var World = World || {};
 			thisWorld.mouseUp(e);
 			if (thisWorld.selection && thisWorld.dragging)
 				thisWorld.selection.onDrop(thisWorld.selection);
+			if (thisWorld.selection)
+				thisWorld.selection.onRelease(thisWorld.selection);
 		}, true);
 
 		// Track the mouse movement
