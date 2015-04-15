@@ -146,6 +146,14 @@ var Item = Item || {};
 		 */
 		onDrop: function(i) {
 			console.log('Drop:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Item} i
+		 * @returns {undefined}
+		 */
+		onRelease: function(i) {
+			console.log('Release:' + this.types[i.type]);
 		}
 	};
 

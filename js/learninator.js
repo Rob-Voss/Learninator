@@ -5,13 +5,13 @@
 var world;
 
 /**
- * Canvas
- * @type {Canvas}
+ * The World Canvas
+ * @type {HTMLCanvasElement}
  */
 var worldCanvas;
 
 /**
- * Canvas
+ * The Graph Canvas for the charts
  * @type {Canvas}
  */
 var graphCanvas;
