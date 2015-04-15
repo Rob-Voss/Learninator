@@ -124,7 +124,7 @@ var Item = Item || {};
 			console.log('Click:' + this.types[i.type]);
 		},
 		/**
-		 * What to do when dragged
+		 * What to do when double clicked
 		 * @param {Item} i
 		 * @returns {undefined}
 		 */
@@ -140,12 +140,20 @@ var Item = Item || {};
 			console.log('Drag:' + this.types[i.type]);
 		},
 		/**
-		 * What to do when dragged
+		 * What to do when dropped
 		 * @param {Item} i
 		 * @returns {undefined}
 		 */
 		onDrop: function(i) {
 			console.log('Drop:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when released
+		 * @param {Item} i
+		 * @returns {undefined}
+		 */
+		onRelease: function(i) {
+			console.log('Release:' + this.types[i.type]);
 		}
 	};
 

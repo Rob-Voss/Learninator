@@ -5,13 +5,13 @@
 var world;
 
 /**
- * Canvas
- * @type {Canvas}
+ * The World Canvas
+ * @type {HTMLCanvasElement}
  */
 var worldCanvas;
 
 /**
- * Canvas
+ * The Graph Canvas for the charts
  * @type {Canvas}
  */
 var graphCanvas;
@@ -23,13 +23,14 @@ function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	graphCanvas = document.getElementById("graph_canvas");
 
-	var maze = new Maze(worldCanvas, 8, 8);
+	var maze = new Maze(worldCanvas, 3, 3);
 	maze.generate();
 	maze.draw();
 
 	// We are going to use a maze for the environment and give it three agents
 	var walls = maze.cells;
-	var agents = [new Agent(1), new Agent(2), new Agent(3)];
+	var agents = [new Agent(3)];
+//	agents[0].loadMemory("js/SmartAgent.json");
 	world = new World(worldCanvas, walls, agents);
 	world.rewardGraph = new Graph(graphCanvas, world.agents);
 
@@ -38,5 +39,11 @@ function start() {
 	world.brainSpecs = document.getElementById('brainSpecs');
 
 	world.go('mid');
+}
+
+function solve() {
+	world.valid = true;
+	world.go('min');
+	world.maze.solve();
 }
 

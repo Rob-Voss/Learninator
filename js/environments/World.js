@@ -1,11 +1,13 @@
 var World = World || {};
+var Interactions = Interactions || {};
+var Utility = Utility || {};
 
 (function (global) {
 	"use strict";
 
 	/**
 	 * Make a World
-	 * @param {Canvas} canvas
+	 * @param {HTMLCanvasElement} canvas
 	 * @param {Array} walls
 	 * @param {Agent} agents
 	 * @returns {World}
@@ -23,10 +25,13 @@ var World = World || {};
 		this.randf = function(a, b) { return Math.random()*(b-a)+a; };
 		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
 
-		this.simSpeed = 1;
+		this.simSpeed = 2;
 		this.interval = 60;
 		this.clock = 0;
 		this.numItems = 20;
+
+		// Apply the Interactions class to this
+		Interactions.apply(this, [canvas]);
 
 		// This complicates things a little but but fixes mouse co-ordinate problems
 		// when there's a border or padding. See getMouse for more detail
@@ -62,50 +67,14 @@ var World = World || {};
 
 		this.rewardGraph = {};
 
-		var thisWorld = this;
-
-		// This fixes a problem where double clicking causes text to get selected on the canvas
-		canvas.addEventListener('selectstart', function (e) {
-			e.preventDefault();
-			return false;
-		}, false);
-
-		// Double click for making new items
-		canvas.addEventListener('dblclick', function (e) {
-			thisWorld.doubleClick(e);
-			if (thisWorld.selection)
-				thisWorld.selection.onDoubleClick(thisWorld.selection);
-		}, true);
-
-		// Up, down, and move are for dragging
-		canvas.addEventListener('mousedown', function (e) {
-			thisWorld.mouseDown(e);
-			if (thisWorld.selection)
-				thisWorld.selection.onClick(thisWorld.selection);
-		}, true);
-
-		// Track when the mouse selection is let go of
-		canvas.addEventListener('mouseup', function (e) {
-			thisWorld.mouseUp(e);
-			if (thisWorld.selection && thisWorld.dragging)
-				thisWorld.selection.onDrop(thisWorld.selection);
-			if (thisWorld.selection)
-				thisWorld.selection.onRelease(thisWorld.selection);
-		}, true);
-
-		// Track the mouse movement
-		canvas.addEventListener('mousemove', function (e) {
-			thisWorld.mouseMove(e);
-			if (thisWorld.selection && thisWorld.dragging)
-				thisWorld.selection.onDrag(thisWorld.selection);
-		}, true);
+		var self = this;
 
 		setInterval(function () {
-			thisWorld.tick();
-			if (!thisWorld.valid || thisWorld.clock % 50 === 0) {
-				thisWorld.drawSelf();
+			self.tick();
+			if (!self.valid || self.clock % 50 === 0) {
+				self.draw();
 			}
-		}, thisWorld.interval);
+		}, self.interval);
 	};
 
 	/**
@@ -206,135 +175,105 @@ var World = World || {};
 
 			return minRes;
 		},
-		/**
-		 * Double click with the mouse
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		doubleClick: function (e) {
-			var mouse = this.getMouse(e);
-			if (this.selection) {
-				console.log('DoubleClicked:' + this.selection.name);
-			} else {
-				console.log('DoubleClickedWorld');
-				this.randItem(mouse.x, mouse.y);
+		draw: function () {
+			this.clear();
+			this.ctx.lineWidth = 1;
+
+			// Draw the walls in environment
+			this.ctx.strokeStyle = "rgb(0,0,0)";
+			this.ctx.beginPath();
+			for (var i = 0, wall; wall = this.walls[i++];) {
+				this.ctx.moveTo(wall.v1.x, wall.v1.y);
+				this.ctx.lineTo(wall.v2.x, wall.v2.y);
 			}
-		},
-		/**
-		 * Creates an object with x and y defined, set to the mouse position relative
-		 * to the state's canvas. If you wanna be super-correct this can be tricky,
-		 * we have to worry about padding and borders
-		 * @param {MouseEvent} e
-		 * @returns {CanvasState_L3.CanvasState.prototype.getMouse.CanvasStateAnonym$0}
-		 */
-		getMouse: function (e) {
-			var element = this.canvas,
-				offset = new Vec(0,0);
+			this.ctx.stroke();
 
-			// Compute the total offset
-			if (element.offsetParent !== undefined) {
-				do {
-					offset.x += element.offsetLeft;
-					offset.y += element.offsetTop;
-				} while ((element = element.offsetParent));
-			}
+			// Draw the agents
+			for (var i = 0, agent; agent = this.agents[i++];) {
+				var avgR = agent.brain.avgRewardWindow.getAverage().toFixed(1);
 
-			// Add padding and border style widths to offset
-			// Also add the <html> offsets in case there's a position:fixed bar
-			offset.x += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
-			offset.y += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
+				this.ctx.fillStyle = "rgb(150,150,150)";
+				this.ctx.strokeStyle = "rgb(0,0,0)";
 
-			// We return a Vec with x and y defined
-			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
+				// Draw agents body
+				this.ctx.beginPath();
+				this.ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.radius, 0, Math.PI * 2, true);
+				this.ctx.fill();
+				this.ctx.fillText(agent.name + ":" + i + " (" + avgR + ")", agent.oldPos.x + agent.radius, agent.oldPos.y + agent.radius);
+				this.ctx.stroke();
 
-			return mouseLoc;
-		},
-		/**
-		 * Mouse click
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		mouseDown: function (e) {
-			var mouse = this.getMouse(e);
-			// Check for affected items
-			for (var i = this.items.length - 1; i >= 0; i--) {
-				if (this.items[i].contains(mouse)) {
-					var mySel = this.items[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					this.dragging = true;
-					this.valid = false;
-					this.selection = mySel;
-					console.log('MouseDownItem:' + this.selection.name);
-					console.log('DraggingStart:' + this.selection.name);
-					return;
+				// Draw agents sight
+				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
+					switch (eye.sensedType) {
+						// Is it wall or nothing?
+						case -1:case 0:
+							this.ctx.strokeStyle = "rgb(0,0,0)";
+							break;
+						// It is noms
+						case 1:
+							this.ctx.strokeStyle = "rgb(255,150,150)";
+							break;
+						// It is gnar gnar
+						case 2:
+							this.ctx.strokeStyle = "rgb(150,255,150)";
+							break;
+						// Is it another Agent
+						case 3:
+							this.ctx.strokeStyle = "rgb(255,0,0)";
+							break;
+					}
+
+					var aEyeX = agent.oldPos.x + eye.sensedProximity * Math.sin(agent.oldAngle + eye.angle),
+						aEyeY = agent.oldPos.y + eye.sensedProximity * Math.cos(agent.oldAngle + eye.angle);
+
+					// Draw the agent's line of sights
+					this.ctx.beginPath();
+					this.ctx.moveTo(agent.oldPos.x, agent.oldPos.y);
+					this.ctx.lineTo(aEyeX, aEyeY);
+					this.ctx.stroke();
 				}
 			}
 
-			// Check for affected Agents
-			for (var i = this.agents.length - 1; i >= 0; i--) {
-				if (this.agents[i].contains(mouse)) {
-					var mySel = this.agents[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					// No dragging of Agents allowed
-					this.dragging = false;
-					this.valid = false;
-					this.selection = mySel;
-					console.log('MouseDownAgent:' + this.selection.name);
-					return;
-				}
-			}
-			// If we haven't returned, it means that we have failed to select anything.
-			if (this.selection) {
-				console.log('ResettingSelection:' + this.selection.name);
-				// If there was an object selected, we deselect it
-				this.selection = null;
-				this.valid = false; // Need to clear the old selection border
+			// Draw items
+			this.ctx.strokeStyle = "rgb(0,0,0)";
+			for (var i = 0, item; item = this.items[i++];) {
+				if (item.type === 1)
+					this.ctx.fillStyle = "rgb(255, 150, 150)";
+				if (item.type === 2)
+					this.ctx.fillStyle = "rgb(150, 255, 150)";
+				this.ctx.beginPath();
+				this.ctx.arc(item.pos.x, item.pos.y, item.radius, 0, Math.PI * 2, true);
+				this.ctx.fill();
+				this.ctx.stroke();
 			}
 		},
 		/**
-		 * Mouse move
-		 * @param {MouseEvent} e
+		 * Set the speed of the world
+		 * @param {type} speed
 		 * @returns {undefined}
 		 */
-		mouseMove: function (e) {
-			if (this.selection) {
-				var mouse = this.getMouse(e);
-				if (this.dragging) {
-					// We don't want to drag the object by its top-left corner, we want to drag it
-					// from where we clicked. Thats why we saved the offset and use it here
-					this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-					// Something is being dragged so we must redraw
-					this.valid = false;
-					console.log('Dragging:' + this.selection.name);
-				} else {
-					console.log('NotDraggingSoDeselecting:' + this.selection.name);
-					this.selection = null;
-				}
-			} else {
-				console.log('MovingNoSelection');
+		go: function (speed) {
+			clearInterval(this.interval);
+			this.valid = false;
+			switch(speed) {
+				case 'min':
+					this.interval = setInterval(this.tick(), 200);
+					this.simSpeed = 0;
+					break;
+				case 'mid':
+					this.interval = setInterval(this.tick(), 30);
+					this.simSpeed = 1;
+					break;
+				case 'max':
+					this.interval = setInterval(this.tick(), 0);
+					this.simSpeed = 2;
+					break;
+				case 'max+':
+					this.interval = setInterval(this.tick(), 0);
+					this.valid = true;
+					this.simSpeed = 3;
+					break;
 			}
-		},
-		/**
-		 * Mouse release
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		mouseUp: function (e) {
-			if (this.selection) {
-				var mouse = this.getMouse(e);
-				// Set the selection new position
-				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-				console.log('MouseRelease:' + this.selection.name);
-			}
-			// Reset the dragging flag
-			this.dragging = false;
-			console.log('DraggingOff');
 		},
 		/**
 		 * Tick the environment
@@ -478,106 +417,6 @@ var World = World || {};
 				var x = randf(20, this.width - 20),
 					y = randf(20, this.height - 20);
 				this.randItem(x, y);
-			}
-		},
-		/**
-		 * Set the speed of the world
-		 * @param {type} speed
-		 * @returns {undefined}
-		 */
-		go: function (speed) {
-			clearInterval(this.interval);
-			this.valid = false;
-			switch(speed) {
-				case 'min':
-					this.interval = setInterval(this.tick(), 200);
-					this.simSpeed = 0;
-					break;
-				case 'mid':
-					this.interval = setInterval(this.tick(), 30);
-					this.simSpeed = 1;
-					break;
-				case 'max':
-					this.interval = setInterval(this.tick(), 0);
-					this.simSpeed = 2;
-					break;
-				case 'max+':
-					this.interval = setInterval(this.tick(), 0);
-					this.valid = true;
-					this.simSpeed = 3;
-					break;
-			}
-		},
-		drawSelf: function () {
-			this.clear();
-			this.ctx.lineWidth = 1;
-
-			// Draw the walls in environment
-			this.ctx.strokeStyle = "rgb(0,0,0)";
-			this.ctx.beginPath();
-			for (var i = 0, wall; wall = this.walls[i++];) {
-				this.ctx.moveTo(wall.v1.x, wall.v1.y);
-				this.ctx.lineTo(wall.v2.x, wall.v2.y);
-			}
-			this.ctx.stroke();
-
-			// Draw the agents
-			for (var i = 0, agent; agent = this.agents[i++];) {
-				var avgR = agent.brain.avgRewardWindow.getAverage().toFixed(1);
-
-				this.ctx.fillStyle = "rgb(150,150,150)";
-				this.ctx.strokeStyle = "rgb(0,0,0)";
-
-				// Draw agents body
-				this.ctx.beginPath();
-				this.ctx.arc(agent.oldPos.x, agent.oldPos.y, agent.radius, 0, Math.PI * 2, true);
-				this.ctx.fill();
-				this.ctx.fillText(agent.name + " (" + avgR + ")", agent.oldPos.x + agent.radius, agent.oldPos.y + agent.radius);
-				this.ctx.stroke();
-
-				// Draw agents sight
-				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
-					switch (eye.sensedType) {
-						// Is it wall or nothing?
-						case -1:case 0:
-							this.ctx.strokeStyle = "rgb(0,0,0)";
-							break;
-						// It is noms
-						case 1:
-							this.ctx.strokeStyle = "rgb(255,150,150)";
-							break;
-						// It is gnar gnar
-						case 2:
-							this.ctx.strokeStyle = "rgb(150,255,150)";
-							break;
-						// Is it another Agent
-						case 3:
-							this.ctx.strokeStyle = "rgb(255,0,0)";
-							break;
-					}
-
-					var aEyeX = agent.oldPos.x + eye.sensedProximity * Math.sin(agent.oldAngle + eye.angle),
-						aEyeY = agent.oldPos.y + eye.sensedProximity * Math.cos(agent.oldAngle + eye.angle);
-
-					// Draw the agent's line of sights
-					this.ctx.beginPath();
-					this.ctx.moveTo(agent.oldPos.x, agent.oldPos.y);
-					this.ctx.lineTo(aEyeX, aEyeY);
-					this.ctx.stroke();
-				}
-			}
-
-			// Draw items
-			this.ctx.strokeStyle = "rgb(0,0,0)";
-			for (var i = 0, item; item = this.items[i++];) {
-				if (item.type === 1)
-					this.ctx.fillStyle = "rgb(255, 150, 150)";
-				if (item.type === 2)
-					this.ctx.fillStyle = "rgb(150, 255, 150)";
-				this.ctx.beginPath();
-				this.ctx.arc(item.pos.x, item.pos.y, item.radius, 0, Math.PI * 2, true);
-				this.ctx.fill();
-				this.ctx.stroke();
 			}
 		}
 	};

@@ -14,6 +14,7 @@
 		<script src="js/lib/Array.js"></script>
 		<script src="js/lib/Graph.js"></script>
 		<script src="js/lib/Utility.js"></script>
+		<script src="js/lib/Interactions.js"></script>
 
 		<script src="js/entities/Agent.js"></script>
 		<script src="js/entities/Brain.js"></script>
@@ -33,7 +34,7 @@
 			<h1>State Visualizations</h1>
 			<div>Average reward over time (this should go up as agent becomes better on average at collecting rewards)</div>
 			<canvas id="graph_canvas" width="350" height="150"></canvas><br />
-			<canvas id="world_canvas" width="700" height="700"></canvas>
+			<canvas id="world_canvas" width="500" height="500"></canvas>
 
 			<div id="brain_info_div_0"></div><br />
 			<canvas id="vis_canvas_0" width="350" height="150"></canvas>
@@ -43,11 +44,11 @@
 
 			<h1>Controls</h1>
 			<button onclick="reload()">Reload</button>
-			<button onclick="w.maze.generator.solve()">Solve</button>
-			<button onclick="w.go('max+')">Go very fast</button>
-			<button onclick="w.go('max')">Go fast</button>
-			<button onclick="w.go('mid')">Go normal speed</button>
-			<button onclick="w.go('min')">Go slow</button><br />
+			<button onclick="solve()">Solve</button>
+			<button onclick="world.go('max+')">Go very fast</button>
+			<button onclick="world.go('max')">Go fast</button>
+			<button onclick="world.go('mid')">Go normal speed</button>
+			<button onclick="world.go('min')">Go slow</button><br />
 
 			<h1>I/O</h1>
 			<button onclick="saveMemory()">Save network to JSON</button>

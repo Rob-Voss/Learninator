@@ -31,7 +31,7 @@ var Agent = Agent || {};
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
 
-		this.types = ['Ghost', 'Smart', 'Dumb', 'Killer'];
+		this.types = ['Ghost', 'Smart', 'Dumb', 'Agent'];
 		this.name = this.types[this.type];
 
 		// Remember the Agent's old position
@@ -215,10 +215,11 @@ var Agent = Agent || {};
 		 * Load the brains from the field
 		 * @returns {undefined}
 		 */
-		loadMemory: function () {
-			var m = JSON.parse(this.memoryBank.value);
-			this.stopLearnin();
-			this.brain.value_net.fromJSON(m);
+		loadMemory: function (memory) {
+			var brain = this.brain;
+			$.getJSON(memory, function(data) {
+				brain.value_net.fromJSON(data);
+			});
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
@@ -237,7 +238,7 @@ var Agent = Agent || {};
 			console.log('Click:' + this.types[i.type]);
 		},
 		/**
-		 * What to do when dragged
+		 * What to do when double clicked
 		 * @param {Agent} i
 		 * @returns {undefined}
 		 */
@@ -253,12 +254,20 @@ var Agent = Agent || {};
 			console.log('Drag:' + this.types[i.type]);
 		},
 		/**
-		 * What to do when dragged
+		 * What to do when dropped
 		 * @param {Agent} i
 		 * @returns {undefined}
 		 */
 		onDrop: function(i) {
 			console.log('Drop:' + this.types[i.type]);
+		},
+		/**
+		 * What to do when released
+		 * @param {Agent} i
+		 * @returns {undefined}
+		 */
+		onRelease: function(i) {
+			console.log('Release:' + this.types[i.type]);
 		}
 	};
 

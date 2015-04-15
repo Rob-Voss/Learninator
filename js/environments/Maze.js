@@ -20,17 +20,17 @@ var Maze = Maze || {};
 		this.vertCells = vertCells;
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
-		this.graphOptions = {'width': horizCells, 'height': vertCells};
 		this.cells = [];
 		this.cellStack = [];
 		this.path = [];
 
+		this.graphOptions = {
+			'width': horizCells,
+			'height': vertCells
+		};
 		this.graph = new Graph(canvas, null, this.graphOptions);
 
 		var self = this;
-
-		self.ctx.strokeStyle = "rgb(0, 0, 0)";
-		self.ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
 	};
 
 	/**
@@ -154,6 +154,14 @@ var Maze = Maze || {};
 			}
 		},
 		/**
+		 * Build the maze
+		 * @returns {undefined}
+		 */
+		generate: function () {
+			var initialCell = this.graph.getVecAt(1, 1);
+			this.recurse(initialCell);
+		},
+		/**
 		 * Recurse through a Cell's neighboors
 		 * @param {Cell} cell
 		 * @returns {undefined}
@@ -216,14 +224,8 @@ var Maze = Maze || {};
 					}
 				});
 			}
-		},
-		/**
-		 * Build the maze
-		 * @returns {undefined}
-		 */
-		generate: function () {
-			var initialCell = this.graph.getVecAt(1, 1);
-			this.recurse(initialCell);
+
+			this.drawSolution();
 		}
 	};
 
