@@ -25,13 +25,10 @@ var Utility = Utility || {};
 		this.randf = function(a, b) { return Math.random()*(b-a)+a; };
 		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
 
+		this.clock = 0;
 		this.simSpeed = 2;
 		this.interval = 60;
-		this.clock = 0;
 		this.numItems = 20;
-
-		// Apply the Interactions class to this
-		Interactions.apply(this, [canvas]);
 
 		// This complicates things a little but but fixes mouse co-ordinate problems
 		// when there's a border or padding. See getMouse for more detail
@@ -68,6 +65,9 @@ var Utility = Utility || {};
 		this.rewardGraph = {};
 
 		var self = this;
+
+		// Apply the Interactions class to the world
+		Interactions.apply(this, [canvas]);
 
 		setInterval(function () {
 			self.tick();
@@ -325,7 +325,9 @@ var Utility = Utility || {};
 				agent.angle -= agent.rot1;
 				if (agent.angle < 0)
 					agent.angle += 2 * Math.PI;
+
 				agent.angle += agent.rot2;
+
 				if (agent.angle > 2 * Math.PI)
 					agent.angle -= 2 * Math.PI;
 
@@ -358,12 +360,12 @@ var Utility = Utility || {};
 						if (!this.collisionCheck(agent.pos, item.pos, true, false)) {
 							// Nom Noms!
 							switch (item.type) {
-								case 1:// The sweet meats
-									agent.digestionSignal += 5.0 + (item.radius / 2);
-									break;
-								case 2:// The gnar gnar meats
-									agent.digestionSignal += -6.0 + (item.radius / 2);
-									break;
+							case 1:// The sweet meats
+								agent.digestionSignal += 5.0 + (item.radius / 2);
+								break;
+							case 2:// The gnar gnar meats
+								agent.digestionSignal += -6.0 + (item.radius / 2);
+								break;
 							}
 							item.cleanUp = true;
 							this.valid = true;
@@ -403,10 +405,18 @@ var Utility = Utility || {};
 				pts.push(agent.brain.avgRewardWindow.getAverage());
 			}
 
+			// Throw some points on a Graph
 			if (this.clock % 200 === 0) {
 				this.rewardGraph.addPoint(this.clock / 200, pts);
 				this.rewardGraph.drawPoints();
 			}
+		},
+		onRightClick: function (mouse) {
+			console.log('GotRightClick:World');
+//			this.showMenu(mouse.pos.x, mouse.pos.y);
+		},
+		onDoubleClick: function (mouse) {
+			this.randItem(mouse.pos.x, mouse.pos.y);
 		},
 		/**
 		 * Populate the World with Items

@@ -231,43 +231,51 @@ var Agent = Agent || {};
 		},
 		/**
 		 * What to do when clicked
-		 * @param {Agent} i
+		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
-		onClick: function(i) {
-			console.log('Click:' + this.types[i.type]);
+		onClick: function(v) {
+			console.log('GotClick:' + this.types[this.type]);
 		},
 		/**
 		 * What to do when double clicked
-		 * @param {Agent} i
+		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
-		onDoubleClick: function(i) {
-			console.log('DoubleClick:' + this.types[i.type]);
+		onDoubleClick: function(v) {
+			console.log('GotDoubleClick:' + this.types[this.type]);
 		},
 		/**
 		 * What to do when dragged
-		 * @param {Agent} i
+		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
-		onDrag: function(i) {
-			console.log('Drag:' + this.types[i.type]);
+		onDrag: function(v) {
+			console.log('GotDrag:' + this.types[this.type]);
 		},
 		/**
 		 * What to do when dropped
-		 * @param {Agent} i
+		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
-		onDrop: function(i) {
-			console.log('Drop:' + this.types[i.type]);
+		onDrop: function(v) {
+			console.log('GotDrop:' + this.types[this.type]);
 		},
 		/**
 		 * What to do when released
-		 * @param {Agent} i
+		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
-		onRelease: function(i) {
-			console.log('Release:' + this.types[i.type]);
+		onRelease: function(v) {
+			console.log('GotRelease:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when right clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onRightClick: function(v) {
+			console.log('GotRightClick:' + this.types[this.type]);
 		}
 	};
 

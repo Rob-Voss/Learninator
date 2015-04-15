@@ -2,7 +2,7 @@
  * Global world object
  * @type {World}
  */
-var world;
+var W = W || {};
 
 /**
  * The World Canvas
@@ -23,27 +23,24 @@ function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	graphCanvas = document.getElementById("graph_canvas");
 
-	var maze = new Maze(worldCanvas, 3, 3);
-	maze.generate();
-	maze.draw();
-
 	// We are going to use a maze for the environment and give it three agents
-	var walls = maze.cells;
-	var agents = [new Agent(3)];
-//	agents[0].loadMemory("js/SmartAgent.json");
-	world = new World(worldCanvas, walls, agents);
-	world.rewardGraph = new Graph(graphCanvas, world.agents);
+	W = new World(worldCanvas);
+	W.maze = new Maze(worldCanvas, 10, 10);
+	W.maze.draw();
+	W.walls = W.maze.cells;
+	W.agents = [new Agent(3)];
+	W.rewardGraph = new Graph(graphCanvas, W.agents);
 
 	// Globals blech
-	world.memoryBank = document.getElementById('memoryBank');
-	world.brainSpecs = document.getElementById('brainSpecs');
+	W.memoryBank = document.getElementById('memoryBank');
+	W.brainSpecs = document.getElementById('brainSpecs');
 
-	world.go('mid');
+	W.go('mid');
 }
 
 function solve() {
-	world.valid = true;
-	world.go('min');
-	world.maze.solve();
+	W.valid = true;
+	W.go('min');
+	W.maze.solve();
 }
 

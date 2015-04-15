@@ -77,7 +77,7 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		drawSolution: function() {
-		  var path = this.generator.path;
+		  var path = this.path;
 
 		  for(var i = 0, V; V = path[i++];) {
 			  var vW = this.vW;

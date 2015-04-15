@@ -9,7 +9,8 @@ var Interactions = Interactions || {};
 	 */
 	var Interactions = function (canvas) {
 		var self = this;
-		
+		self.mouse = {};
+
 		/**
 		 * Creates an object with x and y defined, set to the mouse position relative
 		 * to the state's canvas. If you wanna be super-correct this can be tricky,
@@ -35,9 +36,8 @@ var Interactions = Interactions || {};
 			offset.y += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
 
 			// We return a Vec with x and y defined
-			var mouseLoc = new Vec(e.pageX - offset.x, e.pageY - offset.y);
-
-			return mouseLoc;
+			self.mouse.pos = new Vec(e.pageX - offset.x, e.pageY - offset.y);
+			self.mouse.button = e.button;
 		};
 
 		/**
@@ -46,60 +46,47 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		this.doubleClick = function (e) {
-			var mouse = self.getMouse(e);
 			if (this.selection) {
-				console.log('DoubleClicked:' + this.selection.name);
+				this.selection.onDoubleClick(this.selection);
 			} else {
-				console.log('DoubleClickedWorld');
-				this.randItem(mouse.x, mouse.y);
+				this.onDoubleClick(self.mouse);
 			}
 		};
+
 		/**
-		 * Mouse click
+		 * Mouse Down
 		 * @param {MouseEvent} e
 		 * @returns {undefined}
 		 */
 		this.mouseDown = function (e) {
-			var mouse = self.getMouse(e);
 			// Check for affected items
 			for (var i = this.items.length - 1; i >= 0; i--) {
-				if (this.items[i].contains(mouse)) {
+				if (this.items[i].contains(self.mouse.pos)) {
 					var mySel = this.items[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					this.dragging = true;
-					this.valid = false;
 					this.selection = mySel;
-					console.log('MouseDownItem:' + this.selection.name);
-					console.log('DraggingStart:' + this.selection.name);
+					if (self.mouse.button === 0) {
+						this.dragging = true;
+						return this.selection.onClick(self.mouse.pos);
+					}
 					return;
 				}
 			}
 
 			// Check for affected Agents
 			for (var i = this.agents.length - 1; i >= 0; i--) {
-				if (this.agents[i].contains(mouse)) {
+				if (this.agents[i].contains(self.mouse.pos)) {
 					var mySel = this.agents[i];
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					this.dragoff.x = mouse.x - mySel.pos.x;
-					this.dragoff.y = mouse.y - mySel.pos.y;
-					// No dragging of Agents allowed
-					this.dragging = false;
-					this.valid = false;
 					this.selection = mySel;
-					console.log('MouseDownAgent:' + this.selection.name);
+					if (self.mouse.button === 0) {
+						return this.selection.onClick(self.mouse.pos);
+					}
 					return;
 				}
 			}
-			// If we haven't returned, it means that we have failed to select anything.
+
 			if (this.selection) {
-				console.log('ResettingSelection:' + this.selection.name);
-				// If there was an object selected, we deselect it
 				this.selection = null;
-				this.valid = false; // Need to clear the old selection border
+				this.dragging = false;
 			}
 		};
 
@@ -110,19 +97,22 @@ var Interactions = Interactions || {};
 		 */
 		this.mouseMove = function (e) {
 			if (this.selection) {
-				var mouse = self.getMouse(e);
-				if (this.dragging) {
-					// We don't want to drag the object by its top-left corner, we want to drag it
-					// from where we clicked. Thats why we saved the offset and use it here
-					this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-					// Something is being dragged so we must redraw
+				if (this.dragoff.x !== 0 && this.dragoff.y !== 0) {
+					this.dragging = true;
+					// Keep track of where in the object we clicked
+					// so we can move it smoothly (see mousemove)
+					var offX = self.mouse.pos.x - this.dragoff.x,
+						offY = self.mouse.pos.y - this.dragoff.y;
+
+					this.selection.pos = new Vec(offX, offY);
 					this.valid = false;
-					console.log('Dragging:' + this.selection.name);
 				} else {
-					console.log('NotDraggingDeselecting:' + this.selection.name);
-					this.selection = null;
+					this.dragging = false;
+					this.valid = true;
 				}
+				return this.selection.onDrag(this.selection);
 			}
+			this.dragging = false;
 		};
 
 		/**
@@ -131,15 +121,30 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		this.mouseUp = function (e) {
-			if (this.selection) {
-				var mouse = self.getMouse(e);
+			if (this.selection && this.dragging) {
 				// Set the selection new position
-				this.selection.pos = new Vec(mouse.x - this.dragoff.x, mouse.y - this.dragoff.y);
-				console.log('MouseRelease:' + this.selection.name);
+				var offX = self.mouse.pos.x - this.dragoff.x,
+					offY = self.mouse.pos.y - this.dragoff.y;
+				this.selection.pos = new Vec(offX, offY);
+				this.selection.onDrop(this.selection);
 			}
 			// Reset the dragging flag
 			this.dragging = false;
-			console.log('DraggingOff');
+			this.selection = null;
+			this.valid = false;
+		};
+
+		/**
+		 * Right click with the mouse
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.rightClick = function (e) {
+			if (this.selection) {
+				this.selection.onRightClick(this.selection);
+			} else {
+				this.onRightClick();
+			}
 		};
 
 		// This fixes a problem where double clicking causes text to get selected on the canvas
@@ -150,32 +155,33 @@ var Interactions = Interactions || {};
 
 		// Double click for making new items
 		canvas.addEventListener('dblclick', function (e) {
+			self.getMouse(e);
 			self.doubleClick(e);
-			if (self.selection)
-				self.selection.onDoubleClick(self.selection);
+		}, true);
+
+		// Right click
+		canvas.addEventListener('contextmenu', function (e) {
+			e.preventDefault();
+			self.getMouse(e);
+			self.rightClick(e);
 		}, true);
 
 		// Up, down, and move are for dragging
 		canvas.addEventListener('mousedown', function (e) {
+			self.getMouse(e);
 			self.mouseDown(e);
-			if (self.selection)
-				self.selection.onClick(self.selection);
 		}, true);
 
 		// Track when the mouse selection is let go of
 		canvas.addEventListener('mouseup', function (e) {
+			self.getMouse(e);
 			self.mouseUp(e);
-			if (self.selection && self.dragging)
-				self.selection.onDrop(self.selection);
-			if (self.selection)
-				self.selection.onRelease(self.selection);
 		}, true);
 
 		// Track the mouse movement
 		canvas.addEventListener('mousemove', function (e) {
+			self.getMouse(e);
 			self.mouseMove(e);
-			if (self.selection && self.dragging)
-				self.selection.onDrag(self.selection);
 		}, true);
 
 	};
