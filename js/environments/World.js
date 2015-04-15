@@ -33,6 +33,8 @@ var Utility = Utility || {};
 		// Apply the Interactions class to this
 		Interactions.apply(this, [canvas]);
 
+		Interactions.apply(this, [canvas]);
+		
 		// This complicates things a little but but fixes mouse co-ordinate problems
 		// when there's a border or padding. See getMouse for more detail
 		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
