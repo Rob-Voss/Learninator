@@ -144,7 +144,7 @@ function loop() {
 	window.requestAnimationFrame(loop);
 }
 
-loadImage('face.png', function (error, image) {
+loadImage('img/face.png', function (error, image) {
 	if (error)
 		return console.error(error);
 
