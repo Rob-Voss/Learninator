@@ -47,9 +47,7 @@ var Graph = Graph || {};
 				}
 			}
 		}
-		
 		self = this;
-		self.neighbs = [];
 	};
 
 	Graph.prototype = {
@@ -222,8 +220,7 @@ var Graph = Graph || {};
 		 * @returns {unresolved}
 		 */
 		connectedNeighbors: function (v) {
-			var neighbors = this.neighbors(v);
-			return _.select(neighbors, function (c) {
+			return _.select(this.neighbors(v), function (c) {
 				return self.areConnected(v, c);
 			});
 		},
@@ -234,8 +231,7 @@ var Graph = Graph || {};
 		 * @returns {unresolved}
 		 */
 		disconnectedNeighbors: function (v) {
-			var neighbors = this.neighbors(v);
-			return _.reject(neighbors, function (c) {
+			return _.reject(this.neighbors(v), function (c) {
 				return self.areConnected(v, c);
 			});
 		},
@@ -263,7 +259,7 @@ var Graph = Graph || {};
 			if (v.x > 0 && leftCell) {
 				neighbors.push(leftCell);
 			}
-			this.neighbs = neighbors;
+
 			return neighbors;
 		},
 		/**
