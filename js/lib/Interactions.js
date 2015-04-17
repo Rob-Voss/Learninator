@@ -53,6 +53,7 @@ var Interactions = Interactions || {};
 		 */
 		this.doubleClick = function (e) {
 			if (this.selection) {
+				console.log('GotDoubleClick:' + this.types[this.selection.type]);
 				this.selection.onDoubleClick(this.selection);
 			} else {
 				this.onDoubleClick(self.mouse);
@@ -66,17 +67,21 @@ var Interactions = Interactions || {};
 		 */
 		this.mouseDown = function (e) {
 			for (var i = this.entities.length - 1; i >= 0; i--) {
-				if (this.entities[i].contains(self.mouse.pos)) {
-					var mySel = this.entities[i];
-					this.selection = mySel;
-					if (self.mouse.button === 0) {
-						this.dragging = true;
-						return this.selection.onClick(self.mouse.pos);
+				var entityType = this.types[this.entities[i].type];
+				if (entityType == 'Gnar' || entityType == 'Nom') {
+					if (this.entities[i].contains(self.mouse.pos)) {
+						var mySel = this.entities[i];
+						this.selection = mySel;
+						if (self.mouse.button === 0) {
+							this.dragging = true;
+							console.log('GotClick:' + this.types[this.selection.type]);
+							return this.selection.onClick(self.mouse.pos);
+						}
+						return;
 					}
-					return;
 				}
 			}
-			
+
 			if (this.selection) {
 				this.selection = null;
 				this.dragging = false;
@@ -103,6 +108,7 @@ var Interactions = Interactions || {};
 					this.dragging = false;
 					this.valid = true;
 				}
+				console.log('GotDrag:' + this.types[this.selection.type]);
 				return this.selection.onDrag(this.selection);
 			}
 			this.dragging = false;
@@ -119,6 +125,7 @@ var Interactions = Interactions || {};
 				var offX = self.mouse.pos.x - this.dragoff.x,
 					offY = self.mouse.pos.y - this.dragoff.y;
 				this.selection.pos = new Vec(offX, offY);
+				console.log('GotDrop:' + this.types[this.selection.type]);
 				this.selection.onDrop(this.selection);
 			}
 			// Reset the dragging flag
@@ -134,6 +141,7 @@ var Interactions = Interactions || {};
 		 */
 		this.rightClick = function (e) {
 			if (this.selection) {
+				console.log('GotRightClick:' + this.types[this.selection.type]);
 				this.selection.onRightClick(this.selection);
 			} else {
 				this.onRightClick();

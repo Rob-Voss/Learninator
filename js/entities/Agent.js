@@ -31,8 +31,7 @@ var Agent = Agent || {};
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
 
-		this.types = ['Ghost', 'Smart', 'Dumb', 'Agent'];
-		this.name = this.types[this.type];
+		this.name = '';
 		this.image = new Image();
 		this.image.src = 'img/Agent.png';
 
@@ -317,7 +316,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onClick: function(v) {
-			console.log('GotClick:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when double clicked
@@ -325,7 +324,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onDoubleClick: function(v) {
-			console.log('GotDoubleClick:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when dragged
@@ -333,7 +332,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onDrag: function(v) {
-			console.log('GotDrag:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when dropped
@@ -341,7 +340,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onDrop: function(v) {
-			console.log('GotDrop:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when released
@@ -349,7 +348,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onRelease: function(v) {
-			console.log('GotRelease:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when right clicked
@@ -357,7 +356,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		onRightClick: function(v) {
-			console.log('GotRightClick:' + this.types[this.type]);
+
 		},
 		/**
 		 * Download the brains to the field
@@ -390,7 +389,7 @@ var Agent = Agent || {};
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle),
 					// We have a line from agent.pos to p->eyep
-					result = world.collisionCheck(this.pos, new Vec(X, Y), true, true, true);
+					result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
 				if (result) {
 					// eye collided with wall
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
@@ -434,7 +433,7 @@ var Agent = Agent || {};
 				this.angle -= 2 * Math.PI;
 
 			// The agent is trying to move from pos to oPos so we need to check walls
-			if (world.collisionCheck(this.oldPos, this.pos, true, false, false)) {
+			if (world.collisionCheck(this.oldPos, this.pos, true, false)) {
 				// The agent derped! Wall collision! Reset their position
 				this.pos = this.oldPos;
 			}

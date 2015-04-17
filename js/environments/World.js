@@ -34,6 +34,8 @@ var Utility = Utility || {};
 
 		this.addWalls(walls || []);
 		this.addAgents(agents || []);
+		this.addEntities(this.walls);
+		this.addEntities(this.agents);
 
 		// This complicates things a little but but fixes mouse co-ordinate problems
 		// when there's a border or padding. See getMouse for more detail
@@ -60,6 +62,8 @@ var Utility = Utility || {};
 		// **** Options! ****
 		this.selectionColor = '#CC0000';
 		this.selectionWidth = 1;
+
+		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
 		this.rewardGraph = {};
 
@@ -92,6 +96,17 @@ var Utility = Utility || {};
 		},
 		/**
 		 * Add an item to the world canvas and set it to redraw
+		 * @param {Array} entities
+		 * @returns {undefined}
+		 */
+		addEntities: function (entities) {
+			var oE = this.entities,
+				nE = entities;
+			this.entities = oE.concat(nE);
+			this.valid = false;
+		},
+		/**
+		 * Add an item to the world canvas and set it to redraw
 		 * @param {Item||Agent} entity
 		 * @returns {undefined}
 		 */
@@ -105,10 +120,7 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		addRandEntity: function(v) {
-			var type = this.randi(1, 3),
-				radius = this.randi(7, 11);
-
-			this.addEntity(new Item(type, v, 0, 0, radius));
+			this.addEntity(new Item(this.randi(1, 3), v, 0, 0, this.randi(7, 11)));
 		},
 		/**
 		 * Add walls
@@ -130,8 +142,6 @@ var Utility = Utility || {};
 		 * A helper function to get check for colliding walls/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
-		 * @param {Boolean} checkWalls
-		 * @param {Boolean} checkItems
 		 */
 		collisionCheck: function (v1, v2, checkWalls, checkItems) {
 			var minRes = false;
@@ -152,22 +162,15 @@ var Utility = Utility || {};
 
 			return minRes;
 		},
+		contains: function () {
+
+		},
 		/**
 		 * Draw the world
 		 * @returns {undefined}
 		 */
 		draw: function () {
 			this.clear();
-
-			// Draw the walls in environment
-			for (var i = 0, wall; wall = this.walls[i++];) {
-				wall.draw(this.ctx);
-			}
-
-			// Draw the population of the world
-			for (var i = 0, agent; agent = this.agents[i++];) {
-				agent.draw(this.ctx);
-			}
 
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
@@ -216,20 +219,22 @@ var Utility = Utility || {};
 			// Tick ALL OF teh items!
 			this.valid = false;
 			for (var i = 0, entity; entity = this.entities[i++];) {
-				entity.age += 1;
-				// Did the agent find teh noms?
-				for (var j = 0, agent; agent = this.agents[j++];) {
-					entity.cleanUp = agent.eat(this, entity);
-					if (entity.cleanUp) {
-						this.valid = true;
-						break;
+				if (this.types[entity.type] == 'Gnar' || this.types[entity.type] == 'Nom') {
+					entity.age += 1;
+					// Did the agent find teh noms?
+					for (var j = 0, agent; agent = this.agents[j++];) {
+						entity.cleanUp = agent.eat(this, entity);
+						if (entity.cleanUp) {
+							this.valid = true;
+							break;
+						}
 					}
-				}
 
-				if (entity.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
-					// Keell it, it has been around way too long
-					entity.cleanUp = true;
-					this.valid = true;
+					if (entity.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
+						// Keell it, it has been around way too long
+						entity.cleanUp = true;
+						this.valid = true;
+					}
 				}
 			}
 
@@ -237,8 +242,12 @@ var Utility = Utility || {};
 			if (this.valid) {
 				var nt = [];
 				for (var i = 0, entity; entity = this.entities[i++];) {
-					if (!entity.cleanUp)
+					if (this.types[entity.type] == 'Gnar' || this.types[entity.type] == 'Nom') {
+						if (!entity.cleanUp)
+							nt.push(entity);
+					} else {
 						nt.push(entity);
+					}
 				}
 				// Swap new list
 				this.entities = nt;
@@ -271,7 +280,7 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		onRightClick: function (mouse) {
-			console.log('GotRightClick:World');
+
 		},
 		/**
 		 * Handle the double click on the world
@@ -279,7 +288,6 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		onDoubleClick: function (mouse) {
-			console.log('GotDoubleClick:World');
 			this.addRandEntity(new Vec(mouse.pos.x, mouse.pos.y));
 		},
 		/**

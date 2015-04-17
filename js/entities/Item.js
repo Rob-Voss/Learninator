@@ -23,14 +23,8 @@ var Item = Item || {};
 		this.cleanUp = false;
 		this.fill = fill || '#AAAAAA';
 		this.image = new Image();
-		if (this.type === 1) {
-			this.image.src = 'img/Apple.png';
-		} else {
-			this.image.src = 'img/Poison.png';
-		}
-
-		this.types = ['Wall', 'Nom', 'Gnar'];
-		this.name = this.types[this.type];
+		this.image.src = (this.type === 1) ? 'img/Apple.png' : 'img/Poison.png';
+		this.name = '';
 	};
 
 	/**
@@ -162,7 +156,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onClick: function(v) {
-			console.log('GotClick:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when double clicked
@@ -170,7 +164,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onDoubleClick: function(v) {
-			console.log('GotDoubleClick:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when dragged
@@ -178,7 +172,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onDrag: function(v) {
-			console.log('GotDrag:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when dropped
@@ -186,7 +180,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onDrop: function(v) {
-			console.log('GotDrop:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when released
@@ -194,7 +188,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onRelease: function(v) {
-			console.log('GotRelease:' + this.types[this.type]);
+
 		},
 		/**
 		 * What to do when right clicked
@@ -202,7 +196,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		onRightClick: function(v) {
-			console.log('GotRightClick:' + this.types[this.type]);
+			
 		}
 	};
 
