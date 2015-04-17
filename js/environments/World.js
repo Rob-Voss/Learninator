@@ -219,7 +219,7 @@ var Utility = Utility || {};
 			// Tick ALL OF teh items!
 			this.valid = false;
 			for (var i = 0, entity; entity = this.entities[i++];) {
-				if (this.types[entity.type] == 'Gnar' || this.types[entity.type] == 'Nom') {
+				if (entity.type == 1 || entity.type == 2) {
 					entity.age += 1;
 					// Did the agent find teh noms?
 					for (var j = 0, agent; agent = this.agents[j++];) {
@@ -242,7 +242,7 @@ var Utility = Utility || {};
 			if (this.valid) {
 				var nt = [];
 				for (var i = 0, entity; entity = this.entities[i++];) {
-					if (this.types[entity.type] == 'Gnar' || this.types[entity.type] == 'Nom') {
+					if (entity.type == 1 || entity.type == 2) {
 						if (!entity.cleanUp)
 							nt.push(entity);
 					} else {
