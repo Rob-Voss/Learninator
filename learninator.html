@@ -5,37 +5,16 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<title>Learninator</title>
 
-		<style type="text/css">
-			#wrap {
-				width:800px;
-				margin-left: auto;
-				margin-right: auto;
-			}
-			h2 {
-				text-align: center;
-			}
-			h1 {
-				font-size: 16px;
-				color: #333;
-				background-color: #DDD;
-				border-bottom: 1px #999 solid;
-				text-align: center;
-			}
-			body {
-				font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-			}
-			canvas {
-				border: 1px solid white;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="css/styles.css">
 
+		<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 		<script src="js/lib/convnet-min.js"></script>
 		<script src="js/lib/underscore-min.js"></script>
-		<script src="js/lib/jquery-1.11.2.min.js"></script>
 
 		<script src="js/lib/Array.js"></script>
 		<script src="js/lib/Graph.js"></script>
 		<script src="js/lib/Utility.js"></script>
+		<script src="js/lib/Interactions.js"></script>
 
 		<script src="js/entities/Agent.js"></script>
 		<script src="js/entities/Brain.js"></script>
@@ -45,8 +24,6 @@
 		<script src="js/entities/Window.js"></script>
 
 		<script src="js/environments/Maze.js"></script>
-		<script src="js/environments/MazeGenerator.js"></script>
-		<script src="js/environments/Simple.js"></script>
 		<script src="js/environments/World.js"></script>
 
 		<script src="js/learninator.js"></script>
@@ -57,7 +34,7 @@
 			<h1>State Visualizations</h1>
 			<div>Average reward over time (this should go up as agent becomes better on average at collecting rewards)</div>
 			<canvas id="graph_canvas" width="350" height="150"></canvas><br />
-			<canvas id="world_canvas" width="700" height="500"></canvas>
+			<canvas id="world_canvas" width="500" height="500"></canvas>
 
 			<div id="brain_info_div_0"></div><br />
 			<canvas id="vis_canvas_0" width="350" height="150"></canvas>
@@ -67,13 +44,11 @@
 
 			<h1>Controls</h1>
 			<button onclick="reload()">Reload</button>
-			<button onclick="w.maze.generator.solve()">Solve</button>
-			<button onclick="go('max+')">Go very fast</button>
-			<button onclick="go('max')">Go fast</button>
-			<button onclick="go('mid')">Go normal speed</button>
-			<button onclick="go('min')">Go slow</button><br />
-			<button onclick="startLearnin()">Start Learning</button>
-			<button onclick="stopLearnin()">Stop Learning</button>
+			<button onclick="solve()">Solve</button>
+			<button onclick="world.go('max+')">Go very fast</button>
+			<button onclick="world.go('max')">Go fast</button>
+			<button onclick="world.go('mid')">Go normal speed</button>
+			<button onclick="world.go('min')">Go slow</button><br />
 
 			<h1>I/O</h1>
 			<button onclick="saveMemory()">Save network to JSON</button>

@@ -1,33 +1,43 @@
-var Utility = Utility || {REVISION: '0.1'};
+var Utility = Utility || {};
 
 (function (global) {
 	"use strict";
 
-	// returns min, max and indeces of an array
-	Utility.maxmin = function (w) {
-		if (w.length === 0) {
+	var Utility = {};
+
+	/**
+	 * Max and min of an array
+	 * @param {Array} a
+	 * @returns {Object}
+	 */
+	Utility.maxmin = function (a) {
+		if (a.length === 0) {
 			return {};
-		} // ... ;s
+		}
 
-		var maxv = w[0], minv = w[0], maxi = 0, mini = 0;
+		var maxv = a[0],
+			minv = a[0],
+			maxi = 0,
+			mini = 0,
+			result = {};
 
-		for (var i = 1; i < w.length; i++) {
-			if (w[i] > maxv) {
-				maxv = w[i];
+		for (var i = 0, item; item = a[i++];) {
+			if (item > maxv) {
+				maxv = item;
 				maxi = i;
-			}
-			if (w[i] < minv) {
-				minv = w[i];
+			} else if (item < minv) {
+				minv = item;
 				mini = i;
 			}
 		}
-		return {
-			maxi: maxi,
-			maxv: maxv,
-			mini: mini,
-			minv: minv,
-			dv: maxv - minv
-		};
+
+		result.maxi = maxi;
+		result.maxv = maxv;
+		result.mini = mini;
+		result.minv = minv;
+		result.dv = maxv - minv;
+
+		return result;
 	};
 
 	/**
@@ -37,7 +47,7 @@ var Utility = Utility || {REVISION: '0.1'};
 	 * @returns {String}
 	 */
 	Utility.flt2str = function (x, d) {
-		if (typeof (d) === 'undefined') {
+		if (typeof(d) === 'undefined') {
 			var d = 5;
 		}
 		var dd = 1.0 * Math.pow(10, d);
@@ -61,7 +71,8 @@ var Utility = Utility || {REVISION: '0.1'};
 			yDiff = v1.x - v0.x,
 			v = new Vec(x, -y),
 			d = Math.abs(y * xDiff - yDiff * x),
-			vecX = 0;
+			vecX = 0,
+			result = {};
 
 		d = d / v.length();
 		if (d > rad) {
@@ -72,16 +83,13 @@ var Utility = Utility || {REVISION: '0.1'};
 		v.scale(d);
 
 		var vecI = v0.add(v);
-		if (Math.abs(y) > Math.abs(x)) {
-			vecX = (vecI.x - v1.x) / (y);
-		} else {
-			vecX = (vecI.y - v1.y) / (x);
-		}
+		vecX = (Math.abs(y) > Math.abs(x)) ? (vecI.x - v1.x) / (y) : (vecI.y - v1.y) / (x);
+
 		if (vecX > 0.0 && vecX < 1.0) {
-			return {
-				vecX: vecX,
-				vecI: vecI
-			};
+			result.vecX = vecX;
+			result.vecI = vecI;
+
+			return result;
 		}
 		return false;
 	};
@@ -107,10 +115,11 @@ var Utility = Utility || {REVISION: '0.1'};
 			// Line 2: 2nd Point
 			x4 = v4.x,
 			y4 = v4.y,
-			denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+			denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1),
+			result = {};
 
 		if (denom === 0.0) {
-			// Parallel lines if it be this yar!
+			// They be parallel lines if it be this yar!
 			return false;
 		}
 
@@ -121,15 +130,15 @@ var Utility = Utility || {REVISION: '0.1'};
 			// Intersection point
 			var vecI = new Vec(x1 + pX * (x2 - x1), y1 + pX * (y2 - y1));
 
-			return {
-				vecX: pX,
-				vecY: pY,
-				vecI: vecI
-			};
+			result.vecX = pX;
+			result.vecY = pY;
+			result.vecI = vecI;
+
+			return result;
 		}
 		return false;
 	};
-	
+
 	/**
 	 * Add a box
 	 * @param {List} lst

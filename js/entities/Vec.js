@@ -1,4 +1,4 @@
-var Vec = Vec || {REVISION: '0.1'};
+var Vec = Vec || {};
 
 (function (global) {
 	"use strict";
@@ -23,7 +23,6 @@ var Vec = Vec || {REVISION: '0.1'};
 
 	/**
 	 * Vector utilities
-	 *
 	 * @type Vec
 	 */
 	Vec.prototype = {
@@ -33,10 +32,8 @@ var Vec = Vec || {REVISION: '0.1'};
 		 * @returns {Number}
 		 */
 		distFrom: function (v) {
-			var xDiff = this.x - v.x,
-				yDiff = this.y - v.y,
-				X = Math.pow(xDiff, 2),
-				Y = Math.pow(yDiff, 2),
+			var X = Math.pow(this.x - v.x, 2),
+				Y = Math.pow(this.y - v.y, 2),
 				dist = Math.sqrt(X + Y);
 
 			return dist;
@@ -90,7 +87,7 @@ var Vec = Vec || {REVISION: '0.1'};
 			return length;
 		},
 		/**
-		 * New vector returning operations
+		 * Add to a Vec
 		 * @param {Vec} v
 		 * @returns {Vec}
 		 */
@@ -101,7 +98,7 @@ var Vec = Vec || {REVISION: '0.1'};
 			return new Vec(X, Y);
 		},
 		/**
-		 * Remove vector
+		 * Remove from a Vec
 		 * @param {Vec} v
 		 * @returns {Vec}
 		 */
@@ -112,32 +109,31 @@ var Vec = Vec || {REVISION: '0.1'};
 			return new Vec(X, Y);
 		},
 		/**
-		 * Rotate the vector clockwise
-		 * @param {Number} a
+		 * Rotate the Vec clockwise
+		 * @param {Number} angle
 		 * @returns {Vec}
 		 */
-		rotate: function (a) {
-			var X = this.x * Math.cos(a) + this.y * Math.sin(a),
-				Y = -this.x * Math.sin(a) + this.y * Math.cos(a);
+		rotate: function (angle) {
+			var X = this.x * Math.cos(angle) + this.y * Math.sin(angle),
+				Y = -this.x * Math.sin(angle) + this.y * Math.cos(angle);
 
 			return new Vec(X, Y);
 		},
 		/**
 		 * In place vector operations
-		 * @param {Number} s
+		 * @param {Number} scale
 		 * @returns {undefined}
 		 */
-		scale: function (s) {
-			this.x *= s;
-			this.y *= s;
+		scale: function (scale) {
+			this.x *= scale;
+			this.y *= scale;
 		},
 		/**
 		 * Normalize the vector
 		 * @returns {undefined}
 		 */
 		normalize: function () {
-			var d = this.length();
-			this.scale(1.0 / d);
+			this.scale(1.0 / this.length());
 		}
 	};
 

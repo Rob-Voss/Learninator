@@ -1,4 +1,4 @@
-var Brain = Brain || {REVISION: '0.1'};
+var Brain = Brain || {};
 
 (function (global) {
 	"use strict";

@@ -1,4 +1,4 @@
-var Wall = Wall || {REVISION: '0.1'};
+var Wall = Wall || {};
 
 (function (global) {
 	"use strict";
@@ -12,6 +12,7 @@ var Wall = Wall || {REVISION: '0.1'};
 	var Wall = function (v1, v2) {
 		this.v1 = v1;
 		this.v2 = v2;
+		this.name = 'Wall';
 	};
 
 	global.Wall = Wall;

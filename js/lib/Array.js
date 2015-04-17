@@ -1,4 +1,4 @@
-var Array = Array || {REVISION: '0.1'};
+var Array = Array || {};
 
 (function (global) {
 	"use strict";

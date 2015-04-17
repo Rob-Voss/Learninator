@@ -1,4 +1,4 @@
-var Agent = Agent || {REVISION: '0.1'};
+var Agent = Agent || {};
 
 (function (global) {
 	"use strict";
@@ -17,24 +17,31 @@ var Agent = Agent || {REVISION: '0.1'};
 
 	/**
 	 * A single agent
-	 * @param {Number} radius
+	 * @param {Number} type
+	 * @param {Vec} v
+	 * @param {Number} w
+	 * @param {Number} h
+	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (radius) {
+	var Agent = function (type, v, w, h, r) {
+		this.type = type || 3; // type of agent
+		this.width = w || 0; // width of agent
+		this.height = h || 0; // height of agent
+		this.radius = r || 10; // default radius
+		this.pos = v || new Vec(this.radius, this.radius); // position
+
+		this.types = ['Ghost', 'Smart', 'Dumb', 'Agent'];
+		this.name = this.types[this.type];
+
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
-
-		// The Agent's size
-		this.rad = radius;
-
-		// Positional information
-		this.pos = new Vec(this.rad, this.rad);
 
 		// The direction the Agent is facing
 		this.angle = 0;
 
 		// The number of item types the Agent's eys can see (wall, green, red thing proximity)
-		this.numTypes = 3;
+		this.numTypes = 4;
 
 		// The number of Agent's eyes
 		this.numEyes = 9;
@@ -131,13 +138,13 @@ var Agent = Agent || {REVISION: '0.1'};
 			// Create input to brain
 			var inputArray = new Array(this.numEyes * this.numTypes);
 
-			for (var i = 0; i < this.numEyes; i++) {
-				var e = this.eyes[i];
+			for (var i = 0, e; e = this.eyes[i++];) {
 				inputArray[i * 3] = 1.0;
 				inputArray[i * 3 + 1] = 1.0;
 				inputArray[i * 3 + 2] = 1.0;
+				inputArray[i * 3 + 3] = 1.0;
 				if (e.sensedType !== -1) {
-					// sensedType is 0 for wall, 1 for food and 2 for poison.
+					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
 					// lets do a 1-of-k encoding into the input array
 					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
 				}
@@ -158,8 +165,7 @@ var Agent = Agent || {REVISION: '0.1'};
 		backward: function () {
 			// Compute the reward
 			var proximityReward = 0.0;
-			for (var i = 0; i < this.numEyes; i++) {
-				var e = this.eyes[i];
+			for (var i = 0, e; e = this.eyes[i++];) {
 				// Agents dont like to see walls, especially up close
 				proximityReward += e.sensedType === 0 ? e.sensedProximity / e.maxRange : 1.0;
 			}
@@ -182,6 +188,94 @@ var Agent = Agent || {REVISION: '0.1'};
 
 			// pass to brain for learning
 			this.brain.backward(reward);
+		},
+		/**
+		 * Get to learninating
+		 * @returns {undefined}
+		 */
+		startLearnin: function () {
+			this.brain.learning = true;
+		},
+		/**
+		 * Stop learninating
+		 * @returns {undefined}
+		 */
+		stopLearnin: function () {
+			this.brain.learning = false;
+		},
+		/**
+		 * Download the brains to the field
+		 * @returns {undefined}
+		 */
+		saveMemory: function () {
+			var j = this.brain.value_net.toJSON();
+			this.memoryBank.value = JSON.stringify(j);
+		},
+		/**
+		 * Load the brains from the field
+		 * @returns {undefined}
+		 */
+		loadMemory: function (memory) {
+			var brain = this.brain;
+			$.getJSON(memory, function(data) {
+				brain.value_net.fromJSON(data);
+			});
+		},
+		/**
+		 * Determine if a point is inside the shape's bounds
+		 * @param {Vec} v
+		 * @returns {Boolean}
+		 */
+		contains: function (v) {
+			return this.pos.distFrom(v) < this.radius;
+		},
+		/**
+		 * What to do when clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onClick: function(v) {
+			console.log('GotClick:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when double clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDoubleClick: function(v) {
+			console.log('GotDoubleClick:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDrag: function(v) {
+			console.log('GotDrag:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when dropped
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDrop: function(v) {
+			console.log('GotDrop:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when released
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onRelease: function(v) {
+			console.log('GotRelease:' + this.types[this.type]);
+		},
+		/**
+		 * What to do when right clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onRightClick: function(v) {
+			console.log('GotRightClick:' + this.types[this.type]);
 		}
 	};
 

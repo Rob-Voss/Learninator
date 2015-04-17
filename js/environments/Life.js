@@ -65,13 +65,13 @@ var Life = Life || {REVISION: '0.1'};
 		};
 
 		var _this = this,
-				_canvas = document.createElement('canvas'),
-				_brainDiv = document.createElement('div'),
-				_canvasWidth = _params.width,
-				_canvasHeight = _params.height,
-				_context = _canvas.getContext('2d'),
-				_world = null,
-				_selectedAgent = null;
+			_canvas = document.createElement('canvas'),
+			_brainDiv = document.createElement('div'),
+			_canvasWidth = _params.width,
+			_canvasHeight = _params.height,
+			_context = _canvas.getContext('2d'),
+			_world = null,
+			_selectedAgent = null;
 
 		_canvas.width = _canvasWidth;
 		_canvas.height = _canvasHeight;
@@ -81,15 +81,12 @@ var Life = Life || {REVISION: '0.1'};
 		this.agent = _selectedAgent;
 		this.parameters = _params;
 
-
-
 		this.animate = function () {
 			requestAnimationFrame(_this.animate);
 			_this.render();
 		},
 		this.render = function () {
 			if (_world) {
-
 				_context.clearRect(0, 0, _canvasWidth, _canvasHeight);
 				var drawFood = true;
 
@@ -186,7 +183,7 @@ var Life = Life || {REVISION: '0.1'};
 			_context.fillText(agent.repCounter.toFixed(2), agent.pos.elements[0] - _this.parameters.agent.size, agent.pos.elements[1] + _this.parameters.agent.size * 2 + 30);
 		},
 		this.drawFood = function (x, y, quantity) {
-			_context.fillStyle = Life.Utils.rgbaToCss(0.8, 1, 0.8, quantity);
+			_context.fillStyle = Life.Utils.rgbaToCss(0.5, 1, 0.5, quantity);
 			_context.fillRect(x * _this.parameters.cellSize, y * _this.parameters.cellSize, _this.parameters.cellSize, _this.parameters.cellSize);
 		},
 		this.getBrain = function () {
@@ -202,12 +199,27 @@ var Life = Life || {REVISION: '0.1'};
 				}
 				var val = (neuron.out < 1) ? neuron.out : 1;
 
-				var node = {"id": id, "name": id, data: {"$type": type, "$dim": "5", "$color": Life.Utils.rgbaToCss(1, neuron.output, neuron.output, 1)}, "adjacencies": []};
+				var node = {
+					"id": id,
+					"name": id,
+					data: {
+						"$type": type,
+						"$dim": "5",
+						"$color": Life.Utils.rgbaToCss(1, neuron.output, neuron.output, 1)
+					},
+					"adjacencies": []
+				};
 				for (var syn in neurons[id].id) {
 					var synapse = neurons[id].id[syn];
 					var width = neurons[id].weight[syn] + 3;
 					var color = (neurons[id].type[syn] > 0.5) ? Life.Utils.rgbaToCss(1, 1, 0, 0.3) : Life.Utils.rgbaToCss(0, 0, 0, 0.05);
-					node.adjacencies.push({"nodeTo": synapse, "data": {"$color": color, "weight": width / 2}});
+					node.adjacencies.push({
+						"nodeTo": synapse,
+						"data": {
+							"$color": color,
+							"weight": width / 2
+						}
+					});
 				}
 				graph.push(node);
 			}
@@ -233,6 +245,7 @@ var Life = Life || {REVISION: '0.1'};
 				window.requestAnimationFrame = window[ vendors[ x ] + 'RequestAnimationFrame' ];
 				window.cancelAnimationFrame = window[ vendors[ x ] + 'CancelAnimationFrame' ] || window[ vendors[ x ] + 'CancelRequestAnimationFrame' ];
 			}
+
 			if (!window.requestAnimationFrame) {
 				window.requestAnimationFrame = function (callback, element) {
 					var currTime = Date.now(), timeToCall = Math.max(0, 16 - (currTime - lastTime));
@@ -243,6 +256,7 @@ var Life = Life || {REVISION: '0.1'};
 					return id;
 				};
 			}
+
 			if (!window.cancelAnimationFrame) {
 				window.cancelAnimationFrame = function (id) {
 					clearTimeout(id);
