@@ -11,6 +11,12 @@ var Interactions = Interactions || {};
 		var self = this;
 		self.mouse = {};
 
+		// Keep track of when we are dragging
+		this.dragging = false;
+
+		// See mousedown and mousemove events for explanation
+		this.dragoff = new Vec(0,0);
+
 		/**
 		 * Creates an object with x and y defined, set to the mouse position relative
 		 * to the state's canvas. If you wanna be super-correct this can be tricky,
@@ -59,10 +65,9 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		this.mouseDown = function (e) {
-			// Check for affected items
-			for (var i = this.items.length - 1; i >= 0; i--) {
-				if (this.items[i].contains(self.mouse.pos)) {
-					var mySel = this.items[i];
+			for (var i = this.entities.length - 1; i >= 0; i--) {
+				if (this.entities[i].contains(self.mouse.pos)) {
+					var mySel = this.entities[i];
 					this.selection = mySel;
 					if (self.mouse.button === 0) {
 						this.dragging = true;
@@ -71,19 +76,7 @@ var Interactions = Interactions || {};
 					return;
 				}
 			}
-
-			// Check for affected Agents
-			for (var i = this.agents.length - 1; i >= 0; i--) {
-				if (this.agents[i].contains(self.mouse.pos)) {
-					var mySel = this.agents[i];
-					this.selection = mySel;
-					if (self.mouse.button === 0) {
-						return this.selection.onClick(self.mouse.pos);
-					}
-					return;
-				}
-			}
-
+			
 			if (this.selection) {
 				this.selection = null;
 				this.dragging = false;

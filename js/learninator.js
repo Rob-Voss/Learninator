@@ -23,12 +23,10 @@ function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	graphCanvas = document.getElementById("graph_canvas");
 
+	var maze = new Maze(worldCanvas, 5, 5, true);
+
 	// We are going to use a maze for the environment and give it three agents
-	W = new World(worldCanvas);
-	W.maze = new Maze(worldCanvas, 10, 10);
-	W.maze.draw();
-	W.walls = W.maze.cells;
-	W.agents = [new Agent(3)];
+	W = new World(worldCanvas, maze.cells, [new Agent(3), new Agent(3)]);
 	W.rewardGraph = new Graph(graphCanvas, W.agents);
 
 	// Globals blech
