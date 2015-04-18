@@ -8,9 +8,10 @@ var Maze = Maze || {};
 	 * @param {HTMLCanvasElement} canvas
 	 * @param {Number} horizCells
 	 * @param {Number} vertCells
+	 * @param {Boolean} go
 	 * @returns {undefined}
 	 */
-	var Maze = function (canvas, horizCells, vertCells) {
+	var Maze = function (canvas, horizCells, vertCells, go) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 
@@ -31,6 +32,12 @@ var Maze = Maze || {};
 		this.graph = new Graph(canvas, null, this.graphOptions);
 
 		var self = this;
+
+		if (go) {
+			this.generate();
+			this.drawBorders();
+			this.drawMaze();
+		}
 	};
 
 	/**

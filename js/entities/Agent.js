@@ -26,13 +26,14 @@ var Agent = Agent || {};
 	 */
 	var Agent = function (type, v, w, h, r) {
 		this.type = type || 3; // type of agent
-		this.width = w || 0; // width of agent
-		this.height = h || 0; // height of agent
+		this.width = w || 20; // width of agent
+		this.height = h || 20; // height of agent
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
 
-		this.types = ['Ghost', 'Smart', 'Dumb', 'Agent'];
-		this.name = this.types[this.type];
+		this.name = '';
+		this.image = new Image();
+		this.image.src = 'img/Agent.png';
 
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
@@ -131,34 +132,6 @@ var Agent = Agent || {};
 	 */
 	Agent.prototype = {
 		/**
-		 * In forward pass the agent simply behaves in the environment
-		 * @returns {undefined}
-		 */
-		forward: function () {
-			// Create input to brain
-			var inputArray = new Array(this.numEyes * this.numTypes);
-
-			for (var i = 0, e; e = this.eyes[i++];) {
-				inputArray[i * 3] = 1.0;
-				inputArray[i * 3 + 1] = 1.0;
-				inputArray[i * 3 + 2] = 1.0;
-				inputArray[i * 3 + 3] = 1.0;
-				if (e.sensedType !== -1) {
-					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
-					// lets do a 1-of-k encoding into the input array
-					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
-				}
-			}
-
-			// Get action from brain
-			this.actionIndex = this.brain.forward(inputArray);
-			var action = this.actions[this.actionIndex];
-
-			// Demultiplex into behavior variables
-			this.rot1 = action[0] * 1;
-			this.rot2 = action[1] * 1;
-		},
-		/**
 		 * In backward pass agent learns.
 		 * @returns {undefined}
 		 */
@@ -190,6 +163,210 @@ var Agent = Agent || {};
 			this.brain.backward(reward);
 		},
 		/**
+		 * Check if there was a collision
+		 * @param {Object} minRes
+		 * @param {Vec} v1
+		 * @param {Vec} v2
+		 * @returns {unresolved}
+		 */
+		collisionCheck: function (minRes, v1, v2) {
+			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
+			if (iResult) {
+				iResult.type = this.type; // Store type of item
+				if (!minRes) {
+					minRes = iResult;
+				} else {
+					if (iResult.vecX < minRes.vecX) {
+						minRes = iResult;
+					}
+				}
+			}
+			return minRes;
+		},
+		/**
+		 * Determine if a point is inside the shape's bounds
+		 * @param {Vec} v
+		 * @returns {Boolean}
+		 */
+		contains: function (v) {
+			var result = this.pos.distFrom(v) < this.radius;
+
+			return result;
+		},
+		/**
+		 * Draw the Agent to the given context
+		 * @param {CanvasRenderingContext2D} ctx
+		 * @returns {undefined}
+		 */
+		draw: function (ctx) {
+			var avgR = this.brain.avgRewardWindow.getAverage().toFixed(1);
+
+			// Draw agents body
+			if (this.image) {
+				ctx.drawImage(this.image, this.pos.x - this.radius, this.pos.y - this.radius, this.width, this.height);
+			} else {
+				ctx.fillStyle = "rgb(150,150,150)";
+				ctx.strokeStyle = "rgb(0,0,0)";
+				ctx.beginPath();
+				ctx.arc(this.oldPos.x, this.oldPos.y, this.radius, 0, Math.PI * 2, true);
+				ctx.fill();
+				ctx.fillText(this.name + " (" + avgR + ")", this.oldPos.x + this.radius, this.oldPos.y + this.radius);
+				ctx.stroke();
+			}
+
+			// Draw agents sight
+			for (var ei = 0, eye; eye = this.eyes[ei++];) {
+				switch (eye.sensedType) {
+					// Is it wall or nothing?
+					case -1:case 0:
+						ctx.strokeStyle = "rgb(0,0,0)";
+						break;
+					// It is noms
+					case 1:
+						ctx.strokeStyle = "rgb(255,150,150)";
+						break;
+					// It is gnar gnar
+					case 2:
+						ctx.strokeStyle = "rgb(150,255,150)";
+						break;
+					// Is it another Agent
+					case 3:
+						this.ctx.strokeStyle = "rgb(255,0,0)";
+						break;
+					default:
+						this.ctx.strokeStyle = "rgb(0,255,0)";
+				}
+
+				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
+					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
+
+				// Draw the agent's line of sights
+				ctx.beginPath();
+				ctx.moveTo(this.oldPos.x, this.oldPos.y);
+				ctx.lineTo(aEyeX, aEyeY);
+				ctx.stroke();
+			}
+		},
+		/**
+		 * Did we get Noms or Gnars
+		 * @param {Item} item
+		 * @returns {undefined}
+		 */
+		eat: function (world, item) {
+			// Did the agent find teh noms?
+			if (this.pos.distFrom(item.pos) < item.radius + this.radius) {
+				// Check if it's on the other side of a wall
+				if (!world.collisionCheck(this.pos, item.pos, true, false, false)) {
+					// Nom Noms!
+					switch (item.type) {
+					case 1:// The sweet meats
+						this.digestionSignal += 5.0 + (item.radius / 2);
+						break;
+					case 2:// The gnar gnar meats
+						this.digestionSignal += -6.0 + (item.radius / 2);
+						break;
+					}
+					return true;
+					// Done consuming, move on
+				}
+			}
+			return false;
+		},
+		/**
+		 * In forward pass the agent simply behaves in the environment
+		 * @returns {undefined}
+		 */
+		forward: function () {
+			// Create input to brain
+			var inputArray = new Array(this.numEyes * this.numTypes);
+
+			for (var i = 0, e; e = this.eyes[i++];) {
+				inputArray[i * 3] = 1.0;
+				inputArray[i * 3 + 1] = 1.0;
+				inputArray[i * 3 + 2] = 1.0;
+				inputArray[i * 3 + 3] = 1.0;
+				if (e.sensedType !== -1) {
+					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
+					// lets do a 1-of-k encoding into the input array
+					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
+				}
+			}
+
+			// Get action from brain
+			this.actionIndex = this.brain.forward(inputArray);
+			var action = this.actions[this.actionIndex];
+
+			// Demultiplex into behavior variables
+			this.rot1 = action[0] * 1;
+			this.rot2 = action[1] * 1;
+		},
+		/**
+		 * Load the brains from the field
+		 * @returns {undefined}
+		 */
+		loadMemory: function (memory) {
+			var brain = this.brain;
+			$.getJSON(memory, function(data) {
+				brain.value_net.fromJSON(data);
+			});
+		},
+		/**
+		 * What to do when clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onClick: function(v) {
+
+		},
+		/**
+		 * What to do when double clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDoubleClick: function(v) {
+
+		},
+		/**
+		 * What to do when dragged
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDrag: function(v) {
+
+		},
+		/**
+		 * What to do when dropped
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onDrop: function(v) {
+
+		},
+		/**
+		 * What to do when released
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onRelease: function(v) {
+
+		},
+		/**
+		 * What to do when right clicked
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		onRightClick: function(v) {
+
+		},
+		/**
+		 * Download the brains to the field
+		 * @returns {undefined}
+		 */
+		saveMemory: function () {
+			var j = this.brain.value_net.toJSON();
+			this.memoryBank.value = JSON.stringify(j);
+		},
+		/**
 		 * Get to learninating
 		 * @returns {undefined}
 		 */
@@ -204,78 +381,73 @@ var Agent = Agent || {};
 			this.brain.learning = false;
 		},
 		/**
-		 * Download the brains to the field
+		 * Tick the agent
 		 * @returns {undefined}
 		 */
-		saveMemory: function () {
-			var j = this.brain.value_net.toJSON();
-			this.memoryBank.value = JSON.stringify(j);
-		},
-		/**
-		 * Load the brains from the field
-		 * @returns {undefined}
-		 */
-		loadMemory: function (memory) {
-			var brain = this.brain;
-			$.getJSON(memory, function(data) {
-				brain.value_net.fromJSON(data);
-			});
-		},
-		/**
-		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} v
-		 * @returns {Boolean}
-		 */
-		contains: function (v) {
-			return this.pos.distFrom(v) < this.radius;
-		},
-		/**
-		 * What to do when clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onClick: function(v) {
-			console.log('GotClick:' + this.types[this.type]);
-		},
-		/**
-		 * What to do when double clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function(v) {
-			console.log('GotDoubleClick:' + this.types[this.type]);
-		},
-		/**
-		 * What to do when dragged
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrag: function(v) {
-			console.log('GotDrag:' + this.types[this.type]);
-		},
-		/**
-		 * What to do when dropped
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrop: function(v) {
-			console.log('GotDrop:' + this.types[this.type]);
-		},
-		/**
-		 * What to do when released
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRelease: function(v) {
-			console.log('GotRelease:' + this.types[this.type]);
-		},
-		/**
-		 * What to do when right clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRightClick: function(v) {
-			console.log('GotRightClick:' + this.types[this.type]);
+		tick: function (world) {
+			for (var ei = 0, eye; eye = this.eyes[ei++];) {
+				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
+					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle),
+					// We have a line from agent.pos to p->eyep
+					result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
+				if (result) {
+					// eye collided with wall
+					eye.sensedProximity = result.vecI.distFrom(this.pos);
+					eye.sensedType = result.type;
+				} else {
+					eye.sensedProximity = eye.maxRange;
+					eye.sensedType = -1;
+				}
+			}
+			// Let the agents behave in the world based on their input
+			this.forward();
+
+			// Apply the outputs of agents on the environment
+			this.oldPos = this.pos; // Back up the old position
+			this.oldAngle = this.angle; // and angle
+
+			// Steer the agent according to outputs of wheel velocities
+			var v = new Vec(0, this.radius / 2.0),
+				v = v.rotate(this.angle + Math.PI / 2),
+				w1pos = this.pos.add(v), // Positions of wheel 1
+				w2pos = this.pos.sub(v), // Positions of wheel 2
+				vv = this.pos.sub(w2pos),
+				vv = vv.rotate(-this.rot1),
+				vv2 = this.pos.sub(w1pos),
+				vv2 = vv2.rotate(this.rot2),
+				newPos = w2pos.add(vv),
+				newPos2 = w1pos.add(vv2);
+
+			newPos.scale(0.5);
+			newPos2.scale(0.5);
+
+			this.pos = newPos.add(newPos2);
+
+			this.angle -= this.rot1;
+			if (this.angle < 0)
+				this.angle += 2 * Math.PI;
+
+			this.angle += this.rot2;
+
+			if (this.angle > 2 * Math.PI)
+				this.angle -= 2 * Math.PI;
+
+			// The agent is trying to move from pos to oPos so we need to check walls
+			if (world.collisionCheck(this.oldPos, this.pos, true, false)) {
+				// The agent derped! Wall collision! Reset their position
+				this.pos = this.oldPos;
+			}
+
+			// Handle boundary conditions
+			if (this.pos.x < 0)
+				this.pos.x = 0;
+			if (this.pos.x > world.width)
+				this.pos.x = world.width;
+			if (this.pos.y < 0)
+				this.pos.y = 0;
+			if (this.pos.y > world.height)
+				this.pos.y = world.height;
+
 		}
 	};
 
