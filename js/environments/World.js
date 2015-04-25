@@ -25,9 +25,9 @@ var Utility = Utility || {};
 		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
 
 		this.clock = 0;
-		this.simSpeed = 2;
+		this.simSpeed = 3;
 		this.interval = 60;
-		this.numItems = 20;
+		this.numItems = 80;
 		this.entities = [];
 
 		this.populate();
@@ -65,7 +65,33 @@ var Utility = Utility || {};
 
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
-		this.rewardGraph = {};
+		/**
+		 * Handle the right click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.click = function (e) {
+			console.log('World Click');
+		};
+
+		/**
+		 * Handle the right click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.contextMenu = function (e) {
+			console.log('World Right Click');
+		};
+
+		/**
+		 * Handle the double click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.doubleClick = function (e) {
+			console.log('World Double Click');
+			this.addRandEntity(new Vec(self.mouse.pos.x, self.mouse.pos.y));
+		};
 
 		var self = this;
 
@@ -142,6 +168,9 @@ var Utility = Utility || {};
 		 * A helper function to get check for colliding walls/items
 		 * @param {Vec} v1
 		 * @param {Vec} v2
+		 * @param {Boolean} checkWalls
+		 * @param {Boolean} checkItems
+		 * @returns {Boolean}
 		 */
 		collisionCheck: function (v1, v2, checkWalls, checkItems) {
 			var minRes = false;
@@ -273,22 +302,6 @@ var Utility = Utility || {};
 				this.rewardGraph.addPoint(this.clock / 200, pts);
 				this.rewardGraph.drawPoints();
 			}
-		},
-		/**
-		 * Handle the right click on the world
-		 * @param {Object} mouse
-		 * @returns {undefined}
-		 */
-		onRightClick: function (mouse) {
-
-		},
-		/**
-		 * Handle the double click on the world
-		 * @param {Object} mouse
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function (mouse) {
-			this.addRandEntity(new Vec(mouse.pos.x, mouse.pos.y));
 		},
 		/**
 		 * Populate the World with Items

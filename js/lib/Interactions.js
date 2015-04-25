@@ -47,44 +47,34 @@ var Interactions = Interactions || {};
 		};
 
 		/**
-		 * Double click with the mouse
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.doubleClick = function (e) {
-			if (this.selection) {
-				console.log('GotDoubleClick:' + this.types[this.selection.type]);
-				this.selection.onDoubleClick(this.selection);
-			} else {
-				this.onDoubleClick(self.mouse);
-			}
-		};
-
-		/**
 		 * Mouse Down
 		 * @param {MouseEvent} e
 		 * @returns {undefined}
 		 */
 		this.mouseDown = function (e) {
-			for (var i = this.entities.length - 1; i >= 0; i--) {
-				var entityType = this.types[this.entities[i].type];
-				if (entityType == 'Gnar' || entityType == 'Nom') {
-					if (this.entities[i].contains(self.mouse.pos)) {
-						var mySel = this.entities[i];
+			self.getMouse(e);
+			if (this.entities.length > 0) {
+				for (var i = this.entities.length - 1; i >= 0; i--) {
+					var entity = this.entities[i];
+					if (entity.contains !== undefined && entity.contains(self.mouse.pos)) {
+						var mySel = entity;
 						this.selection = mySel;
 						if (self.mouse.button === 0) {
 							this.dragging = true;
-							console.log('GotClick:' + this.types[this.selection.type]);
-							return this.selection.onClick(self.mouse.pos);
+							return this.selection.click(self.mouse.pos);
+						} else {
+							this.dragging = false;
+							this.selection.contextMenu(self.mouse.pos);
 						}
-						return;
 					}
 				}
-			}
 
-			if (this.selection) {
-				this.selection = null;
-				this.dragging = false;
+				if (this.selection) {
+					this.selection = null;
+					this.dragging = false;
+				}
+			} else {
+				return this.click(self.mouse.pos);
 			}
 		};
 
@@ -94,6 +84,7 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		this.mouseMove = function (e) {
+			self.getMouse(e);
 			if (this.selection) {
 				if (this.dragoff.x !== 0 && this.dragoff.y !== 0) {
 					this.dragging = true;
@@ -103,15 +94,14 @@ var Interactions = Interactions || {};
 						offY = self.mouse.pos.y - this.dragoff.y;
 
 					this.selection.pos = new Vec(offX, offY);
-					this.valid = false;
-				} else {
-					this.dragging = false;
-					this.valid = true;
+					this.selection.dragging = true;
+					this.selection.valid = false;
+					return this.selection.drag(this.selection);
 				}
-				console.log('GotDrag:' + this.types[this.selection.type]);
-				return this.selection.onDrag(this.selection);
+				this.dragging = false;
+				this.selection.valid = true;
 			}
-			this.dragging = false;
+			return;
 		};
 
 		/**
@@ -120,32 +110,20 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		this.mouseUp = function (e) {
-			if (this.selection && this.dragging) {
-				// Set the selection new position
-				var offX = self.mouse.pos.x - this.dragoff.x,
-					offY = self.mouse.pos.y - this.dragoff.y;
-				this.selection.pos = new Vec(offX, offY);
-				console.log('GotDrop:' + this.types[this.selection.type]);
-				this.selection.onDrop(this.selection);
-			}
-			// Reset the dragging flag
-			this.dragging = false;
-			this.selection = null;
-			this.valid = false;
-		};
-
-		/**
-		 * Right click with the mouse
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.rightClick = function (e) {
+			self.getMouse(e);
 			if (this.selection) {
-				console.log('GotRightClick:' + this.types[this.selection.type]);
-				this.selection.onRightClick(this.selection);
-			} else {
-				this.onRightClick();
+				if (this.dragging) {
+					// Set the selection new position
+					var offX = self.mouse.pos.x - this.dragoff.x,
+						offY = self.mouse.pos.y - this.dragoff.y;
+					this.selection.pos = new Vec(offX, offY);
+					this.selection.drop(this.selection);
+				}
+				this.dragging = false;
+				this.selection = null;
+				this.valid = false;
 			}
+			return;
 		};
 
 		// This fixes a problem where double clicking causes text to get selected on the canvas
@@ -154,35 +132,30 @@ var Interactions = Interactions || {};
 			return false;
 		}, false);
 
-		// Double click for making new items
-		canvas.addEventListener('dblclick', function (e) {
-			self.getMouse(e);
-			self.doubleClick(e);
-		}, true);
-
 		// Right click
 		canvas.addEventListener('contextmenu', function (e) {
 			e.preventDefault();
-			self.getMouse(e);
-			self.rightClick(e);
+			return self.contextMenu(e);
+		}, false);
+
+		// Double click for making new items
+		canvas.addEventListener('dblclick', function (e) {
+			return self.doubleClick(e);
 		}, true);
 
 		// Up, down, and move are for dragging
 		canvas.addEventListener('mousedown', function (e) {
-			self.getMouse(e);
-			self.mouseDown(e);
+			return self.mouseDown(e);
 		}, true);
 
 		// Track when the mouse selection is let go of
 		canvas.addEventListener('mouseup', function (e) {
-			self.getMouse(e);
-			self.mouseUp(e);
+			return self.mouseUp(e);
 		}, true);
 
 		// Track the mouse movement
 		canvas.addEventListener('mousemove', function (e) {
-			self.getMouse(e);
-			self.mouseMove(e);
+			return self.mouseMove(e);
 		}, true);
 
 	};

@@ -25,6 +25,55 @@ var Item = Item || {};
 		this.image = new Image();
 		this.image.src = (this.type === 1) ? 'img/Apple.png' : 'img/Poison.png';
 		this.name = '';
+		this.dragging = false;
+		this.valid = false;
+
+		/**
+		 * What to do when clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.click = function(e) {
+			console.log('Item Click:' + this.type);
+			return;
+		};
+
+		/**
+		 * What to do when right clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.contextMenu = function(e) {
+			console.log('Item Right Click:' + this.type);
+		};
+
+		/**
+		 * What to do when double clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.doubleClick = function(e) {
+			console.log('Item Double Click:' + this.type);
+		};
+
+		/**
+		 * What to do when dragged
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drag = function(e) {
+			console.log('Item Drag:' + this.type);
+		};
+
+		/**
+		 * What to do when dropped
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drop = function(e) {
+			console.log('Item Drop:' + this.type);
+		};
+
 	};
 
 	/**
@@ -33,7 +82,7 @@ var Item = Item || {};
 	 */
 	Item.prototype = {
 		/**
-		 * Find the area
+		 * Find the area of a triangle
 		 * @param {Vec} v1
 		 * @param {Vec} v2
 		 * @param {Vec} v3
@@ -47,7 +96,7 @@ var Item = Item || {};
 		 * @param {Object} minRes
 		 * @param {Vec} v1
 		 * @param {Vec} v2
-		 * @returns {unresolved}
+		 * @returns {Object}
 		 */
 		collisionCheck: function (minRes, v1, v2) {
 			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
@@ -69,23 +118,8 @@ var Item = Item || {};
 		 * @returns {Boolean}
 		 */
 		contains: function (v) {
-			if (this.type === 'tria') {
-				var v1 = this.pos,
-					v2 = new Vec(this.pos.x + this.width / 2, this.pos.y + this.height),
-					v3 = new Vec(this.pos.x - this.width / 2, this.pos.y + this.height),
-					A = this.area(v1, v2, v3),
-					A1 = this.area(v, v2, v3),
-					A2 = this.area(v1, v, v3),
-					A3 = this.area(v1, v2, v);
-				return (A === A1 + A2 + A3);
-			} else if (this.type === 'rect') {
-				return  (this.pos.x <= v.x) && (this.pos.x + this.width >= v.x) &&
-						(this.pos.y <= v.y) && (this.pos.y + this.height >= v.y);
-			} else if (this.type === 1 || this.type === 2 || this.type === 3) {
-				var result = this.pos.distFrom(v) < this.radius;
-
-				return result;
-			}
+			var result = this.pos.distFrom(v) < this.radius;
+			return result;
 		},
 		/**
 		 * Draws this item to a given context
@@ -93,48 +127,10 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
-			ctx.fillStyle = this.fill;
-			ctx.lineWidth = "1";
-			ctx.strokeStyle = "black";
-
-			if (this.type === 'rect' || this.type === 'undefined') {
-				ctx.beginPath();
-				ctx.rect(this.pos.x, this.pos.y, this.width, this.height);
-				ctx.closePath();
-				ctx.fill();
-				ctx.stroke();
-			} else if(this.type === 'circ') {
-				ctx.beginPath();
-				ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, true);
-				ctx.closePath();
-				ctx.stroke();
-				ctx.fill();
-			} else if(this.type === 'tria') {
-				ctx.beginPath();
-				ctx.moveTo(this.pos.x, this.pos.y);
-				ctx.lineTo(this.pos.x + this.width / 2, this.pos.y + this.height);
-				ctx.lineTo(this.pos.x - this.width / 2, this.pos.y + this.height);
-				ctx.closePath();
-				ctx.stroke();
-				ctx.fill();
-			} else if(this.type === 'bubb') {
-				var r = this.pos.x + this.width;
-				var b = this.pos.y + this.height;
-
-				ctx.beginPath();
-				ctx.moveTo(this.pos.x + this.radius, this.pos.y);
-				ctx.lineTo(this.pos.x + this.radius / 2, this.pos.y - 10);
-				ctx.lineTo(this.pos.x + this.radius * 2, this.pos.y);
-				ctx.lineTo(r - this.radius, this.pos.y);
-				ctx.quadraticCurveTo(r, this.pos.y, r, this.pos.y + this.radius);
-				ctx.lineTo(r, this.pos.y + this.height - this.radius);
-				ctx.quadraticCurveTo(r, b, r - this.radius, b);
-				ctx.lineTo(this.pos.x + this.radius, b);
-				ctx.quadraticCurveTo(this.pos.x, b, this.pos.x, b - this.radius);
-				ctx.lineTo(this.pos.x, this.pos.y + this.radius);
-				ctx.quadraticCurveTo(this.pos.x, this.pos.y, this.pos.x + this.radius, this.pos.y);
-				ctx.stroke();
-			} else if (this.type === 1 || this.type === 2) {
+			if (!this.valid) {
+				ctx.fillStyle = this.fill;
+				ctx.lineWidth = "1";
+				ctx.strokeStyle = "black";
 				if (this.image) {
 					ctx.drawImage(this.image, this.pos.x - this.radius, this.pos.y - this.radius, this.width, this.height);
 				} else {
@@ -149,54 +145,6 @@ var Item = Item || {};
 					ctx.stroke();
 				}
 			}
-		},
-		/**
-		 * What to do when clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onClick: function(v) {
-
-		},
-		/**
-		 * What to do when double clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function(v) {
-
-		},
-		/**
-		 * What to do when dragged
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrag: function(v) {
-
-		},
-		/**
-		 * What to do when dropped
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrop: function(v) {
-
-		},
-		/**
-		 * What to do when released
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRelease: function(v) {
-
-		},
-		/**
-		 * What to do when right clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRightClick: function(v) {
-			
 		}
 	};
 

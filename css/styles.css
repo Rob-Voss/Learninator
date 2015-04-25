@@ -23,3 +23,28 @@ body {
 canvas {
 	border: 1px solid white;
 }
+
+#ui_canvas {
+	/*z-index: 0;*/
+	position: absolute;
+}
+
+#world_canvas {
+	z-index: 0;
+	position: absolute;
+}
+
+.button {
+    width: 100px;
+    height: 50px;
+    line-height: 50px;
+    position: absolute;
+    left: 50px;
+    top: 100px;
+    color: #FFF;
+    text-decoration: none;
+    text-align: center;
+    font-size: 15px;
+    font-family: sans-serif;
+    background-repeat: no-repeat;
+}

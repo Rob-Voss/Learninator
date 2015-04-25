@@ -34,6 +34,8 @@ var Agent = Agent || {};
 		this.name = '';
 		this.image = new Image();
 		this.image.src = 'img/Agent.png';
+		this.dragging = false;
+		this.valid = false;
 
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
@@ -124,6 +126,52 @@ var Agent = Agent || {};
 			brainOpts.tdtrainer_options = trainerOpts;
 
 		this.brain = new Brain(this.numInputs, this.numActions, brainOpts); // woohoo
+
+		/**
+		 * What to do when clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.click = function(e) {
+			console.log('Agent Click');
+		};
+
+		/**
+		 * What to do when right clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.contextMenu = function(e) {
+			console.log('Agent Right Click');
+		};
+
+		/**
+		 * What to do when double clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.doubleClick = function(e) {
+			console.log('Agent Double Click');
+		};
+
+		/**
+		 * What to do when dragged
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drag = function(e) {
+			console.log('Agent Drag');
+		};
+
+		/**
+		 * What to do when dropped
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drop = function(e) {
+			console.log('Agent Drop');
+		};
+
 	};
 
 	/**
@@ -309,54 +357,6 @@ var Agent = Agent || {};
 			$.getJSON(memory, function(data) {
 				brain.value_net.fromJSON(data);
 			});
-		},
-		/**
-		 * What to do when clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onClick: function(v) {
-
-		},
-		/**
-		 * What to do when double clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function(v) {
-
-		},
-		/**
-		 * What to do when dragged
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrag: function(v) {
-
-		},
-		/**
-		 * What to do when dropped
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrop: function(v) {
-
-		},
-		/**
-		 * What to do when released
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRelease: function(v) {
-
-		},
-		/**
-		 * What to do when right clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRightClick: function(v) {
-
 		},
 		/**
 		 * Download the brains to the field
