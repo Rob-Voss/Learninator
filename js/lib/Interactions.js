@@ -64,7 +64,7 @@ var Interactions = Interactions || {};
 							return this.selection.click(self.mouse.pos);
 						} else {
 							this.dragging = false;
-							this.selection.contextMenu(self.mouse.pos);
+							return this.selection.contextMenu(self.mouse.pos);
 						}
 					}
 				}
@@ -94,12 +94,12 @@ var Interactions = Interactions || {};
 						offY = self.mouse.pos.y - this.dragoff.y;
 
 					this.selection.pos = new Vec(offX, offY);
-					this.selection.dragging = true;
-					this.selection.valid = false;
+					this.dragging = true;
+					this.valid = false;
 					return this.selection.drag(this.selection);
 				}
 				this.dragging = false;
-				this.selection.valid = true;
+				this.valid = true;
 			}
 			return;
 		};
@@ -116,12 +116,14 @@ var Interactions = Interactions || {};
 					// Set the selection new position
 					var offX = self.mouse.pos.x - this.dragoff.x,
 						offY = self.mouse.pos.y - this.dragoff.y;
+
 					this.selection.pos = new Vec(offX, offY);
+					this.dragging = false;
+					this.valid = false;
 					this.selection.drop(this.selection);
+					this.selection = null;
+					return;
 				}
-				this.dragging = false;
-				this.selection = null;
-				this.valid = false;
 			}
 			return;
 		};
