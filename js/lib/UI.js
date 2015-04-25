@@ -38,6 +38,52 @@ var UI = UI || {};
 		// When set to false, the canvas will redraw everything
 		this.valid = false;
 
+		/**
+		 * What to do when clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.click = function(e) {
+			console.log('UI Click');
+			return;
+		};
+
+		/**
+		 * What to do when right clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.contextMenu = function(e) {
+			console.log('UI Right Click');
+		};
+
+		/**
+		 * What to do when double clicked
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.doubleClick = function(e) {
+			console.log('UI Double Click');
+		};
+
+		/**
+		 * What to do when dragged
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drag = function(e) {
+			console.log('UI Drag');
+		};
+
+		/**
+		 * What to do when dropped
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		this.drop = function(e) {
+			console.log('UI Drop');
+		};
+
 		this.interval = 60;
 		this.fill = 'black';
 		var self = this;
@@ -158,57 +204,6 @@ var UI = UI || {};
 					this.ctx.stroke();
 				}
 			}
-		},
-		/**
-		 * What to do when clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onClick: function (v) {
-			console.log('UI Click');
-			this.draw('tria');
-		},
-		/**
-		 * What to do when double clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function (v) {
-			console.log('UI Double Click');
-			this.draw('bubb');
-		},
-		/**
-		 * What to do when dragged
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrag: function (v) {
-			console.log('UI Drag');
-		},
-		/**
-		 * What to do when dropped
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onDrop: function (v) {
-			console.log('UI Drop');
-		},
-		/**
-		 * What to do when released
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRelease: function (v) {
-			console.log('UI Release');
-		},
-		/**
-		 * What to do when right clicked
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		onRightClick: function (v) {
-			console.log('UI Right Click');
-			this.draw('rect');
 		},
 		/**
 		 * Tick the environment

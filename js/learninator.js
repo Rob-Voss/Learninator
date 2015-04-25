@@ -30,12 +30,12 @@ function start() {
 	graphCanvas = document.getElementById("graph_canvas");
 	uiCanvas = document.getElementById("ui_canvas");
 
-	var maze = new Maze(worldCanvas, 2, 2, true);
+	var maze = new Maze(worldCanvas, 10, 10, true);
 
 	// We are going to use a maze for the environment and give it three agents
 	W = new World(worldCanvas, maze.cells, [new Agent(3)]);
 	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
-//	W.UI = new UI(uiCanvas);
+	W.UI = new UI(uiCanvas);
 
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
