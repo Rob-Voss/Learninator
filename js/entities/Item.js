@@ -22,56 +22,29 @@ var Item = Item || {};
 		this.age = 0;
 		this.cleanUp = false;
 		this.fill = fill || '#AAAAAA';
+
 		this.image = new Image();
-		this.image.src = (this.type === 1) ? 'img/Apple.png' : 'img/Poison.png';
+		this.image.src = (this.type === 1) ? 'img/AppleSmall.png' : 'img/PoisonSmall.png';
+		this.image.onload = imageLoaded;
 		this.name = '';
 		this.dragging = false;
-		this.valid = false;
+		this.update = false;
 
-		/**
-		 * What to do when clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
+		function imageLoaded(e) {
+			var image = e.target,
+				hitArea = new Vec(image.width/2, image.height/2);
+		};
+
 		this.click = function(e) {
-			console.log('Item Click:' + this.type);
-			return;
+			console.log('Click @' + e.layerX + ':' + e.layerY);
 		};
 
-		/**
-		 * What to do when right clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.contextMenu = function(e) {
-			console.log('Item Right Click:' + this.type);
-		};
-
-		/**
-		 * What to do when double clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.doubleClick = function(e) {
-			console.log('Item Double Click:' + this.type);
-		};
-
-		/**
-		 * What to do when dragged
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
 		this.drag = function(e) {
-			console.log('Item Drag:' + this.type);
+			console.log('Drag @' + e.layerX + ':' + e.layerY);
 		};
 
-		/**
-		 * What to do when dropped
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
 		this.drop = function(e) {
-			console.log('Item Drop:' + this.type);
+			console.log('Drop @' + e.layerX + ':' + e.layerY);
 		};
 
 	};
@@ -127,7 +100,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
-			if (!this.valid) {
+			if (!this.redraw) {
 				ctx.fillStyle = this.fill;
 				ctx.lineWidth = "1";
 				ctx.strokeStyle = "black";

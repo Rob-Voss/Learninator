@@ -35,7 +35,7 @@ var Agent = Agent || {};
 		this.image = new Image();
 		this.image.src = 'img/Agent.png';
 		this.dragging = false;
-		this.valid = false;
+		this.redraw = false;
 
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
@@ -127,49 +127,16 @@ var Agent = Agent || {};
 
 		this.brain = new Brain(this.numInputs, this.numActions, brainOpts); // woohoo
 
-		/**
-		 * What to do when clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
 		this.click = function(e) {
-			console.log('Agent Click');
+			console.log('Click @' + e.layerX + ':' + e.layerY);
 		};
 
-		/**
-		 * What to do when right clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.contextMenu = function(e) {
-			console.log('Agent Right Click');
-		};
-
-		/**
-		 * What to do when double clicked
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.doubleClick = function(e) {
-			console.log('Agent Double Click');
-		};
-
-		/**
-		 * What to do when dragged
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
 		this.drag = function(e) {
-			console.log('Agent Drag');
+			console.log('Drag @' + e.layerX + ':' + e.layerY);
 		};
 
-		/**
-		 * What to do when dropped
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
 		this.drop = function(e) {
-			console.log('Agent Drop');
+			console.log('Drop @' + e.layerX + ':' + e.layerY);
 		};
 
 	};

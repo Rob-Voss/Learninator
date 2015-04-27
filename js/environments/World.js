@@ -37,24 +37,8 @@ var Utility = Utility || {};
 		this.addEntities(this.walls);
 		this.addEntities(this.agents);
 
-		// This complicates things a little but but fixes mouse co-ordinate problems
-		// when there's a border or padding. See getMouse for more detail
-		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
-		if (document.defaultView && document.defaultView.getComputedStyle) {
-			this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingLeft'], 10) || 0;
-			this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingTop'], 10) || 0;
-			this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderLeftWidth'], 10) || 0;
-			this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderTopWidth'], 10) || 0;
-		}
-
-		// Some pages have fixed-position bars at the top or left of the page
-		// They will mess up mouse coordinates and this fixes that
-		var html = document.body.parentNode;
-		this.htmlTop = html.offsetTop;
-		this.htmlLeft = html.offsetLeft;
-
 		// When set to false, the canvas will redraw everything
-		this.valid = false;
+		this.redraw = false;
 
 		// Currently selected object. In the future an array for multiple selection
 		this.selection = null;
@@ -65,42 +49,77 @@ var Utility = Utility || {};
 
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
-		/**
-		 * Handle the right click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.click = function (e) {
-			console.log('World Click');
-		};
-
-		/**
-		 * Handle the right click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.contextMenu = function (e) {
-			console.log('World Right Click');
-		};
-
-		/**
-		 * Handle the double click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		this.doubleClick = function (e) {
-			console.log('World Double Click');
-			this.addRandEntity(new Vec(self.mouse.pos.x, self.mouse.pos.y));
-		};
-
 		var self = this;
 
 		// Apply the Interactions class to the world
 		Interactions.apply(this, [canvas]);
 
+		CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams) {
+			// define the default values for the optional arguments
+			if (!arguments[0])
+				delta = 100;
+			if (!arguments[1])
+				color = 'blue';
+			if (!arguments[2])
+				fontParams = '8px sans-serif';
+
+			// extend the canvas width and height by delta
+			var width = this.canvas.width;
+			var height = this.canvas.height;
+
+			// draw the vertical and horizontal lines
+			this.lineWidth = 0.1;
+			this.strokeStyle = color;
+			this.font = fontParams;
+			this.beginPath();
+
+			for (var i = 0; i * delta < width; i++) {
+				this.moveTo(i * delta, 0);
+				this.lineTo(i * delta, height);
+			}
+
+			for (var j = 0; j * delta < height; j++) {
+				this.moveTo(0, j * delta);
+				this.lineTo(width, j * delta);
+			}
+			this.closePath();
+			this.stroke();
+
+			// draw a thicker line, which is the border of the original canvas
+			this.lineWidth = 0.5;
+			this.beginPath();
+			this.moveTo(0, 0);
+			this.lineTo(width, 0);
+			this.lineTo(width, height);
+			this.lineTo(0, height);
+			this.lineTo(0, 0);
+			this.closePath();
+			this.stroke();
+
+			// set the text parameters and write the number values to the vertical and horizontal lines
+			this.font = fontParams
+			this.lineWidth = 0.3;
+
+			// 1. writing the numbers to the x axis
+			var textY = height - 1; // y-coordinate for the number strings
+			for (var i = 0; i * delta <= width; i++) {
+				var x = i * delta,
+					text = i * delta;
+				this.strokeText(text, x, textY);
+			}
+
+			// 2. writing the numbers to the y axis
+			var textX = width - 15; // x-coordinate for the number strings
+			for (var j = 0; j * delta <= height; j++) {
+				var y = j * delta,
+					text = j * delta;
+				this.strokeText(text, textX, y);
+			}
+		};
+
 		setInterval(function () {
 			self.tick();
-			if (!self.valid || self.clock % 50 === 0) {
+			if (!self.redraw || self.clock % 50 === 0) {
 				self.draw();
 			}
 		}, self.interval);
@@ -118,7 +137,7 @@ var Utility = Utility || {};
 		 */
 		addAgents: function (agents) {
 			this.agents = this.agents || agents;
-			this.valid = false;
+			this.redraw = false;
 		},
 		/**
 		 * Add an item to the world canvas and set it to redraw
@@ -129,7 +148,7 @@ var Utility = Utility || {};
 			var oE = this.entities,
 				nE = entities;
 			this.entities = oE.concat(nE);
-			this.valid = false;
+			this.redraw = false;
 		},
 		/**
 		 * Add an item to the world canvas and set it to redraw
@@ -138,7 +157,7 @@ var Utility = Utility || {};
 		 */
 		addEntity: function (entity) {
 			this.entities.push(entity);
-			this.valid = false;
+			this.redraw = false;
 		},
 		/**
 		 * Randomly create an antity at the Vec
@@ -155,7 +174,7 @@ var Utility = Utility || {};
 		 */
 		addWalls: function (walls) {
 			this.walls = this.walls || walls;
-			this.valid = false;
+			this.redraw = false;
 		},
 		/**
 		 * Clear the canvas
@@ -200,7 +219,7 @@ var Utility = Utility || {};
 		 */
 		draw: function () {
 			this.clear();
-
+			this.ctx.addGrid();
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				entity.draw(this.ctx);
@@ -213,7 +232,7 @@ var Utility = Utility || {};
 		 */
 		go: function (speed) {
 			clearInterval(this.interval);
-			this.valid = false;
+			this.redraw = false;
 			switch(speed) {
 				case 'min':
 					this.interval = setInterval(this.tick(), 200);
@@ -229,7 +248,7 @@ var Utility = Utility || {};
 					break;
 				case 'max+':
 					this.interval = setInterval(this.tick(), 0);
-					this.valid = true;
+					this.redraw = true;
 					this.simSpeed = 3;
 					break;
 			}
@@ -246,7 +265,7 @@ var Utility = Utility || {};
 			}
 
 			// Tick ALL OF teh items!
-			this.valid = false;
+			this.redraw = false;
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				if (entity.type == 1 || entity.type == 2) {
 					entity.age += 1;
@@ -254,7 +273,7 @@ var Utility = Utility || {};
 					for (var j = 0, agent; agent = this.agents[j++];) {
 						entity.cleanUp = agent.eat(this, entity);
 						if (entity.cleanUp) {
-							this.valid = true;
+							this.redraw = true;
 							break;
 						}
 					}
@@ -262,13 +281,13 @@ var Utility = Utility || {};
 					if (entity.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
 						// Keell it, it has been around way too long
 						entity.cleanUp = true;
-						this.valid = true;
+						this.redraw = true;
 					}
 				}
 			}
 
 			// Drop old the items
-			if (this.valid) {
+			if (this.redraw) {
 				var nt = [];
 				for (var i = 0, entity; entity = this.entities[i++];) {
 					if (entity.type == 1 || entity.type == 2) {
@@ -313,6 +332,31 @@ var Utility = Utility || {};
 					y = this.randf(20, this.height - 20);
 				this.addRandEntity(new Vec(x, y));
 			}
+		},
+		/**
+		 * Handle the right click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		click: function (e) {
+			console.log('World Click');
+		},
+		/**
+		 * Handle the right click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		contextMenu: function (e) {
+			console.log('World Right Click');
+		},
+		/**
+		 * Handle the double click on the world
+		 * @param {MouseEvent} e
+		 * @returns {undefined}
+		 */
+		doubleClick: function (e) {
+			console.log('World Double Click');
+			this.addRandEntity(new Vec(this.mouse.pos.x, this.mouse.pos.y));
 		}
 	};
 

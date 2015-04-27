@@ -36,7 +36,7 @@ var UI = UI || {};
 		this.htmlLeft = html.offsetLeft;
 
 		// When set to false, the canvas will redraw everything
-		this.valid = false;
+		this.redraw = false;
 
 		/**
 		 * What to do when clicked
@@ -93,7 +93,7 @@ var UI = UI || {};
 
 		setInterval(function () {
 			self.tick();
-			if (!self.valid || self.clock % 50 === 0) {
+			if (!self.redraw || self.clock % 50 === 0) {
 				self.draw();
 			}
 		}, self.interval);
@@ -212,7 +212,7 @@ var UI = UI || {};
 			this.clock++;
 
 			// Drop old the items
-			if (!this.valid) {
+			if (!this.redraw) {
 				this.draw();
 			}
 		}
