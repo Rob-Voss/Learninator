@@ -24,46 +24,44 @@ var Brain = Brain || {};
 	 * A Brain object does all the magic.
 	 * Over time it receives some inputs and some rewards and its job is to set
 	 * the outputs to maximize the expected reward
-	 * @param {Number} numStates
-	 * @param {Number} numActions
 	 * @param {Object} options
 	 * @returns {Brain}
 	 */
-	var Brain = function (numStates, numActions, options) {
+	var Brain = function (options) {
 		var opt = options || {};
 		// in number of time steps, of temporal memory
 		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
 		// current x so to have no information from previous time step going into value
 		// function, set to 0.
-		this.temporal_window = typeof opt.temporal_window !== 'undefined' ? opt.temporal_window : 1;
+		this.temporal_window = opt.temporal_window ? opt.temporal_window : 1;
 
 		// size of experience replay memory
-		this.experience_size = typeof opt.experience_size !== 'undefined' ? opt.experience_size : 30000;
+		this.experience_size = opt.experience_size ? opt.experience_size : 30000;
 
 		// number of examples in experience replay memory before we begin learning
-		this.start_learn_threshold = typeof opt.start_learn_threshold !== 'undefined' ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
+		this.start_learn_threshold = opt.start_learn_threshold ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
 
 		// gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
-		this.gamma = typeof opt.gamma !== 'undefined' ? opt.gamma : 0.8;
+		this.gamma = opt.gamma ? opt.gamma : 0.8;
 
 		// number of steps we will learn for
-		this.learning_steps_total = typeof opt.learning_steps_total !== 'undefined' ? opt.learning_steps_total : 100000;
+		this.learning_steps_total = opt.learning_steps_total ? opt.learning_steps_total : 100000;
 
 		// how many steps of the above to perform only random actions (in the beginning)?
-		this.learning_steps_burnin = typeof opt.learning_steps_burnin !== 'undefined' ? opt.learning_steps_burnin : 3000;
+		this.learning_steps_burnin = opt.learning_steps_burnin ? opt.learning_steps_burnin : 3000;
 
 		// what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
-		this.epsilon_min = typeof opt.epsilon_min !== 'undefined' ? opt.epsilon_min : 0.05;
+		this.epsilon_min = opt.epsilon_min ? opt.epsilon_min : 0.05;
 
 		// what epsilon to use at test time? (i.e. when learning is disabled)
-		this.epsilon_test_time = typeof opt.epsilon_test_time !== 'undefined' ? opt.epsilon_test_time : 0.01;
+		this.epsilon_test_time = opt.epsilon_test_time ? opt.epsilon_test_time : 0.01;
 
 		// advanced feature. Sometimes a random action should be biased towards some values
 		// for example in flappy bird, we may want to choose to not flap more often
 		if (typeof opt.random_action_distribution !== 'undefined') {
 			// this better sum to 1 by the way, and be of length this.num_actions
 			this.random_action_distribution = opt.random_action_distribution;
-			if (this.random_action_distribution.length !== numActions) {
+			if (this.random_action_distribution.length !== opt.numActions) {
 				console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
 			}
 			var a = this.random_action_distribution;
@@ -82,9 +80,9 @@ var Brain = Brain || {};
 		// x0,a0,x1,a1,x2,a2,...xt
 		// this variable controls the size of that temporal window. Actions are
 		// encoded as 1-of-k hot vectors
-		this.net_inputs = numStates * this.temporal_window + numActions * this.temporal_window + numStates;
-		this.num_states = numStates;
-		this.num_actions = numActions;
+		this.net_inputs = opt.numStates * this.temporal_window + opt.numActions * this.temporal_window + opt.numStates;
+		this.num_states = opt.numStates;
+		this.num_actions = opt.numActions;
 		// must be at least 2, but if we want more context even more
 		this.window_size = Math.max(this.temporal_window, 2);
 		this.state_window = new Array(this.window_size);
@@ -180,7 +178,7 @@ var Brain = Brain || {};
 		 */
 		random_action: function () {
 			if (this.random_action_distribution.length === 0) {
-				return convnetjs.randi(0, this.num_actions);
+				return Utility.randi(0, this.num_actions);
 			} else {
 				// okay, lets do some fancier sampling:
 				var p = convnetjs.randf(0, 1.0);
@@ -264,7 +262,7 @@ var Brain = Brain || {};
 				} else {
 					this.epsilon = this.epsilon_test_time; // use test-time value
 				}
-				var rf = convnetjs.randf(0, 1);
+				var rf = Utility.randf(0, 1);
 				if (rf < this.epsilon) {
 					// choose a random action with epsilon probability
 					action = this.random_action();
@@ -321,7 +319,7 @@ var Brain = Brain || {};
 					this.experience.push(e);
 				} else {
 					// replace. finite memory!
-					var ri = convnetjs.randi(0, this.experience_size);
+					var ri = Utility.randi(0, this.experience_size);
 					this.experience[ri] = e;
 				}
 			}
@@ -331,7 +329,7 @@ var Brain = Brain || {};
 			if (this.experience.length > this.start_learn_threshold) {
 				var avcost = 0.0;
 				for (var k = 0; k < this.tdtrainer.batch_size; k++) {
-					var re = convnetjs.randi(0, this.experience.length),
+					var re = Utility.randi(0, this.experience.length),
 						e = this.experience[re],
 						x = new convnetjs.Vol(1, 1, this.net_inputs);
 					x.w = e.state0;
@@ -363,6 +361,34 @@ var Brain = Brain || {};
 			brainvis.appendChild(desc);
 
 			element.appendChild(brainvis);
+		}
+	};
+
+	function postData() {
+		var agents = Array();
+		for (var id in _world.agents) {
+			var agent = {};
+			for (var attr in _world.agents[id]) {
+				if (attr !== "brain") {
+					agent[attr] = _world.agents[id][attr];
+				}
+			}
+			agents.push(agent);
+		}
+
+		var world = {
+			agents: agents,
+			food: _world.food
+		};
+		self.postMessage(JSON.stringify({world: world, agent: _selectedAgent}));
+	};
+
+	self.onmessage = function (event) {
+		var data = event.data;
+		if (data.action === "init") {
+			init(data.parameters);
+		} else if (data.action === "select") {
+			selectAgent(data.x, data.y);
 		}
 	};
 

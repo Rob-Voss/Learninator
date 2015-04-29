@@ -12,11 +12,16 @@ var Utility = Utility || {};
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	var World = function (canvas, walls, agents) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
-		this.width = canvas.width;
-		this.height = canvas.height;
+	var World = function (options) {
+		this.canvas = options.canvas;
+		this.ctx = options.canvas.getContext("2d");
+		this.width = options.canvas.width;
+		this.height = options.canvas.height;
+		this.horizCells = options.horizCells;
+		this.vertCells = options.vertCells;
+		this.vW = this.width / this.horizCells;
+		this.vH = this.height / this.vertCells;
+		this.maze = options.maze;
 
 		this.clock = 0;
 		this.simSpeed = 3;
@@ -27,10 +32,11 @@ var Utility = Utility || {};
 
 		// When set to true, the canvas will redraw everything
 		this.redraw = true;
+		this.pause = false;
 
 		this.populate();
-		this.addWalls(walls || []);
-		this.addAgents(agents || []);
+		this.addWalls(options.walls || []);
+		this.addAgents(options.agents || []);
 		this.addEntities(this.walls);
 		this.addEntities(this.agents);
 
@@ -40,9 +46,11 @@ var Utility = Utility || {};
 		Interactions.apply(this);
 
 		setInterval(function () {
-			_this.tick();
-			if (_this.redraw || _this.clock % 50 === 0) {
-				_this.draw();
+			if (!_this.pause) {
+				_this.tick();
+				if (_this.redraw || _this.clock % 50 === 0) {
+					_this.draw();
+				}
 			}
 		}, _this.interval);
 	};
@@ -141,6 +149,8 @@ var Utility = Utility || {};
 		 */
 		draw: function () {
 			this.clear();
+
+			this.ctx.addGrid(this.cellSize);
 
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {

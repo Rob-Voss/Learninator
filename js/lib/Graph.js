@@ -47,7 +47,8 @@ var Graph = Graph || {};
 				}
 			}
 		}
-		self = this;
+
+
 	};
 
 	Graph.prototype = {
@@ -84,7 +85,7 @@ var Graph = Graph || {};
 				this.step_horizon *= 2;
 		},
 		/**
-		 * Draw itself
+		 * Draw it
 		 * @returns {undefined}
 		 */
 		drawPoints: function () {
@@ -210,8 +211,10 @@ var Graph = Graph || {};
 		 * @returns {unresolved}
 		 */
 		unvisitedNeighbors: function (v) {
+			var _this = this;
 			return _.select(this.connectedNeighbors(v), function (c) {
-				return !c.visited;
+				var unv = !c.visited;
+				return unv;
 			});
 		},
 		/**
@@ -220,19 +223,23 @@ var Graph = Graph || {};
 		 * @returns {unresolved}
 		 */
 		connectedNeighbors: function (v) {
+			var _this = this;
 			return _.select(this.neighbors(v), function (c) {
-				return self.areConnected(v, c);
+				var con = _this.areConnected(v, c);
+				return con;
 			});
 		},
 		/**
 		 * Returns all neighbors of this Vec that are NOT separated by an edge
-		 * This means there is a maze path between both cells.self
+		 * This means there is a maze path between both cells._this
 		 * @param {Vec} v
 		 * @returns {unresolved}
 		 */
 		disconnectedNeighbors: function (v) {
+			var _this = this;
 			return _.reject(this.neighbors(v), function (c) {
-				return self.areConnected(v, c);
+				var disc = _this.areConnected(v, c);
+				return disc;
 			});
 		},
 		/**

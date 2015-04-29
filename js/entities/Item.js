@@ -24,8 +24,8 @@ var Item = Item || {};
 		this.fill = '#AAAAAA';
 
 		this.image = new Image();
-		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
 		this.image.onload = imageLoaded;
+		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
 		this.name = (this.type === 1 ? 'Nom' : 'Gnar') + id;
 		this.dragging = false;
 		this.redraw = true;

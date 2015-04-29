@@ -33,7 +33,14 @@ var Agent = Agent || {};
 
 		this.id = Utility.guid();
 		this.image = new Image();
+		this.image.onload = imageLoaded;
 		this.image.src = 'img/Agent.png';
+
+		function imageLoaded(e) {
+			var image = e.target,
+				hitArea = new Vec(image.width/2, image.height/2);
+		};
+
 		this.dragging = false;
 		this.redraw = false;
 
@@ -116,6 +123,8 @@ var Agent = Agent || {};
 		 * @type {Object}
 		 */
 		var brainOpts = {};
+			brainOpts.numStates = this.numInputs;
+			brainOpts.numActions = this.numActions;
 			brainOpts.temporal_window = this.temporalWindow;
 			brainOpts.experience_size = 30000;
 			brainOpts.start_learn_threshold = 1000;
@@ -127,7 +136,16 @@ var Agent = Agent || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
-		this.brain = new Brain(this.numInputs, this.numActions, brainOpts);
+		this.brain = new Brain(brainOpts);
+
+		this.init = function (worker) {
+			worker.onmessage = function (event) {
+				var data = JSON.parse(event.data);
+			};
+
+			worker.postMessage({action: "init", parameters: brainOpts});
+		}
+
 	};
 
 	/**

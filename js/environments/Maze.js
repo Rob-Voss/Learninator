@@ -6,19 +6,17 @@ var Maze = Maze || {};
 	/**
 	 * A maze
 	 * @param {HTMLCanvasElement} canvas
-	 * @param {Number} horizCells
-	 * @param {Number} vertCells
-	 * @param {Boolean} go
+	 * @param {Object} options
 	 * @returns {undefined}
 	 */
-	var Maze = function (canvas, horizCells, vertCells) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
+	var Maze = function (options) {
+		this.canvas = options.canvas;
+		this.ctx = this.canvas.getContext("2d");
 
-		this.width = canvas.width;
-		this.height = canvas.height;
-		this.horizCells = horizCells;
-		this.vertCells = vertCells;
+		this.width = this.canvas.width;
+		this.height = this.canvas.height;
+		this.horizCells = options.horizCells;
+		this.vertCells = options.vertCells;
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
 		this.cells = [];
@@ -26,12 +24,11 @@ var Maze = Maze || {};
 		this.path = [];
 
 		this.graphOptions = {
-			'width': horizCells,
-			'height': vertCells
+			'width': this.horizCells,
+			'height': this.vertCells
 		};
-		this.graph = new Graph(canvas, null, this.graphOptions);
 
-		var self = this;
+		this.graph = new Graph(this.canvas, null, this.graphOptions);
 
 		this.draw();
 	};
@@ -64,7 +61,6 @@ var Maze = Maze || {};
 			this.generate();
 			this.drawBorders();
 			this.drawMaze();
-			this.ctx.addGrid(this.vW);
 		},
 		/**
 		 * Draw the borders
@@ -80,20 +76,25 @@ var Maze = Maze || {};
 		 * Draw the solution
 		 * @returns {undefined}
 		 */
-		drawSolution: function() {
-		  var path = this.path;
+		drawSolution: function () {
+			var _this = this;
+			var path = this.path;
+			this.ctx.fillStyle = "rgba(0,165,0,.1)";
+			this.ctx.strokeStyle = "rgb(0,0,0)";
 
-		  for(var i = 0, V; V = path[i++];) {
-			  var vW = this.vW,
-				vH = this.vH,
-				vX = V.x,
-				vY = V.y;
-			(function () {
-			  setTimeout(function() {
-				self.ctx.fillRect(vX, vY, vW, vH);
-			  }, 80 * i);
-			})();
-		  }
+			for (var i = 0, V; V = path[i++];) {
+				var vW = this.vW,
+					vH = this.vH,
+					vX = V.x,
+					vY = V.y,
+					// Get the cell X coords and multiply by the cell width
+					x = _this.graph.cells[vX][vY].x * vW,
+					// Get the cell Y coords and multiply by the cell height
+					y = _this.graph.cells[vX][vY].y * vH;
+				(function () {
+					_this.ctx.fillRect(x, y, vW, vH);
+				})();
+			}
 		},
 		/**
 		 * Draw the Maze
@@ -228,8 +229,6 @@ var Maze = Maze || {};
 					}
 				});
 			}
-
-			this.drawSolution();
 		}
 	};
 

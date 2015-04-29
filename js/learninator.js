@@ -30,10 +30,22 @@ function start() {
 	graphCanvas = document.getElementById("graph_canvas");
 	uiCanvas = document.getElementById("ui_canvas");
 
-	var maze = new Maze(worldCanvas, 5, 5);
+	var mazeOptions = {
+		canvas: worldCanvas,
+		horizCells: 25,
+		vertCells: 25
+	};
+	var maze = new Maze(mazeOptions);
 
-	// We are going to use a maze for the environment and give it three agents
-	W = new World(worldCanvas, maze.cells, [new Agent(3)]);
+	var worldOptions = {
+		canvas: worldCanvas,
+		maze: maze,
+		walls: maze.cells,
+		agents: [new Agent()],
+		horizCells: mazeOptions.horizCells,
+		vertCells: mazeOptions.vertCells
+	};
+	W = new World(worldOptions);
 	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
 //	W.UI = new UI(uiCanvas);
 
@@ -47,5 +59,7 @@ function start() {
 function solve() {
 	W.redraw = true;
 	W.maze.solve();
+	W.maze.drawSolution();
+	W.pause = true;
 }
 
