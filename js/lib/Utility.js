@@ -5,6 +5,39 @@ var Utility = Utility || {};
 
 	var Utility = {};
 
+	Utility.randf = function(a, b) {
+		return Math.random()*(b-a)+a;
+	};
+
+	Utility.randi = function(a, b) {
+		return Math.floor(Math.random()*(b-a)+a);
+	};
+
+	/**
+	 * Check if there was a collision
+	 * @param {Object} minRes
+	 * @param {Vec} v1
+	 * @param {Vec} v2
+	 * @returns {Object}
+	 */
+	Utility.collisionCheck = function (minRes, v1, v2, v0, radius) {
+		var iResult = Utility.linePointIntersect(v1, v2, v0, radius);
+		if (iResult) {
+			iResult.type = this.type;
+			iResult.id = this.id;
+			iResult.radius = this.radius;
+			iResult.pos = this.pos;
+			if (!minRes) {
+				minRes = iResult;
+			} else {
+				if (iResult.vecX < minRes.vecX) {
+					minRes = iResult;
+				}
+			}
+		}
+		return minRes;
+	};
+
 	/**
 	 * Max and min of an array
 	 * @param {Array} a
@@ -47,7 +80,7 @@ var Utility = Utility || {};
 	 * @returns {String}
 	 */
 	Utility.flt2str = function (x, d) {
-		if (typeof(d) === 'undefined') {
+		if (typeof(d) === undefined) {
 			var d = 5;
 		}
 		var dd = 1.0 * Math.pow(10, d);
@@ -140,24 +173,22 @@ var Utility = Utility || {};
 	};
 
 	/**
-	 * Add a box
-	 * @param {List} lst
-	 * @param {Number} x
-	 * @param {Number} y
-	 * @param {Number} w
-	 * @param {Number} h
-	 * @returns {List}
+	 * Find the area of a triangle
+	 * @param {Vec} v1
+	 * @param {Vec} v2
+	 * @param {Vec} v3
+	 * @returns {Number}
 	 */
-	Utility.utilAddBox = function (lst, x, y, w, h) {
-		var xw = x + w,
-			yh = y + h;
+	Utility.area = function (v1, v2, v3) {
+		return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+	};
 
-		lst.push(new Wall(new Vec(x, y), new Vec(xw, y)));
-		lst.push(new Wall(new Vec(xw, y), new Vec(xw, yh)));
-		lst.push(new Wall(new Vec(xw, yh), new Vec(x, yh)));
-		lst.push(new Wall(new Vec(x, yh), new Vec(x, y)));
+	Utility.S4 = function () {
+		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+	};
 
-		return lst;
+	Utility.guid = function () {
+		return (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0,3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
 	};
 
 	global.Utility = Utility;

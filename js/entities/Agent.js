@@ -31,11 +31,13 @@ var Agent = Agent || {};
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
 
-		this.name = '';
+		this.id = Utility.guid();
 		this.image = new Image();
 		this.image.src = 'img/Agent.png';
 		this.dragging = false;
 		this.redraw = false;
+
+		this.digested = [];
 
 		// Remember the Agent's old position
 		this.oldPos = this.pos;
@@ -125,20 +127,7 @@ var Agent = Agent || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
-		this.brain = new Brain(this.numInputs, this.numActions, brainOpts); // woohoo
-
-		this.click = function(e) {
-			console.log('Click @' + e.layerX + ':' + e.layerY);
-		};
-
-		this.drag = function(e) {
-			console.log('Drag @' + e.layerX + ':' + e.layerY);
-		};
-
-		this.drop = function(e) {
-			console.log('Drop @' + e.layerX + ':' + e.layerY);
-		};
-
+		this.brain = new Brain(this.numInputs, this.numActions, brainOpts);
 	};
 
 	/**
@@ -187,7 +176,10 @@ var Agent = Agent || {};
 		collisionCheck: function (minRes, v1, v2) {
 			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
 			if (iResult) {
-				iResult.type = this.type; // Store type of item
+				iResult.type = this.type;
+				iResult.id = this.id;
+				iResult.radius = this.radius;
+				iResult.pos = this.pos;
 				if (!minRes) {
 					minRes = iResult;
 				} else {
@@ -238,15 +230,15 @@ var Agent = Agent || {};
 						break;
 					// It is noms
 					case 1:
-						ctx.strokeStyle = "rgb(255,150,150)";
+						ctx.strokeStyle = "rgb(255,0,0)";
 						break;
 					// It is gnar gnar
 					case 2:
-						ctx.strokeStyle = "rgb(150,255,150)";
+						ctx.strokeStyle = "rgb(0,255,0)";
 						break;
 					// Is it another Agent
 					case 3:
-						this.ctx.strokeStyle = "rgb(255,0,0)";
+						this.ctx.strokeStyle = "rgb(100,10,90)";
 						break;
 					default:
 						this.ctx.strokeStyle = "rgb(0,255,0)";
@@ -261,31 +253,6 @@ var Agent = Agent || {};
 				ctx.lineTo(aEyeX, aEyeY);
 				ctx.stroke();
 			}
-		},
-		/**
-		 * Did we get Noms or Gnars
-		 * @param {Item} item
-		 * @returns {undefined}
-		 */
-		eat: function (world, item) {
-			// Did the agent find teh noms?
-			if (this.pos.distFrom(item.pos) < item.radius + this.radius) {
-				// Check if it's on the other side of a wall
-				if (!world.collisionCheck(this.pos, item.pos, true, false, false)) {
-					// Nom Noms!
-					switch (item.type) {
-					case 1:// The sweet meats
-						this.digestionSignal += 5.0 + (item.radius / 2);
-						break;
-					case 2:// The gnar gnar meats
-						this.digestionSignal += -6.0 + (item.radius / 2);
-						break;
-					}
-					return true;
-					// Done consuming, move on
-				}
-			}
-			return false;
 		},
 		/**
 		 * In forward pass the agent simply behaves in the environment
@@ -316,56 +283,38 @@ var Agent = Agent || {};
 			this.rot2 = action[1] * 1;
 		},
 		/**
-		 * Load the brains from the field
-		 * @returns {undefined}
-		 */
-		loadMemory: function (memory) {
-			var brain = this.brain;
-			$.getJSON(memory, function(data) {
-				brain.value_net.fromJSON(data);
-			});
-		},
-		/**
-		 * Download the brains to the field
-		 * @returns {undefined}
-		 */
-		saveMemory: function () {
-			var j = this.brain.value_net.toJSON();
-			this.memoryBank.value = JSON.stringify(j);
-		},
-		/**
-		 * Get to learninating
-		 * @returns {undefined}
-		 */
-		startLearnin: function () {
-			this.brain.learning = true;
-		},
-		/**
-		 * Stop learninating
-		 * @returns {undefined}
-		 */
-		stopLearnin: function () {
-			this.brain.learning = false;
-		},
-		/**
 		 * Tick the agent
 		 * @returns {undefined}
 		 */
 		tick: function (world) {
+			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle),
 					// We have a line from agent.pos to p->eyep
 					result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
-				if (result) {
-					// eye collided with wall
+				if (result && result.type !== 0) {
+					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
 					eye.sensedType = result.type;
+					if (eye.sensedProximity < result.radius + this.radius) {
+						// Nom Noms!
+						switch (result.type) {
+							case 1:// The sweet meats
+								this.digestionSignal += 5.0 + (result.radius / 2);
+								break;
+							case 2:// The gnar gnar meats
+								this.digestionSignal += -6.0 + (result.radius / 2);
+								break;
+						}
+						this.digested.push(result.id);
+					}
 				} else {
 					eye.sensedProximity = eye.maxRange;
 					eye.sensedType = -1;
 				}
 			}
+
 			// Let the agents behave in the world based on their input
 			this.forward();
 
@@ -404,17 +353,47 @@ var Agent = Agent || {};
 				// The agent derped! Wall collision! Reset their position
 				this.pos = this.oldPos;
 			}
-
-			// Handle boundary conditions
-			if (this.pos.x < 0)
-				this.pos.x = 0;
-			if (this.pos.x > world.width)
-				this.pos.x = world.width;
-			if (this.pos.y < 0)
-				this.pos.y = 0;
-			if (this.pos.y > world.height)
-				this.pos.y = world.height;
-
+		},
+		/**
+		 * Load the brains from the field
+		 * @returns {undefined}
+		 */
+		loadMemory: function (memory) {
+			var brain = this.brain;
+			$.getJSON(memory, function(data) {
+				brain.value_net.fromJSON(data);
+			});
+		},
+		/**
+		 * Download the brains to the field
+		 * @returns {undefined}
+		 */
+		saveMemory: function () {
+			var j = this.brain.value_net.toJSON();
+			this.memoryBank.value = JSON.stringify(j);
+		},
+		/**
+		 * Get to learninating
+		 * @returns {undefined}
+		 */
+		startLearnin: function () {
+			this.brain.learning = true;
+		},
+		/**
+		 * Stop learninating
+		 * @returns {undefined}
+		 */
+		stopLearnin: function () {
+			this.brain.learning = false;
+		},
+		click: function(e) {
+			console.log('Agent Click');
+		},
+		drag: function(e) {
+			console.log('Agent Drag');
+		},
+		drop: function(e) {
+			console.log('Agent Drop');
 		}
 	};
 

@@ -7,13 +7,7 @@ var Interactions = Interactions || {};
 	 * Holder for interactions with the world
 	 * @returns {Interactions}
 	 */
-	var Interactions = function (canvas) {
-		// Some pages have fixed-position bars at the top or left of the page
-		// They will mess up mouse coordinates and this fixes that
-		var html = document.body.parentNode;
-		// This complicates things a little but but fixes mouse co-ordinate problems
-		// when there's a border or padding. See getMouse for more detail
-		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
+	var Interactions = function () {
 		if (document.defaultView && document.defaultView.getComputedStyle) {
 			this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingLeft'], 10) || 0;
 			this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingTop'], 10) || 0;
@@ -21,11 +15,11 @@ var Interactions = Interactions || {};
 			this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderTopWidth'], 10) || 0;
 		}
 
+		var html = document.body.parentNode;
 		this.htmlTop = html.offsetTop;
 		this.htmlLeft = html.offsetLeft;
 
-		var self = this;
-		self.mouse = {};
+		this.mouse = {};
 
 		// Keep track of when we are dragging
 		this.dragging = false;
@@ -33,8 +27,21 @@ var Interactions = Interactions || {};
 		// See mousedown and mousemove events for explanation
 		this.dragoff = new Vec(0,0);
 
+		// Currently selected object. In the future an array for multiple selection
+		this.selection = null;
+
+		// **** Options! ****
+		this.selectionColor = '#CC0000';
+		this.selectionWidth = 1;
+
+		/**
+		 * Event handler
+		 * @param {MouseEvent} event
+		 * @returns {undefined}
+		 */
 		function eventHandler(event) {
 			event.preventDefault();
+
 			switch(event.type) {
 				case 'contextmenu':
 					console.log('Right Click');
@@ -52,7 +59,7 @@ var Interactions = Interactions || {};
 					mouseMove(event);
 					break;
 				case 'dblclick':
-					console.log('Double Click');
+					doubleClick(event);
 					break;
 				case 'drag':
 					console.log('Drag');
@@ -64,15 +71,30 @@ var Interactions = Interactions || {};
 			}
 		};
 
+		// This fixes a problem where double clicking causes text to get selected on the canvas
+		this.canvas.addEventListener('selectstart', function (event) {
+			event.preventDefault();
+			return false;
+		});
+
+		// Event Handlers
+		this.canvas.addEventListener('contextmenu', eventHandler, false);
+		this.canvas.addEventListener('click', eventHandler, false);
+		this.canvas.addEventListener('dblclick', eventHandler, false);
+		this.canvas.addEventListener('mouseup', eventHandler, false);
+		this.canvas.addEventListener('mousedown', eventHandler, false);
+		this.canvas.addEventListener('mousemove', mouseMove, false);
+
+		var _this = this;
+
 		/**
 		 * Creates an object with x and y defined, set to the mouse position relative
-		 * to the state's canvas. If you wanna be super-correct this can be tricky,
-		 * we have to worry about padding and borders
-		 * @param {MouseEvent} e
+		 * to the state's canvas.
+		 * @param {MouseEvent} event
 		 * @returns {undefined}
 		 */
-		function getMouse(e) {
-			var element = canvas,
+		function getMouse(event) {
+			var element = _this.canvas,
 				offset = new Vec(0,0);
 
 			// Compute the total offset
@@ -85,140 +107,120 @@ var Interactions = Interactions || {};
 
 			// Add padding and border style widths to offset
 			// Also add the <html> offsets in case there's a position:fixed bar
-			offset.x += self.stylePaddingLeft + self.styleBorderLeft + self.htmlLeft;
-			offset.y += self.stylePaddingTop + self.styleBorderTop + self.htmlTop;
+			offset.x += _this.stylePaddingLeft + _this.styleBorderLeft + _this.htmlLeft;
+			offset.y += _this.stylePaddingTop + _this.styleBorderTop + _this.htmlTop;
 
 			// We return a Vec with x and y defined
-			self.mouse.pos = new Vec(e.pageX - offset.x, e.pageY - offset.y);
-			self.mouse.offset = new Vec(offset.x, offset.y);
-			self.mouse.button = e.button;
+			_this.mouse.pos = new Vec(event.pageX - offset.x, event.pageY - offset.y);
+			_this.mouse.offset = new Vec(offset.x, offset.y);
+			_this.mouse.button = event.button;
 		};
 
 		/**
 		 * Mouse Down
-		 * @param {MouseEvent} e
+		 * @param {MouseEvent} event
 		 * @returns {undefined}
 		 */
-		function mouseDown(e) {
-			getMouse(e);
-			if (self.entities.length > 0) {
-				for (var i = self.entities.length - 1; i >= 0; i--) {
-					var entity = self.entities[i];
-					if (entity.contains !== undefined && entity.contains(self.mouse.pos)) {
+		function mouseDown(event) {
+			getMouse(event);
+			if (_this.entities.length > 0) {
+				for (var i = _this.entities.length - 1; i >= 0; i--) {
+					var entity = _this.entities[i];
+					if (entity.contains !== undefined && entity.contains(_this.mouse.pos)) {
 						var mySel = entity;
-						self.selection = mySel;
-						if (self.mouse.button === 0) {
-							var offX = self.mouse.pos.x - self.selection.pos.x,
-								offY = self.mouse.pos.y - self.selection.pos.y;
+						_this.selection = mySel;
+						if (_this.mouse.button === 0) {
+							var offX = _this.mouse.pos.x - _this.selection.pos.x,
+								offY = _this.mouse.pos.y - _this.selection.pos.y;
 
-							self.dragoff = new Vec(offX, offY);
-							self.dragging = true;
-							return self.selection.click(e);
+							_this.dragoff = new Vec(offX, offY);
+							_this.dragging = true;
+							return _this.selection.click(event);
 						} else {
-							self.dragging = false;
-							return self.selection.contextMenu(e);
+							_this.dragging = false;
+							return _this.selection.contextMenu(event);
 						}
 					}
 				}
 
-				if (self.selection) {
-					self.selection = null;
-					self.dragging = false;
+				if (_this.selection) {
+					_this.selection = null;
+					_this.dragging = false;
 				}
 			} else {
-				return self.click(e);
+				return _this.click(event);
 			}
 		};
 
 		/**
 		 * Mouse move
-		 * @param {MouseEvent} e
+		 * @param {MouseEvent} event
 		 * @returns {undefined}
 		 */
-		function mouseMove(e) {
-			getMouse(e);
-			console.log("Mouse at " + e.pageX + ", " + e.pageY);
-			if (self.selection) {
-				if (self.dragoff.x !== 0 && self.dragoff.y !== 0) {
-					self.dragging = true;
-					// Keep track of where in the object we clicked
-					// so we can move it smoothly (see mousemove)
-					var offX = self.mouse.pos.x - self.dragoff.x,
-						offY = self.mouse.pos.y - self.dragoff.y;
+		function mouseMove(event) {
+			getMouse(event);
+			if (_this.selection) {
+				if (_this.dragoff.x !== 0 && _this.dragoff.y !== 0) {
+					_this.dragging = true;
+					var offX = _this.mouse.pos.x - _this.dragoff.x,
+						offY = _this.mouse.pos.y - _this.dragoff.y;
 
-					self.selection.pos = new Vec(offX, offY);
-					self.dragging = true;
-					self.redraw = false;
-					return self.selection.drag(e);
+					_this.selection.pos = new Vec(offX, offY);
+					_this.dragging = true;
+					_this.redraw = false;
+					return _this.selection.drag(event);
 				}
-				self.dragging = false;
-				self.redraw = true;
+				_this.dragging = false;
+				_this.redraw = true;
 			}
 			return;
 		};
 
 		/**
 		 * Mouse release
-		 * @param {MouseEvent} e
+		 * @param {MouseEvent} event
 		 * @returns {undefined}
 		 */
-		function mouseUp(e) {
-			getMouse(e);
-			if (self.selection) {
-				if (self.dragging) {
-					// Set the selection new position
-					var offX = self.mouse.pos.x - self.dragoff.x,
-						offY = self.mouse.pos.y - self.dragoff.y;
+		function mouseUp(event) {
+			getMouse(event);
+			if (_this.selection && _this.dragging) {
+				// Set the selection new position
+				var offX = _this.mouse.pos.x - _this.dragoff.x,
+					offY = _this.mouse.pos.y - _this.dragoff.y;
 
-					self.selection.pos = new Vec(offX, offY);
-					self.dragging = false;
-					self.redraw = false;
-					self.selection.drop(e);
-					self.selection = null;
-					return;
-				}
+				_this.selection.pos = new Vec(offX, offY);
+				_this.dragging = false;
+				_this.redraw = false;
+				_this.selection.drop(event);
+				_this.selection = null;
+				return;
 			}
+			_this.selection = null;
 			return;
 		};
 
 		/**
 		 * Mouse Click
-		 * @param {MouseEvent} e
+		 * @param {MouseEvent} event
 		 * @returns {undefined}
 		 */
-		function mouseClick(e) {
-			getMouse(e);
-			if (self.selection) {
-				console.log('Mouse Click');
-			}
+		function mouseClick(event) {
+			getMouse(event);
+			console.log('Mouse Click');
 			return;
 		};
 
-		function mouseMoved(event) {
-			console.log("Mouse at " + event.pageX + ", " + event.pageY);
-//			lastEvent = event;
-//			if (!scheduled) {
-//				scheduled = true;
-//				setTimeout(function () {
-//					scheduled = false;
-//					displayCoords(event);
-//				}, 250);
-//			}
-		}
+		/**
+		 * Mouse Click
+		 * @param {MouseEvent} event
+		 * @returns {undefined}
+		 */
+		function doubleClick(event) {
+			getMouse(event);
+			console.log('Double Click');
+			return;
+		};
 
-		// This fixes a problem where double clicking causes text to get selected on the canvas
-		canvas.addEventListener('selectstart', function (e) {
-			e.preventDefault();
-			return false;
-		});
-
-		// Event Handlers
-		canvas.addEventListener('contextmenu', eventHandler, false);
-		canvas.addEventListener('click', eventHandler, false);
-		canvas.addEventListener('dblclick', eventHandler, false);
-		canvas.addEventListener('mouseup', eventHandler, false);
-		canvas.addEventListener('mousedown', eventHandler, false);
-		canvas.addEventListener('mousemove', mouseMove, false);
 	};
 
 	global.Interactions = Interactions;

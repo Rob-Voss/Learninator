@@ -12,117 +12,39 @@ var Utility = Utility || {};
 	 * @param {Agent} agents
 	 * @returns {World}
 	 */
-	var World = function (canvas, walls, agents, items) {
+	var World = function (canvas, walls, agents) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 		this.width = canvas.width;
 		this.height = canvas.height;
-
-		// An attempt to hold all the entities in this world
-		this.entities = [];
-
-		this.randf = function(a, b) { return Math.random()*(b-a)+a; };
-		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
 
 		this.clock = 0;
 		this.simSpeed = 3;
 		this.interval = 60;
 		this.numItems = 80;
 		this.entities = [];
+		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
+
+		// When set to true, the canvas will redraw everything
+		this.redraw = true;
 
 		this.populate();
-
 		this.addWalls(walls || []);
 		this.addAgents(agents || []);
 		this.addEntities(this.walls);
 		this.addEntities(this.agents);
 
-		// When set to false, the canvas will redraw everything
-		this.redraw = false;
-
-		// Currently selected object. In the future an array for multiple selection
-		this.selection = null;
-
-		// **** Options! ****
-		this.selectionColor = '#CC0000';
-		this.selectionWidth = 1;
-
-		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
-
-		var self = this;
+		var _this = this;
 
 		// Apply the Interactions class to the world
-		Interactions.apply(this, [canvas]);
-
-		CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams) {
-			// define the default values for the optional arguments
-			if (!arguments[0])
-				delta = 100;
-			if (!arguments[1])
-				color = 'blue';
-			if (!arguments[2])
-				fontParams = '8px sans-serif';
-
-			// extend the canvas width and height by delta
-			var width = this.canvas.width;
-			var height = this.canvas.height;
-
-			// draw the vertical and horizontal lines
-			this.lineWidth = 0.1;
-			this.strokeStyle = color;
-			this.font = fontParams;
-			this.beginPath();
-
-			for (var i = 0; i * delta < width; i++) {
-				this.moveTo(i * delta, 0);
-				this.lineTo(i * delta, height);
-			}
-
-			for (var j = 0; j * delta < height; j++) {
-				this.moveTo(0, j * delta);
-				this.lineTo(width, j * delta);
-			}
-			this.closePath();
-			this.stroke();
-
-			// draw a thicker line, which is the border of the original canvas
-			this.lineWidth = 0.5;
-			this.beginPath();
-			this.moveTo(0, 0);
-			this.lineTo(width, 0);
-			this.lineTo(width, height);
-			this.lineTo(0, height);
-			this.lineTo(0, 0);
-			this.closePath();
-			this.stroke();
-
-			// set the text parameters and write the number values to the vertical and horizontal lines
-			this.font = fontParams
-			this.lineWidth = 0.3;
-
-			// 1. writing the numbers to the x axis
-			var textY = height - 1; // y-coordinate for the number strings
-			for (var i = 0; i * delta <= width; i++) {
-				var x = i * delta,
-					text = i * delta;
-				this.strokeText(text, x, textY);
-			}
-
-			// 2. writing the numbers to the y axis
-			var textX = width - 15; // x-coordinate for the number strings
-			for (var j = 0; j * delta <= height; j++) {
-				var y = j * delta,
-					text = j * delta;
-				this.strokeText(text, textX, y);
-			}
-		};
+		Interactions.apply(this);
 
 		setInterval(function () {
-			self.tick();
-			if (!self.redraw || self.clock % 50 === 0) {
-				self.draw();
+			_this.tick();
+			if (_this.redraw || _this.clock % 50 === 0) {
+				_this.draw();
 			}
-		}, self.interval);
+		}, _this.interval);
 	};
 
 	/**
@@ -137,7 +59,7 @@ var Utility = Utility || {};
 		 */
 		addAgents: function (agents) {
 			this.agents = this.agents || agents;
-			this.redraw = false;
+			this.redraw = true;
 		},
 		/**
 		 * Add an item to the world canvas and set it to redraw
@@ -148,7 +70,7 @@ var Utility = Utility || {};
 			var oE = this.entities,
 				nE = entities;
 			this.entities = oE.concat(nE);
-			this.redraw = false;
+			this.redraw = true;
 		},
 		/**
 		 * Add an item to the world canvas and set it to redraw
@@ -157,7 +79,7 @@ var Utility = Utility || {};
 		 */
 		addEntity: function (entity) {
 			this.entities.push(entity);
-			this.redraw = false;
+			this.redraw = true;
 		},
 		/**
 		 * Randomly create an antity at the Vec
@@ -165,7 +87,7 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		addRandEntity: function(v) {
-			this.addEntity(new Item(this.randi(1, 3), v, 0, 0, this.randi(7, 11)));
+			this.addEntity(new Item(Utility.randi(1, 3), v, 0, 0, Utility.randi(7, 11)));
 		},
 		/**
 		 * Add walls
@@ -174,7 +96,7 @@ var Utility = Utility || {};
 		 */
 		addWalls: function (walls) {
 			this.walls = this.walls || walls;
-			this.redraw = false;
+			this.redraw = true;
 		},
 		/**
 		 * Clear the canvas
@@ -211,7 +133,7 @@ var Utility = Utility || {};
 			return minRes;
 		},
 		contains: function () {
-
+			console.log('Contains!');
 		},
 		/**
 		 * Draw the world
@@ -219,7 +141,7 @@ var Utility = Utility || {};
 		 */
 		draw: function () {
 			this.clear();
-			this.ctx.addGrid();
+
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				entity.draw(this.ctx);
@@ -232,7 +154,7 @@ var Utility = Utility || {};
 		 */
 		go: function (speed) {
 			clearInterval(this.interval);
-			this.redraw = false;
+			this.redraw = true;
 			switch(speed) {
 				case 'min':
 					this.interval = setInterval(this.tick(), 200);
@@ -248,7 +170,7 @@ var Utility = Utility || {};
 					break;
 				case 'max+':
 					this.interval = setInterval(this.tick(), 0);
-					this.redraw = true;
+					this.redraw = false;
 					this.simSpeed = 3;
 					break;
 			}
@@ -259,61 +181,59 @@ var Utility = Utility || {};
 		tick: function () {
 			this.clock++;
 
+			// Tick ALL OF teh items!
+			this.redraw = true;
+
+			var pts = [];
+			var digested = [];
 			// Fix input to all agents based on environment and process their eyes
 			for (var i = 0, agent; agent = this.agents[i++];) {
 				agent.tick(this);
+				digested = agent.digested;
+				// Handle boundary conditions
+				if (agent.pos.x < 0)
+					agent.pos.x = 0;
+				if (agent.pos.x > this.width)
+					agent.pos.x = this.width;
+				if (agent.pos.y < 0)
+					agent.pos.y = 0;
+				if (agent.pos.y > this.height)
+					agent.pos.y = this.height;
+
+				// This is where the agents learns based on the feedback of their
+				// actions on the environment
+				agent.backward();
+				pts.push(agent.brain.avgRewardWindow.getAverage());
 			}
 
-			// Tick ALL OF teh items!
-			this.redraw = false;
+			var nt = [];
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				if (entity.type == 1 || entity.type == 2) {
-					entity.age += 1;
-					// Did the agent find teh noms?
-					for (var j = 0, agent; agent = this.agents[j++];) {
-						entity.cleanUp = agent.eat(this, entity);
-						if (entity.cleanUp) {
-							this.redraw = true;
-							break;
-						}
+					var derp = digested.indexOf(entity.id);
+					if (derp !== -1) {
+						entity.cleanUp = true;
+					} else {
+						entity.tick(this.clock);
 					}
 
-					if (entity.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
-						// Keell it, it has been around way too long
-						entity.cleanUp = true;
-						this.redraw = true;
-					}
+					if (!entity.cleanUp)
+						nt.push(entity);
+				} else {
+					nt.push(entity);
 				}
 			}
 
 			// Drop old the items
 			if (this.redraw) {
-				var nt = [];
-				for (var i = 0, entity; entity = this.entities[i++];) {
-					if (entity.type == 1 || entity.type == 2) {
-						if (!entity.cleanUp)
-							nt.push(entity);
-					} else {
-						nt.push(entity);
-					}
-				}
 				// Swap new list
 				this.entities = nt;
 			}
 
 			// If we have less then the number of items allowed throw a random one in
-			if (this.entities.length < this.numItems && this.clock % 10 === 0 && this.randf(0, 1) < 0.25) {
-				var x = this.randf(20, this.width - 20),
-					y = this.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y));
-			}
-
-			// This is where the agents learns based on the feedback of their
-			// actions on the environment
-			var pts = [];
-			for (var i = 0, agent; agent = this.agents[i++];) {
-				agent.backward();
-				pts.push(agent.brain.avgRewardWindow.getAverage());
+			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+				var x = Utility.randf(20, this.width - 20),
+					y = Utility.randf(20, this.height - 20);
+				this.addRandEntity(new Vec(x, y), this.entities.length);
 			}
 
 			// Throw some points on a Graph
@@ -328,9 +248,9 @@ var Utility = Utility || {};
 		 */
 		populate: function () {
 			for (var k = 0; k < this.numItems; k++) {
-				var x = this.randf(20, this.width - 20),
-					y = this.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y));
+				var x = Utility.randf(20, this.width - 20),
+					y = Utility.randf(20, this.height - 20);
+				this.addRandEntity(new Vec(x, y), k);
 			}
 		},
 		/**
@@ -356,7 +276,6 @@ var Utility = Utility || {};
 		 */
 		doubleClick: function (e) {
 			console.log('World Double Click');
-			this.addRandEntity(new Vec(this.mouse.pos.x, this.mouse.pos.y));
 		}
 	};
 

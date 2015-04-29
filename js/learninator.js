@@ -30,7 +30,7 @@ function start() {
 	graphCanvas = document.getElementById("graph_canvas");
 	uiCanvas = document.getElementById("ui_canvas");
 
-	var maze = new Maze(worldCanvas, 5, 5, true);
+	var maze = new Maze(worldCanvas, 5, 5);
 
 	// We are going to use a maze for the environment and give it three agents
 	W = new World(worldCanvas, maze.cells, [new Agent(3)]);
@@ -41,12 +41,11 @@ function start() {
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
 
-	W.go('mid');
+	W.go('max');
 }
 
 function solve() {
 	W.redraw = true;
-	W.go('min');
 	W.maze.solve();
 }
 

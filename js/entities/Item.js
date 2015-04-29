@@ -10,43 +10,30 @@ var Item = Item || {};
 	 * @param {Number} w
 	 * @param {Number} h
 	 * @param {Number} r
-	 * @param {String} fill
 	 * @returns {undefined}
 	 */
-	var Item = function (type, v, w, h, r, fill) {
+	var Item = function (type, v, w, h, r, id) {
 		this.type = type || 1; // type of item
 		this.width = w || 20; // width of item
 		this.height = h || 20; // height of item
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
 		this.age = 0;
+		this.id = Utility.guid();
 		this.cleanUp = false;
-		this.fill = fill || '#AAAAAA';
+		this.fill = '#AAAAAA';
 
 		this.image = new Image();
-		this.image.src = (this.type === 1) ? 'img/AppleSmall.png' : 'img/PoisonSmall.png';
+		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
 		this.image.onload = imageLoaded;
-		this.name = '';
+		this.name = (this.type === 1 ? 'Nom' : 'Gnar') + id;
 		this.dragging = false;
-		this.update = false;
+		this.redraw = true;
 
 		function imageLoaded(e) {
 			var image = e.target,
 				hitArea = new Vec(image.width/2, image.height/2);
 		};
-
-		this.click = function(e) {
-			console.log('Click @' + e.layerX + ':' + e.layerY);
-		};
-
-		this.drag = function(e) {
-			console.log('Drag @' + e.layerX + ':' + e.layerY);
-		};
-
-		this.drop = function(e) {
-			console.log('Drop @' + e.layerX + ':' + e.layerY);
-		};
-
 	};
 
 	/**
@@ -54,15 +41,11 @@ var Item = Item || {};
 	 * @type Item
 	 */
 	Item.prototype = {
-		/**
-		 * Find the area of a triangle
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @param {Vec} v3
-		 * @returns {Number}
-		 */
-		area: function (v1, v2, v3) {
-			return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+		tick: function (clock) {
+			this.age += 1;
+			if (this.age > 5000 && clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
+				this.cleanUp = true;
+			}
 		},
 		/**
 		 * Check if there was a collision
@@ -74,7 +57,10 @@ var Item = Item || {};
 		collisionCheck: function (minRes, v1, v2) {
 			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
 			if (iResult) {
-				iResult.type = this.type; // Store type of item
+				iResult.type = this.type;
+				iResult.id = this.id;
+				iResult.radius = this.radius;
+				iResult.pos = this.pos;
 				if (!minRes) {
 					minRes = iResult;
 				} else {
@@ -91,8 +77,7 @@ var Item = Item || {};
 		 * @returns {Boolean}
 		 */
 		contains: function (v) {
-			var result = this.pos.distFrom(v) < this.radius;
-			return result;
+			return this.pos.distFrom(v) < this.radius;;
 		},
 		/**
 		 * Draws this item to a given context
@@ -100,7 +85,7 @@ var Item = Item || {};
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
-			if (!this.redraw) {
+			if (this.redraw) {
 				ctx.fillStyle = this.fill;
 				ctx.lineWidth = "1";
 				ctx.strokeStyle = "black";
@@ -118,6 +103,21 @@ var Item = Item || {};
 					ctx.stroke();
 				}
 			}
+		},
+		click: function(e) {
+			console.log('Item Click');
+		},
+		contextMenu: function(e) {
+			console.log('Item Right Click');
+		},
+		doubleClick: function(e) {
+			console.log('Item Double Click');
+		},
+		drag: function(e) {
+			console.log('Item Drag');
+		},
+		drop: function(e) {
+			console.log('Item Drop');
 		}
 	};
 

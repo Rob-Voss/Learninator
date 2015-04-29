@@ -11,7 +11,7 @@ var Maze = Maze || {};
 	 * @param {Boolean} go
 	 * @returns {undefined}
 	 */
-	var Maze = function (canvas, horizCells, vertCells, go) {
+	var Maze = function (canvas, horizCells, vertCells) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
 
@@ -33,11 +33,7 @@ var Maze = Maze || {};
 
 		var self = this;
 
-		if (go) {
-			this.generate();
-			this.drawBorders();
-			this.drawMaze();
-		}
+		this.draw();
 	};
 
 	/**
@@ -68,6 +64,7 @@ var Maze = Maze || {};
 			this.generate();
 			this.drawBorders();
 			this.drawMaze();
+			this.ctx.addGrid(this.vW);
 		},
 		/**
 		 * Draw the borders
@@ -87,10 +84,10 @@ var Maze = Maze || {};
 		  var path = this.path;
 
 		  for(var i = 0, V; V = path[i++];) {
-			  var vW = this.vW;
-			  var vH = this.vH;
-			  var vX = V.x;
-			  var vY = V.y;
+			  var vW = this.vW,
+				vH = this.vH,
+				vX = V.x,
+				vY = V.y;
 			(function () {
 			  setTimeout(function() {
 				self.ctx.fillRect(vX, vY, vW, vH);
