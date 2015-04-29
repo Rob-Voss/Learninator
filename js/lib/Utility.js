@@ -136,7 +136,7 @@ var Utility = Utility || {};
 	 * @returns {Object|Boolean}
 	 */
 	Utility.lineIntersect = function (v1, v2, v3, v4) {
-		// Line 1: 1st Point
+			// Line 1: 1st Point
 		var x1 = v1.x,
 			y1 = v1.y,
 			// Line 1: 2nd Point
@@ -166,7 +166,7 @@ var Utility = Utility || {};
 			result.vecX = pX;
 			result.vecY = pY;
 			result.vecI = vecI;
-
+			
 			return result;
 		}
 		return false;

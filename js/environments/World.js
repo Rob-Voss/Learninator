@@ -22,6 +22,7 @@ var Utility = Utility || {};
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
 		this.maze = options.maze;
+		this.cells = this.maze.graph.cells;
 
 		this.clock = 0;
 		this.simSpeed = 3;
@@ -126,6 +127,8 @@ var Utility = Utility || {};
 
 			// Collide with walls
 			if (checkWalls) {
+				// @TODO Need to check the current cell first so we
+				// don't loop through all the walls
 				for (var i = 0, wall; wall = this.walls[i++];) {
 					minRes = wall.collisionCheck(minRes, v1, v2);
 				}
@@ -133,6 +136,8 @@ var Utility = Utility || {};
 
 			// Collide with items
 			if (checkItems) {
+				// @TODO Need to check the current cell first so we
+				// don't check all the items
 				for (var i = 0, entity; entity = this.entities[i++];) {
 					minRes = entity.collisionCheck(minRes, v1, v2);
 				}
@@ -165,6 +170,7 @@ var Utility = Utility || {};
 		go: function (speed) {
 			clearInterval(this.interval);
 			this.redraw = true;
+			this.pause = false;
 			switch(speed) {
 				case 'min':
 					this.interval = setInterval(this.tick(), 200);
