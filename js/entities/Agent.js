@@ -25,24 +25,26 @@ var Agent = Agent || {};
 	 * @returns {Agent_L3.Agent}
 	 */
 	var Agent = function (type, v, w, h, r) {
+		var _this = this;
 		this.type = type || 3; // type of agent
 		this.width = w || 20; // width of agent
 		this.height = h || 20; // height of agent
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
+		this.gridLocation = {};
 
 		this.id = Utility.guid();
 		this.image = new Image();
 		this.image.onload = imageLoaded;
 		this.image.src = 'img/Agent.png';
-
-		function imageLoaded(e) {
-			var image = e.target,
-				hitArea = new Vec(image.width/2, image.height/2);
-		};
-
 		this.dragging = false;
 		this.redraw = false;
+
+		function imageLoaded(e) {
+			var image = e.target;
+			_this.hitArea = new Vec(image.width/2, image.height/2);
+		};
+
 
 		this.digested = [];
 
@@ -192,7 +194,7 @@ var Agent = Agent || {};
 		 * @returns {unresolved}
 		 */
 		collisionCheck: function (minRes, v1, v2) {
-			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
+			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.width);
 			if (iResult) {
 				iResult.type = this.type;
 				iResult.id = this.id;
@@ -300,11 +302,26 @@ var Agent = Agent || {};
 			this.rot1 = action[0] * 1;
 			this.rot2 = action[1] * 1;
 		},
+		getGridLocation: function (cells, width, height) {
+			for(var h = 0, hCell; hCell = cells[h++];) {
+				for(var v = 0, vCell; vCell = hCell[v++];) {
+					var topLeft = vCell.x * width,
+						topRight = topLeft + width,
+						bottomLeft = vCell.y * height,
+						bottomRight = bottomLeft + height;
+					if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
+						(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
+						this.gridLocation = cells[h-1][v-1];
+					}
+				}
+			}
+		},
 		/**
 		 * Tick the agent
 		 * @returns {undefined}
 		 */
 		tick: function (world) {
+			this.getGridLocation(world.grid, world.vW, world.vH);
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
@@ -315,6 +332,7 @@ var Agent = Agent || {};
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
 					eye.sensedType = result.type;
+					
 					if (eye.sensedProximity < result.radius + this.radius) {
 						// Nom Noms!
 						switch (result.type) {

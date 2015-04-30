@@ -27,18 +27,6 @@ var Vec = Vec || {};
 	 */
 	Vec.prototype = {
 		/**
-		 * Distance from the referenced Vector
-		 * @param {Vec} v
-		 * @returns {Number}
-		 */
-		distFrom: function (v) {
-			var X = Math.pow(this.x - v.x, 2),
-				Y = Math.pow(this.y - v.y, 2),
-				dist = Math.sqrt(X + Y);
-
-			return dist;
-		},
-		/**
 		 * Mark it as visited
 		 * @returns {undefined}
 		 */
@@ -76,39 +64,6 @@ var Vec = Vec || {};
 			return path;
 		},
 		/**
-		 * Return the length of the Vector
-		 * @returns {Number}
-		 */
-		length: function () {
-			var X = Math.pow(this.x, 2),
-				Y = Math.pow(this.y, 2),
-				length = Math.sqrt(X + Y);
-
-			return length;
-		},
-		/**
-		 * Add to a Vec
-		 * @param {Vec} v
-		 * @returns {Vec}
-		 */
-		add: function (v) {
-			var X = this.x + v.x,
-				Y = this.y + v.y;
-
-			return new Vec(X, Y);
-		},
-		/**
-		 * Remove from a Vec
-		 * @param {Vec} v
-		 * @returns {Vec}
-		 */
-		sub: function (v) {
-			var X = this.x - v.x,
-				Y = this.y - v.y;
-
-			return new Vec(X, Y);
-		},
-		/**
 		 * Rotate the Vec clockwise
 		 * @param {Number} angle
 		 * @returns {Vec}
@@ -118,6 +73,41 @@ var Vec = Vec || {};
 				Y = -this.x * Math.sin(angle) + this.y * Math.cos(angle);
 
 			return new Vec(X, Y);
+		},
+		/**
+		 * Return the length of the Vector
+		 * @returns {Number}
+		 */
+		length: function () {
+			var length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+
+			return length;
+		},
+		/**
+		 * Distance from the referenced Vector
+		 * @param {Vec} v
+		 * @returns {Number}
+		 */
+		distFrom: function (v) {
+			var dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+
+			return dist;
+		},
+		/**
+		 * Add to a Vec
+		 * @param {Vec} v
+		 * @returns {Vec}
+		 */
+		add: function (v) {
+			return new Vec(this.x + v.x, this.y + v.y);
+		},
+		/**
+		 * Remove from a Vec
+		 * @param {Vec} v
+		 * @returns {Vec}
+		 */
+		sub: function (v) {
+			return new Vec(this.x - v.x, this.y - v.y);
 		},
 		/**
 		 * In place vector operations

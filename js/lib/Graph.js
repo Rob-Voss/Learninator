@@ -211,7 +211,6 @@ var Graph = Graph || {};
 		 * @returns {unresolved}
 		 */
 		unvisitedNeighbors: function (v) {
-			var _this = this;
 			return _.select(this.connectedNeighbors(v), function (c) {
 				var unv = !c.visited;
 				return unv;

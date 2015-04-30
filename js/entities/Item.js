@@ -12,7 +12,8 @@ var Item = Item || {};
 	 * @param {Number} r
 	 * @returns {undefined}
 	 */
-	var Item = function (type, v, w, h, r, id) {
+	var Item = function (type, v, w, h, r) {
+		var _this = this;
 		this.type = type || 1; // type of item
 		this.width = w || 20; // width of item
 		this.height = h || 20; // height of item
@@ -22,17 +23,17 @@ var Item = Item || {};
 		this.id = Utility.guid();
 		this.cleanUp = false;
 		this.fill = '#AAAAAA';
+		this.gridLocation = {};
 
 		this.image = new Image();
 		this.image.onload = imageLoaded;
 		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
-		this.name = (this.type === 1 ? 'Nom' : 'Gnar') + id;
 		this.dragging = false;
 		this.redraw = true;
 
 		function imageLoaded(e) {
-			var image = e.target,
-				hitArea = new Vec(image.width/2, image.height/2);
+			var image = e.target;
+			_this.hitArea = new Vec(image.width/2, image.height/2);
 		};
 	};
 
@@ -41,9 +42,23 @@ var Item = Item || {};
 	 * @type Item
 	 */
 	Item.prototype = {
-		tick: function (clock) {
+		getGridLocation: function (cells, width, height) {
+			for(var h = 0, hCell; hCell = cells[h++];) {
+				for(var v = 0, vCell; vCell = hCell[v++];) {
+					var topLeft = vCell.x * width,
+						topRight = topLeft + width,
+						bottomLeft = vCell.y * height,
+						bottomRight = bottomLeft + height;
+					if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
+						(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
+						this.gridLocation = cells[h-1][v-1];
+					}
+				}
+			}
+		},
+		tick: function (world) {
 			this.age += 1;
-			if (this.age > 5000 && clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
+			if (this.age > 5000 && world.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 				this.cleanUp = true;
 			}
 		},
@@ -55,7 +70,7 @@ var Item = Item || {};
 		 * @returns {Object}
 		 */
 		collisionCheck: function (minRes, v1, v2) {
-			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.radius);
+			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.width);
 			if (iResult) {
 				iResult.type = this.type;
 				iResult.id = this.id;

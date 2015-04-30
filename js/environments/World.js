@@ -14,15 +14,16 @@ var Utility = Utility || {};
 	 */
 	var World = function (options) {
 		this.canvas = options.canvas;
-		this.ctx = options.canvas.getContext("2d");
-		this.width = options.canvas.width;
-		this.height = options.canvas.height;
+		this.ctx = this.canvas.getContext("2d");
+		this.width = this.canvas.width;
+		this.height = this.canvas.height;
 		this.horizCells = options.horizCells;
 		this.vertCells = options.vertCells;
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
 		this.maze = options.maze;
-		this.cells = this.maze.graph.cells;
+		this.grid = options.maze.graphCells();
+		this.cells = options.maze.cells;
 
 		this.clock = 0;
 		this.simSpeed = 3;
@@ -33,10 +34,11 @@ var Utility = Utility || {};
 
 		// When set to true, the canvas will redraw everything
 		this.redraw = true;
+		this.drawGrid = true;
 		this.pause = false;
 
 		this.populate();
-		this.addWalls(options.walls || []);
+		this.addWalls(this.cells || []);
 		this.addAgents(options.agents || []);
 		this.addEntities(this.walls);
 		this.addEntities(this.agents);
@@ -76,9 +78,12 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		addEntities: function (entities) {
-			var oE = this.entities,
-				nE = entities;
-			this.entities = oE.concat(nE);
+			for (var i = 0, entity; entity = entities[i++];) {
+				if (entity.type !== 0) {
+					entity.getGridLocation(this.grid, this.vW, this.vH);
+				}
+				this.entities.push(entity);
+			}
 			this.redraw = true;
 		},
 		/**
@@ -87,6 +92,9 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		addEntity: function (entity) {
+			if (entity.type !== 0) {
+				entity.getGridLocation(this.grid, this.vW, this.vH);
+			}
 			this.entities.push(entity);
 			this.redraw = true;
 		},
@@ -96,7 +104,7 @@ var Utility = Utility || {};
 		 * @returns {undefined}
 		 */
 		addRandEntity: function(v) {
-			this.addEntity(new Item(Utility.randi(1, 3), v, 0, 0, Utility.randi(7, 11)));
+			this.addEntity(new Item(Utility.randi(1, 3), v, 20, 20, 10));
 		},
 		/**
 		 * Add walls
@@ -154,9 +162,9 @@ var Utility = Utility || {};
 		 */
 		draw: function () {
 			this.clear();
-
-			this.ctx.addGrid(this.cellSize);
-
+			if (this.drawGrid) {
+				this.ctx.addGrid(this.cellSize);
+			}
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				entity.draw(this.ctx);
@@ -189,7 +197,14 @@ var Utility = Utility || {};
 					this.redraw = false;
 					this.simSpeed = 3;
 					break;
+				case 'stop':
+					this.redraw = false;
+					this.pause = true;
+					bereak;
 			}
+		},
+		pause: function() {
+
 		},
 		/**
 		 * Tick the environment
@@ -229,7 +244,7 @@ var Utility = Utility || {};
 					if (derp !== -1) {
 						entity.cleanUp = true;
 					} else {
-						entity.tick(this.clock);
+						entity.tick(this);
 					}
 
 					if (!entity.cleanUp)
@@ -249,7 +264,7 @@ var Utility = Utility || {};
 			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
 				var x = Utility.randf(20, this.width - 20),
 					y = Utility.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y), this.entities.length);
+				this.addRandEntity(new Vec(x, y));
 			}
 
 			// Throw some points on a Graph

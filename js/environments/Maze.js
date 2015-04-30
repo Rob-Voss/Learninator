@@ -31,6 +31,7 @@ var Maze = Maze || {};
 		this.graph = new Graph(this.canvas, null, this.graphOptions);
 
 		this.draw();
+		this.solve();
 	};
 
 	/**
@@ -52,6 +53,13 @@ var Maze = Maze || {};
 		 */
 		cells: function () {
 			return this.cells;
+		},
+		/**
+		 * Return the Graph's Cells
+		 * @returns {Array}
+		 */
+		graphCells: function () {
+			return this.graph.cells;
 		},
 		/**
 		 * Draw it
