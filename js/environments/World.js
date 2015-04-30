@@ -200,7 +200,7 @@ var Utility = Utility || {};
 				case 'stop':
 					this.redraw = false;
 					this.pause = true;
-					bereak;
+					break;
 			}
 		},
 		pause: function() {
