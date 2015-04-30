@@ -26,7 +26,7 @@ var Utility = Utility || {};
 		this.cells = options.maze.cells;
 
 		this.clock = 0;
-		this.simSpeed = 3;
+		this.simSpeed = 2;
 		this.interval = 60;
 		this.numItems = 80;
 		this.entities = [];
@@ -80,7 +80,7 @@ var Utility = Utility || {};
 		addEntities: function (entities) {
 			for (var i = 0, entity; entity = entities[i++];) {
 				if (entity.type !== 0) {
-					entity.getGridLocation(this.grid, this.vW, this.vH);
+					this.addEntity(entity);
 				}
 				this.entities.push(entity);
 			}
@@ -94,6 +94,7 @@ var Utility = Utility || {};
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
 				entity.getGridLocation(this.grid, this.vW, this.vH);
+				this.grid[entity.gridLocation.x][entity.gridLocation.x].population.push(entity.id);
 			}
 			this.entities.push(entity);
 			this.redraw = true;
@@ -163,7 +164,9 @@ var Utility = Utility || {};
 		draw: function () {
 			this.clear();
 			if (this.drawGrid) {
-				this.ctx.addGrid(this.cellSize);
+				var canvas = document.getElementById("ui_canvas")
+				var ctx = canvas.getContext('2d');
+				ctx.addGrid(this.horizCells + this.vertCells);
 			}
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
@@ -202,9 +205,6 @@ var Utility = Utility || {};
 					this.pause = true;
 					break;
 			}
-		},
-		pause: function() {
-
 		},
 		/**
 		 * Tick the environment
@@ -281,7 +281,7 @@ var Utility = Utility || {};
 			for (var k = 0; k < this.numItems; k++) {
 				var x = Utility.randf(20, this.width - 20),
 					y = Utility.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y), k);
+				this.addRandEntity(new Vec(x, y));
 			}
 		},
 		/**

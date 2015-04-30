@@ -46,7 +46,7 @@ var Wall = Wall || {};
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
-			ctx.lineWidth = 1;
+			ctx.lineWidth = .5;
 
 			// Draw the walls in environment
 			ctx.strokeStyle = "rgb(0,0,0)";

@@ -119,19 +119,19 @@ var Item = Item || {};
 				}
 			}
 		},
-		click: function(e) {
+		click: function(e, mouse) {
 			console.log('Item Click');
 		},
-		contextMenu: function(e) {
+		contextMenu: function(e, mouse) {
 			console.log('Item Right Click');
 		},
-		doubleClick: function(e) {
+		doubleClick: function(e, mouse) {
 			console.log('Item Double Click');
 		},
-		drag: function(e) {
+		drag: function(e, mouse) {
 			console.log('Item Drag');
 		},
-		drop: function(e) {
+		drop: function(e, mouse) {
 			console.log('Item Drop');
 		}
 	};

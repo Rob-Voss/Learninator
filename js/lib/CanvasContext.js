@@ -1,20 +1,21 @@
-CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams) {
+CanvasRenderingContext2D.prototype.addGrid = function (delta, width, height) {
 	// define the default values for the optional arguments
 	if (!arguments[0])
 		delta = 100;
 	if (!arguments[1])
-		color = 'blue';
+		width = 500;
 	if (!arguments[2])
-		fontParams = '8px sans-serif';
+		height = 500;
 
 	// extend the canvas width and height by delta
-	var width = this.canvas.width;
-	var height = this.canvas.height;
+//	var width = this.canvas.width;
+//	var height = this.canvas.height;
 
 	// draw the vertical and horizontal lines
+	this.clearRect(0, 0, width, height);
 	this.lineWidth = 0.1;
-	this.strokeStyle = color;
-	this.font = fontParams;
+	this.strokeStyle = 'blue';
+	this.font = '8px sans-serif';
 	this.beginPath();
 
 	for (var i = 0; i * delta < width; i++) {
@@ -26,37 +27,27 @@ CanvasRenderingContext2D.prototype.addGrid = function (delta, color, fontParams)
 		this.moveTo(0, j * delta);
 		this.lineTo(width, j * delta);
 	}
-	this.closePath();
-	this.stroke();
-
-	// draw a thicker line, which is the border of the original canvas
-	this.lineWidth = 0.5;
-	this.beginPath();
-	this.moveTo(0, 0);
-	this.lineTo(width, 0);
-	this.lineTo(width, height);
-	this.lineTo(0, height);
-	this.lineTo(0, 0);
+	
 	this.closePath();
 	this.stroke();
 
 	// set the text parameters and write the number values to the vertical and horizontal lines
-	this.font = fontParams;
+	this.font = '8px sans-serif';
 	this.lineWidth = 0.3;
 
 	// 1. writing the numbers to the x axis
 	var textY = height - 1; // y-coordinate for the number strings
-	for (var i = 0; i * delta <= width; i++) {
+	for (var i = 0; i * delta <= width - delta; i++) {
 		var x = i * delta,
-				text = i * delta;
+			text = i * delta;
 		this.strokeText(text, x, textY);
 	}
 
 	// 2. writing the numbers to the y axis
 	var textX = width - 15; // x-coordinate for the number strings
-	for (var j = 0; j * delta <= height; j++) {
+	for (var j = 0; j * delta <= height - delta; j++) {
 		var y = j * delta,
-				text = j * delta;
+			text = j * delta;
 		this.strokeText(text, textX, y);
 	}
 };

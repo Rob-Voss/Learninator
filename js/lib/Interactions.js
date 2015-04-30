@@ -44,7 +44,6 @@ var Interactions = Interactions || {};
 
 			switch(event.type) {
 				case 'contextmenu':
-					console.log('Right Click');
 					break;
 				case 'click':
 					mouseClick(event);
@@ -62,10 +61,8 @@ var Interactions = Interactions || {};
 					doubleClick(event);
 					break;
 				case 'drag':
-					console.log('Drag');
 					break;
 				case 'drop':
-					console.log('Drop');
 					break;
 
 			}
@@ -75,7 +72,7 @@ var Interactions = Interactions || {};
 		this.canvas.addEventListener('selectstart', function (event) {
 			event.preventDefault();
 			return false;
-		});
+		}, false);
 
 		// Event Handlers
 		this.canvas.addEventListener('contextmenu', eventHandler, false);
@@ -135,10 +132,10 @@ var Interactions = Interactions || {};
 
 							_this.dragoff = new Vec(offX, offY);
 							_this.dragging = true;
-							return _this.selection.click(event);
+							return _this.selection.click(event, _this.mouse);
 						} else {
 							_this.dragging = false;
-							return _this.selection.contextMenu(event);
+							return _this.selection.contextMenu(event, _this.mouse);
 						}
 					}
 				}
@@ -148,7 +145,7 @@ var Interactions = Interactions || {};
 					_this.dragging = false;
 				}
 			} else {
-				return _this.click(event);
+				return _this.click(event, _this.mouse);
 			}
 		};
 
@@ -168,7 +165,7 @@ var Interactions = Interactions || {};
 					_this.selection.pos = new Vec(offX, offY);
 					_this.dragging = true;
 					_this.redraw = false;
-					return _this.selection.drag(event);
+					return _this.selection.drag(event, _this.mouse);
 				}
 				_this.dragging = false;
 				_this.redraw = true;
@@ -191,7 +188,7 @@ var Interactions = Interactions || {};
 				_this.selection.pos = new Vec(offX, offY);
 				_this.dragging = false;
 				_this.redraw = false;
-				_this.selection.drop(event);
+				_this.selection.drop(event, _this.mouse);
 				_this.selection = null;
 				return;
 			}
@@ -206,7 +203,6 @@ var Interactions = Interactions || {};
 		 */
 		function mouseClick(event) {
 			getMouse(event);
-			console.log('Mouse Click');
 			return;
 		};
 
@@ -217,7 +213,6 @@ var Interactions = Interactions || {};
 		 */
 		function doubleClick(event) {
 			getMouse(event);
-			console.log('Double Click');
 			return;
 		};
 

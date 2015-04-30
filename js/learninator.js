@@ -31,8 +31,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 5,
-		vertCells: 5
+		horizCells: 10,
+		vertCells: 10
 	};
 	var maze = new Maze(mazeOptions);
 
@@ -55,17 +55,11 @@ function start() {
 	W.go('max');
 }
 
-function pause() {
-	W.go('stop');
-}
-
-function go(speed) {
-	W.go(speed);
-}
-
-function showUI() {
+function UI() {
 	uiCanvas = document.getElementById("ui_canvas");
 	var context = uiCanvas.getContext('2d');
+
+	context.addGrid(W.cellSize);
 
 	var button = new Button(uiCanvas, 100, 100, "Click Me", function(){
         context.beginPath();
