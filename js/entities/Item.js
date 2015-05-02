@@ -92,8 +92,8 @@ var Item = Item || {};
 		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (v) {
-			return this.pos.distFrom(v) < this.radius;;
+		contains: function (event, mouse) {
+			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
 		/**
 		 * Draws this item to a given context
@@ -120,7 +120,7 @@ var Item = Item || {};
 				}
 			}
 		},
-		click: function(e, mouse) {
+		mouseClick: function(e, mouse) {
 			console.log('Item Click');
 		},
 		contextMenu: function(e, mouse) {
@@ -129,10 +129,16 @@ var Item = Item || {};
 		doubleClick: function(e, mouse) {
 			console.log('Item Double Click');
 		},
-		drag: function(e, mouse) {
+		mouseMove: function(e, mouse) {
+			console.log('Item Move');
+		},
+		mouseUp: function(e, mouse) {
+			console.log('Item Release');
+		},
+		mouseDrag: function(e, mouse) {
 			console.log('Item Drag');
 		},
-		drop: function(e, mouse) {
+		mouseDrop: function(e, mouse) {
 			console.log('Item Drop');
 		}
 	};

@@ -7,9 +7,7 @@ var Utility = Utility || {};
 
 	/**
 	 * Make a World
-	 * @param {HTMLCanvasElement} canvas
-	 * @param {Array} walls
-	 * @param {Agent} agents
+	 * @param {Object} options
 	 * @returns {World}
 	 */
 	var World = function (options) {
@@ -34,7 +32,6 @@ var Utility = Utility || {};
 
 		// When set to true, the canvas will redraw everything
 		this.redraw = true;
-		this.drawGrid = true;
 		this.pause = false;
 
 		this.populate();
@@ -163,11 +160,6 @@ var Utility = Utility || {};
 		 */
 		draw: function () {
 			this.clear();
-			if (this.drawGrid) {
-				var canvas = document.getElementById("ui_canvas")
-				var ctx = canvas.getContext('2d');
-				ctx.addGrid(this.vW);
-			}
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {
 				entity.draw(this.ctx);

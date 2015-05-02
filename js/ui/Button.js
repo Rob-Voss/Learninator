@@ -1,8 +1,7 @@
 function Button(canvas, x, y, label, onclick) {
 	this.canvas = canvas;
 	this.context = this.canvas.getContext("2d");
-	this.x = x;
-	this.y = y;
+	this.pos = new Vec(x, y);
 	this.label = label;
 	this.onclick = onclick;
 	this.width = 100;
@@ -18,27 +17,34 @@ function Button(canvas, x, y, label, onclick) {
 Button.prototype.draw = function () {
 	// draw border
 	this.context.fillStyle = this.borderColor;
-	this.context.fillRect(this.x, this.y, this.width, this.height);
+	this.context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-	// draw face
-	if (this.state == "over") {
+	if (this.state === "over") {
 		this.context.fillStyle = this.overColor;
-	} else if (this.state == "down") {
+	} else if (this.state === "down") {
 		this.context.fillStyle = this.downColor;
 	} else {
 		this.context.fillStyle = this.upColor;
 	}
-	this.context.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
+	this.context.fillRect(this.pos.x + 1, this.pos.y + 1, this.width - 2, this.height - 2);
 
 	// draw label
 	this.context.font = "12px Arial";
 	this.context.fillStyle = "#000000";
-	this.context.fillText(this.label, this.x + (this.width - this.context.measureText(this.label).width) / 2, this.y + (this.height + 9) / 2);
+	this.context.fillText(this.label, this.pos.x + (this.width - this.context.measureText(this.label).width) / 2, this.pos.y + (this.height + 9) / 2);
 };
 
-Button.prototype.checkMouseDown = function (x, y) {
-	if (x > this.x && x < this.x + this.width &&
-		y > this.y && y < this.y + this.height) {
+Button.prototype.contains = function (e, mouse) {
+	if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
+		mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
+		return true;
+	}
+	return false;
+};
+
+Button.prototype.mouseClick = function (e, mouse) {
+	if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
+		mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
 		this.state = "down";
 	} else {
 		this.state = "up";
@@ -46,22 +52,23 @@ Button.prototype.checkMouseDown = function (x, y) {
 	this.draw();
 };
 
-Button.prototype.checkMouseUp = function (x, y) {
-	if (x > this.x && x < this.x + this.width &&
-		y > this.y && y < this.y + this.height) {
+Button.prototype.mouseUp = function (e, mouse) {
+	if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
+		mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
 		this.state = "over";
 		if (this.onclick != null) {
 			this.onclick();
 		}
+		this.mouseClick(e, mouse);
 	} else {
 		this.state = "up";
 	}
 	this.draw();
 };
 
-Button.prototype.checkMouseMove = function (x, y) {
-	if (x > this.x && x < this.x + this.width &&
-		y > this.y && y < this.y + this.height) {
+Button.prototype.mouseMove = function (e, mouse) {
+	if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
+		mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
 		this.state = "over";
 	} else {
 		this.state = "up";

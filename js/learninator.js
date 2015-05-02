@@ -28,6 +28,7 @@ var uiCanvas;
 function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	graphCanvas = document.getElementById("graph_canvas");
+	uiCanvas = document.getElementById("ui_canvas");;
 
 	var mazeOptions = {
 		canvas: worldCanvas,
@@ -46,38 +47,17 @@ function start() {
 	};
 	W = new World(worldOptions);
 	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
-	W.UI = new UI(uiCanvas);
-
+	var uiOptions = {
+		canvas: uiCanvas,
+		cellSize: worldCanvas.width / mazeOptions.horizCells
+	};
+	W.UI = new UI(uiOptions);
+	
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
 
 	W.go('max');
-}
-
-function UI() {
-	uiCanvas = document.getElementById("ui_canvas");
-	var context = uiCanvas.getContext('2d');
-
-	context.addGrid(W.cellSize);
-
-	var button = new Button(uiCanvas, 100, 100, "Click Me", function(){
-        context.beginPath();
-        context.arc(Math.random() * uiCanvas.width, Math.random() * uiCanvas.height, 5 + Math.random() * 15, 0, Math.PI * 2, false);
-        context.fill();
-    });
-
-    $("#ui_canvas").mousedown(function(event) {
-        button.checkMouseDown(event.pageX - this.offsetLeft, event.pageY - this.offsetTop);
-    });
-
-    $("#ui_canvas").mouseup(function(event) {
-        button.checkMouseUp(event.pageX - this.offsetLeft, event.pageY - this.offsetTop);
-    });
-
-    $("#ui_canvas").mousemove(function(event) {
-        button.checkMouseMove(event.pageX - this.offsetLeft, event.pageY - this.offsetTop);
-    });
 }
 
 function solve() {

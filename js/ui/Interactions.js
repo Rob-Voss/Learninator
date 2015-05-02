@@ -123,7 +123,8 @@ var Interactions = Interactions || {};
 			if (_this.entities.length > 0) {
 				for (var i = _this.entities.length - 1; i >= 0; i--) {
 					var entity = _this.entities[i];
-					if (entity.contains !== undefined && entity.contains(_this.mouse.pos)) {
+					if (entity.contains !== undefined && 
+						entity.contains(event, _this.mouse)) {
 						var mySel = entity;
 						_this.selection = mySel;
 						if (_this.mouse.button === 0) {
@@ -132,10 +133,12 @@ var Interactions = Interactions || {};
 
 							_this.dragoff = new Vec(offX, offY);
 							_this.dragging = true;
-							return _this.selection.click(event, _this.mouse);
+							if (_this.selection.mouseClick !== undefined)
+								return _this.selection.mouseClick(event, _this.mouse);
 						} else {
 							_this.dragging = false;
-							return _this.selection.contextMenu(event, _this.mouse);
+							if (_this.selection.contextMenu !== undefined)
+								return _this.selection.contextMenu(event, _this.mouse);
 						}
 					}
 				}
@@ -165,10 +168,13 @@ var Interactions = Interactions || {};
 					_this.selection.pos = new Vec(offX, offY);
 					_this.dragging = true;
 					_this.redraw = false;
-					return _this.selection.drag(event, _this.mouse);
+					if (_this.selection.mouseDrag !== undefined)
+						return _this.selection.mouseDrag(event, _this.mouse);
 				}
 				_this.dragging = false;
 				_this.redraw = true;
+				if (_this.selection.mouseMove !== undefined)
+					return _this.selection.mouseMove(event, _this.mouse);
 			}
 			return;
 		};
@@ -188,10 +194,13 @@ var Interactions = Interactions || {};
 				_this.selection.pos = new Vec(offX, offY);
 				_this.dragging = false;
 				_this.redraw = false;
-				_this.selection.drop(event, _this.mouse);
+				if (_this.selection.mouseDrop !== undefined)
+					_this.selection.mouseDrop(event, _this.mouse);
 				_this.selection = null;
 				return;
 			}
+			if (_this.selection && _this.selection.mouseUp !== undefined)
+				_this.selection.mouseUp(event, _this.mouse);
 			_this.selection = null;
 			return;
 		};
@@ -205,17 +214,6 @@ var Interactions = Interactions || {};
 			getMouse(event);
 			return;
 		};
-
-		/**
-		 * Mouse Click
-		 * @param {MouseEvent} event
-		 * @returns {undefined}
-		 */
-		function doubleClick(event) {
-			getMouse(event);
-			return;
-		};
-
 	};
 
 	global.Interactions = Interactions;

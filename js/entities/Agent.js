@@ -215,8 +215,8 @@ var Agent = Agent || {};
 		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (v) {
-			var result = this.pos.distFrom(v) < this.radius;
+		contains: function (e, mouse) {
+			var result = this.pos.distFrom(mouse.pos) < this.radius;
 
 			return result;
 		},
@@ -422,13 +422,13 @@ var Agent = Agent || {};
 		stopLearnin: function () {
 			this.brain.learning = false;
 		},
-		click: function(e) {
+		mouseClick: function(e) {
 			console.log('Agent Click');
 		},
-		drag: function(e) {
+		mouseDrag: function(e) {
 			console.log('Agent Drag');
 		},
-		drop: function(e) {
+		mouseDrop: function(e) {
 			console.log('Agent Drop');
 		}
 	};
