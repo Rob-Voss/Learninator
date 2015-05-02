@@ -166,7 +166,7 @@ var Utility = Utility || {};
 			if (this.drawGrid) {
 				var canvas = document.getElementById("ui_canvas")
 				var ctx = canvas.getContext('2d');
-				ctx.addGrid(this.horizCells + this.vertCells);
+				ctx.addGrid(this.vW);
 			}
 			// Draw the population of the world
 			for (var i = 0, entity; entity = this.entities[i++];) {

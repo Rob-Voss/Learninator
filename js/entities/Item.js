@@ -52,6 +52,7 @@ var Item = Item || {};
 					if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
 						(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
 						this.gridLocation = cells[h-1][v-1];
+						return;
 					}
 				}
 			}

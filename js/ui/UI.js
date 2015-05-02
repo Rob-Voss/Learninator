@@ -3,37 +3,10 @@ var UI = UI || {};
 (function (global) {
 	"use strict";
 
-	var UI = function (canvas) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d');
-		this.width = canvas.width;
-		this.height = canvas.height;
-
-		// An attempt to hold all the entities in this UI
-		this.entities = [];
-
-		this.randf = function (a, b) {
-			return Math.random() * (b - a) + a;
-		};
-		this.randi = function (a, b) {
-			return Math.floor(Math.random() * (b - a) + a);
-		};
-
-		// This complicates things a little but but fixes mouse co-ordinate problems
-		// when there's a border or padding. See getMouse for more detail
-		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
-		if (document.defaultView && document.defaultView.getComputedStyle) {
-			this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingLeft'], 10) || 0;
-			this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingTop'], 10) || 0;
-			this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderLeftWidth'], 10) || 0;
-			this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderTopWidth'], 10) || 0;
-		}
-
-		// Some pages have fixed-position bars at the top or left of the page
-		// They will mess up mouse coordinates and this fixes that
-		var html = document.body.parentNode;
-		this.htmlTop = html.offsetTop;
-		this.htmlLeft = html.offsetLeft;
+	var UI = function () {
+		this.ctx = this.canvas.getContext('2d');
+		this.width = this.canvas.width;
+		this.height = this.canvas.height;
 
 		// When set to false, the canvas will redraw everything
 		this.redraw = false;

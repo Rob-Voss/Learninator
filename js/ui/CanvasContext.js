@@ -7,10 +7,6 @@ CanvasRenderingContext2D.prototype.addGrid = function (delta, width, height) {
 	if (!arguments[2])
 		height = 500;
 
-	// extend the canvas width and height by delta
-//	var width = this.canvas.width;
-//	var height = this.canvas.height;
-
 	// draw the vertical and horizontal lines
 	this.clearRect(0, 0, width, height);
 	this.lineWidth = 0.1;

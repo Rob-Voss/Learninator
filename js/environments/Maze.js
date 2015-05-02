@@ -89,8 +89,8 @@ var Maze = Maze || {};
 			var path = this.path;
 			this.ctx.fillStyle = "rgba(0,165,0,.1)";
 			this.ctx.strokeStyle = "rgb(0,0,0)";
-
-			for (var i = 0, V; V = path[i++];) {
+			for (var i = 0; i < this.path.length; i++) {
+				var V = path[ei];
 				var vW = this.vW,
 					vH = this.vH,
 					vX = V.x,
