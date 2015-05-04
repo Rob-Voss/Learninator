@@ -25,7 +25,13 @@ var Utility = Utility || {};
 
 		this.clock = 0;
 		this.simSpeed = 2;
-		this.interval = 60;
+
+		/**
+		* 1s = 1000ms (remember that setInterval and setTimeout run on milliseconds)
+		* 1000ms / 60(fps) = 16.7ms (we'll round this to 17)
+		*/
+		this.fps = 60;
+		this.interval = 1000 / this.fps;
 		this.numItems = 80;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
@@ -45,14 +51,28 @@ var Utility = Utility || {};
 		// Apply the Interactions class to the world
 		Interactions.apply(this);
 
-		setInterval(function () {
-			if (!_this.pause) {
-				_this.tick();
-				if (_this.redraw || _this.clock % 50 === 0) {
-					_this.draw();
+		/**
+		 * Draw the world
+		 * @returns {undefined}
+		 */
+		function draw() {
+			setTimeout(function () {
+				if (!_this.pause) {
+					_this.tick();
+					if (_this.redraw) {
+						window.requestAnimationFrame(draw);
+
+						_this.clear();
+						// Draw the population of the world
+						for (var i = 0, entity; entity = _this.entities[i++];) {
+							entity.draw(_this.ctx);
+						}
+					}
 				}
-			}
-		}, _this.interval);
+			}, _this.interval);
+		};
+
+		draw();
 	};
 
 	/**
@@ -94,6 +114,21 @@ var Utility = Utility || {};
 				this.grid[entity.gridLocation.x][entity.gridLocation.x].population.push(entity.id);
 			}
 			this.entities.push(entity);
+			this.redraw = true;
+		},
+		/**
+		 * Add an item to the world canvas and set it to redraw
+		 * @param {Item||Agent} entity
+		 * @returns {undefined}
+		 */
+		deleteEntity: function (entity) {
+			if (entity.type !== 0) {
+				entity.getGridLocation(this.grid, this.vW, this.vH);
+				var index = this.grid[entity.gridLocation.x][entity.gridLocation.x].population.indexOf(entity.id);
+				if (index > -1) {
+					this.grid[entity.gridLocation.x][entity.gridLocation.x].population.splice(index, 1);
+				}
+			}
 			this.redraw = true;
 		},
 		/**
@@ -155,50 +190,6 @@ var Utility = Utility || {};
 			console.log('Contains!');
 		},
 		/**
-		 * Draw the world
-		 * @returns {undefined}
-		 */
-		draw: function () {
-			this.clear();
-			// Draw the population of the world
-			for (var i = 0, entity; entity = this.entities[i++];) {
-				entity.draw(this.ctx);
-			}
-		},
-		/**
-		 * Set the speed of the world
-		 * @param {type} speed
-		 * @returns {undefined}
-		 */
-		go: function (speed) {
-			clearInterval(this.interval);
-			this.redraw = true;
-			this.pause = false;
-			switch(speed) {
-				case 'min':
-					this.interval = setInterval(this.tick(), 200);
-					this.simSpeed = 0;
-					break;
-				case 'mid':
-					this.interval = setInterval(this.tick(), 30);
-					this.simSpeed = 1;
-					break;
-				case 'max':
-					this.interval = setInterval(this.tick(), 0);
-					this.simSpeed = 2;
-					break;
-				case 'max+':
-					this.interval = setInterval(this.tick(), 0);
-					this.redraw = false;
-					this.simSpeed = 3;
-					break;
-				case 'stop':
-					this.redraw = false;
-					this.pause = true;
-					break;
-			}
-		},
-		/**
 		 * Tick the environment
 		 */
 		tick: function () {
@@ -239,8 +230,11 @@ var Utility = Utility || {};
 						entity.tick(this);
 					}
 
-					if (!entity.cleanUp)
+					if (!entity.cleanUp) {
 						nt.push(entity);
+					} else {
+						this.deleteEntity(entity);
+					}
 				} else {
 					nt.push(entity);
 				}

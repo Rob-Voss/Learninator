@@ -52,12 +52,10 @@ function start() {
 		cellSize: worldCanvas.width / mazeOptions.horizCells
 	};
 	W.UI = new UI(uiOptions);
-	
+
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
-
-	W.go('max');
 }
 
 function solve() {

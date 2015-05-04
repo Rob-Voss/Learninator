@@ -123,7 +123,7 @@ var Interactions = Interactions || {};
 			if (_this.entities.length > 0) {
 				for (var i = _this.entities.length - 1; i >= 0; i--) {
 					var entity = _this.entities[i];
-					if (entity.contains !== undefined && 
+					if (entity.contains !== undefined &&
 						entity.contains(event, _this.mouse)) {
 						var mySel = entity;
 						_this.selection = mySel;
