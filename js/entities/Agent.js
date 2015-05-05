@@ -325,22 +325,22 @@ var Agent = Agent || {};
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
-					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle),
-					// We have a line from agent.pos to p->eyep
-					result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
+					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
+				// We have a line from agent.pos to p->eyep
+				var result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
 				if (result && result.type !== 0) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
 					eye.sensedType = result.type;
-					
+
 					if (eye.sensedProximity < result.radius + this.radius) {
 						// Nom Noms!
 						switch (result.type) {
 							case 1:// The sweet meats
-								this.digestionSignal += 5.0 + (result.radius / 2);
+								this.digestionSignal += 5.0;
 								break;
 							case 2:// The gnar gnar meats
-								this.digestionSignal += -6.0 + (result.radius / 2);
+								this.digestionSignal += -6.0;
 								break;
 						}
 						this.digested.push(result.id);

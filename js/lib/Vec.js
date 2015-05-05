@@ -13,6 +13,7 @@ var Vec = Vec || {};
 		this.x = x;
 		this.y = y;
 		this.visited = false;
+		this.population = [];
 
 		// When solving the maze, this represents the previous node in the navigated path.
 		this.parent = null;

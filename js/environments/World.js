@@ -34,6 +34,7 @@ var Utility = Utility || {};
 		this.interval = 1000 / this.fps;
 		this.numItems = 80;
 		this.entities = [];
+		this.population = this.grid;
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
 		// When set to true, the canvas will redraw everything
@@ -70,7 +71,7 @@ var Utility = Utility || {};
 					}
 				}
 			}, _this.interval);
-		};
+		}
 
 		draw();
 	};
@@ -111,7 +112,7 @@ var Utility = Utility || {};
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
 				entity.getGridLocation(this.grid, this.vW, this.vH);
-				this.grid[entity.gridLocation.x][entity.gridLocation.x].population.push(entity.id);
+				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
 			}
 			this.entities.push(entity);
 			this.redraw = true;
@@ -123,16 +124,18 @@ var Utility = Utility || {};
 		 */
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
-				entity.getGridLocation(this.grid, this.vW, this.vH);
-				var index = this.grid[entity.gridLocation.x][entity.gridLocation.x].population.indexOf(entity.id);
+				if (entity.gridLocation.x === undefined) {
+					entity.getGridLocation(this.grid, this.vW, this.vH);
+				}
+				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
-					this.grid[entity.gridLocation.x][entity.gridLocation.x].population.splice(index, 1);
+					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
 				}
 			}
 			this.redraw = true;
 		},
 		/**
-		 * Randomly create an antity at the Vec
+		 * Randomly create an entity at the Vec
 		 * @param {Vec} v
 		 * @returns {undefined}
 		 */
