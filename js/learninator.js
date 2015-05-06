@@ -32,8 +32,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 4,
-		vertCells: 4
+		horizCells: 5,
+		vertCells: 5
 	};
 	var maze = new Maze(mazeOptions);
 

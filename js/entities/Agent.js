@@ -31,7 +31,7 @@ var Agent = Agent || {};
 		this.height = h || 20; // height of agent
 		this.radius = r || 10; // default radius
 		this.pos = v || new Vec(this.radius, this.radius); // position
-		this.gridLocation = {};
+		this.gridLocation = new Vec(0, 0);
 
 		this.id = Utility.guid();
 		this.image = new Image();
@@ -302,52 +302,36 @@ var Agent = Agent || {};
 			this.rot1 = action[0] * 1;
 			this.rot2 = action[1] * 1;
 		},
-		getGridLocation: function (cells, width, height) {
-			for(var h = 0, hCell; hCell = cells[h++];) {
-				for(var v = 0, vCell; vCell = hCell[v++];) {
-					var topLeft = vCell.x * width,
-						topRight = topLeft + width,
-						bottomLeft = vCell.y * height,
-						bottomRight = bottomLeft + height;
-					if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
-						(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
-						this.gridLocation = cells[h-1][v-1];
-					}
-				}
-			}
-		},
 		/**
 		 * Tick the agent
 		 * @returns {undefined}
 		 */
 		tick: function (world) {
-			this.getGridLocation(world.grid, world.vW, world.vH);
+			world.getGridLocation(this);
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
 				// We have a line from agent.pos to p->eyep
 				var result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
-				if (result && result.type !== 0) {
+				if (result) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
-					eye.sensedType = result.type;
+					eye.sensedType =  (result.type !== 0) ? result.type : -1;
 
 					if (eye.sensedProximity < result.radius + this.radius) {
 						// Nom Noms!
 						switch (result.type) {
 							case 1:// The sweet meats
 								this.digestionSignal += 5.0;
+								this.digested.push(result.id);
 								break;
 							case 2:// The gnar gnar meats
 								this.digestionSignal += -6.0;
+								this.digested.push(result.id);
 								break;
 						}
-						this.digested.push(result.id);
 					}
-				} else {
-					eye.sensedProximity = eye.maxRange;
-					eye.sensedType = -1;
 				}
 			}
 

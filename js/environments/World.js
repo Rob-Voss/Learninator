@@ -34,7 +34,6 @@ var Utility = Utility || {};
 		this.interval = 1000 / this.fps;
 		this.numItems = 80;
 		this.entities = [];
-		this.population = this.grid;
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
 		// When set to true, the canvas will redraw everything
@@ -111,7 +110,7 @@ var Utility = Utility || {};
 		 */
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
-				entity.getGridLocation(this.grid, this.vW, this.vH);
+				this.getGridLocation(entity);
 				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
 			}
 			this.entities.push(entity);
@@ -125,7 +124,7 @@ var Utility = Utility || {};
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
 				if (entity.gridLocation.x === undefined) {
-					entity.getGridLocation(this.grid, this.vW, this.vH);
+					this.getGridLocation(this.grid, this.vW, this.vH);
 				}
 				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
@@ -188,6 +187,21 @@ var Utility = Utility || {};
 			}
 
 			return minRes;
+		},
+		getGridLocation: function (entity) {
+			for(var h = 0, hCell; hCell = this.grid[h++];) {
+				for(var v = 0, vCell; vCell = hCell[v++];) {
+					var topLeft = vCell.x * this.vW,
+						topRight = topLeft + this.vW,
+						bottomLeft = vCell.y * this.vH,
+						bottomRight = bottomLeft + this.vH;
+					if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
+						(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
+						entity.gridLocation = new Vec(h-1, v-1);
+						return;
+					}
+				}
+			}
 		},
 		contains: function () {
 			console.log('Contains!');

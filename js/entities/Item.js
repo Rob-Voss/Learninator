@@ -1,4 +1,5 @@
 var Item = Item || {};
+var Utility = Utility || {};
 
 (function (global) {
 	"use strict";
@@ -23,7 +24,7 @@ var Item = Item || {};
 		this.id = Utility.guid();
 		this.cleanUp = false;
 		this.fill = '#AAAAAA';
-		this.gridLocation = {};
+		this.gridLocation = new Vec(0, 0);
 
 		this.image = new Image();
 		this.image.onload = imageLoaded;
@@ -42,21 +43,6 @@ var Item = Item || {};
 	 * @type Item
 	 */
 	Item.prototype = {
-		getGridLocation: function (cells, width, height) {
-			for(var h = 0, hCell; hCell = cells[h++];) {
-				for(var v = 0, vCell; vCell = hCell[v++];) {
-					var topLeft = vCell.x * width,
-						topRight = topLeft + width,
-						bottomLeft = vCell.y * height,
-						bottomRight = bottomLeft + height;
-					if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
-						(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
-						this.gridLocation = new Vec(h-1, v-1);
-						return;
-					}
-				}
-			}
-		},
 		tick: function (world) {
 			this.age += 1;
 			if (this.age > 5000 && world.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {

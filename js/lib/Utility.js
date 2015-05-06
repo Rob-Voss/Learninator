@@ -5,14 +5,54 @@ var Utility = Utility || {};
 
 	var Utility = {};
 
+	/**
+	 * Return a random Float within the range of a-b
+	 * @param {Float} a
+	 * @param {Float} b
+	 * @returns {Number}
+	 */
 	Utility.randf = function(a, b) {
 		return Math.random()*(b-a)+a;
 	};
 
+	/**
+	 * Return a random Integer within the range of a-b
+	 * @param {Float} a
+	 * @param {Float} b
+	 * @returns {Number}
+	 */
 	Utility.randi = function(a, b) {
 		return Math.floor(Math.random()*(b-a)+a);
 	};
 
+	Utility.findObject = function (ar, id) {
+		ar.map(function(el) {
+			return el.id;
+		}).indexOf(id);
+	};
+	
+	/**
+	 * Return the location within a grid
+	 * @param {Array} cells
+	 * @param {Number} width
+	 * @param {Number} height
+	 * @returns {Number}
+	 */
+	Utility.getGridLocation = function (cells, width, height) {
+		for(var h = 0, hCell; hCell = cells[h++];) {
+			for(var v = 0, vCell; vCell = hCell[v++];) {
+				var topLeft = vCell.x * width,
+					topRight = topLeft + width,
+					bottomLeft = vCell.y * height,
+					bottomRight = bottomLeft + height;
+				if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
+					(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
+					return cells[h-1][v-1];
+				}
+			}
+		}
+	};
+	
 	/**
 	 * Check if there was a collision
 	 * @param {Object} minRes
