@@ -308,6 +308,7 @@ var Agent = Agent || {};
 		 */
 		tick: function (world) {
 			world.getGridLocation(this);
+
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
@@ -317,21 +318,10 @@ var Agent = Agent || {};
 				if (result) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
-					eye.sensedType =  (result.type !== 0) ? result.type : -1;
-
-					if (eye.sensedProximity < result.radius + this.radius) {
-						// Nom Noms!
-						switch (result.type) {
-							case 1:// The sweet meats
-								this.digestionSignal += 5.0;
-								this.digested.push(result.id);
-								break;
-							case 2:// The gnar gnar meats
-								this.digestionSignal += -6.0;
-								this.digested.push(result.id);
-								break;
-						}
-					}
+					eye.sensedType = result.type;
+				} else {
+					eye.sensedProximity = eye.maxRange;
+					eye.sensedType = -1;
 				}
 			}
 
@@ -373,6 +363,16 @@ var Agent = Agent || {};
 				// The agent derped! Wall collision! Reset their position
 				this.pos = this.oldPos;
 			}
+
+			// Handle boundary conditions
+			if (this.pos.x < 0)
+				this.pos.x = 0;
+			if (this.pos.x > world.width)
+				this.pos.x = world.width;
+			if (this.pos.y < 0)
+				this.pos.y = 0;
+			if (this.pos.y > world.height)
+				this.pos.y = world.height;
 		},
 		/**
 		 * Load the brains from the field
@@ -406,13 +406,25 @@ var Agent = Agent || {};
 		stopLearnin: function () {
 			this.brain.learning = false;
 		},
-		mouseClick: function(e) {
+		mouseClick: function(e, mouse) {
 			console.log('Agent Click');
 		},
-		mouseDrag: function(e) {
+		rightClick: function(e, mouse) {
+			console.log('Agent Right Click');
+		},
+		doubleClick: function(e, mouse) {
+			console.log('Agent Double Click');
+		},
+		mouseMove: function(e, mouse) {
+			console.log('Agent Move');
+		},
+		mouseUp: function(e, mouse) {
+			console.log('Agent Release');
+		},
+		mouseDrag: function(e, mouse) {
 			console.log('Agent Drag');
 		},
-		mouseDrop: function(e) {
+		mouseDrop: function(e, mouse) {
 			console.log('Agent Drop');
 		}
 	};

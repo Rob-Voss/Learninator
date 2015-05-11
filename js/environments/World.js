@@ -19,9 +19,7 @@ var Utility = Utility || {};
 		this.vertCells = options.vertCells;
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
-		this.maze = options.maze;
 		this.grid = options.maze.graphCells();
-		this.cells = options.maze.cells;
 
 		this.clock = 0;
 		this.simSpeed = 2;
@@ -32,7 +30,7 @@ var Utility = Utility || {};
 		*/
 		this.fps = 60;
 		this.interval = 1000 / this.fps;
-		this.numItems = 80;
+		this.numItems = 40;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
@@ -40,11 +38,9 @@ var Utility = Utility || {};
 		this.redraw = true;
 		this.pause = false;
 
+		this.walls = options.walls || [];
+		this.agents = options.agents || [];
 		this.populate();
-		this.addWalls(this.cells || []);
-		this.addAgents(options.agents || []);
-		this.addEntities(this.walls);
-		this.addEntities(this.agents);
 
 		var _this = this;
 
@@ -63,7 +59,12 @@ var Utility = Utility || {};
 						window.requestAnimationFrame(draw);
 
 						_this.clear();
-						// Draw the population of the world
+						for (var i = 0, wall; wall = _this.walls[i++];) {
+							wall.draw(_this.ctx);
+						}
+						for (var i = 0, agent; agent = _this.agents[i++];) {
+							agent.draw(_this.ctx);
+						}
 						for (var i = 0, entity; entity = _this.entities[i++];) {
 							entity.draw(_this.ctx);
 						}
@@ -129,7 +130,10 @@ var Utility = Utility || {};
 				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
 					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
+					var idx = this.entities.findIndex(this.getId, entity.id);
+					this.entities.splice(idx, 1);
 				}
+
 			}
 			this.redraw = true;
 		},
@@ -203,6 +207,12 @@ var Utility = Utility || {};
 				}
 			}
 		},
+		getId: function (element, index, array) {
+			if (element.id === this) {
+				return true;
+			}
+			return false;
+		},
 		contains: function () {
 			console.log('Contains!');
 		},
@@ -216,52 +226,38 @@ var Utility = Utility || {};
 			this.redraw = true;
 
 			var pts = [];
-			var digested = [];
+			var ents = [];
 			// Fix input to all agents based on environment and process their eyes
 			for (var i = 0, agent; agent = this.agents[i++];) {
 				agent.tick(this);
-				digested = agent.digested;
-				// Handle boundary conditions
-				if (agent.pos.x < 0)
-					agent.pos.x = 0;
-				if (agent.pos.x > this.width)
-					agent.pos.x = this.width;
-				if (agent.pos.y < 0)
-					agent.pos.y = 0;
-				if (agent.pos.y > this.height)
-					agent.pos.y = this.height;
 
+				for (var j=0,n=this.grid[agent.gridLocation.x][agent.gridLocation.y].population.length;j<n;j++) {
+					var id = this.grid[agent.gridLocation.x][agent.gridLocation.y].population[j],
+						entityIdx = this.entities.find(this.getId, id);
+					if (entityIdx) {
+						var dist = agent.pos.distFrom(entityIdx.pos);
+						if (entityIdx && dist < entityIdx.radius + agent.radius) {
+							// Nom Noms!
+							switch (entityIdx.type) {
+								case 1:// The sweet meats
+									agent.digestionSignal += 5.0;
+									break;
+								case 2:// The gnar gnar meats
+									agent.digestionSignal += -6.0;
+									break;
+							}
+							this.deleteEntity(entityIdx);
+						} else {
+							ents.push(entityIdx);
+						}
+					}
+				}
 				// This is where the agents learns based on the feedback of their
 				// actions on the environment
 				agent.backward();
 				pts.push(agent.brain.avgRewardWindow.getAverage());
 			}
-
-			var nt = [];
-			for (var i = 0, entity; entity = this.entities[i++];) {
-				if (entity.type == 1 || entity.type == 2) {
-					var derp = digested.indexOf(entity.id);
-					if (derp !== -1) {
-						entity.cleanUp = true;
-					} else {
-						entity.tick(this);
-					}
-
-					if (!entity.cleanUp) {
-						nt.push(entity);
-					} else {
-						this.deleteEntity(entity);
-					}
-				} else {
-					nt.push(entity);
-				}
-			}
-
-			// Drop old the items
-			if (this.redraw) {
-				// Swap new list
-				this.entities = nt;
-			}
+//			this.entities = ents;
 
 			// If we have less then the number of items allowed throw a random one in
 			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
@@ -292,7 +288,7 @@ var Utility = Utility || {};
 		 * @param {MouseEvent} e
 		 * @returns {undefined}
 		 */
-		click: function (e) {
+		mouseClick: function (e) {
 			console.log('World Click');
 		},
 		/**
@@ -300,7 +296,7 @@ var Utility = Utility || {};
 		 * @param {MouseEvent} e
 		 * @returns {undefined}
 		 */
-		contextMenu: function (e) {
+		rightClick: function (e) {
 			console.log('World Right Click');
 		},
 		/**

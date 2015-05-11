@@ -109,7 +109,7 @@ var Utility = Utility || {};
 		mouseClick: function(e, mouse) {
 			console.log('Item Click');
 		},
-		contextMenu: function(e, mouse) {
+		rightClick: function(e, mouse) {
 			console.log('Item Right Click');
 		},
 		doubleClick: function(e, mouse) {

@@ -44,6 +44,7 @@ var Interactions = Interactions || {};
 
 			switch(event.type) {
 				case 'contextmenu':
+					rightClick(event);
 					break;
 				case 'click':
 					mouseClick(event);
@@ -61,8 +62,10 @@ var Interactions = Interactions || {};
 					doubleClick(event);
 					break;
 				case 'drag':
+					mouseDrag(event);
 					break;
 				case 'drop':
+					mouseDrop(event);
 					break;
 
 			}
@@ -138,7 +141,7 @@ var Interactions = Interactions || {};
 						} else {
 							_this.dragging = false;
 							if (_this.selection.contextMenu !== undefined)
-								return _this.selection.contextMenu(event, _this.mouse);
+								return _this.selection.rightClick(event, _this.mouse);
 						}
 					}
 				}
@@ -148,7 +151,7 @@ var Interactions = Interactions || {};
 					_this.dragging = false;
 				}
 			} else {
-				return _this.click(event, _this.mouse);
+				return _this.mouseClick(event, _this.mouse);
 			}
 		};
 

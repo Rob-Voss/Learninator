@@ -32,8 +32,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 5,
-		vertCells: 5
+		horizCells: 2,
+		vertCells: 2
 	};
 	var maze = new Maze(mazeOptions);
 
@@ -47,6 +47,7 @@ function start() {
 	};
 	W = new World(worldOptions);
 	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
+
 	var uiOptions = {
 		canvas: uiCanvas,
 		cellSize: worldCanvas.width / mazeOptions.horizCells

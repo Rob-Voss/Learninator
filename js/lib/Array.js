@@ -21,9 +21,9 @@ var Array = Array || {};
 		}
 
 		var maxv = arr[0],
-			minv = arr[0],
-			maxi = 0,
-			mini = 0;
+				minv = arr[0],
+				maxi = 0,
+				mini = 0;
 
 		for (var i = 1; i < arr.length; i++) {
 			if (arr[i] > maxv) {
@@ -45,6 +45,50 @@ var Array = Array || {};
 		};
 	};
 
+	if (!Array.prototype.find) {
+		Array.prototype.find = function (predicate) {
+			if (this == null) {
+				throw new TypeError('Array.prototype.find called on null or undefined');
+			}
+			if (typeof predicate !== 'function') {
+				throw new TypeError('predicate must be a function');
+			}
+			var list = Object(this);
+			var length = list.length >>> 0;
+			var thisArg = arguments[1];
+			var value;
+
+			for (var i = 0; i < length; i++) {
+				value = list[i];
+				if (predicate.call(thisArg, value, i, list)) {
+					return value;
+				}
+			}
+			return undefined;
+		};
+	}
+	if (!Array.prototype.findIndex) {
+		Array.prototype.findIndex = function (predicate) {
+			if (this == null) {
+				throw new TypeError('Array.prototype.findIndex called on null or undefined');
+			}
+			if (typeof predicate !== 'function') {
+				throw new TypeError('predicate must be a function');
+			}
+			var list = Object(this);
+			var length = list.length >>> 0;
+			var thisArg = arguments[1];
+			var value;
+
+			for (var i = 0; i < length; i++) {
+				value = list[i];
+				if (predicate.call(thisArg, value, i, list)) {
+					return i;
+				}
+			}
+			return -1;
+		};
+	}
 	global.Array = Array;
 
 }(this));
