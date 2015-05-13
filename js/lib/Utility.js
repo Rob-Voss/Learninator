@@ -30,29 +30,37 @@ var Utility = Utility || {};
 			return el.id;
 		}).indexOf(id);
 	};
-	
+
+	Utility.getId = function (element, index, array) {
+		if (element.id === this) {
+			return true;
+		}
+		return false;
+	};
+
 	/**
 	 * Return the location within a grid
+	 * @param {Object} entity
 	 * @param {Array} cells
 	 * @param {Number} width
 	 * @param {Number} height
 	 * @returns {Number}
 	 */
-	Utility.getGridLocation = function (cells, width, height) {
+	Utility.getGridLocation = function (entity, cells, width, height) {
 		for(var h = 0, hCell; hCell = cells[h++];) {
 			for(var v = 0, vCell; vCell = hCell[v++];) {
 				var topLeft = vCell.x * width,
 					topRight = topLeft + width,
 					bottomLeft = vCell.y * height,
 					bottomRight = bottomLeft + height;
-				if ((this.pos.x >= topLeft && this.pos.x <= topRight) &&
-					(this.pos.y >= bottomLeft && this.pos.y <= bottomRight)) {
+				if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
+					(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
 					return cells[h-1][v-1];
 				}
 			}
 		}
 	};
-	
+
 	/**
 	 * Check if there was a collision
 	 * @param {Object} minRes
@@ -206,7 +214,7 @@ var Utility = Utility || {};
 			result.vecX = pX;
 			result.vecY = pY;
 			result.vecI = vecI;
-			
+
 			return result;
 		}
 		return false;
@@ -223,10 +231,18 @@ var Utility = Utility || {};
 		return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
 	};
 
+	/**
+	 * Do stuff
+	 * @returns {Number}
+	 */
 	Utility.S4 = function () {
 		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 	};
 
+	/**
+	 * Generate a UUID
+	 * @returns {String}
+	 */
 	Utility.guid = function () {
 		return (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0,3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
 	};

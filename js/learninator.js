@@ -32,8 +32,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 2,
-		vertCells: 2
+		horizCells: 5,
+		vertCells: 5
 	};
 	var maze = new Maze(mazeOptions);
 
@@ -48,11 +48,11 @@ function start() {
 	W = new World(worldOptions);
 	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
 
-	var uiOptions = {
-		canvas: uiCanvas,
-		cellSize: worldCanvas.width / mazeOptions.horizCells
-	};
-	W.UI = new UI(uiOptions);
+//	var uiOptions = {
+//		canvas: uiCanvas,
+//		cellSize: worldCanvas.width / mazeOptions.horizCells
+//	};
+//	W.UI = new UI(uiOptions);
 
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');

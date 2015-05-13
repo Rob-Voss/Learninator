@@ -26,9 +26,9 @@ var Utility = Utility || {};
 		this.fill = '#AAAAAA';
 		this.gridLocation = new Vec(0, 0);
 
-		this.image = new Image();
-		this.image.onload = imageLoaded;
-		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
+//		this.image = new Image();
+//		this.image.onload = imageLoaded;
+//		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
 		this.dragging = false;
 		this.redraw = true;
 
@@ -45,33 +45,11 @@ var Utility = Utility || {};
 	Item.prototype = {
 		tick: function (world) {
 			this.age += 1;
+			Utility.getGridLocation(this, world.grid, world.vW, world.vH);
+
 			if (this.age > 5000 && world.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 				this.cleanUp = true;
 			}
-		},
-		/**
-		 * Check if there was a collision
-		 * @param {Object} minRes
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @returns {Object}
-		 */
-		collisionCheck: function (minRes, v1, v2) {
-			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.width);
-			if (iResult) {
-				iResult.type = this.type;
-				iResult.id = this.id;
-				iResult.radius = this.radius;
-				iResult.pos = this.pos;
-				if (!minRes) {
-					minRes = iResult;
-				} else {
-					if (iResult.vecX < minRes.vecX) {
-						minRes = iResult;
-					}
-				}
-			}
-			return minRes;
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds

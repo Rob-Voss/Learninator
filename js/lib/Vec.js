@@ -29,10 +29,6 @@ var Vec = Vec || {};
 		 */
 		add: function (v) {
 			return new Vec(this.x + v.x, this.y + v.y);
-//			this.x += v.x;
-//			this.y += v.y;
-//
-//			return this;
 		},
 		/**
 		 * Adds two vectors to each other and stores the result in this vector
@@ -205,7 +201,6 @@ var Vec = Vec || {};
 			var length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
 
 			return length;
-//			return Math.sqrt(this.lengthSq());
 		},
 		/**
 		 * Sets this vector components to the maximum value when compared to the passed vector's components
@@ -422,10 +417,6 @@ var Vec = Vec || {};
 		 */
 		sub: function (v) {
 			return new Vec(this.x - v.x, this.y - v.y);
-//			this.x -= v.x;
-//			this.y -= v.y;
-//
-//			return this;
 		},
 		/**
 		 * Subtracts two vectors from each other and stores the result in this vector

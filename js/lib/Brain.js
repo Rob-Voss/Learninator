@@ -136,7 +136,7 @@ var Brain = Brain || {};
 			}
 			var regressionLayer = {
 					type: 'regression',
-					num_neurons: numActions
+					num_neurons: this.num_actions
 				};
 			layer_defs.push(regressionLayer); // value function output
 		}
@@ -181,7 +181,7 @@ var Brain = Brain || {};
 				return Utility.randi(0, this.num_actions);
 			} else {
 				// okay, lets do some fancier sampling:
-				var p = convnetjs.randf(0, 1.0);
+				var p = Utility.randf(0, 1.0);
 				var cumprob = 0.0;
 				for (var k = 0; k < this.num_actions; k++) {
 					cumprob += this.random_action_distribution[k];

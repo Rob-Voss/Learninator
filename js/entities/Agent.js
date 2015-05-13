@@ -34,9 +34,9 @@ var Agent = Agent || {};
 		this.gridLocation = new Vec(0, 0);
 
 		this.id = Utility.guid();
-		this.image = new Image();
-		this.image.onload = imageLoaded;
-		this.image.src = 'img/Agent.png';
+//		this.image = new Image();
+//		this.image.onload = imageLoaded;
+//		this.image.src = 'img/Agent.png';
 		this.dragging = false;
 		this.redraw = false;
 
@@ -44,7 +44,6 @@ var Agent = Agent || {};
 			var image = e.target;
 			_this.hitArea = new Vec(image.width/2, image.height/2);
 		};
-
 
 		this.digested = [];
 
@@ -55,7 +54,7 @@ var Agent = Agent || {};
 		this.angle = 0;
 
 		// The number of item types the Agent's eys can see (wall, green, red thing proximity)
-		this.numTypes = 4;
+		this.numTypes = 3;
 
 		// The number of Agent's eyes
 		this.numEyes = 9;
@@ -168,9 +167,8 @@ var Agent = Agent || {};
 			}
 
 			// Calculate the proximity reward
-			var rewardPerEye = 0.0;
-			rewardPerEye = proximityReward / this.numEyes;
-			proximityReward = Math.min(1.0, rewardPerEye * 2);
+			proximityReward = proximityReward / this.numEyes;
+			proximityReward = Math.min(1.0, proximityReward * 2);
 
 			// Agents like to go straight forward
 			var forwardReward = 0.0;
@@ -184,39 +182,17 @@ var Agent = Agent || {};
 			var reward = proximityReward + forwardReward + digestionReward;
 
 			// pass to brain for learning
+			// TODO: Set up Brain as a Worker
 			this.brain.backward(reward);
 		},
 		/**
-		 * Check if there was a collision
-		 * @param {Object} minRes
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @returns {unresolved}
-		 */
-		collisionCheck: function (minRes, v1, v2) {
-			var iResult = Utility.linePointIntersect(v1, v2, this.pos, this.width);
-			if (iResult) {
-				iResult.type = this.type;
-				iResult.id = this.id;
-				iResult.radius = this.radius;
-				iResult.pos = this.pos;
-				if (!minRes) {
-					minRes = iResult;
-				} else {
-					if (iResult.vecX < minRes.vecX) {
-						minRes = iResult;
-					}
-				}
-			}
-			return minRes;
-		},
-		/**
 		 * Determine if a point is inside the shape's bounds
+		 * @param {MouseEvent} e
 		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (e, mouse) {
-			var result = this.pos.distFrom(mouse.pos) < this.radius;
+		contains: function (e, v) {
+			var result = this.pos.distFrom(v) < this.radius;
 
 			return result;
 		},
@@ -258,10 +234,8 @@ var Agent = Agent || {};
 						break;
 					// Is it another Agent
 					case 3:
-						this.ctx.strokeStyle = "rgb(100,10,90)";
+						ctx.strokeStyle = "rgb(100,10,90)";
 						break;
-					default:
-						this.ctx.strokeStyle = "rgb(0,255,0)";
 				}
 
 				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
@@ -286,7 +260,6 @@ var Agent = Agent || {};
 				inputArray[i * 3] = 1.0;
 				inputArray[i * 3 + 1] = 1.0;
 				inputArray[i * 3 + 2] = 1.0;
-				inputArray[i * 3 + 3] = 1.0;
 				if (e.sensedType !== -1) {
 					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
 					// lets do a 1-of-k encoding into the input array
@@ -307,7 +280,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		tick: function (world) {
-			world.getGridLocation(this);
+			Utility.getGridLocation(this, world.grid, world.vW, world.vH);
 
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
@@ -358,12 +331,6 @@ var Agent = Agent || {};
 			if (this.angle > 2 * Math.PI)
 				this.angle -= 2 * Math.PI;
 
-			// The agent is trying to move from pos to oPos so we need to check walls
-			if (world.collisionCheck(this.oldPos, this.pos, true, false)) {
-				// The agent derped! Wall collision! Reset their position
-				this.pos = this.oldPos;
-			}
-
 			// Handle boundary conditions
 			if (this.pos.x < 0)
 				this.pos.x = 0;
@@ -373,14 +340,50 @@ var Agent = Agent || {};
 				this.pos.y = 0;
 			if (this.pos.y > world.height)
 				this.pos.y = world.height;
+
+			for (var j=0,n=world.grid[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
+				var id = world.grid[this.gridLocation.x][this.gridLocation.y].population[j],
+					entityIdx = world.entities.find(Utility.getId, id);
+				if (entityIdx) {
+					var dist = this.pos.distFrom(entityIdx.pos);
+					if (entityIdx && dist < entityIdx.radius + this.radius) {
+						var result = world.collisionCheck(this.pos, entityIdx.pos, true, false);
+						if (!result) {
+							// Nom Noms!
+							switch (entityIdx.type) {
+								case 1:// The sweet meats
+									this.digestionSignal += 5.0;
+									break;
+								case 2:// The gnar gnar meats
+									this.digestionSignal += -6.0;
+									break;
+								default:
+									this.digestionSignal = this.digestionSignal;
+							}
+							world.deleteEntity(entityIdx);
+						}
+					}
+				}
+			}
+
+			// The agent is trying to move from pos to oPos so we need to check walls
+			var derped = world.collisionCheck(this.oldPos, this.pos, true, false);
+			if (derped) {
+				// The agent derped! Wall collision! Reset their position
+				this.pos = this.oldPos;
+			}
+
+			// This is where the agents learns based on the feedback of their
+			// actions on the environment
+			this.backward();
 		},
 		/**
 		 * Load the brains from the field
 		 * @returns {undefined}
 		 */
-		loadMemory: function (memory) {
+		loadMemory: function () {
 			var brain = this.brain;
-			$.getJSON(memory, function(data) {
+			$.getJSON(document.getElementById('memoryBank'), function(data) {
 				brain.value_net.fromJSON(data);
 			});
 		},
@@ -390,7 +393,7 @@ var Agent = Agent || {};
 		 */
 		saveMemory: function () {
 			var j = this.brain.value_net.toJSON();
-			this.memoryBank.value = JSON.stringify(j);
+			document.getElementById('memoryBank').value = JSON.stringify(j);
 		},
 		/**
 		 * Get to learninating
@@ -406,6 +409,7 @@ var Agent = Agent || {};
 		stopLearnin: function () {
 			this.brain.learning = false;
 		},
+		
 		mouseClick: function(e, mouse) {
 			console.log('Agent Click');
 		},

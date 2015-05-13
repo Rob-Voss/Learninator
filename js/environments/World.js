@@ -82,15 +82,6 @@ var Utility = Utility || {};
 	 */
 	World.prototype = {
 		/**
-		 * Add an agent to the world canvas and set it to redraw
-		 * @param {Array} agents
-		 * @returns {undefined}
-		 */
-		addAgents: function (agents) {
-			this.agents = this.agents || agents;
-			this.redraw = true;
-		},
-		/**
 		 * Add an item to the world canvas and set it to redraw
 		 * @param {Array} entities
 		 * @returns {undefined}
@@ -111,7 +102,7 @@ var Utility = Utility || {};
 		 */
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
-				this.getGridLocation(entity);
+				Utility.getGridLocation(entity, this.grid, this.vW, this.vH);
 				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
 			}
 			this.entities.push(entity);
@@ -125,15 +116,13 @@ var Utility = Utility || {};
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
 				if (entity.gridLocation.x === undefined) {
-					this.getGridLocation(this.grid, this.vW, this.vH);
+					Utility.getGridLocation(entity, this.grid, this.vW, this.vH);
 				}
 				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
 					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
-					var idx = this.entities.findIndex(this.getId, entity.id);
-					this.entities.splice(idx, 1);
+					this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
 				}
-
 			}
 			this.redraw = true;
 		},
@@ -146,20 +135,16 @@ var Utility = Utility || {};
 			this.addEntity(new Item(Utility.randi(1, 3), v, 20, 20, 10));
 		},
 		/**
-		 * Add walls
-		 * @param {Array} walls
-		 * @returns {undefined}
-		 */
-		addWalls: function (walls) {
-			this.walls = this.walls || walls;
-			this.redraw = true;
-		},
-		/**
 		 * Clear the canvas
+		 * @param {Vec} cell
 		 * @returns {undefined}
 		 */
-		clear: function () {
-			this.ctx.clearRect(0, 0, this.width, this.height);
+		clear: function (cell) {
+			if (cell) {
+				this.ctx.clearRect(0, 0, this.width, this.height);
+			} else {
+				this.ctx.clearRect(0, 0, this.width, this.height);
+			}
 		},
 		/**
 		 * A helper function to get check for colliding walls/items
@@ -177,7 +162,19 @@ var Utility = Utility || {};
 				// @TODO Need to check the current cell first so we
 				// don't loop through all the walls
 				for (var i = 0, wall; wall = this.walls[i++];) {
-					minRes = wall.collisionCheck(minRes, v1, v2);
+					var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
+					if (wResult) {
+						wResult.type = 0; // 0 is wall
+						if (!minRes) {
+							minRes = wResult;
+						} else {
+							// Check if it's closer
+							if (wResult.vecX < minRes.vecX) {
+								// If yes, replace it
+								minRes = wResult;
+							}
+						}
+					}
 				}
 			}
 
@@ -186,35 +183,24 @@ var Utility = Utility || {};
 				// @TODO Need to check the current cell first so we
 				// don't check all the items
 				for (var i = 0, entity; entity = this.entities[i++];) {
-					minRes = entity.collisionCheck(minRes, v1, v2);
+					var iResult = Utility.linePointIntersect(v1, v2, entity.pos, entity.radius);
+					if (iResult) {
+						iResult.type = entity.type;
+						iResult.id = entity.id;
+						iResult.radius = entity.radius;
+						iResult.pos = entity.pos;
+						if (!minRes) {
+							minRes = iResult;
+						} else {
+							if (iResult.vecX < minRes.vecX) {
+								minRes = iResult;
+							}
+						}
+					}
 				}
 			}
 
 			return minRes;
-		},
-		getGridLocation: function (entity) {
-			for(var h = 0, hCell; hCell = this.grid[h++];) {
-				for(var v = 0, vCell; vCell = hCell[v++];) {
-					var topLeft = vCell.x * this.vW,
-						topRight = topLeft + this.vW,
-						bottomLeft = vCell.y * this.vH,
-						bottomRight = bottomLeft + this.vH;
-					if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
-						(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
-						entity.gridLocation = new Vec(h-1, v-1);
-						return;
-					}
-				}
-			}
-		},
-		getId: function (element, index, array) {
-			if (element.id === this) {
-				return true;
-			}
-			return false;
-		},
-		contains: function () {
-			console.log('Contains!');
 		},
 		/**
 		 * Tick the environment
@@ -226,38 +212,15 @@ var Utility = Utility || {};
 			this.redraw = true;
 
 			var pts = [];
-			var ents = [];
-			// Fix input to all agents based on environment and process their eyes
 			for (var i = 0, agent; agent = this.agents[i++];) {
 				agent.tick(this);
 
-				for (var j=0,n=this.grid[agent.gridLocation.x][agent.gridLocation.y].population.length;j<n;j++) {
-					var id = this.grid[agent.gridLocation.x][agent.gridLocation.y].population[j],
-						entityIdx = this.entities.find(this.getId, id);
-					if (entityIdx) {
-						var dist = agent.pos.distFrom(entityIdx.pos);
-						if (entityIdx && dist < entityIdx.radius + agent.radius) {
-							// Nom Noms!
-							switch (entityIdx.type) {
-								case 1:// The sweet meats
-									agent.digestionSignal += 5.0;
-									break;
-								case 2:// The gnar gnar meats
-									agent.digestionSignal += -6.0;
-									break;
-							}
-							this.deleteEntity(entityIdx);
-						} else {
-							ents.push(entityIdx);
-						}
-					}
-				}
-				// This is where the agents learns based on the feedback of their
-				// actions on the environment
-				agent.backward();
 				pts.push(agent.brain.avgRewardWindow.getAverage());
 			}
-//			this.entities = ents;
+
+			for (var i = 0, entity; entity = this.entities[i++];) {
+				entity.tick(this);
+			}
 
 			// If we have less then the number of items allowed throw a random one in
 			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
