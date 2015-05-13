@@ -32,8 +32,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 5,
-		vertCells: 5
+		horizCells: 3,
+		vertCells: 3
 	};
 	var maze = new Maze(mazeOptions);
 
@@ -57,6 +57,13 @@ function start() {
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
+}
+
+function gofast() {
+	window.clearInterval(current_interval_id);
+	current_interval_id = setInterval(tick, 0);
+	skipdraw = false;
+	simspeed = 2;
 }
 
 function solve() {

@@ -62,30 +62,61 @@ var Utility = Utility || {};
 	};
 
 	/**
-	 * Check if there was a collision
-	 * @param {Object} minRes
+	 * A helper function to get check for colliding walls/items
 	 * @param {Vec} v1
 	 * @param {Vec} v2
-	 * @returns {Object}
+	 * @param {Array} walls
+	 * @param {Array} entities
+	 * @returns {Boolean}
 	 */
-	Utility.collisionCheck = function (minRes, v1, v2, v0, radius) {
-		var iResult = Utility.linePointIntersect(v1, v2, v0, radius);
-		if (iResult) {
-			iResult.type = this.type;
-			iResult.id = this.id;
-			iResult.radius = this.radius;
-			iResult.pos = this.pos;
-			if (!minRes) {
-				minRes = iResult;
-			} else {
-				if (iResult.vecX < minRes.vecX) {
-					minRes = iResult;
+	Utility.collisionCheck = function (v1, v2, walls, entities) {
+		var minRes = false;
+
+		// Collide with walls
+		if (walls) {
+			// @TODO Need to check the current cell first so we
+			// don't loop through all the walls
+			for (var i = 0, wall; wall = walls[i++];) {
+				var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
+				if (wResult) {
+					wResult.type = 0; // 0 is wall
+					if (!minRes) {
+						minRes = wResult;
+					} else {
+						// Check if it's closer
+						if (wResult.vecX < minRes.vecX) {
+							// If yes, replace it
+							minRes = wResult;
+						}
+					}
 				}
 			}
 		}
+
+		// Collide with items
+		if (entities) {
+			// @TODO Need to check the current cell first so we
+			// don't check all the items
+			for (var i = 0, entity; entity = entities[i++];) {
+				var iResult = Utility.linePointIntersect(v1, v2, entity.pos, entity.radius);
+				if (iResult) {
+					iResult.type = entity.type;
+					iResult.id = entity.id;
+					iResult.radius = entity.radius;
+					iResult.pos = entity.pos;
+					if (!minRes) {
+						minRes = iResult;
+					} else {
+						if (iResult.vecX < minRes.vecX) {
+							minRes = iResult;
+						}
+					}
+				}
+			}
+		}
+
 		return minRes;
 	};
-
 	/**
 	 * Max and min of an array
 	 * @param {Array} a

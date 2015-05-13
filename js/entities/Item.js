@@ -26,9 +26,9 @@ var Utility = Utility || {};
 		this.fill = '#AAAAAA';
 		this.gridLocation = new Vec(0, 0);
 
-//		this.image = new Image();
-//		this.image.onload = imageLoaded;
-//		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
+		this.image = new Image();
+		this.image.onload = imageLoaded;
+		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
 		this.dragging = false;
 		this.redraw = true;
 
@@ -43,14 +43,6 @@ var Utility = Utility || {};
 	 * @type Item
 	 */
 	Item.prototype = {
-		tick: function (world) {
-			this.age += 1;
-			Utility.getGridLocation(this, world.grid, world.vW, world.vH);
-
-			if (this.age > 5000 && world.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
-				this.cleanUp = true;
-			}
-		},
 		/**
 		 * Determine if a point is inside the shape's bounds
 		 * @param {Vec} v
@@ -84,6 +76,7 @@ var Utility = Utility || {};
 				}
 			}
 		},
+		
 		mouseClick: function(e, mouse) {
 			console.log('Item Click');
 		},

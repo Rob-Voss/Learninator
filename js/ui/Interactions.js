@@ -41,6 +41,7 @@ var Interactions = Interactions || {};
 		 */
 		function eventHandler(event) {
 			event.preventDefault();
+			getMouse(event);
 
 			switch(event.type) {
 				case 'contextmenu':
@@ -122,10 +123,8 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		function mouseDown(event) {
-			getMouse(event);
 			if (_this.entities.length > 0) {
-				for (var i = _this.entities.length - 1; i >= 0; i--) {
-					var entity = _this.entities[i];
+				for (var i = 0, entity; entity = _this.entities[i++];) {
 					if (entity.contains !== undefined &&
 						entity.contains(event, _this.mouse)) {
 						var mySel = entity;
@@ -145,7 +144,26 @@ var Interactions = Interactions || {};
 						}
 					}
 				}
+				for (var i = 0, agent; agent = _this.agents[i++];) {
+					if (agent.contains !== undefined &&
+						agent.contains(event, _this.mouse)) {
+						var mySel = agent;
+						_this.selection = mySel;
+						if (_this.mouse.button === 0) {
+							var offX = _this.mouse.pos.x - _this.selection.pos.x,
+								offY = _this.mouse.pos.y - _this.selection.pos.y;
 
+							_this.dragoff = new Vec(offX, offY);
+							_this.dragging = true;
+							if (_this.selection.mouseClick !== undefined)
+								return _this.selection.mouseClick(event, _this.mouse);
+						} else {
+							_this.dragging = false;
+							if (_this.selection.contextMenu !== undefined)
+								return _this.selection.rightClick(event, _this.mouse);
+						}
+					}
+				}
 				if (_this.selection) {
 					_this.selection = null;
 					_this.dragging = false;
@@ -161,7 +179,6 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		function mouseMove(event) {
-			getMouse(event);
 			if (_this.selection) {
 				if (_this.dragoff.x !== 0 && _this.dragoff.y !== 0) {
 					_this.dragging = true;
@@ -188,7 +205,6 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		function mouseUp(event) {
-			getMouse(event);
 			if (_this.selection && _this.dragging) {
 				// Set the selection new position
 				var offX = _this.mouse.pos.x - _this.dragoff.x,
@@ -214,7 +230,6 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		function mouseClick(event) {
-			getMouse(event);
 			return;
 		};
 	};

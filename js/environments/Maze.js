@@ -5,7 +5,6 @@ var Maze = Maze || {};
 
 	/**
 	 * A maze
-	 * @param {HTMLCanvasElement} canvas
 	 * @param {Object} options
 	 * @returns {undefined}
 	 */

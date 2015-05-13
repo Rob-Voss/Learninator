@@ -19,17 +19,13 @@
 		<script src="js/lib/Array.js"></script>
 		<script src="js/lib/Brain.js"></script>
 		<script src="js/lib/Graph.js"></script>
-		<script src="js/lib/Render.js"></script>
 		<script src="js/lib/Utility.js"></script>
 		<script src="js/lib/Vec.js"></script>
 		<script src="js/lib/Window.js"></script>
 
-		<script src="js/ui/UI.js"></script>
-		<script src="js/ui/Button.js"></script>
-		<script src="js/ui/CanvasContext.js"></script>
 		<script src="js/ui/Interactions.js"></script>
 
-		<script src="js/convnet-min.js"></script>
+		<script src="js/convnet.js"></script>
 		<script src="js/underscore-min.js"></script>
 		<script src="js/learninator.js"></script>
 
@@ -38,18 +34,19 @@
 		<a href="#" onclick="W.pause=false;">Start</a>|
 		<a href="#" onclick="W.pause=true;">Stop</a><br/>
 
-		<a href="#" onclick="$('#ui_canvas').show()">Show UI</a>|
-		<a href="#" onclick="$('#ui_canvas').hide()">Hide UI</a><br/>
-
 		<a href="#" onclick="solve()">Solve</a><br/>
 
-		<a href="#" onclick="W.drawGrid=true">Show Grid</a>|
-		<a href="#" onclick="W.drawGrid=false">Hide Grid</a><br/>
+<!--
+		<a href="#" onclick="$('#ui_canvas').show()">Show UI</a>|
+		<a href="#" onclick="$('#ui_canvas').hide()">Hide UI</a><br/>
+		<a href="#" onclick="//W.drawGrid=true">Show Grid</a>|
+		<a href="#" onclick="//W.drawGrid=false">Hide Grid</a><br/>
+-->
 
 		<canvas id="graph_canvas" width="350" height="150"></canvas><br />
 		<div id="wrap">
-			<canvas id="world_canvas" width="500" height="500"></canvas>
-			<canvas id="ui_canvas" width="600" height="600"></canvas>
+			<canvas id="world_canvas" width="700" height="500"></canvas>
+			<!--<canvas id="ui_canvas" width="600" height="600"></canvas>-->
 		</div>
 <!--
 		<textarea id="memoryBank" style="width:100%; height:200px;"></textarea>

@@ -106,6 +106,15 @@ var Vec = Vec || {};
 			return this;
 		},
 		/**
+		 * Calculates the square distance to the passed vector
+		 * @param {Vec} v The vector to check distance to
+		 * @return {Number} The square distance
+		 */
+		distanceToSquared: function (v) {
+			var dx = this.x - v.x, dy = this.y - v.y;
+			return dx * dx + dy * dy;
+		},
+		/**
 		 * Calculates the distance to the passed vector
 		 * @param {Vec} v The vector to check distance to
 		 * @return {Number} The distance
@@ -123,15 +132,6 @@ var Vec = Vec || {};
 			var dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
 
 			return dist;
-		},
-		/**
-		 * Calculates the square distance to the passed vector
-		 * @param {Vec} v The vector to check distance to
-		 * @return {Number} The square distance
-		 */
-		distanceToSquared: function (v) {
-			var dx = this.x - v.x, dy = this.y - v.y;
-			return dx * dx + dy * dy;
 		},
 		/**
 		 * Divides the x and y components of this vector by a scalar value

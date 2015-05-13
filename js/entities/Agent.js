@@ -34,9 +34,9 @@ var Agent = Agent || {};
 		this.gridLocation = new Vec(0, 0);
 
 		this.id = Utility.guid();
-//		this.image = new Image();
-//		this.image.onload = imageLoaded;
-//		this.image.src = 'img/Agent.png';
+		this.image = new Image();
+		this.image.onload = imageLoaded;
+		this.image.src = 'img/Agent.png';
 		this.dragging = false;
 		this.redraw = false;
 
@@ -124,8 +124,8 @@ var Agent = Agent || {};
 		 * @type {Object}
 		 */
 		var brainOpts = {};
-			brainOpts.numStates = this.numInputs;
-			brainOpts.numActions = this.numActions;
+			brainOpts.num_states = this.numInputs;
+			brainOpts.num_actions = this.numActions;
 			brainOpts.temporal_window = this.temporalWindow;
 			brainOpts.experience_size = 30000;
 			brainOpts.start_learn_threshold = 1000;
@@ -187,14 +187,11 @@ var Agent = Agent || {};
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
-		 * @param {MouseEvent} e
 		 * @param {Vec} v
 		 * @returns {Boolean}
 		 */
-		contains: function (e, v) {
-			var result = this.pos.distFrom(v) < this.radius;
-
-			return result;
+		contains: function (event, mouse) {
+			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
 		/**
 		 * Draw the Agent to the given context
@@ -202,7 +199,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		draw: function (ctx) {
-			var avgR = this.brain.avgRewardWindow.getAverage().toFixed(1);
+			var avgR = this.brain.average_reward_window.getAverage().toFixed(1);
 
 			// Draw agents body
 			if (this.image) {
@@ -261,7 +258,7 @@ var Agent = Agent || {};
 				inputArray[i * 3 + 1] = 1.0;
 				inputArray[i * 3 + 2] = 1.0;
 				if (e.sensedType !== -1) {
-					// sensedType is 0 for wall, 1 for food and 2 for poison, 3 for agent
+					// sensedType is 0 for wall, 1 for food and 2 for poison
 					// lets do a 1-of-k encoding into the input array
 					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
 				}
@@ -277,17 +274,18 @@ var Agent = Agent || {};
 		},
 		/**
 		 * Tick the agent
+		 * @param {Array} cells
+		 * @param {Array} walls
+		 * @param {Array} entities
 		 * @returns {undefined}
 		 */
-		tick: function (world) {
-			Utility.getGridLocation(this, world.grid, world.vW, world.vH);
-
+		tick: function (cells, walls, entities) {
 			this.digested = [];
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
 				// We have a line from agent.pos to p->eyep
-				var result = world.collisionCheck(this.pos, new Vec(X, Y), true, true);
+				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), walls, entities);
 				if (result) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
@@ -331,23 +329,23 @@ var Agent = Agent || {};
 			if (this.angle > 2 * Math.PI)
 				this.angle -= 2 * Math.PI;
 
-			// Handle boundary conditions
-			if (this.pos.x < 0)
-				this.pos.x = 0;
-			if (this.pos.x > world.width)
-				this.pos.x = world.width;
-			if (this.pos.y < 0)
-				this.pos.y = 0;
-			if (this.pos.y > world.height)
-				this.pos.y = world.height;
+			// The agent is trying to move from pos to oPos so we need to check walls
+			var derped = Utility.collisionCheck(this.oldPos, this.pos, walls);
+			if (derped) {
+				var d = this.pos.distFrom(derped.vecI);
+				// The agent derped! Wall collision! Reset their position
+				if (derped && d < this.radius) {
+					this.pos = this.oldPos;
+				}
+			}
 
-			for (var j=0,n=world.grid[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
-				var id = world.grid[this.gridLocation.x][this.gridLocation.y].population[j],
-					entityIdx = world.entities.find(Utility.getId, id);
+			for (var j=0,n=cells[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
+				var id = cells[this.gridLocation.x][this.gridLocation.y].population[j],
+					entityIdx = entities.find(Utility.getId, id);
 				if (entityIdx) {
 					var dist = this.pos.distFrom(entityIdx.pos);
-					if (entityIdx && dist < entityIdx.radius + this.radius) {
-						var result = world.collisionCheck(this.pos, entityIdx.pos, true, false);
+					if (entityIdx && dist < (entityIdx.radius + this.radius)) {
+						var result = Utility.collisionCheck(this.pos, entityIdx.pos, walls);
 						if (!result) {
 							// Nom Noms!
 							switch (entityIdx.type) {
@@ -360,17 +358,12 @@ var Agent = Agent || {};
 								default:
 									this.digestionSignal = this.digestionSignal;
 							}
-							world.deleteEntity(entityIdx);
+							this.digested.push(entityIdx);
+						} else {
+							console.log('Merps');
 						}
 					}
 				}
-			}
-
-			// The agent is trying to move from pos to oPos so we need to check walls
-			var derped = world.collisionCheck(this.oldPos, this.pos, true, false);
-			if (derped) {
-				// The agent derped! Wall collision! Reset their position
-				this.pos = this.oldPos;
 			}
 
 			// This is where the agents learns based on the feedback of their
@@ -409,7 +402,7 @@ var Agent = Agent || {};
 		stopLearnin: function () {
 			this.brain.learning = false;
 		},
-		
+
 		mouseClick: function(e, mouse) {
 			console.log('Agent Click');
 		},
