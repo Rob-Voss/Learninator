@@ -25,6 +25,12 @@ var Utility = Utility || {};
 		return Math.floor(Math.random()*(b-a)+a);
 	};
 
+	/**
+	 * Find an object in the array via id attribute
+	 * @param {Array} ar
+	 * @param {String} id
+	 * @returns {undefined}
+	 */
 	Utility.findObject = function (ar, id) {
 		ar.map(function(el) {
 			return el.id;

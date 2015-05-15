@@ -26,16 +26,21 @@ var Utility = Utility || {};
 		this.fill = '#AAAAAA';
 		this.gridLocation = new Vec(0, 0);
 
-		this.image = new Image();
-		this.image.onload = imageLoaded;
-		this.image.src = (this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png';
+		// create a texture from an image path
+		this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');
+		// create a new Sprite using the texture
+		this.sprite = new PIXI.Sprite(this.texture);
+
+		// center the sprites anchor point
+		this.sprite.anchor.x = 0.5;
+		this.sprite.anchor.y = 0.5;
+
+		// move the sprite t the center of the screen
+		this.sprite.position.x = this.pos.x;
+		this.sprite.position.y = this.pos.y;
+
 		this.dragging = false;
 		this.redraw = true;
-
-		function imageLoaded(e) {
-			var image = e.target;
-			_this.hitArea = new Vec(image.width/2, image.height/2);
-		};
 	};
 
 	/**
@@ -51,32 +56,6 @@ var Utility = Utility || {};
 		contains: function (event, mouse) {
 			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
-		/**
-		 * Draws this item to a given context
-		 * @param {CanvasRenderingContext2D} ctx
-		 * @returns {undefined}
-		 */
-		draw: function (ctx) {
-			if (this.redraw) {
-				ctx.fillStyle = this.fill;
-				ctx.lineWidth = "1";
-				ctx.strokeStyle = "black";
-				if (this.image) {
-					ctx.drawImage(this.image, this.pos.x - this.radius, this.pos.y - this.radius, this.width, this.height);
-				} else {
-					if (this.type === 1)
-						ctx.fillStyle = "rgb(255, 150, 150)";
-					if (this.type === 2)
-						ctx.fillStyle = "rgb(150, 255, 150)";
-					ctx.strokeStyle = "rgb(0,0,0)";
-					ctx.beginPath();
-					ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, true);
-					ctx.fill();
-					ctx.stroke();
-				}
-			}
-		},
-		
 		mouseClick: function(e, mouse) {
 			console.log('Item Click');
 		},

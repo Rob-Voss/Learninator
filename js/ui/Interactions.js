@@ -45,7 +45,7 @@ var Interactions = Interactions || {};
 
 			switch(event.type) {
 				case 'contextmenu':
-					rightClick(event);
+					mouseClick(event);
 					break;
 				case 'click':
 					mouseClick(event);

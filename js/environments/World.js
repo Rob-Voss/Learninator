@@ -18,8 +18,8 @@ var Utility = Utility || {};
 		this.height = this.canvas.height;
 
 		this.maze = options.maze;
-		this.grid = options.maze.graphCells();
-		this.graph = options.maze.graph;
+		this.graph = this.maze.graph;
+		this.grid = this.maze.graph.cells;
 
 		this.vW = this.width / this.graph.width;
 		this.vH = this.height / this.graph.height;
@@ -32,7 +32,7 @@ var Utility = Utility || {};
 		* 1000ms / 60(fps) = 16.7ms (we'll round this to 17)
 		*/
 		this.fps = 60;
-		this.interval = 1000 / this.fps;
+		this.interval = Math.ceil(1000 / this.fps);
 		this.numItems = 30;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar'];
@@ -50,49 +50,41 @@ var Utility = Utility || {};
 		// Apply the Interactions class to the world
 		Interactions.apply(this);
 
-		/**
-		 * Draw the world
-		 * @returns {undefined}
-		 */
-//		function draw() {
-//			setTimeout(function () {
-//				if (!_this.pause) {
-//					_this.tick();
-//					if (_this.redraw || this.clock % 50 === 0) {
-//						_this.clear();
-//						window.requestAnimationFrame(draw);
-//
-//						for (var i = 0, wall; wall = _this.walls[i++];) {
-//							wall.draw(_this.ctx);
-//						}
-//						for (var i = 0, agent; agent = _this.agents[i++];) {
-//							agent.draw(_this.ctx);
-//						}
-//						for (var i = 0, entity; entity = _this.entities[i++];) {
-//							entity.draw(_this.ctx);
-//						}
-//					}
-//				}
-//			}, _this.interval);
-//		}
-//		draw();
+		// create a renderer instance.
+		this.renderer = PIXI.autoDetectRenderer(
+			document.getElementById("world_canvas").width,
+			document.getElementById("world_canvas").height,
+			{view:document.getElementById("world_canvas")}
+		);
+		this.renderer.backgroundColor = 0xFFFFFF;
 
-		setInterval(function () {
+		// add the renderer view element to the DOM
+		document.body.appendChild(this.renderer.view);
+
+		// create an new instance of a pixi stage
+		this.stage = new PIXI.Container();
+
+		requestAnimationFrame(animate);
+
+		function animate() {
 			_this.tick();
-			if (_this.redraw || _this.clock % 50 === 0) {
-				_this.clear();
-
-				for (var i = 0, wall; wall = _this.walls[i++];) {
-					wall.draw(_this.ctx);
-				}
-				for (var i = 0, agent; agent = _this.agents[i++];) {
-					agent.draw(_this.ctx);
-				}
-				for (var i = 0, entity; entity = _this.entities[i++];) {
-					entity.draw(_this.ctx);
-				}
+			for (var i = 0, wall; wall = _this.walls[i++];) {
+				_this.stage.addChild(wall.shape);
 			}
-		}, _this.interval);
+
+			for (var i = 0, agent; agent = _this.agents[i++];) {
+				_this.stage.addChild(agent.sprite);
+			}
+
+			for (var i = 0, entity; entity = _this.entities[i++];) {
+				_this.stage.addChild(entity.sprite);
+			}
+
+			// render the stage
+			_this.renderer.render(_this.stage);
+
+			requestAnimationFrame(animate);
+		}
 	};
 
 	/**
@@ -114,6 +106,14 @@ var Utility = Utility || {};
 			this.redraw = true;
 		},
 		/**
+		 * Randomly create an entity at the Vec
+		 * @param {Vec} v
+		 * @returns {undefined}
+		 */
+		addRandEntity: function(v) {
+			this.addEntity(new Item(Utility.randi(1, 3), v, 20, 20, 10));
+		},
+		/**
 		 * Add an item to the world canvas and set it to redraw
 		 * @param {Item||Agent} entity
 		 * @returns {undefined}
@@ -123,18 +123,11 @@ var Utility = Utility || {};
 				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
 					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
-					this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
+					var idx = this.entities.findIndex(Utility.getId, entity.id);
+					this.entities.splice(idx, 1);
+					this.stage.removeChild(entity.sprite);
 				}
 			}
-			this.redraw = true;
-		},
-		/**
-		 * Randomly create an entity at the Vec
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		addRandEntity: function(v) {
-			this.addEntity(new Item(Utility.randi(1, 3), v, 20, 20, 10));
 		},
 		/**
 		 * Clear the canvas
@@ -162,17 +155,7 @@ var Utility = Utility || {};
 			var pts = [];
 			for (var i = 0, agent; agent = this.agents[i++];) {
 				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
-				agent.tick(this.grid, this.walls, this.entities);
-
-				// Handle boundary conditions
-				if (agent.pos.x < 0)
-					agent.pos.x = 0;
-				if (agent.pos.x > this.width)
-					agent.pos.x = this.width;
-				if (agent.pos.y < 0)
-					agent.pos.y = 0;
-				if (agent.pos.y > this.height)
-					agent.pos.y = this.height;
+				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
 
 				for (var j = 0, entity; entity = agent.digested[j++];) {
 					this.deleteEntity(entity);

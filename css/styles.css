@@ -22,6 +22,7 @@ body {
 
 canvas {
 	border: 1px solid white;
+	color: #FFFFFF;
 }
 
 #ui_canvas {

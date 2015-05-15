@@ -13,6 +13,9 @@ var Agent = Agent || {};
 		this.maxRange = 85; // Max range of the eye's vision
 		this.sensedProximity = 85; // What the eye is seeing. will be set in world.tick()
 		this.sensedType = -1; // what does the eye see?
+
+		this.shape = new PIXI.Graphics();
+		this.shape.lineStyle(1, 0x000000);
 	};
 
 	/**
@@ -34,16 +37,24 @@ var Agent = Agent || {};
 		this.gridLocation = new Vec(0, 0);
 
 		this.id = Utility.guid();
-		this.image = new Image();
-		this.image.onload = imageLoaded;
-		this.image.src = 'img/Agent.png';
+
+		// create a texture from an image path
+		this.texture = PIXI.Texture.fromImage("img/Agent.png");
+		// create a new Sprite using the texture
+		this.sprite = new PIXI.Sprite(this.texture);
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+
+		// center the sprites anchor point
+		this.sprite.anchor.x = 0.5;
+		this.sprite.anchor.y = 0.5;
+
+		// move the sprite t the center of the screen
+		this.sprite.position.x = this.pos.x;
+		this.sprite.position.y = this.pos.y;
+
 		this.dragging = false;
 		this.redraw = false;
-
-		function imageLoaded(e) {
-			var image = e.target;
-			_this.hitArea = new Vec(image.width/2, image.height/2);
-		};
 
 		this.digested = [];
 
@@ -194,58 +205,6 @@ var Agent = Agent || {};
 			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
 		/**
-		 * Draw the Agent to the given context
-		 * @param {CanvasRenderingContext2D} ctx
-		 * @returns {undefined}
-		 */
-		draw: function (ctx) {
-			var avgR = this.brain.average_reward_window.getAverage().toFixed(1);
-
-			// Draw agents body
-			if (this.image) {
-				ctx.drawImage(this.image, this.pos.x - this.radius, this.pos.y - this.radius, this.width, this.height);
-			} else {
-				ctx.fillStyle = "rgb(150,150,150)";
-				ctx.strokeStyle = "rgb(0,0,0)";
-				ctx.beginPath();
-				ctx.arc(this.oldPos.x, this.oldPos.y, this.radius, 0, Math.PI * 2, true);
-				ctx.fill();
-				ctx.fillText(this.name + " (" + avgR + ")", this.oldPos.x + this.radius, this.oldPos.y + this.radius);
-				ctx.stroke();
-			}
-
-			// Draw agents sight
-			for (var ei = 0, eye; eye = this.eyes[ei++];) {
-				switch (eye.sensedType) {
-					// Is it wall or nothing?
-					case -1:case 0:
-						ctx.strokeStyle = "rgb(0,0,0)";
-						break;
-					// It is noms
-					case 1:
-						ctx.strokeStyle = "rgb(255,0,0)";
-						break;
-					// It is gnar gnar
-					case 2:
-						ctx.strokeStyle = "rgb(0,255,0)";
-						break;
-					// Is it another Agent
-					case 3:
-						ctx.strokeStyle = "rgb(100,10,90)";
-						break;
-				}
-
-				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
-					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
-
-				// Draw the agent's line of sights
-				ctx.beginPath();
-				ctx.moveTo(this.oldPos.x, this.oldPos.y);
-				ctx.lineTo(aEyeX, aEyeY);
-				ctx.stroke();
-			}
-		},
-		/**
 		 * In forward pass the agent simply behaves in the environment
 		 * @returns {undefined}
 		 */
@@ -279,8 +238,13 @@ var Agent = Agent || {};
 		 * @param {Array} entities
 		 * @returns {undefined}
 		 */
-		tick: function (cells, walls, entities) {
-			this.digested = [];
+		tick: function (cells, walls, entities, width, height) {
+			var avgR = this.brain.average_reward_window.getAverage().toFixed(1);
+
+			// Apply the outputs of agents on the environment
+			this.oldPos = this.pos; // Back up the old position
+			this.oldAngle = this.angle; // and angle
+
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
@@ -298,10 +262,6 @@ var Agent = Agent || {};
 
 			// Let the agents behave in the world based on their input
 			this.forward();
-
-			// Apply the outputs of agents on the environment
-			this.oldPos = this.pos; // Back up the old position
-			this.oldAngle = this.angle; // and angle
 
 			// Steer the agent according to outputs of wheel velocities
 			var v = new Vec(0, this.radius / 2.0),
@@ -339,6 +299,47 @@ var Agent = Agent || {};
 				}
 			}
 
+			// Handle boundary conditions
+			if (this.pos.x < 2)
+				this.pos.x = 2;
+			if (this.pos.x > width)
+				this.pos.x = width;
+			if (this.pos.y < 2)
+				this.pos.y = 2;
+			if (this.pos.y > height)
+				this.pos.y = height;
+
+			// Draw agents sight
+			for (var ei = 0, eye; eye = this.eyes[ei++];) {
+				switch (eye.sensedType) {
+					// Is it wall or nothing?
+					case -1:case 0:
+						eye.shape.lineStyle(0.5, 0x000000);
+						break;
+					// It is noms
+					case 1:
+						eye.shape.lineStyle(0.5, 0xFF0000);
+						break;
+					// It is gnar gnar
+					case 2:
+						eye.shape.lineStyle(0.5, 0x00FF00);
+						break;
+					// Is it another Agent
+					case 3:
+						eye.shape.lineStyle(0.5, 0xFAFAFA);
+						break;
+				}
+
+				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
+					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
+
+				// Draw the agent's line of sights
+				eye.shape.moveTo(this.oldPos.x, this.oldPos.y);
+				eye.shape.lineTo(aEyeX, aEyeY);
+				eye.shape.endFill();
+			}
+
+			this.digested = [];
 			for (var j=0,n=cells[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
 				var id = cells[this.gridLocation.x][this.gridLocation.y].population[j],
 					entityIdx = entities.find(Utility.getId, id);
@@ -360,7 +361,7 @@ var Agent = Agent || {};
 							}
 							this.digested.push(entityIdx);
 						} else {
-							console.log('Merps');
+
 						}
 					}
 				}
@@ -369,6 +370,9 @@ var Agent = Agent || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
+
+			this.sprite.position.x = this.pos.x;
+			this.sprite.position.y = this.pos.y;
 		},
 		/**
 		 * Load the brains from the field
