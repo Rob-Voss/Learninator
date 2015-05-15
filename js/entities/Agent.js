@@ -241,11 +241,8 @@ var Agent = Agent || {};
 		tick: function (cells, walls, entities, width, height) {
 			var avgR = this.brain.average_reward_window.getAverage().toFixed(1);
 
-			// Apply the outputs of agents on the environment
-			this.oldPos = this.pos; // Back up the old position
-			this.oldAngle = this.angle; // and angle
-
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
+				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
 				// We have a line from agent.pos to p->eyep
@@ -258,6 +255,32 @@ var Agent = Agent || {};
 					eye.sensedProximity = eye.maxRange;
 					eye.sensedType = -1;
 				}
+
+				switch (eye.sensedType) {
+					// Is it wall or nothing?
+					case -1:case 0:
+						eye.shape.lineStyle(0.5, 0x000000);
+						break;
+					// It is noms
+					case 1:
+						eye.shape.lineStyle(0.5, 0xFF0000);
+						break;
+					// It is gnar gnar
+					case 2:
+						eye.shape.lineStyle(0.5, 0x00FF00);
+						break;
+					// Is it another Agent
+					case 3:
+						eye.shape.lineStyle(0.5, 0xFAFAFA);
+						break;
+				}
+
+				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
+					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
+
+				// Draw the agent's line of sights
+				eye.shape.moveTo(this.oldPos.x, this.oldPos.y);
+				eye.shape.lineTo(aEyeX, aEyeY);
 			}
 
 			// Let the agents behave in the world based on their input
@@ -309,35 +332,12 @@ var Agent = Agent || {};
 			if (this.pos.y > height)
 				this.pos.y = height;
 
-			// Draw agents sight
-			for (var ei = 0, eye; eye = this.eyes[ei++];) {
-				switch (eye.sensedType) {
-					// Is it wall or nothing?
-					case -1:case 0:
-						eye.shape.lineStyle(0.5, 0x000000);
-						break;
-					// It is noms
-					case 1:
-						eye.shape.lineStyle(0.5, 0xFF0000);
-						break;
-					// It is gnar gnar
-					case 2:
-						eye.shape.lineStyle(0.5, 0x00FF00);
-						break;
-					// Is it another Agent
-					case 3:
-						eye.shape.lineStyle(0.5, 0xFAFAFA);
-						break;
-				}
+			this.sprite.position.x = this.pos.x;
+			this.sprite.position.y = this.pos.y;
 
-				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
-					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
-
-				// Draw the agent's line of sights
-				eye.shape.moveTo(this.oldPos.x, this.oldPos.y);
-				eye.shape.lineTo(aEyeX, aEyeY);
-				eye.shape.endFill();
-			}
+			// Apply the outputs of agents on the environment
+			this.oldPos = this.pos; // Back up the old position
+			this.oldAngle = this.angle; // and angle
 
 			this.digested = [];
 			for (var j=0,n=cells[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
@@ -370,9 +370,6 @@ var Agent = Agent || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
-
-			this.sprite.position.x = this.pos.x;
-			this.sprite.position.y = this.pos.y;
 		},
 		/**
 		 * Load the brains from the field

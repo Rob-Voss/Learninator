@@ -74,6 +74,10 @@ var Utility = Utility || {};
 
 			for (var i = 0, agent; agent = _this.agents[i++];) {
 				_this.stage.addChild(agent.sprite);
+				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
+					_this.stage.addChild(eye.shape);
+				}
+
 			}
 
 			for (var i = 0, entity; entity = _this.entities[i++];) {

@@ -211,6 +211,8 @@ var Interactions = Interactions || {};
 					offY = _this.mouse.pos.y - _this.dragoff.y;
 
 				_this.selection.pos = new Vec(offX, offY);
+				_this.selection.sprite.position.x = offX;
+				_this.selection.sprite.position.x = offY;
 				_this.dragging = false;
 				_this.redraw = false;
 				if (_this.selection.mouseDrop !== undefined)
