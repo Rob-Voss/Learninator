@@ -148,16 +148,35 @@ var Agent = Agent || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
-		this.brain = new Brain(brainOpts);
+		this.brain = new Worker('js/entities/Brain.js');
 
-		this.init = function (worker) {
-			worker.onmessage = function (event) {
-				var data = JSON.parse(event.data);
-			};
+		this.brain.addEventListener('message', function (e) {
+			var data = e.data;
+			switch (data.cmd) {
+				case 'forward':
+					// Get action from brain
+					_this.actionIndex = data.input;
 
-			worker.postMessage({action: "init", parameters: brainOpts});
-		}
+					//this.actionIndex = this.brain.forward(inputArray);
+					var action = _this.actions[_this.actionIndex];
 
+					// Demultiplex into behavior variables
+					_this.rot1 = action[0] * 1;
+					_this.rot2 = action[1] * 1;
+					console.log('Forward: ' + data.msg);
+					break;
+				case 'backward':
+					console.log('Backward: ' + data.msg);
+					break;
+				case 'getAverage':
+					console.log('getAverage: ' + data.msg);
+					break;
+				default:
+					console.log('Unknown command: ' + data.msg);
+			}
+		}, false);
+
+		this.brain.postMessage({cmd: 'init', options:brainOpts});
 	};
 
 	/**
@@ -193,8 +212,7 @@ var Agent = Agent || {};
 			var reward = proximityReward + forwardReward + digestionReward;
 
 			// pass to brain for learning
-			// TODO: Set up Brain as a Worker
-			this.brain.backward(reward);
+			this.brain.postMessage({cmd:'backward', msg:'Backward', input:reward});
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
@@ -224,12 +242,7 @@ var Agent = Agent || {};
 			}
 
 			// Get action from brain
-			this.actionIndex = this.brain.forward(inputArray);
-			var action = this.actions[this.actionIndex];
-
-			// Demultiplex into behavior variables
-			this.rot1 = action[0] * 1;
-			this.rot2 = action[1] * 1;
+			this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
 		},
 		/**
 		 * Tick the agent
@@ -239,8 +252,6 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		tick: function (cells, walls, entities, width, height) {
-			var avgR = this.brain.average_reward_window.getAverage().toFixed(1);
-
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),

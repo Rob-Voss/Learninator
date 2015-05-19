@@ -1,3 +1,10 @@
+importScripts('../convnet.js');
+importScripts('../lib/Utility.js');
+importScripts('../lib/Window.js');
+
+var convnetjs = convnetjs || {};
+var Utility = Utility || {};
+var Window = Window || {};
 var Brain = Brain || {};
 
 (function (global) {
@@ -24,11 +31,14 @@ var Brain = Brain || {};
 	 * A Brain object does all the magic.
 	 * Over time it receives some inputs and some rewards and its job is to set
 	 * the outputs to maximize the expected reward
-	 * @param {Object} options
 	 * @returns {Brain}
 	 */
-	var Brain = function (options) {
+	Brain = function (options) {
+		var _this = this;
 		var opt = options || {};
+		// experience replay
+		this.experience = [];
+
 		// in number of time steps, of temporal memory
 		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
 		// current x so to have no information from previous time step going into value
@@ -122,7 +132,7 @@ var Brain = Brain || {};
 					layer_defs.push({type: 'fc', num_neurons: hl[k], activation: 'relu'}); // relu by default
 				}
 			}
-			layer_defs.push({type: 'regression', num_neurons: num_actions}); // value function output
+			layer_defs.push({type: 'regression', num_neurons: this.num_actions}); // value function output
 		}
 		this.value_net = new convnetjs.Net();
 		this.value_net.makeLayers(layer_defs);
@@ -134,9 +144,6 @@ var Brain = Brain || {};
 		}
 		this.tdtrainer = new convnetjs.SGDTrainer(this.value_net, tdtrainer_options);
 
-		// experience replay
-		this.experience = [];
-
 		// various housekeeping variables
 		this.age = 0; // incremented every backward()
 		this.forward_passes = 0; // incremented every forward()
@@ -146,16 +153,14 @@ var Brain = Brain || {};
 		this.average_reward_window = new Window(1000, 10);
 		this.average_loss_window = new Window(1000, 10);
 		this.learning = true;
-	};
 
-	Brain.prototype = {
 		/**
 		 * Returns a random action
 		 * In the future we can set some actions to be more or less likely
 		 * at "rest"/default state.
 		 * @returns {Number}
 		 */
-		random_action: function () {
+		this.random_action = function () {
 			if (this.random_action_distribution.length === 0) {
 				return Utility.randi(0, this.num_actions);
 			} else {
@@ -169,14 +174,15 @@ var Brain = Brain || {};
 					}
 				}
 			}
-		},
+		}
+
 		/**
 		 * Compute the value of doing any action in this state and return the
 		 * argmax action and its value
 		 * @param {type} s
 		 * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
 		 */
-		policy: function (s) {
+		this.policy = function (s) {
 			var svol = new convnetjs.Vol(1, 1, this.net_inputs);
 			svol.w = s;
 
@@ -190,14 +196,15 @@ var Brain = Brain || {};
 				}
 			}
 			return {action: maxk, value: maxval};
-		},
+		}
+
 		/**
 		 * Return s = (x,a,x,a,x,a,xt) state vector.
 		 * It's a concatenation of last window_size (x,a) pairs and current state x
 		 * @param {type} xt
 		 * @returns {Array|@exp;Array}
 		 */
-		getNetInput: function (xt) {
+		this.getNetInput = function (xt) {
 			var w = [];
 			w = w.concat(xt); // start with current state
 			// and now go backwards and append states and actions from history temporal_window times
@@ -215,13 +222,14 @@ var Brain = Brain || {};
 				w = w.concat(action1ofk);
 			}
 			return w;
-		},
+		}
+
 		/**
 		 * Compute forward (behavior) pass given the input neuron signals from body
 		 * @param {Array} input_array
 		 * @returns {Number|maxact.action}
 		 */
-		forward: function (input_array) {
+		this.forward = function (input_array) {
 			this.forward_passes += 1;
 			this.last_input_array = input_array; // back this up
 
@@ -261,13 +269,14 @@ var Brain = Brain || {};
 			this.action_window.push(action);
 
 			return action;
-		},
+		}
+
 		/**
 		 *
 		 * @param {Number} reward
 		 * @returns {undefined}
 		 */
-		backward: function (reward) {
+		this.backward = function (reward) {
 			this.latest_reward = reward;
 			this.average_reward_window.add(reward);
 			this.reward_window.shift();
@@ -319,8 +328,9 @@ var Brain = Brain || {};
 				avcost = avcost / this.tdtrainer.batch_size;
 				this.average_loss_window.add(avcost);
 			}
-		},
-		visSelf: function (element) {
+		}
+
+		this.visSelf = function (element) {
 			element.innerHTML = ''; // erase element first
 
 			// element is a DOM element that this function fills with brain-related information
@@ -338,31 +348,39 @@ var Brain = Brain || {};
 		}
 	};
 
-	function postData() {
-		var agents = Array();
-		for (var id in _world.agents) {
-			var agent = {};
-			for (var attr in _world.agents[id]) {
-				if (attr !== "brain") {
-					agent[attr] = _world.agents[id][attr];
-				}
-			}
-			agents.push(agent);
-		}
+	var _Brain;
 
-		var world = {
-			agents: agents,
-			food: _world.food
-		};
-		self.postMessage(JSON.stringify({world: world, agent: _selectedAgent}));
-	};
-
-	self.onmessage = function (event) {
-		var data = event.data;
-		if (data.action === "init") {
-			init(data.parameters);
-		} else if (data.action === "select") {
-			selectAgent(data.x, data.y);
+	self.onmessage = function (e) {
+		var data = e.data;
+		switch (data.cmd) {
+			case 'init':
+				_Brain = new Brain(data.option);
+				self.postMessage({cmd:'init',msg:'complete'});
+				console.log('Init: ' + data.msg);
+				break;
+			case 'forward':
+				var actionIndex = _Brain.forward(data.input);
+				self.postMessage({cmd:'forward',msg:'complete',input:actionIndex});
+				console.log('Forward: ' + data.msg);
+				break;
+			case 'backward':
+				_Brain.backward(data.input);
+				self.postMessage({cmd:'backward',msg:'complete'});
+				console.log('Backward: ' + data.msg);
+				break;
+			case 'getAverage':
+				var avg = _Brain.average_reward_window.getAverage().toFixed(1);
+				self.postMessage({cmd:'getAverage',msg:'complete',input:avg});
+				console.log('getAverage: ' + data.msg);
+				break;
+			case 'stop':
+				self.postMessage({cmd:'stop',msg:'complete'});
+				console.log('WORKER STOPPED: ' + data.msg);
+				close(); // Terminates the worker.
+				break;
+			default:
+				self.postMessage({cmd:'error',msg:'Unknown command: ' + data.cmd});
+				console.log('Unknown command: ' + data.msg);
 		}
 	};
 

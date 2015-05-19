@@ -2,6 +2,7 @@ var World = World || {};
 var Agent = Agent || {};
 var Interactions = Interactions || {};
 var Utility = Utility || {};
+var PIXI = PIXI || {};
 
 (function (global) {
 	"use strict";
@@ -54,7 +55,8 @@ var Utility = Utility || {};
 		this.renderer = PIXI.autoDetectRenderer(
 			document.getElementById("world_canvas").width,
 			document.getElementById("world_canvas").height,
-			{view:document.getElementById("world_canvas")}
+			{view:document.getElementById("world_canvas")},
+			true
 		);
 		this.renderer.backgroundColor = 0xFFFFFF;
 
@@ -63,6 +65,9 @@ var Utility = Utility || {};
 
 		// create an new instance of a pixi stage
 		this.stage = new PIXI.Container();
+
+//		var menu = new Menu();
+//		this.stage.addChild(menu);
 
 		requestAnimationFrame(animate);
 
@@ -77,7 +82,6 @@ var Utility = Utility || {};
 				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
 					_this.stage.addChild(eye.shape);
 				}
-
 			}
 
 			for (var i = 0, entity; entity = _this.entities[i++];) {
@@ -165,7 +169,7 @@ var Utility = Utility || {};
 					this.deleteEntity(entity);
 				}
 
-				pts.push(agent.brain.average_reward_window.getAverage());
+//				pts.push(agent.brain.average_reward_window.getAverage());
 			}
 
 			for (var i = 0, entity; entity = this.entities[i++];) {

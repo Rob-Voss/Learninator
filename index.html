@@ -5,9 +5,18 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<title>Learninator</title>
 
+		<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
 		<link rel="stylesheet" type="text/css" href="css/styles.css">
 
-		<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+		<style>
+		/* following three (cascaded) are equivalent to above three meta viewport statements */
+		/* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
+		/* see http://dev.w3.org/csswg/css-device-adapt/ */
+			@-ms-viewport { width: 100vw ; zoom: 100% ; }                           @viewport { width: 100vw ; zoom: 100% ; }
+			@-ms-viewport { user-zoom: fixed ; }                                    @viewport { user-zoom: fixed ; }
+			/*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
+		</style>
 
 		<script src="js/entities/Agent.js"></script>
 		<script src="js/entities/Item.js"></script>
@@ -17,15 +26,14 @@
 		<script src="js/environments/World.js"></script>
 
 		<script src="js/lib/Array.js"></script>
-		<script src="js/lib/Brain.js"></script>
 		<script src="js/lib/Graph.js"></script>
 		<script src="js/lib/Utility.js"></script>
 		<script src="js/lib/Vec.js"></script>
-		<script src="js/lib/Window.js"></script>
+		<script src="js/lib/pixi.js"></script>
 
 		<script src="js/ui/Interactions.js"></script>
+		<script src="js/ui/Menu.js"></script>
 
-		<script src="js/convnet.js"></script>
 		<script src="js/underscore-min.js"></script>
 		<script src="js/learninator.js"></script>
 
@@ -33,25 +41,12 @@
 	<body onload="start();">
 		<a href="#" onclick="W.pause=false;">Start</a>|
 		<a href="#" onclick="W.pause=true;">Stop</a><br/>
-
 		<a href="#" onclick="solve()">Solve</a><br/>
-
-<!--
-		<a href="#" onclick="$('#ui_canvas').show()">Show UI</a>|
-		<a href="#" onclick="$('#ui_canvas').hide()">Hide UI</a><br/>
-		<a href="#" onclick="//W.drawGrid=true">Show Grid</a>|
-		<a href="#" onclick="//W.drawGrid=false">Hide Grid</a><br/>
--->
 
 		<canvas id="graph_canvas" width="350" height="150"></canvas><br />
 		<div id="wrap">
 			<canvas id="world_canvas" width="700" height="500"></canvas>
 			<!--<canvas id="ui_canvas" width="600" height="600"></canvas>-->
 		</div>
-<!--
-		<textarea id="memoryBank" style="width:100%; height:200px;"></textarea>
-		<textarea id="brainSpecs" style="width:100%; height:200px;" ></textarea>
--->
-		<script src="js/lib/pixi.js"></script>
 	</body>
 </html>
