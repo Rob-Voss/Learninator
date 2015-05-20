@@ -29,8 +29,11 @@ var Graph = Graph || {};
 		this.miny = 9999;
 
 		if (legend !== null) {
-			this.pts = [];
 			this.numlines = legend.length;
+			this.pts = new Array(this.numlines);
+			for (var i = 0; i < this.numlines; i++) {
+				this.pts[i] = [];
+			}
 			this.legend = legend;
 			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
 		} else {
@@ -58,7 +61,7 @@ var Graph = Graph || {};
 		 * @param {Number} yl
 		 * @returns {undefined}
 		 */
-		addPoint: function(step, yl) {
+		addPoint: function(step, idx, yl) {
 			// in ms
 			var time = new Date().getTime(),
 				n = yl.length;
@@ -80,7 +83,7 @@ var Graph = Graph || {};
 					time: time,
 					yl: yl
 				};
-			this.pts.push(point);
+			this.pts[idx].push(point);
 			if (step > this.step_horizon)
 				this.step_horizon *= 2;
 		},
@@ -120,14 +123,15 @@ var Graph = Graph || {};
 				ctx.fillText(f2t((ng - i) / ng * (this.maxy - this.miny) + this.miny), 0, ypos);
 			}
 			ctx.stroke();
-
-			var N = this.pts.length;
-			if (N < 2)
-				return;
+			for (var k = 0; k < this.numlines; k++) {
+				var N = this.pts[k].length;
+				if (N < 2)
+					return;
+			}
 
 			// Draw legend
 			for (var k = 0; k < this.numlines; k++) {
-				ctx.fillStyle = this.styles[k % this.styles.length];
+				ctx.fillStyle = this.styles[k];
 				ctx.fillText(this.legend[k].name, W - pad - 100, pad + 20 + k * 16);
 			}
 			ctx.fillStyle = "black";
@@ -140,12 +144,12 @@ var Graph = Graph || {};
 			};
 
 			for (var k = 0; k < this.numlines; k++) {
-				ctx.strokeStyle = this.styles[k % this.styles.length];
+				ctx.strokeStyle = this.styles[k];
 				ctx.beginPath();
 				for (var i = 0; i < N; i++) {
 					// Draw line from i-1 to i
-					var p = this.pts[i],
-						pt = t(p.step, p.yl[k], this);
+					var p = this.pts[k][i],
+						pt = t(p.step, p.yl[0], this);
 					if (i === 0) {
 						ctx.moveTo(pt.tx, pt.ty);
 					} else {

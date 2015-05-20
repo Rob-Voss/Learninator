@@ -98,6 +98,7 @@ var Agent = Agent || {};
 
 		this.rewardBonus = 0.0;
 		this.digestionSignal = 0.0;
+		this.pts = [];
 
 		// Agent outputs on the world
 		this.rot1 = 0.0; // Rotation speed of 1st wheel
@@ -141,7 +142,7 @@ var Agent = Agent || {};
 			brainOpts.experience_size = 30000;
 			brainOpts.start_learn_threshold = 1000;
 			brainOpts.gamma = 0.7;
-			brainOpts.learning_steps_total = 200000;
+			brainOpts.learning_steps_total = 100000;
 			brainOpts.learning_steps_burnin = 3000;
 			brainOpts.epsilon_min = 0.05;
 			brainOpts.epsilon_test_time = 0.05;
@@ -153,6 +154,9 @@ var Agent = Agent || {};
 		this.brain.addEventListener('message', function (e) {
 			var data = e.data;
 			switch (data.cmd) {
+				case 'init':
+					console.log('Init: ' + data.msg);
+				break;
 				case 'forward':
 					// Get action from brain
 					_this.actionIndex = data.input;
@@ -163,13 +167,13 @@ var Agent = Agent || {};
 					// Demultiplex into behavior variables
 					_this.rot1 = action[0] * 1;
 					_this.rot2 = action[1] * 1;
-					console.log('Forward: ' + data.msg);
 					break;
 				case 'backward':
-					console.log('Backward: ' + data.msg);
+
 					break;
 				case 'getAverage':
-					console.log('getAverage: ' + data.msg);
+					_this.pts = [];
+					_this.pts.push(data.input);
 					break;
 				default:
 					console.log('Unknown command: ' + data.msg);
@@ -252,6 +256,7 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		tick: function (cells, walls, entities, width, height) {
+			var avgR = this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),

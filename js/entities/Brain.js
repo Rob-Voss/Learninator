@@ -1,4 +1,4 @@
-importScripts('../convnet.js');
+importScripts('../convnet-min.js');
 importScripts('../lib/Utility.js');
 importScripts('../lib/Window.js');
 
@@ -74,7 +74,7 @@ var Brain = Brain || {};
 		if (typeof opt.random_action_distribution !== 'undefined') {
 			// this better sum to 1 by the way, and be of length this.num_actions
 			this.random_action_distribution = opt.random_action_distribution;
-			if (this.random_action_distribution.length !== num_actions) {
+			if (this.random_action_distribution.length !== this.num_actions) {
 				console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
 			}
 			var a = this.random_action_distribution;
@@ -128,8 +128,8 @@ var Brain = Brain || {};
 			if (typeof opt.hidden_layer_sizes !== 'undefined') {
 				// allow user to specify this via the option, for convenience
 				var hl = opt.hidden_layer_sizes;
-				for (var k = 0; k < hl.length; k++) {
-					layer_defs.push({type: 'fc', num_neurons: hl[k], activation: 'relu'}); // relu by default
+				for (var q = 0; q < hl.length; q++) {
+					layer_defs.push({type: 'fc', num_neurons: hl[q], activation: 'relu'}); // relu by default
 				}
 			}
 			layer_defs.push({type: 'regression', num_neurons: this.num_actions}); // value function output
@@ -174,7 +174,7 @@ var Brain = Brain || {};
 					}
 				}
 			}
-		}
+		};
 
 		/**
 		 * Compute the value of doing any action in this state and return the
@@ -196,7 +196,7 @@ var Brain = Brain || {};
 				}
 			}
 			return {action: maxk, value: maxval};
-		}
+		};
 
 		/**
 		 * Return s = (x,a,x,a,x,a,xt) state vector.
@@ -222,7 +222,7 @@ var Brain = Brain || {};
 				w = w.concat(action1ofk);
 			}
 			return w;
-		}
+		};
 
 		/**
 		 * Compute forward (behavior) pass given the input neuron signals from body
@@ -269,7 +269,7 @@ var Brain = Brain || {};
 			this.action_window.push(action);
 
 			return action;
-		}
+		};
 
 		/**
 		 *
@@ -313,13 +313,13 @@ var Brain = Brain || {};
 				var avcost = 0.0;
 				for (var k = 0; k < this.tdtrainer.batch_size; k++) {
 					var re = Utility.randi(0, this.experience.length),
-						e = this.experience[re],
+						ex = this.experience[re],
 						x = new convnetjs.Vol(1, 1, this.net_inputs);
-					x.w = e.state0;
-					var maxact = this.policy(e.state1),
-						r = e.reward0 + this.gamma * maxact.value,
+					x.w = ex.state0;
+					var maxact = this.policy(ex.state1),
+						r = ex.reward0 + this.gamma * maxact.value,
 						yStruct = {
-							dim: e.action0,
+							dim: ex.action0,
 							val: r
 						},
 						loss = this.tdtrainer.train(x, yStruct);
@@ -328,7 +328,7 @@ var Brain = Brain || {};
 				avcost = avcost / this.tdtrainer.batch_size;
 				this.average_loss_window.add(avcost);
 			}
-		}
+		};
 
 		this.visSelf = function (element) {
 			element.innerHTML = ''; // erase element first
@@ -339,13 +339,13 @@ var Brain = Brain || {};
 				desc = document.createElement('div'),
 				t = '<br>';
 			t += 'Age: ' + this.age + '<br>';
-			t += 'Avg Loss: ' + this.avgLossWindow.getAverage() + '<br />';
-			t += 'Avg Reward: ' + this.avgRewardWindow.getAverage() + '<br />';
+			t += 'Avg Loss: ' + this.average_loss_window.getAverage() + '<br />';
+			t += 'Avg Reward: ' + this.average_reward_window.getAverage() + '<br />';
 			desc.innerHTML = t;
 			brainvis.appendChild(desc);
 
 			element.appendChild(brainvis);
-		}
+		};
 	};
 
 	var _Brain;
@@ -356,31 +356,25 @@ var Brain = Brain || {};
 			case 'init':
 				_Brain = new Brain(data.option);
 				self.postMessage({cmd:'init',msg:'complete'});
-				console.log('Init: ' + data.msg);
 				break;
 			case 'forward':
 				var actionIndex = _Brain.forward(data.input);
 				self.postMessage({cmd:'forward',msg:'complete',input:actionIndex});
-				console.log('Forward: ' + data.msg);
 				break;
 			case 'backward':
 				_Brain.backward(data.input);
 				self.postMessage({cmd:'backward',msg:'complete'});
-				console.log('Backward: ' + data.msg);
 				break;
 			case 'getAverage':
 				var avg = _Brain.average_reward_window.getAverage().toFixed(1);
 				self.postMessage({cmd:'getAverage',msg:'complete',input:avg});
-				console.log('getAverage: ' + data.msg);
 				break;
 			case 'stop':
 				self.postMessage({cmd:'stop',msg:'complete'});
-				console.log('WORKER STOPPED: ' + data.msg);
 				close(); // Terminates the worker.
 				break;
 			default:
 				self.postMessage({cmd:'error',msg:'Unknown command: ' + data.cmd});
-				console.log('Unknown command: ' + data.msg);
 		}
 	};
 

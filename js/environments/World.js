@@ -33,7 +33,7 @@ var PIXI = PIXI || {};
 		* 1000ms / 60(fps) = 16.7ms (we'll round this to 17)
 		*/
 		this.fps = 60;
-		this.interval = Math.ceil(1000 / this.fps);
+		this.interval = 1000 / this.fps;
 		this.numItems = 30;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar'];
@@ -52,12 +52,7 @@ var PIXI = PIXI || {};
 		Interactions.apply(this);
 
 		// create a renderer instance.
-		this.renderer = PIXI.autoDetectRenderer(
-			document.getElementById("world_canvas").width,
-			document.getElementById("world_canvas").height,
-			{view:document.getElementById("world_canvas")},
-			true
-		);
+		this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view:this.canvas}, true);
 		this.renderer.backgroundColor = 0xFFFFFF;
 
 		// add the renderer view element to the DOM
@@ -160,8 +155,8 @@ var PIXI = PIXI || {};
 			// Tick ALL OF teh items!
 			this.redraw = true;
 
-			var pts = [];
-			for (var i = 0, agent; agent = this.agents[i++];) {
+			for (var i = 0; i < this.agents.length; i++) {
+				var agent = this.agents[i];
 				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
 				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
 
@@ -169,7 +164,11 @@ var PIXI = PIXI || {};
 					this.deleteEntity(entity);
 				}
 
-//				pts.push(agent.brain.average_reward_window.getAverage());
+				// Throw some points on a Graph
+				if (this.clock % 100 === 0) {
+					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
+					this.rewardGraph.drawPoints();
+				}
 			}
 
 			for (var i = 0, entity; entity = this.entities[i++];) {
@@ -185,12 +184,6 @@ var PIXI = PIXI || {};
 				var x = Utility.randf(10, this.width - 10),
 					y = Utility.randf(10, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
-			}
-
-			// Throw some points on a Graph
-			if (this.clock % 100 === 0) {
-				this.rewardGraph.addPoint(this.clock / 100, pts);
-				this.rewardGraph.drawPoints();
 			}
 		},
 		/**

@@ -63,9 +63,9 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 		// x0,a0,x1,a1,x2,a2,...xt
 		// this variable controls the size of that temporal window. Actions are
 		// encoded as 1-of-k hot vectors
-		this.net_inputs = num_states * this.temporal_window + num_actions * this.temporal_window + num_states;
 		this.num_states = num_states;
 		this.num_actions = num_actions;
+		this.net_inputs = this.num_states * this.temporal_window + this.num_actions * this.temporal_window + this.num_states;
 		this.window_size = Math.max(this.temporal_window, 2); // must be at least 2, but if we want more context even more
 		this.state_window = new Array(this.window_size);
 		this.action_window = new Array(this.window_size);
@@ -104,7 +104,7 @@ var deepqlearn = deepqlearn || {REVISION: 'ALPHA'};
 					layer_defs.push({type: 'fc', num_neurons: hl[k], activation: 'relu'}); // relu by default
 				}
 			}
-			layer_defs.push({type: 'regression', num_neurons: num_actions}); // value function output
+			layer_defs.push({type: 'regression', num_neurons: this.num_actions}); // value function output
 		}
 		this.value_net = new convnetjs.Net();
 		this.value_net.makeLayers(layer_defs);

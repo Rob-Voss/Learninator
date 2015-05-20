@@ -41,12 +41,12 @@ function start() {
 		canvas: worldCanvas,
 		maze: maze,
 		walls: maze.cells,
-		agents: [new Agent()],
+		agents: [new Agent(), new Agent()],
 		horizCells: mazeOptions.horizCells,
 		vertCells: mazeOptions.vertCells
 	};
 	W = new World(worldOptions);
-	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent'}]);
+	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent1'},{'name':'Agent2'}]);
 
 //	var uiOptions = {
 //		canvas: uiCanvas,
@@ -57,13 +57,6 @@ function start() {
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
-}
-
-function gofast() {
-	window.clearInterval(current_interval_id);
-	current_interval_id = setInterval(tick, 0);
-	skipdraw = false;
-	simspeed = 2;
 }
 
 function solve() {

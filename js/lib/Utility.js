@@ -3,8 +3,6 @@ var Utility = Utility || {};
 (function (global) {
 	"use strict";
 
-	var Utility = {};
-
 	/**
 	 * Return a random Float within the range of a-b
 	 * @param {Float} a
