@@ -13,12 +13,15 @@
 		/* following three (cascaded) are equivalent to above three meta viewport statements */
 		/* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
 		/* see http://dev.w3.org/csswg/css-device-adapt/ */
-			@-ms-viewport { width: 100vw ; zoom: 100% ; }                           @viewport { width: 100vw ; zoom: 100% ; }
-			@-ms-viewport { user-zoom: fixed ; }                                    @viewport { user-zoom: fixed ; }
+			@-ms-viewport { width: 100vw ; zoom: 100% ; }
+			@viewport { width: 100vw ; zoom: 100% ; }
+			@-ms-viewport { user-zoom: fixed ; }
+			@viewport { user-zoom: fixed ; }
 			/*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
 		</style>
 
 		<script src="js/entities/Agent.js"></script>
+		<script src="js/entities/Brain.js"></script>
 		<script src="js/entities/Item.js"></script>
 		<script src="js/entities/Wall.js"></script>
 
@@ -29,7 +32,9 @@
 		<script src="js/lib/Graph.js"></script>
 		<script src="js/lib/Utility.js"></script>
 		<script src="js/lib/Vec.js"></script>
+		<script src="js/lib/Window.js"></script>
 		<script src="js/lib/pixi.min.js"></script>
+		<script src="js/convnet.min.js"></script>
 
 		<script src="js/ui/Interactions.js"></script>
 		<script src="js/ui/Menu.js"></script>

@@ -105,6 +105,7 @@ var Agent = Agent || {};
 		this.rot2 = 0.0; // Rotation speed of 2nd wheel
 
 		this.previousActionix = -1;
+		this.worker = false;
 
 		/**
 		 * The value function network computes a value of taking any of the possible actions
@@ -149,37 +150,41 @@ var Agent = Agent || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
-		this.brain = new Worker('js/entities/Brain.js');
-		this.brain.addEventListener('message', function (e) {
-			var data = e.data;
-			switch (data.cmd) {
-				case 'init':
-					_this.loadMemory();
-				break;
-				case 'forward':
-					// Get action from brain
-					_this.actionIndex = data.input;
-
-					//this.actionIndex = this.brain.forward(inputArray);
-					var action = _this.actions[_this.actionIndex];
-
-					// Demultiplex into behavior variables
-					_this.rot1 = action[0] * 1;
-					_this.rot2 = action[1] * 1;
+		if (this.worker) {
+			this.brain = new Worker('js/entities/Brain.js');
+			this.brain.addEventListener('message', function (e) {
+				var data = e.data;
+				switch (data.cmd) {
+					case 'init':
+						_this.loadMemory();
 					break;
-				case 'backward':
+					case 'forward':
+						// Get action from brain
+						_this.actionIndex = data.input;
 
-					break;
-				case 'getAverage':
-					_this.pts = [];
-					_this.pts.push(data.input);
-					break;
-				default:
-					console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-			}
-		}, false);
+						//this.actionIndex = this.brain.forward(inputArray);
+						var action = _this.actions[_this.actionIndex];
 
-		this.brain.postMessage({cmd:'init', msg:'Start', input:brainOpts});
+						// Demultiplex into behavior variables
+						_this.rot1 = action[0] * 1;
+						_this.rot2 = action[1] * 1;
+						break;
+					case 'backward':
+
+						break;
+					case 'getAverage':
+						_this.pts = [];
+						_this.pts.push(data.input);
+						break;
+					default:
+						console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+				}
+			}, false);
+
+			this.brain.postMessage({cmd:'init', msg:'Start', input:brainOpts});
+		} else {
+			this.brain = new Brain(brainOpts);
+		}
 	};
 
 	/**
@@ -213,9 +218,12 @@ var Agent = Agent || {};
 			this.digestionSignal = 0.0;
 
 			var reward = proximityReward + forwardReward + digestionReward;
-
-			// pass to brain for learning
-			this.brain.postMessage({cmd:'backward', msg:'Backward', input:reward});
+			if (this.worker) {
+				// pass to brain for learning
+				this.brain.postMessage({cmd:'backward', msg:'Backward', input:reward});
+			} else {
+				this.brain.backward(reward);
+			}
 		},
 		/**
 		 * Determine if a point is inside the shape's bounds
@@ -244,9 +252,20 @@ var Agent = Agent || {};
 				}
 			}
 
-			// Get action from brain
-			this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
-			this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
+			if (this.worker) {
+				// Get action from brain
+				this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
+			} else {
+				// Get action from brain
+				this.actionIndex = this.brain.forward();
+
+				//this.actionIndex = this.brain.forward(inputArray);
+				var action = this.actions[this.actionIndex];
+
+				// Demultiplex into behavior variables
+				this.rot1 = action[0] * 1;
+				this.rot2 = action[1] * 1;
+			}
 		},
 		/**
 		 * Tick the agent
@@ -256,6 +275,9 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		tick: function (cells, walls, entities, width, height) {
+			this.oldPos = this.pos; // Back up the old position
+			this.oldAngle = this.angle; // and angle
+
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
@@ -351,9 +373,6 @@ var Agent = Agent || {};
 			this.sprite.position.y = this.pos.y;
 
 			// Apply the outputs of agents on the environment
-			this.oldPos = this.pos; // Back up the old position
-			this.oldAngle = this.angle; // and angle
-
 			this.digested = [];
 			for (var j=0,n=cells[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
 				var id = cells[this.gridLocation.x][this.gridLocation.y].population[j],
@@ -375,8 +394,6 @@ var Agent = Agent || {};
 									this.digestionSignal = this.digestionSignal;
 							}
 							this.digested.push(entityIdx);
-						} else {
-
 						}
 					}
 				}
@@ -385,6 +402,11 @@ var Agent = Agent || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
+			if (this.worker) {
+				this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
+			} else {
+				this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
+			}
 		},
 		/**
 		 * Load the brains from the field

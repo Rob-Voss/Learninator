@@ -157,18 +157,14 @@ var PIXI = PIXI || {};
 
 			for (var i = 0; i < this.agents.length; i++) {
 				var agent = this.agents[i];
+				agent.pts = [];
 				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
 				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
 
 				for (var j = 0, entity; entity = agent.digested[j++];) {
 					this.deleteEntity(entity);
 				}
-
-				// Throw some points on a Graph
-				if (this.clock % 100 === 0) {
-					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
-					this.rewardGraph.drawPoints();
-				}
+				agent.pts.push(agent.brain.average_reward_window.getAverage());
 			}
 
 			for (var i = 0, entity; entity = this.entities[i++];) {
@@ -184,6 +180,14 @@ var PIXI = PIXI || {};
 				var x = Utility.randf(10, this.width - 10),
 					y = Utility.randf(10, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
+			}
+
+			for (var i = 0; i < this.agents.length; i++) {
+				// Throw some points on a Graph
+				if (this.clock % 100 === 0) {
+					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
+					this.rewardGraph.drawPoints();
+				}
 			}
 		},
 		/**

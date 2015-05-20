@@ -1,7 +1,3 @@
-importScripts('../convnet.js');
-importScripts('../lib/Utility.js');
-importScripts('../lib/Window.js');
-
 var convnetjs = convnetjs || {};
 var Utility = Utility || {};
 var Window = Window || {};
@@ -31,6 +27,7 @@ var Brain = Brain || {};
 	 * A Brain object does all the magic.
 	 * Over time it receives some inputs and some rewards and its job is to set
 	 * the outputs to maximize the expected reward
+	 * @param {Object} options
 	 * @returns {Brain}
 	 */
 	Brain = function (options) {
@@ -353,6 +350,9 @@ var Brain = Brain || {};
 		var data = e.data;
 		switch (data.cmd) {
 			case 'init':
+				importScripts('../convnet.js');
+				importScripts('../lib/Utility.js');
+				importScripts('../lib/Window.js');
 				_Brain = new Brain(data.option);
 				self.postMessage({cmd:'init',msg:'complete'});
 				break;
