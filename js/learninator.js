@@ -32,8 +32,8 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 3,
-		vertCells: 3
+		horizCells: 2,
+		vertCells: 2
 	};
 	var maze = new Maze(mazeOptions);
 
@@ -41,12 +41,12 @@ function start() {
 		canvas: worldCanvas,
 		maze: maze,
 		walls: maze.cells,
-		agents: [new Agent(), new Agent()],
+		agents: [new Agent()],
 		horizCells: mazeOptions.horizCells,
 		vertCells: mazeOptions.vertCells
 	};
 	W = new World(worldOptions);
-	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent1'},{'name':'Agent2'}]);
+	W.rewardGraph = new Graph(graphCanvas, [{'name':'Agent1'}]);
 
 //	var uiOptions = {
 //		canvas: uiCanvas,

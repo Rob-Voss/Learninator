@@ -1,4 +1,4 @@
-importScripts('../convnet-min.js');
+importScripts('../convnet.js');
 importScripts('../lib/Utility.js');
 importScripts('../lib/Window.js');
 
@@ -34,7 +34,6 @@ var Brain = Brain || {};
 	 * @returns {Brain}
 	 */
 	Brain = function (options) {
-		var _this = this;
 		var opt = options || {};
 		// experience replay
 		this.experience = [];
@@ -356,6 +355,11 @@ var Brain = Brain || {};
 			case 'init':
 				_Brain = new Brain(data.option);
 				self.postMessage({cmd:'init',msg:'complete'});
+				break;
+			case 'load':
+				_Brain.value_net.fromJSON(data.input);
+				_Brain.learning = false;
+				self.postMessage({cmd:'load',msg:'complete'});
 				break;
 			case 'forward':
 				var actionIndex = _Brain.forward(data.input);

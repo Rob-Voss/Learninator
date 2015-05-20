@@ -142,7 +142,7 @@ var Agent = Agent || {};
 			brainOpts.experience_size = 30000;
 			brainOpts.start_learn_threshold = 1000;
 			brainOpts.gamma = 0.7;
-			brainOpts.learning_steps_total = 100000;
+			brainOpts.learning_steps_total = 200000;
 			brainOpts.learning_steps_burnin = 3000;
 			brainOpts.epsilon_min = 0.05;
 			brainOpts.epsilon_test_time = 0.05;
@@ -150,12 +150,11 @@ var Agent = Agent || {};
 			brainOpts.tdtrainer_options = trainerOpts;
 
 		this.brain = new Worker('js/entities/Brain.js');
-
 		this.brain.addEventListener('message', function (e) {
 			var data = e.data;
 			switch (data.cmd) {
 				case 'init':
-					console.log('Init: ' + data.msg);
+					_this.loadMemory();
 				break;
 				case 'forward':
 					// Get action from brain
@@ -176,11 +175,11 @@ var Agent = Agent || {};
 					_this.pts.push(data.input);
 					break;
 				default:
-					console.log('Unknown command: ' + data.msg);
+					console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
 			}
 		}, false);
 
-		this.brain.postMessage({cmd: 'init', options:brainOpts});
+		this.brain.postMessage({cmd:'init', msg:'Start', input:brainOpts});
 	};
 
 	/**
@@ -247,6 +246,7 @@ var Agent = Agent || {};
 
 			// Get action from brain
 			this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
+			this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
 		},
 		/**
 		 * Tick the agent
@@ -256,7 +256,6 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		tick: function (cells, walls, entities, width, height) {
-			var avgR = this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
 			for (var ei = 0, eye; eye = this.eyes[ei++];) {
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
@@ -392,10 +391,8 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		loadMemory: function () {
-			var brain = this.brain;
-			$.getJSON(document.getElementById('memoryBank'), function(data) {
-				brain.value_net.fromJSON(data);
-			});
+//			var specs = JSON.parse(document.getElementById('memoryBank').value);
+//			this.brain.postMessage({cmd:'load',input:specs});
 		},
 		/**
 		 * Download the brains to the field
