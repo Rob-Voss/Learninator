@@ -241,7 +241,8 @@ var Agent = Agent || {};
 			// Create input to brain
 			var inputArray = new Array(this.numEyes * this.numTypes);
 
-			for (var i = 0, e; e = this.eyes[i++];) {
+			for (var i = 0; i < this.numEyes; i++) {
+				var e = this.eyes[i];
 				inputArray[i * 3] = 1.0;
 				inputArray[i * 3 + 1] = 1.0;
 				inputArray[i * 3 + 2] = 1.0;
@@ -257,7 +258,7 @@ var Agent = Agent || {};
 				this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
 			} else {
 				// Get action from brain
-				this.actionIndex = this.brain.forward();
+				this.actionIndex = this.brain.forward(inputArray);
 
 				//this.actionIndex = this.brain.forward(inputArray);
 				var action = this.actions[this.actionIndex];
