@@ -155,34 +155,41 @@ var PIXI = PIXI || {};
 			// Tick ALL OF teh items!
 			this.redraw = true;
 
-			for (var i = 0; i < this.agents.length; i++) {
+			var agentCount = this.agents.length;
+			for (var i = 0; i < agentCount; i++) {
 				var agent = this.agents[i];
 				agent.pts = [];
 				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
 				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
-
-				for (var j = 0, entity; entity = agent.digested[j++];) {
+				var digestedCount = agent.digested.length;
+				for (var j = 0; j < digestedCount; j++) {
+					var entity = agent.digested[j];
 					this.deleteEntity(entity);
 				}
 				agent.pts.push(agent.brain.average_reward_window.getAverage());
 			}
 
-			for (var i = 0, entity; entity = this.entities[i++];) {
+			var entityCount = this.entities.length;
+			for (var e = 0; e < entityCount; e++) {
+				var entity = this.entities[i];
 				entity.age += 1;
 
 				if (entity.age > 5000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 					entity.cleanUp = true;
 				}
+				if (entity.cleanUp) {
+					this.deleteEntity(entity);
+				}
 			}
 
 			// If we have less then the number of items allowed throw a random one in
-			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+			if (entityCount < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
 				var x = Utility.randf(10, this.width - 10),
 					y = Utility.randf(10, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
 			}
 
-			for (var i = 0; i < this.agents.length; i++) {
+			for (var i = 0; i < agentCount; i++) {
 				// Throw some points on a Graph
 				if (this.clock % 100 === 0) {
 					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
