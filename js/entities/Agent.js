@@ -27,16 +27,15 @@ var Agent = Agent || {};
 	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (type, v, w, h, r) {
-		var _this = this;
+	var Agent = function (type, v, w, h, r, worker) {
+		this.id = Utility.guid();
 		this.type = type || 3; // type of agent
+		this.pos = v || new Vec(1, 1); // position
+		this.gridLocation = new Vec(0, 0);
 		this.width = w || 20; // width of agent
 		this.height = h || 20; // height of agent
 		this.radius = r || 10; // default radius
-		this.pos = v || new Vec(this.radius, this.radius); // position
-		this.gridLocation = new Vec(0, 0);
-
-		this.id = Utility.guid();
+		this.worker = (type === undefined) ? false : true;
 
 		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
@@ -105,7 +104,6 @@ var Agent = Agent || {};
 		this.rot2 = 0.0; // Rotation speed of 2nd wheel
 
 		this.previousActionix = -1;
-		this.worker = false;
 
 		/**
 		 * The value function network computes a value of taking any of the possible actions
@@ -150,13 +148,17 @@ var Agent = Agent || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
+		var _this = this;
+
 		if (this.worker) {
 			this.brain = new Worker('js/entities/Brain.js');
 			this.brain.addEventListener('message', function (e) {
 				var data = e.data;
 				switch (data.cmd) {
 					case 'init':
-						_this.loadMemory();
+						if (data.msg == 'load') {
+							_this.loadMemory();
+						}
 					break;
 					case 'forward':
 						// Get action from brain
@@ -173,7 +175,6 @@ var Agent = Agent || {};
 
 						break;
 					case 'getAverage':
-						_this.pts = [];
 						_this.pts.push(data.input);
 						break;
 					default:
@@ -199,7 +200,8 @@ var Agent = Agent || {};
 		backward: function () {
 			// Compute the reward
 			var proximityReward = 0.0;
-			for (var i = 0, e; e = this.eyes[i++];) {
+			for (var ei = 0; ei < this.numEyes;ei++) {
+				var e = this.eyes[ei];
 				// Agents dont like to see walls, especially up close
 				proximityReward += e.sensedType === 0 ? e.sensedProximity / e.maxRange : 1.0;
 			}
@@ -224,14 +226,6 @@ var Agent = Agent || {};
 			} else {
 				this.brain.backward(reward);
 			}
-		},
-		/**
-		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} v
-		 * @returns {Boolean}
-		 */
-		contains: function (event, mouse) {
-			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
 		/**
 		 * In forward pass the agent simply behaves in the environment
@@ -273,13 +267,16 @@ var Agent = Agent || {};
 		 * @param {Array} cells
 		 * @param {Array} walls
 		 * @param {Array} entities
+		 * @param {Number} width
+		 * @param {Number} height
 		 * @returns {undefined}
 		 */
 		tick: function (cells, walls, entities, width, height) {
 			this.oldPos = this.pos; // Back up the old position
 			this.oldAngle = this.angle; // and angle
 
-			for (var ei = 0, eye; eye = this.eyes[ei++];) {
+			for (var ei = 0; ei < this.numEyes;ei++) {
+				var eye = this.eyes[ei];
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
@@ -403,10 +400,12 @@ var Agent = Agent || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
-			if (this.worker) {
-				this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
-			} else {
-				this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
+			if (this.digested.length !== 0) {
+				if (this.worker) {
+					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
+				} else {
+					this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
+				}
 			}
 		},
 		/**
@@ -414,16 +413,26 @@ var Agent = Agent || {};
 		 * @returns {undefined}
 		 */
 		loadMemory: function () {
-//			var specs = JSON.parse(document.getElementById('memoryBank').value);
-//			this.brain.postMessage({cmd:'load',input:specs});
+			if (this.worker) {
+				var specs = JSON.parse(document.getElementById('memoryBank').value);
+				this.brain.postMessage({cmd:'load', msg:'', input:specs});
+			} else {
+				$.getJSON(document.getElementById('memoryBank'), function(data) {
+					this.brain.value_net.fromJSON(data);
+				});
+			}
 		},
 		/**
 		 * Download the brains to the field
 		 * @returns {undefined}
 		 */
 		saveMemory: function () {
-			var j = this.brain.value_net.toJSON();
-			document.getElementById('memoryBank').value = JSON.stringify(j);
+			if (this.worker) {
+				this.brain.postMessage({cmd:'save', msg:'', input:''});
+			} else {
+				var j = this.brain.value_net.toJSON();
+				document.getElementById('memoryBank').value = JSON.stringify(j);
+			}
 		},
 		/**
 		 * Get to learninating

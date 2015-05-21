@@ -109,30 +109,31 @@ var Graph = Graph || {};
 			ctx.strokeStyle = "#999";
 			ctx.beginPath();
 			var ng = 10;
-			for (var i = 0; i <= ng; i++) {
-				var xpos = i / ng * (W - 2 * pad) + pad;
+			for (var gl = 0; gl <= ng; gl++) {
+				var xpos = gl / ng * (W - 2 * pad) + pad;
 				ctx.moveTo(xpos, pad);
 				ctx.lineTo(xpos, H - pad);
-				ctx.fillText(f2t(i / ng * this.step_horizon / 1000) + 'k', xpos, H - pad + 14);
+				ctx.fillText(f2t(gl / ng * this.step_horizon / 1000) + 'k', xpos, H - pad + 14);
 			}
 
-			for (var i = 0; i <= ng; i++) {
-				var ypos = i / ng * (H - 2 * pad) + pad;
+			for (var v = 0; v <= ng; v++) {
+				var ypos = v / ng * (H - 2 * pad) + pad;
 				ctx.moveTo(pad, ypos);
 				ctx.lineTo(W - pad, ypos);
-				ctx.fillText(f2t((ng - i) / ng * (this.maxy - this.miny) + this.miny), 0, ypos);
+				ctx.fillText(f2t((ng - v) / ng * (this.maxy - this.miny) + this.miny), 0, ypos);
 			}
 			ctx.stroke();
-			for (var k = 0; k < this.numlines; k++) {
-				var N = this.pts[k].length;
-				if (N < 2)
+			var agentN = [];
+			for (var z = 0; z < this.numlines; z++) {
+				agentN[z] = this.pts[z].length;
+				if (agentN[z] < 2)
 					return;
 			}
 
 			// Draw legend
-			for (var k = 0; k < this.numlines; k++) {
-				ctx.fillStyle = this.styles[k];
-				ctx.fillText(this.legend[k].name, W - pad - 100, pad + 20 + k * 16);
+			for (var l = 0; l < this.numlines; l++) {
+				ctx.fillStyle = this.styles[l];
+				ctx.fillText(this.legend[l].name, W - pad - 100, pad + 20 + l * 16);
 			}
 			ctx.fillStyle = "black";
 
@@ -146,7 +147,7 @@ var Graph = Graph || {};
 			for (var k = 0; k < this.numlines; k++) {
 				ctx.strokeStyle = this.styles[k];
 				ctx.beginPath();
-				for (var i = 0; i < N; i++) {
+				for (var i = 0; i < agentN[k]; i++) {
 					// Draw line from i-1 to i
 					var p = this.pts[k][i],
 						pt = t(p.step, p.yl[0], this);

@@ -133,20 +133,6 @@ var PIXI = PIXI || {};
 			}
 		},
 		/**
-		 * Clear the canvas
-		 * @param {Vec} cell
-		 * @returns {undefined}
-		 */
-		clear: function (cell) {
-			if (cell) {
-				var topLeft = cell.x * this.vW,
-					bottomLeft = cell.y * this.vH;
-				this.ctx.clearRect(topLeft, bottomLeft, this.vW, this.vH);
-			} else {
-				this.ctx.clearRect(0, 0, this.width, this.height);
-			}
-		},
-		/**
 		 * Tick the environment
 		 */
 		tick: function () {
@@ -158,7 +144,6 @@ var PIXI = PIXI || {};
 			var agentCount = this.agents.length;
 			for (var i = 0; i < agentCount; i++) {
 				var agent = this.agents[i];
-				agent.pts = [];
 				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
 				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
 				var digestedCount = agent.digested.length;
@@ -166,7 +151,6 @@ var PIXI = PIXI || {};
 					var entity = agent.digested[j];
 					this.deleteEntity(entity);
 				}
-				agent.pts.push(agent.brain.average_reward_window.getAverage());
 			}
 
 			var entityCount = this.entities.length;
@@ -175,9 +159,6 @@ var PIXI = PIXI || {};
 				entity.age += 1;
 
 				if (entity.age > 5000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
-					entity.cleanUp = true;
-				}
-				if (entity.cleanUp) {
 					this.deleteEntity(entity);
 				}
 			}
@@ -190,10 +171,13 @@ var PIXI = PIXI || {};
 			}
 
 			for (var i = 0; i < agentCount; i++) {
+				var agent = this.agents[i];
 				// Throw some points on a Graph
-				if (this.clock % 100 === 0) {
+				if (this.clock % 100 === 0 && agent.pts.length !== 0) {
 					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
 					this.rewardGraph.drawPoints();
+					// Clear them up since we've drawn them
+					agent.pts = [];
 				}
 			}
 		},
