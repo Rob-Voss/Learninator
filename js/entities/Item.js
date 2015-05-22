@@ -14,17 +14,16 @@ var Utility = Utility || {};
 	 * @returns {undefined}
 	 */
 	var Item = function (type, v, w, h, r) {
-		var _this = this;
+		this.id = Utility.guid();
 		this.type = type || 1; // type of item
+		this.pos = v || new Vec(0, 0); // position
+		this.gridLocation = new Vec(0, 0);
 		this.width = w || 20; // width of item
 		this.height = h || 20; // height of item
 		this.radius = r || 10; // default radius
-		this.pos = v || new Vec(this.radius, this.radius); // position
 		this.age = 0;
-		this.id = Utility.guid();
 		this.cleanUp = false;
 		this.fill = '#AAAAAA';
-		this.gridLocation = new Vec(0, 0);
 
 		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');

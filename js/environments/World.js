@@ -34,7 +34,7 @@ var PIXI = PIXI || {};
 		*/
 		this.fps = 60;
 		this.interval = 1000 / this.fps;
-		this.numItems = 30;
+		this.numItems = 60;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar'];
 

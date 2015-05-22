@@ -83,7 +83,11 @@ var Graph = Graph || {};
 					time: time,
 					yl: yl
 				};
-			this.pts[idx].push(point);
+			if (this.pts[idx] !== undefined) {
+				this.pts[idx].push(point);
+			} else {
+				console.log('this.pts[' + idx + '] = undefined. this.pts=' + this.pts);
+			}
 			if (step > this.step_horizon)
 				this.step_horizon *= 2;
 		},

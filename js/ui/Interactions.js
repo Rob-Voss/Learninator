@@ -19,7 +19,10 @@ var Interactions = Interactions || {};
 		this.htmlTop = html.offsetTop;
 		this.htmlLeft = html.offsetLeft;
 
-		this.mouse = {};
+		this.mouse = {
+			pos: new Vec(0, 0),
+			gridLocation: new Vec(0, 0)
+		};
 
 		// Keep track of when we are dragging
 		this.dragging = false;
@@ -113,6 +116,7 @@ var Interactions = Interactions || {};
 
 			// We return a Vec with x and y defined
 			_this.mouse.pos = new Vec(event.pageX - offset.x, event.pageY - offset.y);
+			Utility.getGridLocation(_this.mouse, _this.grid, _this.vW, _this.vH);
 			_this.mouse.offset = new Vec(offset.x, offset.y);
 			_this.mouse.button = event.button;
 		};
@@ -123,53 +127,56 @@ var Interactions = Interactions || {};
 		 * @returns {undefined}
 		 */
 		function mouseDown(event) {
-			if (_this.entities.length > 0) {
-				for (var i = 0, entity; entity = _this.entities[i++];) {
-					if (entity.contains !== undefined &&
-						entity.contains(event, _this.mouse)) {
-						var mySel = entity;
-						_this.selection = mySel;
-						if (_this.mouse.button === 0) {
-							var offX = _this.mouse.pos.x - _this.selection.pos.x,
-								offY = _this.mouse.pos.y - _this.selection.pos.y;
+			var x = _this.mouse.gridLocation.x,
+				y = _this.mouse.gridLocation.y;
+			var population = _this.grid[x][y].population;
+			for (var i=0; i<population.length; i++) {
+				var id = _this.grid[x][y].population[i],
+					entity = _this.entities.find(Utility.getId, id);
+				if (entity && entity.contains !== undefined && entity.contains(event, _this.mouse)) {
+					_this.selection = entity;
+					if (_this.mouse.button === 0) {
+						var offX = _this.mouse.pos.x - _this.selection.pos.x,
+							offY = _this.mouse.pos.y - _this.selection.pos.y;
 
-							_this.dragoff = new Vec(offX, offY);
-							_this.dragging = true;
-							if (_this.selection.mouseClick !== undefined)
-								return _this.selection.mouseClick(event, _this.mouse);
-						} else {
-							_this.dragging = false;
-							if (_this.selection.contextMenu !== undefined)
-								return _this.selection.rightClick(event, _this.mouse);
+						_this.dragoff = new Vec(offX, offY);
+						_this.dragging = true;
+						if (_this.selection.mouseClick !== undefined) {
+							return _this.selection.mouseClick(event, _this.mouse);
+						}
+					} else {
+						_this.dragging = false;
+						if (_this.selection.contextMenu !== undefined) {
+							return _this.selection.rightClick(event, _this.mouse);
 						}
 					}
 				}
-				for (var i = 0, agent; agent = _this.agents[i++];) {
-					if (agent.contains !== undefined &&
-						agent.contains(event, _this.mouse)) {
-						var mySel = agent;
-						_this.selection = mySel;
-						if (_this.mouse.button === 0) {
-							var offX = _this.mouse.pos.x - _this.selection.pos.x,
-								offY = _this.mouse.pos.y - _this.selection.pos.y;
+			}
 
-							_this.dragoff = new Vec(offX, offY);
-							_this.dragging = true;
-							if (_this.selection.mouseClick !== undefined)
-								return _this.selection.mouseClick(event, _this.mouse);
-						} else {
-							_this.dragging = false;
-							if (_this.selection.contextMenu !== undefined)
-								return _this.selection.rightClick(event, _this.mouse);
+			for (var z=0; z<_this.agents.length; z++) {
+				var agent = _this.agents[z];
+				if (agent.contains !== undefined && agent.contains(event, _this.mouse)) {
+					_this.selection = agent;
+					if (_this.mouse.button === 0) {
+						var offX = _this.mouse.pos.x - _this.selection.pos.x,
+							offY = _this.mouse.pos.y - _this.selection.pos.y;
+
+						_this.dragoff = new Vec(offX, offY);
+						_this.dragging = true;
+						if (_this.selection.mouseClick !== undefined) {
+							return _this.selection.mouseClick(event, _this.mouse);
+						}
+					} else {
+						_this.dragging = false;
+						if (_this.selection.contextMenu !== undefined) {
+							return _this.selection.rightClick(event, _this.mouse);
 						}
 					}
 				}
-				if (_this.selection) {
-					_this.selection = null;
-					_this.dragging = false;
-				}
-			} else {
-				return _this.mouseClick(event, _this.mouse);
+			}
+			if (_this.selection) {
+				_this.selection = null;
+				_this.dragging = false;
 			}
 		};
 
@@ -181,20 +188,23 @@ var Interactions = Interactions || {};
 		function mouseMove(event) {
 			if (_this.selection) {
 				if (_this.dragoff.x !== 0 && _this.dragoff.y !== 0) {
-					_this.dragging = true;
 					var offX = _this.mouse.pos.x - _this.dragoff.x,
 						offY = _this.mouse.pos.y - _this.dragoff.y;
 
 					_this.selection.pos = new Vec(offX, offY);
+					_this.selection.sprite.position.x = offX;
+					_this.selection.sprite.position.y = offY;
 					_this.dragging = true;
 					_this.redraw = false;
-					if (_this.selection.mouseDrag !== undefined)
+					if (_this.selection.mouseDrag !== undefined) {
 						return _this.selection.mouseDrag(event, _this.mouse);
+					}
 				}
 				_this.dragging = false;
 				_this.redraw = true;
-				if (_this.selection.mouseMove !== undefined)
+				if (_this.selection.mouseMove !== undefined) {
 					return _this.selection.mouseMove(event, _this.mouse);
+				}
 			}
 			return;
 		};
@@ -212,16 +222,18 @@ var Interactions = Interactions || {};
 
 				_this.selection.pos = new Vec(offX, offY);
 				_this.selection.sprite.position.x = offX;
-				_this.selection.sprite.position.x = offY;
+				_this.selection.sprite.position.y = offY;
 				_this.dragging = false;
 				_this.redraw = false;
-				if (_this.selection.mouseDrop !== undefined)
+				if (_this.selection.mouseDrop !== undefined) {
 					_this.selection.mouseDrop(event, _this.mouse);
+				}
 				_this.selection = null;
 				return;
 			}
-			if (_this.selection && _this.selection.mouseUp !== undefined)
+			if (_this.selection && _this.selection.mouseUp !== undefined) {
 				_this.selection.mouseUp(event, _this.mouse);
+			}
 			_this.selection = null;
 			return;
 		};

@@ -1,4 +1,5 @@
 var Agent = Agent || {};
+var Utility = Utility || {};
 
 (function (global) {
 	"use strict";
@@ -27,15 +28,15 @@ var Agent = Agent || {};
 	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (type, v, w, h, r, worker) {
+	var Agent = function (type, v, w, h, r) {
 		this.id = Utility.guid();
-		this.type = type || 3; // type of agent
+		this.type = (type === 'Worker') ? 3 : 4; // type of agent
+		this.worker = (type === 'Worker') ? true : false;
 		this.pos = v || new Vec(1, 1); // position
 		this.gridLocation = new Vec(0, 0);
 		this.width = w || 20; // width of agent
 		this.height = h || 20; // height of agent
 		this.radius = r || 10; // default radius
-		this.worker = (type === undefined) ? false : true;
 
 		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
@@ -51,9 +52,6 @@ var Agent = Agent || {};
 		// move the sprite t the center of the screen
 		this.sprite.position.x = this.pos.x;
 		this.sprite.position.y = this.pos.y;
-
-		this.dragging = false;
-		this.redraw = false;
 
 		this.digested = [];
 
@@ -156,7 +154,7 @@ var Agent = Agent || {};
 				var data = e.data;
 				switch (data.cmd) {
 					case 'init':
-						if (data.msg == 'load') {
+						if (data.msg === 'load') {
 							_this.loadMemory();
 						}
 					break;
@@ -228,6 +226,14 @@ var Agent = Agent || {};
 			}
 		},
 		/**
+		 * Determine if a point is inside the shape's bounds
+		 * @param {Vec} v
+		 * @returns {Boolean}
+		 */
+		contains: function (event, mouse) {
+			return this.pos.distFrom(mouse.pos) < this.radius;;
+		},
+		/**
 		 * In forward pass the agent simply behaves in the environment
 		 * @returns {undefined}
 		 */
@@ -264,24 +270,36 @@ var Agent = Agent || {};
 		},
 		/**
 		 * Tick the agent
-		 * @param {Array} cells
+		 * @param {Array} grid
 		 * @param {Array} walls
 		 * @param {Array} entities
 		 * @param {Number} width
 		 * @param {Number} height
 		 * @returns {undefined}
 		 */
-		tick: function (cells, walls, entities, width, height) {
+		tick: function (grid, walls, entities, width, height) {
 			this.oldPos = this.pos; // Back up the old position
 			this.oldAngle = this.angle; // and angle
 
+			var x = this.gridLocation.x,
+				y = this.gridLocation.y,
+				population = grid[x][y].population,
+				nearby = [];
+			for (var i=0; i < population.length; i++) {
+				var id = grid[x][y].population[i],
+					entity = entities.find(Utility.getId, id);
+				if (entity) {
+					nearby.push(entity);
+				}
+			}
 			for (var ei = 0; ei < this.numEyes;ei++) {
 				var eye = this.eyes[ei];
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
+
 				// We have a line from agent.pos to p->eyep
-				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), walls, entities);
+				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), walls, nearby);
 				if (result) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
@@ -372,8 +390,8 @@ var Agent = Agent || {};
 
 			// Apply the outputs of agents on the environment
 			this.digested = [];
-			for (var j=0,n=cells[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
-				var id = cells[this.gridLocation.x][this.gridLocation.y].population[j],
+			for (var j=0,n=grid[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
+				var id = grid[this.gridLocation.x][this.gridLocation.y].population[j],
 					entityIdx = entities.find(Utility.getId, id);
 				if (entityIdx) {
 					var dist = this.pos.distFrom(entityIdx.pos);

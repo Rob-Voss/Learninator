@@ -87,10 +87,11 @@ var Brain = Brain || {};
 
 		// states that go into neural net to predict optimal action look as
 		// x0,a0,x1,a1,x2,a2,...xt
-		// this variable controls the size of that temporal window. Actions are
-		// encoded as 1-of-k hot vectors
+		// this variable controls the size of that temporal window.
+		// Actions are encoded as 1-of-k hot vectors
 		this.net_inputs = this.num_states * this.temporal_window + this.num_actions * this.temporal_window + this.num_states;
-		this.window_size = Math.max(this.temporal_window, 2); // must be at least 2, but if we want more context even more
+		// must be at least 2, but if we want more context even more
+		this.window_size = Math.max(this.temporal_window, 2);
 		this.state_window = new Array(this.window_size);
 		this.action_window = new Array(this.window_size);
 		this.reward_window = new Array(this.window_size);
@@ -314,10 +315,7 @@ var Brain = Brain || {};
 					x.w = ex.state0;
 					var maxact = this.policy(ex.state1),
 						r = ex.reward0 + this.gamma * maxact.value,
-						yStruct = {
-							dim: ex.action0,
-							val: r
-						},
+						yStruct = {dim: ex.action0, val: r},
 						loss = this.tdtrainer.train(x, yStruct);
 					avcost += loss.loss;
 				}

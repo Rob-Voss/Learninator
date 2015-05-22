@@ -29,13 +29,13 @@ var Utility = Utility || {};
 	 * @param {String} id
 	 * @returns {undefined}
 	 */
-	Utility.findObject = function (ar, id) {
+	Utility.findObject = function(ar, id) {
 		ar.map(function(el) {
 			return el.id;
 		}).indexOf(id);
 	};
 
-	Utility.getId = function (element, index, array) {
+	Utility.getId = function(element, index, array) {
 		if (element.id === this) {
 			return true;
 		}
@@ -50,7 +50,7 @@ var Utility = Utility || {};
 	 * @param {Number} height
 	 * @returns {Number}
 	 */
-	Utility.getGridLocation = function (entity, cells, width, height) {
+	Utility.getGridLocation = function(entity, cells, width, height) {
 		for(var h = 0, hCell; hCell = cells[h++];) {
 			for(var v = 0, vCell; vCell = hCell[v++];) {
 				var topLeft = vCell.x * width,
@@ -59,6 +59,9 @@ var Utility = Utility || {};
 					bottomRight = bottomLeft + height;
 				if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
 					(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
+					entity.gridLocation.x = h-1;
+					entity.gridLocation.y = v-1;
+
 					return cells[h-1][v-1];
 				}
 			}
@@ -73,14 +76,15 @@ var Utility = Utility || {};
 	 * @param {Array} entities
 	 * @returns {Boolean}
 	 */
-	Utility.collisionCheck = function (v1, v2, walls, entities) {
+	Utility.collisionCheck = function(v1, v2, walls, entities) {
 		var minRes = false;
 
 		// Collide with walls
 		if (walls) {
 			// @TODO Need to check the current cell first so we
 			// don't loop through all the walls
-			for (var i = 0, wall; wall = walls[i++];) {
+			for (var i=0; i<walls.length; i++) {
+				var wall = walls[i];
 				var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 				if (wResult) {
 					wResult.type = 0; // 0 is wall
@@ -101,7 +105,8 @@ var Utility = Utility || {};
 		if (entities) {
 			// @TODO Need to check the current cell first so we
 			// don't check all the items
-			for (var i = 0, entity; entity = entities[i++];) {
+			for (var z=0; z<entities.length; z++) {
+				var entity = entities[z];
 				var iResult = Utility.linePointIntersect(v1, v2, entity.pos, entity.radius);
 				if (iResult) {
 					iResult.type = entity.type;
@@ -126,7 +131,7 @@ var Utility = Utility || {};
 	 * @param {Array} a
 	 * @returns {Object}
 	 */
-	Utility.maxmin = function (a) {
+	Utility.maxmin = function(a) {
 		if (a.length === 0) {
 			return {};
 		}
@@ -162,7 +167,7 @@ var Utility = Utility || {};
 	 * @param {Number} d
 	 * @returns {String}
 	 */
-	Utility.flt2str = function (x, d) {
+	Utility.flt2str = function(x, d) {
 		if (typeof(d) === undefined) {
 			var d = 5;
 		}
@@ -179,7 +184,7 @@ var Utility = Utility || {};
 	 * @param {Number} rad
 	 * @returns {Object|Boolean}
 	 */
-	Utility.linePointIntersect = function (v1, v2, v0, rad) {
+	Utility.linePointIntersect = function(v1, v2, v0, rad) {
 		// Create a perpendicular vector
 		var x = v2.y - v1.y,
 			y = v2.x - v1.x,
@@ -218,7 +223,7 @@ var Utility = Utility || {};
 	 * @param {Vec} v4
 	 * @returns {Object|Boolean}
 	 */
-	Utility.lineIntersect = function (v1, v2, v3, v4) {
+	Utility.lineIntersect = function(v1, v2, v3, v4) {
 			// Line 1: 1st Point
 		var x1 = v1.x,
 			y1 = v1.y,
@@ -262,7 +267,7 @@ var Utility = Utility || {};
 	 * @param {Vec} v3
 	 * @returns {Number}
 	 */
-	Utility.area = function (v1, v2, v3) {
+	Utility.area = function(v1, v2, v3) {
 		return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
 	};
 
@@ -270,7 +275,7 @@ var Utility = Utility || {};
 	 * Do stuff
 	 * @returns {Number}
 	 */
-	Utility.S4 = function () {
+	Utility.S4 = function() {
 		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 	};
 
@@ -278,7 +283,7 @@ var Utility = Utility || {};
 	 * Generate a UUID
 	 * @returns {String}
 	 */
-	Utility.guid = function () {
+	Utility.guid = function() {
 		return (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0,3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
 	};
 
