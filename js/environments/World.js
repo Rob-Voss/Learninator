@@ -26,7 +26,6 @@ var PIXI = PIXI || {};
 		this.vH = this.height / this.graph.height;
 
 		this.clock = 0;
-		this.simSpeed = 2;
 
 		/**
 		* 1s = 1000ms (remember that setInterval and setTimeout run on milliseconds)
@@ -38,8 +37,15 @@ var PIXI = PIXI || {};
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar'];
 
+		// create a renderer instance.
+		this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view:this.canvas}, true);
+		this.renderer.backgroundColor = 0xFFFFFF;
+		// add the renderer view element to the DOM
+		document.body.appendChild(this.renderer.view);
+		// create an new instance of a pixi stage
+		this.stage = new PIXI.Container();
+
 		// When set to true, the canvas will redraw everything
-		this.redraw = true;
 		this.pause = false;
 
 		this.walls = options.walls || [];
@@ -48,44 +54,26 @@ var PIXI = PIXI || {};
 
 		var _this = this;
 
-		// Apply the Interactions class to the world
-		Interactions.apply(this);
+		for (var w = 0; w < this.walls.length; w++) {
+			this.stage.addChild(this.walls[w].shape);
+		}
 
-		// create a renderer instance.
-		this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view:this.canvas}, true);
-		this.renderer.backgroundColor = 0xFFFFFF;
+		for (var a = 0; a < this.agents.length; a++) {
+			this.stage.addChild(this.agents[a].sprite);
+			for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
+				this.stage.addChild(this.agents[a].eyes[ei].shape);
+			}
+		}
 
-		// add the renderer view element to the DOM
-		document.body.appendChild(this.renderer.view);
-
-		// create an new instance of a pixi stage
-		this.stage = new PIXI.Container();
-
-//		var menu = new Menu();
-//		this.stage.addChild(menu);
+		for (var e = 0; e < this.entities.length; e++) {
+			this.stage.addChild(this.entities[e].sprite);
+		}
 
 		requestAnimationFrame(animate);
-
 		function animate() {
 			_this.tick();
-			for (var i = 0, wall; wall = _this.walls[i++];) {
-				_this.stage.addChild(wall.shape);
-			}
-
-			for (var i = 0, agent; agent = _this.agents[i++];) {
-				_this.stage.addChild(agent.sprite);
-				for (var ei = 0, eye; eye = agent.eyes[ei++];) {
-					_this.stage.addChild(eye.shape);
-				}
-			}
-
-			for (var i = 0, entity; entity = _this.entities[i++];) {
-				_this.stage.addChild(entity.sprite);
-			}
-
 			// render the stage
 			_this.renderer.render(_this.stage);
-
 			requestAnimationFrame(animate);
 		}
 	};
@@ -105,6 +93,7 @@ var PIXI = PIXI || {};
 				Utility.getGridLocation(entity, this.grid, this.vW, this.vH);
 				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
 			}
+			this.stage.addChild(entity.sprite);
 			this.entities.push(entity);
 			this.redraw = true;
 		},
@@ -123,9 +112,11 @@ var PIXI = PIXI || {};
 		 */
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
-				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
+				var x = entity.gridLocation.x,
+					y = entity.gridLocation.y,
+					index = this.grid[x][y].population.indexOf(entity.id);
 				if (index > -1) {
-					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
+					this.grid[x][y].population.splice(index, 1);
 					var idx = this.entities.findIndex(Utility.getId, entity.id);
 					this.entities.splice(idx, 1);
 					this.stage.removeChild(entity.sprite);
@@ -158,7 +149,7 @@ var PIXI = PIXI || {};
 				var entity = this.entities[i];
 				entity.age += 1;
 
-				if (entity.age > 5000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
+				if (entity.age > 10000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 					this.deleteEntity(entity);
 				}
 			}
@@ -191,30 +182,6 @@ var PIXI = PIXI || {};
 					y = Utility.randf(10, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
 			}
-		},
-		/**
-		 * Handle the right click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		mouseClick: function (e) {
-			console.log('World Click');
-		},
-		/**
-		 * Handle the right click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		rightClick: function (e) {
-			console.log('World Right Click');
-		},
-		/**
-		 * Handle the double click on the world
-		 * @param {MouseEvent} e
-		 * @returns {undefined}
-		 */
-		doubleClick: function (e) {
-			console.log('World Double Click');
 		}
 	};
 

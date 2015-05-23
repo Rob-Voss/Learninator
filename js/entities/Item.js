@@ -23,12 +23,29 @@ var Utility = Utility || {};
 		this.radius = r || 10; // default radius
 		this.age = 0;
 		this.cleanUp = false;
-		this.fill = '#AAAAAA';
 
 		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');
 		// create a new Sprite using the texture
 		this.sprite = new PIXI.Sprite(this.texture);
+		// Add in interactivity
+		this.sprite.interactive = true;
+
+		this.sprite
+			.on('mousedown', this.onDragStart)
+			.on('touchstart', this.onDragStart)
+			// set the mouseup and touchend callback...
+			.on('mouseup', this.onDragEnd)
+			.on('mouseupoutside', this.onDragEnd)
+			.on('touchend', this.onDragEnd)
+			.on('touchendoutside', this.onDragEnd)
+			// set the mouseover callback...
+			.on('mouseover', this.onMouseOver)
+			// set the mouseout callback...
+			.on('mouseout', this.onMouseOut)
+			// events for drag move
+			.on('mousemove', this.onDragMove)
+			.on('touchmove', this.onDragMove);
 
 		// center the sprites anchor point
 		this.sprite.anchor.x = 0.5;
@@ -37,9 +54,7 @@ var Utility = Utility || {};
 		// move the sprite t the center of the screen
 		this.sprite.position.x = this.pos.x;
 		this.sprite.position.y = this.pos.y;
-
-		this.dragging = false;
-		this.redraw = true;
+		
 	};
 
 	/**
@@ -55,26 +70,43 @@ var Utility = Utility || {};
 		contains: function (event, mouse) {
 			return this.pos.distFrom(mouse.pos) < this.radius;;
 		},
-		mouseClick: function(e, mouse) {
-			console.log('Item Click');
+		
+		onDragStart: function(event) {
+			this.data = event.data;
+			this.alpha = 0.5;
+			this.dragging = true;
 		},
-		rightClick: function(e, mouse) {
-			console.log('Item Right Click');
+		onDragMove: function() {
+			if(this.dragging) {
+				var newPosition = this.data.getLocalPosition(this.parent);
+				this.position.x =  newPosition.x;
+				this.position.y =  newPosition.y;
+			}
 		},
-		doubleClick: function(e, mouse) {
-			console.log('Item Double Click');
+		onDragEnd: function(item) {
+			this.alpha = 1;
+			this.dragging = false;
+			// set the interaction data to null
+			this.data = null;
 		},
-		mouseMove: function(e, mouse) {
-			console.log('Item Move');
+		onMouseDown: function() {
+			this.isdown = true;
+			this.alpha = 1;
 		},
-		mouseUp: function(e, mouse) {
-			console.log('Item Release');
+		onMouseUp: function(item) {
+			this.isdown = false;
 		},
-		mouseDrag: function(e, mouse) {
-			console.log('Item Drag');
+		onMouseOver: function(item) {
+			this.isOver = true;
+			if (this.isdown) {
+				return;
+			}
 		},
-		mouseDrop: function(e, mouse) {
-			console.log('Item Drop');
+		onMouseOut: function(item) {
+			this.isOver = false;
+			if (this.isdown) {
+				return;
+			}
 		}
 	};
 

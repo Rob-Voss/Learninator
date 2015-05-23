@@ -1,5 +1,6 @@
 var Agent = Agent || {};
 var Utility = Utility || {};
+var PIXI = PIXI || {};
 
 (function (global) {
 	"use strict";
@@ -42,6 +43,24 @@ var Utility = Utility || {};
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
 		// create a new Sprite using the texture
 		this.sprite = new PIXI.Sprite(this.texture);
+		// Add in interactivity
+		this.sprite.interactive = true;
+		this.sprite
+			.on('mousedown', this.onMouseClick)
+			.on('touchstart', this.onMouseClick)
+			// set the mouseup and touchend callback...
+			.on('mouseup', this.onMouseUp)
+			.on('mouseupoutside', this.onMouseUp)
+			.on('touchend', this.onMouseUp)
+			.on('touchendoutside', this.onMouseUp)
+			// set the mouseover callback...
+			.on('mouseover', this.onMouseOver)
+			// set the mouseout callback...
+			.on('mouseout', this.onMouseOut)
+			// events for drag move
+			.on('mousemove', this.onDragMove)
+			.on('touchmove', this.onDragMove);
+	
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
 
@@ -292,7 +311,7 @@ var Utility = Utility || {};
 					nearby.push(entity);
 				}
 			}
-			for (var ei = 0; ei < this.numEyes;ei++) {
+			for (var ei = 0; ei < this.numEyes; ei++) {
 				var eye = this.eyes[ei];
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
@@ -387,11 +406,11 @@ var Utility = Utility || {};
 
 			this.sprite.position.x = this.pos.x;
 			this.sprite.position.y = this.pos.y;
-
+			
 			// Apply the outputs of agents on the environment
 			this.digested = [];
-			for (var j=0,n=grid[this.gridLocation.x][this.gridLocation.y].population.length;j<n;j++) {
-				var id = grid[this.gridLocation.x][this.gridLocation.y].population[j],
+			for (var j=0,n=grid[x][y].population.length;j<n;j++) {
+				var id = grid[x][y].population[j],
 					entityIdx = entities.find(Utility.getId, id);
 				if (entityIdx) {
 					var dist = this.pos.distFrom(entityIdx.pos);
@@ -407,7 +426,7 @@ var Utility = Utility || {};
 									this.digestionSignal += -6.0;
 									break;
 								default:
-									this.digestionSignal = this.digestionSignal;
+									this.digestionSignal = 0;
 							}
 							this.digested.push(entityIdx);
 						}
@@ -418,6 +437,7 @@ var Utility = Utility || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
+			
 			if (this.digested.length !== 0) {
 				if (this.worker) {
 					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
@@ -467,26 +487,42 @@ var Utility = Utility || {};
 			this.brain.learning = false;
 		},
 
-		mouseClick: function(e, mouse) {
-			console.log('Agent Click');
+		onDragStart: function(event) {
+			this.data = event.data;
+			this.alpha = 0.5;
+			this.dragging = true;
 		},
-		rightClick: function(e, mouse) {
-			console.log('Agent Right Click');
+		onDragMove: function() {
+			if(this.dragging) {
+				var newPosition = this.data.getLocalPosition(this.parent);
+				this.position.x = _this.pos.x = newPosition.x;
+				this.position.y = _this.pos.x =  newPosition.y;
+			}
 		},
-		doubleClick: function(e, mouse) {
-			console.log('Agent Double Click');
+		onDragEnd: function() {
+			this.alpha = 1;
+			this.dragging = false;
+			// set the interaction data to null
+			this.data = null;
 		},
-		mouseMove: function(e, mouse) {
-			console.log('Agent Move');
+		onMouseDown: function() {
+			this.isdown = true;
+			this.alpha = 1;
 		},
-		mouseUp: function(e, mouse) {
-			console.log('Agent Release');
+		onMouseUp: function() {
+			this.isdown = false;
 		},
-		mouseDrag: function(e, mouse) {
-			console.log('Agent Drag');
+		onMouseOver: function() {
+			this.isOver = true;
+			if (this.isdown) {
+				return;
+			}
 		},
-		mouseDrop: function(e, mouse) {
-			console.log('Agent Drop');
+		onMouseOut: function() {
+			this.isOver = false;
+			if (this.isdown) {
+				return;
+			}
 		}
 	};
 
