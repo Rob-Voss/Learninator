@@ -23,6 +23,7 @@ var Utility = Utility || {};
 		this.radius = r || 10; // default radius
 		this.age = 0;
 		this.cleanUp = false;
+		var _this = this;
 
 		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');
@@ -30,6 +31,15 @@ var Utility = Utility || {};
 		this.sprite = new PIXI.Sprite(this.texture);
 		// Add in interactivity
 		this.sprite.interactive = true;
+
+		// center the sprites anchor point
+		this.sprite.anchor.x = 0.5;
+		this.sprite.anchor.y = 0.5;
+
+		// move the sprite t the center of the screen
+		this.sprite.position.x = this.pos.x;
+		this.sprite.position.y = this.pos.y;
+		this.sprite.entity = _this;
 
 		this.sprite
 			.on('mousedown', this.onDragStart)
@@ -47,14 +57,7 @@ var Utility = Utility || {};
 			.on('mousemove', this.onDragMove)
 			.on('touchmove', this.onDragMove);
 
-		// center the sprites anchor point
-		this.sprite.anchor.x = 0.5;
-		this.sprite.anchor.y = 0.5;
 
-		// move the sprite t the center of the screen
-		this.sprite.position.x = this.pos.x;
-		this.sprite.position.y = this.pos.y;
-		
 	};
 
 	/**
@@ -68,9 +71,8 @@ var Utility = Utility || {};
 		 * @returns {Boolean}
 		 */
 		contains: function (event, mouse) {
-			return this.pos.distFrom(mouse.pos) < this.radius;;
+			return this.pos.distFrom(mouse.pos) < this.radius;
 		},
-		
 		onDragStart: function(event) {
 			this.data = event.data;
 			this.alpha = 0.5;
@@ -79,13 +81,14 @@ var Utility = Utility || {};
 		onDragMove: function() {
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
-				this.position.x =  newPosition.x;
-				this.position.y =  newPosition.y;
+				this.position.x = this.entity.pos.x = newPosition.x;
+				this.position.y = this.entity.pos.y = newPosition.y;
 			}
 		},
-		onDragEnd: function(item) {
+		onDragEnd: function() {
 			this.alpha = 1;
 			this.dragging = false;
+			this.entity.pos.set(this.position.x, this.position.y);
 			// set the interaction data to null
 			this.data = null;
 		},
@@ -93,16 +96,16 @@ var Utility = Utility || {};
 			this.isdown = true;
 			this.alpha = 1;
 		},
-		onMouseUp: function(item) {
+		onMouseUp: function() {
 			this.isdown = false;
 		},
-		onMouseOver: function(item) {
+		onMouseOver: function() {
 			this.isOver = true;
 			if (this.isdown) {
 				return;
 			}
 		},
-		onMouseOut: function(item) {
+		onMouseOut: function() {
 			this.isOver = false;
 			if (this.isdown) {
 				return;

@@ -31,7 +31,7 @@ var PIXI = PIXI || {};
 	 */
 	var Agent = function (type, v, w, h, r) {
 		this.id = Utility.guid();
-		this.type = (type === 'Worker') ? 3 : 4; // type of agent
+		this.type = 3; // type of agent
 		this.worker = (type === 'Worker') ? true : false;
 		this.pos = v || new Vec(1, 1); // position
 		this.gridLocation = new Vec(0, 0);
@@ -43,6 +43,7 @@ var PIXI = PIXI || {};
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
 		// create a new Sprite using the texture
 		this.sprite = new PIXI.Sprite(this.texture);
+		this.sprite.tint = (this.worker ? 0x0000FF : 0xFF0000);
 		// Add in interactivity
 		this.sprite.interactive = true;
 		this.sprite
@@ -60,13 +61,12 @@ var PIXI = PIXI || {};
 			// events for drag move
 			.on('mousemove', this.onDragMove)
 			.on('touchmove', this.onDragMove);
-	
+
 		this.sprite.width = this.width;
 		this.sprite.height = this.height;
 
 		// center the sprites anchor point
-		this.sprite.anchor.x = 0.5;
-		this.sprite.anchor.y = 0.5;
+		this.sprite.anchor.set(0.5, 0.5);
 
 		// move the sprite t the center of the screen
 		this.sprite.position.x = this.pos.x;
@@ -120,7 +120,7 @@ var PIXI = PIXI || {};
 		this.rot1 = 0.0; // Rotation speed of 1st wheel
 		this.rot2 = 0.0; // Rotation speed of 2nd wheel
 
-		this.previousActionix = -1;
+		this.previousActionIdx = -1;
 
 		/**
 		 * The value function network computes a value of taking any of the possible actions
@@ -178,6 +178,7 @@ var PIXI = PIXI || {};
 						}
 					break;
 					case 'forward':
+						_this.previousActionIdx = _this.actionIndex;
 						// Get action from brain
 						_this.actionIndex = data.input;
 
@@ -217,7 +218,7 @@ var PIXI = PIXI || {};
 		backward: function () {
 			// Compute the reward
 			var proximityReward = 0.0;
-			for (var ei = 0; ei < this.numEyes;ei++) {
+			for (var ei = 0; ei < this.numEyes; ei++) {
 				var e = this.eyes[ei];
 				// Agents dont like to see walls, especially up close
 				proximityReward += e.sensedType === 0 ? e.sensedProximity / e.maxRange : 1.0;
@@ -245,14 +246,6 @@ var PIXI = PIXI || {};
 			}
 		},
 		/**
-		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} v
-		 * @returns {Boolean}
-		 */
-		contains: function (event, mouse) {
-			return this.pos.distFrom(mouse.pos) < this.radius;;
-		},
-		/**
 		 * In forward pass the agent simply behaves in the environment
 		 * @returns {undefined}
 		 */
@@ -276,11 +269,11 @@ var PIXI = PIXI || {};
 				// Get action from brain
 				this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
 			} else {
+				this.previousActionIdx = this.actionIndex;
+				var actionIdx = this.brain.forward(inputArray),
+					action = this.actions[actionIdx];
 				// Get action from brain
-				this.actionIndex = this.brain.forward(inputArray);
-
-				//this.actionIndex = this.brain.forward(inputArray);
-				var action = this.actions[this.actionIndex];
+				this.actionIndex = actionIdx;
 
 				// Demultiplex into behavior variables
 				this.rot1 = action[0] * 1;
@@ -289,36 +282,21 @@ var PIXI = PIXI || {};
 		},
 		/**
 		 * Tick the agent
-		 * @param {Array} grid
-		 * @param {Array} walls
-		 * @param {Array} entities
-		 * @param {Number} width
-		 * @param {Number} height
+		 * @param {Object} smallWorld
 		 * @returns {undefined}
 		 */
-		tick: function (grid, walls, entities, width, height) {
+		tick: function (smallWorld) {				
 			this.oldPos = this.pos; // Back up the old position
 			this.oldAngle = this.angle; // and angle
 
-			var x = this.gridLocation.x,
-				y = this.gridLocation.y,
-				population = grid[x][y].population,
-				nearby = [];
-			for (var i=0; i < population.length; i++) {
-				var id = grid[x][y].population[i],
-					entity = entities.find(Utility.getId, id);
-				if (entity) {
-					nearby.push(entity);
-				}
-			}
+			// Loop through the eyes and check the walls and nearby entities
 			for (var ei = 0; ei < this.numEyes; ei++) {
 				var eye = this.eyes[ei];
 				eye.shape.clear();
 				var X = this.pos.x + eye.maxRange * Math.sin(this.angle + eye.angle),
 					Y = this.pos.y + eye.maxRange * Math.cos(this.angle + eye.angle);
-
 				// We have a line from agent.pos to p->eyep
-				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), walls, nearby);
+				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), smallWorld.walls, smallWorld.entities);
 				if (result) {
 					// eye collided with an entity
 					eye.sensedProximity = result.vecI.distFrom(this.pos);
@@ -327,32 +305,6 @@ var PIXI = PIXI || {};
 					eye.sensedProximity = eye.maxRange;
 					eye.sensedType = -1;
 				}
-
-				switch (eye.sensedType) {
-					// Is it wall or nothing?
-					case -1:case 0:
-						eye.shape.lineStyle(0.5, 0x000000);
-						break;
-					// It is noms
-					case 1:
-						eye.shape.lineStyle(0.5, 0xFF0000);
-						break;
-					// It is gnar gnar
-					case 2:
-						eye.shape.lineStyle(0.5, 0x00FF00);
-						break;
-					// Is it another Agent
-					case 3:
-						eye.shape.lineStyle(0.5, 0xFAFAFA);
-						break;
-				}
-
-				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
-					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
-
-				// Draw the agent's line of sights
-				eye.shape.moveTo(this.oldPos.x, this.oldPos.y);
-				eye.shape.lineTo(aEyeX, aEyeY);
 			}
 
 			// Let the agents behave in the world based on their input
@@ -383,13 +335,14 @@ var PIXI = PIXI || {};
 
 			if (this.angle > 2 * Math.PI)
 				this.angle -= 2 * Math.PI;
-
+			this.sprite.rotation = -this.angle;
+			
 			// The agent is trying to move from pos to oPos so we need to check walls
-			var derped = Utility.collisionCheck(this.oldPos, this.pos, walls);
+			var derped = Utility.collisionCheck(this.oldPos, this.pos, smallWorld.walls);
 			if (derped) {
 				var d = this.pos.distFrom(derped.vecI);
 				// The agent derped! Wall collision! Reset their position
-				if (derped && d < this.radius) {
+				if (derped && d <= this.radius) {
 					this.pos = this.oldPos;
 				}
 			}
@@ -397,39 +350,73 @@ var PIXI = PIXI || {};
 			// Handle boundary conditions
 			if (this.pos.x < 2)
 				this.pos.x = 2;
-			if (this.pos.x > width)
-				this.pos.x = width;
+			if (this.pos.x > smallWorld.width)
+				this.pos.x = smallWorld.width;
 			if (this.pos.y < 2)
 				this.pos.y = 2;
-			if (this.pos.y > height)
-				this.pos.y = height;
+			if (this.pos.y > smallWorld.height)
+				this.pos.y = smallWorld.height;
 
 			this.sprite.position.x = this.pos.x;
 			this.sprite.position.y = this.pos.y;
+
+			// Gather up all the entities nearby based on cell population
+			var nearby = [],
+				cell = Utility.getGridLocation(this, smallWorld.grid, smallWorld.cellW, smallWorld.cellH);
+			for (var i = 0; i < cell.population.length; i++) {
+				var id = cell.population[i],
+					entity = smallWorld.entities.find(Utility.getId, id);
+				if (entity) {
+					nearby.push(entity);
+				}
+			}
 			
+			for (var ei = 0; ei < this.numEyes; ei++) {
+				var eye = this.eyes[ei];
+				switch (eye.sensedType) {
+					// Is it wall or nothing?
+					case -1:case 0:
+						eye.shape.lineStyle(0.5, 0x000000);
+						break;
+					// It is noms
+					case 1:
+						eye.shape.lineStyle(0.5, 0xFF0000);
+						break;
+					// It is gnar gnar
+					case 2:
+						eye.shape.lineStyle(0.5, 0x00FF00);
+						break;
+					// Is it another Agent
+					case 3:
+						eye.shape.lineStyle(0.5, 0xFAFAFA);
+						break;
+				}
+
+				var aEyeX = this.oldPos.x + eye.sensedProximity * Math.sin(this.oldAngle + eye.angle),
+					aEyeY = this.oldPos.y + eye.sensedProximity * Math.cos(this.oldAngle + eye.angle);
+
+				// Draw the agent's line of sights
+				eye.shape.moveTo(this.oldPos.x, this.oldPos.y);
+				eye.shape.lineTo(aEyeX, aEyeY);
+			}
+
 			// Apply the outputs of agents on the environment
 			this.digested = [];
-			for (var j=0,n=grid[x][y].population.length;j<n;j++) {
-				var id = grid[x][y].population[j],
-					entityIdx = entities.find(Utility.getId, id);
-				if (entityIdx) {
-					var dist = this.pos.distFrom(entityIdx.pos);
-					if (entityIdx && dist < (entityIdx.radius + this.radius)) {
-						var result = Utility.collisionCheck(this.pos, entityIdx.pos, walls);
-						if (!result) {
-							// Nom Noms!
-							switch (entityIdx.type) {
-								case 1:// The sweet meats
-									this.digestionSignal += 5.0;
-									break;
-								case 2:// The gnar gnar meats
-									this.digestionSignal += -6.0;
-									break;
-								default:
-									this.digestionSignal = 0;
-							}
-							this.digested.push(entityIdx);
+			for (var j = 0, n = nearby.length; j < n; j++) {
+				var dist = this.pos.distFrom(nearby[j].pos);
+				if (dist < (nearby[j].radius + this.radius)) {
+					var result = Utility.collisionCheck(this.pos, nearby[j].pos, smallWorld.walls);
+					if (!result) {
+						// Nom Noms!
+						switch (nearby[j].type) {
+							case 1:// The sweet meats
+								this.digestionSignal += 5.0;
+								break;
+							case 2:// The gnar gnar meats
+								this.digestionSignal += -6.0;
+								break;
 						}
+						this.digested.push(nearby[j]);
 					}
 				}
 			}
@@ -437,8 +424,8 @@ var PIXI = PIXI || {};
 			// This is where the agents learns based on the feedback of their
 			// actions on the environment
 			this.backward();
-			
-			if (this.digested.length !== 0) {
+
+			if (this.digested.length > 0) {
 				if (this.worker) {
 					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
 				} else {
@@ -495,8 +482,8 @@ var PIXI = PIXI || {};
 		onDragMove: function() {
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
-				this.position.x = _this.pos.x = newPosition.x;
-				this.position.y = _this.pos.x =  newPosition.y;
+				this.position.x = newPosition.x;
+				this.position.y = newPosition.y;
 			}
 		},
 		onDragEnd: function() {

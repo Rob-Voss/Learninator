@@ -18,7 +18,7 @@ var Maze = Maze || {};
 		this.vertCells = options.vertCells;
 		this.vW = this.width / this.horizCells;
 		this.vH = this.height / this.vertCells;
-		this.cells = [];
+		this.walls = [];
 		this.cellStack = [];
 		this.path = [];
 
@@ -29,7 +29,7 @@ var Maze = Maze || {};
 
 		this.graph = new Graph(this.canvas, null, this.graphOptions);
 
-		this.draw();
+		this.draw(options.closed);
 		this.solve();
 	};
 
@@ -44,14 +44,14 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		addWall: function (v1, v2) {
-			this.cells.push(new Wall(v1, v2));
+			this.walls.push(new Wall(v1, v2));
 		},
 		/**
-		 * Return the Cells
+		 * Return the walls
 		 * @returns {Array}
 		 */
-		cells: function () {
-			return this.cells;
+		walls: function () {
+			return this.walls;
 		},
 		/**
 		 * Return the Graph's Cells
@@ -64,19 +64,19 @@ var Maze = Maze || {};
 		 * Draw it
 		 * @returns {undefined}
 		 */
-		draw: function () {
+		draw: function (closed) {
 			this.generate();
-			this.drawBorders();
+			this.drawBorders(closed);
 			this.drawMaze();
 		},
 		/**
 		 * Draw the borders
 		 * @returns {undefined}
 		 */
-		drawBorders: function () {
-			this.addWall(new Vec(this.vW, 0), new Vec(this.width, 0));
+		drawBorders: function (closed) {
+			this.addWall(new Vec(closed ? 0 : this.vW, 0), new Vec(this.width, 0));
 			this.addWall(new Vec(this.width, 0), new Vec(this.width, this.height));
-			this.addWall(new Vec(this.width - this.vW, this.height), new Vec(0, this.height));
+			this.addWall(new Vec(this.width - (closed ? 0 : this.vW), this.height), new Vec(0, this.height));
 			this.addWall(new Vec(0, this.height), new Vec(0, 0));
 		},
 		/**
@@ -213,6 +213,7 @@ var Maze = Maze || {};
 					if (neighbor === targetCell) {
 						neighbor.parent = searchCell;
 						this.path = neighbor.pathToOrigin();
+						this.graph.path = this.path;
 						openSet = [];
 						return;
 					}

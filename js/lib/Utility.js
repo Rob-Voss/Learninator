@@ -3,6 +3,26 @@ var Utility = Utility || {};
 (function (global) {
 	"use strict";
 
+	// Random number utilities
+	var return_v = false;
+	var v_val = 0.0;
+	var gaussRandom = function () {
+		if (return_v) {
+			return_v = false;
+			return v_val;
+		}
+		var u = 2 * Math.random() - 1;
+		var v = 2 * Math.random() - 1;
+		var r = u * u + v * v;
+		if (r === 0 || r > 1)
+			return gaussRandom();
+		var c = Math.sqrt(-2 * Math.log(r) / r);
+		v_val = v * c; // cache this
+		return_v = true;
+
+		return u * c;
+	};
+
 	/**
 	 * Return a random Float within the range of a-b
 	 * @param {Float} a
@@ -10,7 +30,7 @@ var Utility = Utility || {};
 	 * @returns {Number}
 	 */
 	Utility.randf = function(a, b) {
-		return Math.random()*(b-a)+a;
+		return Math.random() * (b - a) + a;
 	};
 
 	/**
@@ -20,7 +40,17 @@ var Utility = Utility || {};
 	 * @returns {Number}
 	 */
 	Utility.randi = function(a, b) {
-		return Math.floor(Math.random()*(b-a)+a);
+		return Math.floor(Math.random() * (b - a) + a);
+	};
+
+	/**
+	 * Return a random Number
+	 * @param {Float} mu
+	 * @param {Float} std
+	 * @returns {Number}
+	 */
+	Utility.randn = function(mu, std) {
+		return mu + gaussRandom() * std;
 	};
 
 	/**
@@ -51,18 +81,20 @@ var Utility = Utility || {};
 	 * @returns {Number}
 	 */
 	Utility.getGridLocation = function(entity, cells, width, height) {
-		for(var h = 0, hCell; hCell = cells[h++];) {
-			for(var v = 0, vCell; vCell = hCell[v++];) {
-				var topLeft = vCell.x * width,
+		for(var h = 0; h < cells.length; h++) {
+			var hCell = cells[h];
+			for(var v = 0; v < hCell.length; v++) {
+				var vCell = hCell[v],
+					topLeft = vCell.x * width,
 					topRight = topLeft + width,
 					bottomLeft = vCell.y * height,
 					bottomRight = bottomLeft + height;
 				if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
 					(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
-					entity.gridLocation.x = h-1;
-					entity.gridLocation.y = v-1;
+						entity.gridLocation.x = h;
+						entity.gridLocation.y = v;
 
-					return cells[h-1][v-1];
+						return cells[h][v];
 				}
 			}
 		}
@@ -83,7 +115,7 @@ var Utility = Utility || {};
 		if (walls) {
 			// @TODO Need to check the current cell first so we
 			// don't loop through all the walls
-			for (var i=0; i<walls.length; i++) {
+			for (var i = 0, wl = walls.length; i < wl; i++) {
 				var wall = walls[i];
 				var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 				if (wResult) {
@@ -103,10 +135,8 @@ var Utility = Utility || {};
 
 		// Collide with items
 		if (entities) {
-			// @TODO Need to check the current cell first so we
-			// don't check all the items
-			for (var z=0; z<entities.length; z++) {
-				var entity = entities[z];
+			for (var e = 0, el = entities.length; e < el; e++) {
+				var entity = entities[e];
 				var iResult = Utility.linePointIntersect(v1, v2, entity.pos, entity.radius);
 				if (iResult) {
 					iResult.type = entity.type;
@@ -142,7 +172,8 @@ var Utility = Utility || {};
 			mini = 0,
 			result = {};
 
-		for (var i = 0, item; item = a[i++];) {
+		for (var i = 0, il = a.length; i < il; i++) {
+			var item = a[i];
 			if (item > maxv) {
 				maxv = item;
 				maxi = i;

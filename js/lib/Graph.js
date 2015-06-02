@@ -38,6 +38,7 @@ var Graph = Graph || {};
 			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
 		} else {
 			this.cells = [];
+			this.path = [];
 			this.removedEdges = [];
 
 			for (var i = 0; i < this.width; i++) {

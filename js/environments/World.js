@@ -14,16 +14,15 @@ var PIXI = PIXI || {};
 	 */
 	var World = function (options) {
 		this.canvas = options.canvas;
+		this.graph = options.graph;
 		this.ctx = this.canvas.getContext("2d");
 		this.width = this.canvas.width;
 		this.height = this.canvas.height;
 
-		this.maze = options.maze;
-		this.graph = this.maze.graph;
-		this.grid = this.maze.graph.cells;
-
-		this.vW = this.width / this.graph.width;
-		this.vH = this.height / this.graph.height;
+		this.grid = this.graph.cells;
+		this.cellW = this.canvas.width / this.graph.width;
+		this.cellH = this.canvas.height / this.graph.height;
+		this.path = this.graph.path;
 
 		this.clock = 0;
 
@@ -33,7 +32,7 @@ var PIXI = PIXI || {};
 		*/
 		this.fps = 60;
 		this.interval = 1000 / this.fps;
-		this.numItems = 60;
+		this.numItems = 30;
 		this.entities = [];
 		this.types = ['Wall', 'Nom', 'Gnar'];
 
@@ -48,33 +47,33 @@ var PIXI = PIXI || {};
 		// When set to true, the canvas will redraw everything
 		this.pause = false;
 
-		this.walls = options.walls || [];
-		this.agents = options.agents || [];
-		this.populate();
-
 		var _this = this;
 
-		for (var w = 0; w < this.walls.length; w++) {
+		this.walls = options.walls || [];
+		for (var w = 0, wl = this.walls.length; w < wl; w++) {
 			this.stage.addChild(this.walls[w].shape);
 		}
 
-		for (var a = 0; a < this.agents.length; a++) {
+		this.agents = options.agents || [];
+		for (var a = 0, al = this.agents.length; a < al; a++) {
 			this.stage.addChild(this.agents[a].sprite);
 			for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
 				this.stage.addChild(this.agents[a].eyes[ei].shape);
 			}
 		}
 
-		for (var e = 0; e < this.entities.length; e++) {
+		this.populate();
+		for (var e = 0, el = this.entities.length; e < el; e++) {
 			this.stage.addChild(this.entities[e].sprite);
 		}
 
 		requestAnimationFrame(animate);
 		function animate() {
-			_this.tick();
-			// render the stage
-			_this.renderer.render(_this.stage);
 			requestAnimationFrame(animate);
+			if (!_this.pause) {
+				_this.tick();
+				_this.renderer.render(_this.stage);
+			}
 		}
 	};
 
@@ -90,12 +89,11 @@ var PIXI = PIXI || {};
 		 */
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
-				Utility.getGridLocation(entity, this.grid, this.vW, this.vH);
+				Utility.getGridLocation(entity, this.grid, this.cellW, this.cellH);
+				this.stage.addChild(entity.sprite);
 				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
+				this.entities.push(entity);
 			}
-			this.stage.addChild(entity.sprite);
-			this.entities.push(entity);
-			this.redraw = true;
 		},
 		/**
 		 * Randomly create an entity at the Vec
@@ -112,15 +110,37 @@ var PIXI = PIXI || {};
 		 */
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
-				var x = entity.gridLocation.x,
-					y = entity.gridLocation.y,
-					index = this.grid[x][y].population.indexOf(entity.id);
+				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
 				if (index > -1) {
-					this.grid[x][y].population.splice(index, 1);
-					var idx = this.entities.findIndex(Utility.getId, entity.id);
-					this.entities.splice(idx, 1);
+					Utility.getGridLocation(entity, this.grid, this.cellW, this.cellH);
 					this.stage.removeChild(entity.sprite);
+					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
+					this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
 				}
+			}
+		},
+		/**
+		 * Draw the solution
+		 * @returns {undefined}
+		 */
+		drawSolution: function () {
+			var _this = this;
+			var path = this.path;
+			this.ctx.fillStyle = "rgba(0,165,0,.1)";
+			this.ctx.strokeStyle = "rgb(0,0,0)";
+			for (var i = 0; i < this.path.length; i++) {
+				var V = path[i];
+				var vW = this.cellW,
+					vH = this.cellH,
+					vX = V.x,
+					vY = V.y,
+					// Get the cell X coords and multiply by the cell width
+					x = _this.graph.cells[vX][vY].x * vW,
+					// Get the cell Y coords and multiply by the cell height
+					y = _this.graph.cells[vX][vY].y * vH;
+				(function () {
+					_this.ctx.fillRect(x, y, vW, vH);
+				})();
 			}
 		},
 		/**
@@ -131,44 +151,44 @@ var PIXI = PIXI || {};
 
 			// Tick ALL OF teh items!
 			this.redraw = true;
-
-			var agentCount = this.agents.length;
-			for (var i = 0; i < agentCount; i++) {
-				var agent = this.agents[i];
-				Utility.getGridLocation(agent, this.grid, this.vW, this.vH);
-				agent.tick(this.grid, this.walls, this.entities, this.width, this.height);
-				var digestedCount = agent.digested.length;
-				for (var j = 0; j < digestedCount; j++) {
-					var entity = agent.digested[j];
-					this.deleteEntity(entity);
+			var smallWorld = {
+				width:this.width,
+				height:this.height,
+				cellW:this.cellW,
+				cellH:this.cellH,
+				grid:this.grid,
+				walls: this.walls,
+				entities: this.entities
+			};
+			for (var i = 0, al = this.agents.length; i < al; i++) {
+				this.agents[i].tick(smallWorld);
+				for (var j = 0, dl = this.agents[i].digested.length; j < dl; j++) {
+					this.deleteEntity(this.agents[i].digested[j]);
 				}
 			}
 
-			var entityCount = this.entities.length;
-			for (var e = 0; e < entityCount; e++) {
-				var entity = this.entities[i];
-				entity.age += 1;
-
-				if (entity.age > 10000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
-					this.deleteEntity(entity);
+			for (var e = 0; e < this.entities.length; e++) {
+				this.entities[e].age += 1;
+				Utility.getGridLocation(this.entities[e], this.grid, this.cellW, this.cellH);
+				if (this.entities[e].age > 10000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
+					this.deleteEntity(this.entities[e]);
 				}
 			}
 
 			// If we have less then the number of items allowed throw a random one in
-			if (entityCount < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-				var x = Utility.randf(10, this.width - 10),
-					y = Utility.randf(10, this.height - 10);
+			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+				var x = Utility.randi(5, this.width - 10),
+					y = Utility.randi(5, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
 			}
 
-			for (var i = 0; i < agentCount; i++) {
-				var agent = this.agents[i];
+			for (var i = 0, al = this.agents.length; i < al; i++) {
 				// Throw some points on a Graph
-				if (this.clock % 100 === 0 && agent.pts.length !== 0) {
-					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
+				if (this.clock % 100 === 0 && this.agents[i].pts.length !== 0) {
+					this.rewardGraph.addPoint(this.clock / 100, i, this.agents[i].pts);
 					this.rewardGraph.drawPoints();
 					// Clear them up since we've drawn them
-					agent.pts = [];
+					this.agents[i].pts = Array();
 				}
 			}
 		},
@@ -178,8 +198,8 @@ var PIXI = PIXI || {};
 		 */
 		populate: function () {
 			for (var k = 0; k < this.numItems; k++) {
-				var x = Utility.randf(10, this.width - 10),
-					y = Utility.randf(10, this.height - 10);
+				var x = Utility.randi(5, this.width - 10),
+					y = Utility.randi(5, this.height - 10);
 				this.addRandEntity(new Vec(x, y));
 			}
 		}

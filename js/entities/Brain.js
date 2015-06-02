@@ -348,7 +348,7 @@ var Brain = Brain || {};
 		var data = e.data;
 		switch (data.cmd) {
 			case 'init':
-				importScripts('../convnet.js');
+				importScripts('../lib/convnet.min.js');
 				importScripts('../lib/Utility.js');
 				importScripts('../lib/Window.js');
 				_Brain = new Brain(data.option);

@@ -32,27 +32,20 @@ function start() {
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 3,
-		vertCells: 3
+		horizCells: 4,
+		vertCells: 4,
+		closed: true
 	};
 	var maze = new Maze(mazeOptions);
 
 	var worldOptions = {
 		canvas: worldCanvas,
-		maze: maze,
-		walls: maze.cells,
-		agents: [new Agent('Worker'), /*new Agent('Worker'), new Agent(), */new Agent()],
-		horizCells: mazeOptions.horizCells,
-		vertCells: mazeOptions.vertCells
+		graph: maze.graph,
+		walls: maze.walls,
+		agents: [new Agent(), new Agent('Worker')]
 	};
 	W = new World(worldOptions);
-	W.rewardGraph = new Graph(graphCanvas, [{'name':'Worker'}, /*{'name':'Worker'}, {'name':'Normal'}, */{'name':'Normal'}]);
-
-//	var uiOptions = {
-//		canvas: uiCanvas,
-//		cellSize: worldCanvas.width / mazeOptions.horizCells
-//	};
-//	W.UI = new UI(uiOptions);
+	W.rewardGraph = new Graph(graphCanvas, [{'name':'Normal'}, {'name':'Worker'}]);
 
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');

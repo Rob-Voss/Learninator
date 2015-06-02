@@ -374,6 +374,18 @@ var Vec = Vec || {};
 			return this;
 		},
 		/**
+		 * Sets the X and Y
+		 * @param {Number} x The x
+		 * @param {Number} y The y
+		 * @return {Vec} Returns itself.
+		 */
+		set: function (x, y) {
+			this.x = x;
+			this.y = y;
+
+			return this;
+		},
+		/**
 		 * In place vector operations
 		 * @param {Number} scale
 		 * @returns {undefined}
