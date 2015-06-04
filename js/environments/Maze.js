@@ -16,8 +16,8 @@ var Maze = Maze || {};
 		this.height = this.canvas.height;
 		this.horizCells = options.horizCells;
 		this.vertCells = options.vertCells;
-		this.vW = this.width / this.horizCells;
-		this.vH = this.height / this.vertCells;
+		this.cellWidth = this.width / this.horizCells;
+		this.cellHeight = this.height / this.vertCells;
 		this.walls = [];
 		this.cellStack = [];
 		this.path = [];
@@ -27,7 +27,7 @@ var Maze = Maze || {};
 			'height': this.vertCells
 		};
 
-		this.graph = new Graph(this.canvas, null, this.graphOptions);
+		this.grid = new Grid(this.canvas, this.graphOptions);
 
 		this.draw(options.closed);
 		this.solve();
@@ -58,7 +58,7 @@ var Maze = Maze || {};
 		 * @returns {Array}
 		 */
 		graphCells: function () {
-			return this.graph.cells;
+			return this.grid.cells;
 		},
 		/**
 		 * Draw it
@@ -74,9 +74,9 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		drawBorders: function (closed) {
-			this.addWall(new Vec(closed ? 0 : this.vW, 0), new Vec(this.width, 0));
+			this.addWall(new Vec(closed ? 0 : this.cellWidth, 0), new Vec(this.width, 0));
 			this.addWall(new Vec(this.width, 0), new Vec(this.width, this.height));
-			this.addWall(new Vec(this.width - (closed ? 0 : this.vW), this.height), new Vec(0, this.height));
+			this.addWall(new Vec(this.width - (closed ? 0 : this.cellWidth), this.height), new Vec(0, this.height));
 			this.addWall(new Vec(0, this.height), new Vec(0, 0));
 		},
 		/**
@@ -90,14 +90,14 @@ var Maze = Maze || {};
 			this.ctx.strokeStyle = "rgb(0,0,0)";
 			for (var i = 0; i < this.path.length; i++) {
 				var V = path[i];
-				var vW = this.vW,
-					vH = this.vH,
+				var vW = this.cellWidth,
+					vH = this.cellHeight,
 					vX = V.x,
 					vY = V.y,
 					// Get the cell X coords and multiply by the cell width
-					x = _this.graph.cells[vX][vY].x * vW,
+					x = _this.grid.cells[vX][vY].x * vW,
 					// Get the cell Y coords and multiply by the cell height
-					y = _this.graph.cells[vX][vY].y * vH;
+					y = _this.grid.cells[vX][vY].y * vH;
 				(function () {
 					_this.ctx.fillRect(x, y, vW, vH);
 				})();
@@ -108,7 +108,7 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		drawMaze: function () {
-			var graph = this.graph,
+			var grid = this.grid,
 				drawnEdges = [];
 
 			var edgeAlreadyDrawn = function (v1, v2) {
@@ -117,46 +117,46 @@ var Maze = Maze || {};
 				}) !== undefined;
 			};
 
-			for (var i = 0; i < graph.width; i++) {
-				for (var j = 0; j < graph.height; j++) {
-					var v = graph.cells[i][j],
-						topV = graph.getVecAt(v.x, v.y - 1),
-						leftV = graph.getVecAt(v.x - 1, v.y),
-						rightV = graph.getVecAt(v.x + 1, v.y),
-						bottomV = graph.getVecAt(v.x, v.y + 1);
+			for (var i = 0; i < grid.width; i++) {
+				for (var j = 0; j < grid.height; j++) {
+					var v = grid.cells[i][j],
+						topV = grid.getCellAt(v.x, v.y - 1),
+						leftV = grid.getCellAt(v.x - 1, v.y),
+						rightV = grid.getCellAt(v.x + 1, v.y),
+						bottomV = grid.getCellAt(v.x, v.y + 1);
 
-					if (!edgeAlreadyDrawn(v, topV) && graph.areConnected(v, topV)) {
-						var x1 = v.x * this.vW,
-							y1 = v.y * this.vH,
-							x2 = x1 + this.vW,
+					if (!edgeAlreadyDrawn(v, topV) && grid.areConnected(v, topV)) {
+						var x1 = v.x * this.cellWidth,
+							y1 = v.y * this.cellHeight,
+							x2 = x1 + this.cellWidth,
 							y2 = y1;
 
 						this.addWall(new Vec(x1, y1), new Vec(x2, y2));
 						drawnEdges.push([v, topV]);
 					}
 
-					if (!edgeAlreadyDrawn(v, leftV) && graph.areConnected(v, leftV)) {
+					if (!edgeAlreadyDrawn(v, leftV) && grid.areConnected(v, leftV)) {
 						var x2 = x1,
-							y2 = y1 + this.vH;
+							y2 = y1 + this.cellHeight;
 
 						this.addWall(new Vec(x1, y1), new Vec(x2, y2));
 						drawnEdges.push([v, leftV]);
 					}
 
-					if (!edgeAlreadyDrawn(v, rightV) && graph.areConnected(v, rightV)) {
-						var x1 = (v.x * this.vW) + this.vW,
-							y1 = v.y * this.vH,
+					if (!edgeAlreadyDrawn(v, rightV) && grid.areConnected(v, rightV)) {
+						var x1 = (v.x * this.cellWidth) + this.cellWidth,
+							y1 = v.y * this.cellHeight,
 							x2 = x1,
-							y2 = y1 + this.vH;
+							y2 = y1 + this.cellHeight;
 
 						this.addWall(new Vec(x1, y1), new Vec(x2, y2));
 						drawnEdges.push([v, rightV]);
 					}
 
-					if (!edgeAlreadyDrawn(v, bottomV) && graph.areConnected(v, bottomV)) {
-						var x1 = v.x * this.vW,
-							y1 = (v.y * this.vH) + this.vH,
-							x2 = x1 + this.vW,
+					if (!edgeAlreadyDrawn(v, bottomV) && grid.areConnected(v, bottomV)) {
+						var x1 = v.x * this.cellWidth,
+							y1 = (v.y * this.cellHeight) + this.cellHeight,
+							x2 = x1 + this.cellWidth,
 							y2 = y1;
 
 						this.addWall(new Vec(x1, y1), new Vec(x2, y2));
@@ -170,7 +170,7 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		generate: function () {
-			var initialCell = this.graph.getVecAt(1, 1);
+			var initialCell = this.grid.getCellAt(1, 1);
 			this.recurse(initialCell);
 		},
 		/**
@@ -180,11 +180,11 @@ var Maze = Maze || {};
 		 */
 		recurse: function (cell) {
 			cell.visit();
-			var neighbors = this.graph.unvisitedNeighbors(cell);
+			var neighbors = this.grid.unvisitedNeighbors(cell);
 			if (neighbors.length > 0) {
 				var randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
 				this.cellStack.push(cell);
-				this.graph.removeEdgeBetween(cell, randomNeighbor);
+				this.grid.removeEdgeBetween(cell, randomNeighbor);
 				this.recurse(randomNeighbor);
 			} else {
 				var waitingCell = this.cellStack.pop();
@@ -200,20 +200,20 @@ var Maze = Maze || {};
 		solve: function () {
 			var closedSet = [],
 				// Top left cell
-				startCell = this.graph.getVecAt(0, 0),
+				startCell = this.grid.getCellAt(0, 0),
 				// Bottom right cell
-				targetCell = this.graph.getVecAt(this.graph.width - 1, this.graph.height - 1),
+				targetCell = this.grid.getCellAt(this.grid.width - 1, this.grid.height - 1),
 				openSet = [startCell],
 				searchCell = startCell;
 
 			while (openSet.length > 0) {
-				var neighbors = this.graph.disconnectedNeighbors(searchCell);
+				var neighbors = this.grid.disconnectedNeighbors(searchCell);
 				for (var i = 0; i < neighbors.length; i++) {
 					var neighbor = neighbors[i];
 					if (neighbor === targetCell) {
 						neighbor.parent = searchCell;
 						this.path = neighbor.pathToOrigin();
-						this.graph.path = this.path;
+						this.grid.path = this.path;
 						openSet = [];
 						return;
 					}
@@ -221,7 +221,7 @@ var Maze = Maze || {};
 						if (!_.include(openSet, neighbor)) {
 							openSet.push(neighbor);
 							neighbor.parent = searchCell;
-							neighbor.heuristic = neighbor.score() + this.graph.getVecDistance(neighbor, targetCell);
+							neighbor.heuristic = neighbor.score() + this.grid.getCellDistance(neighbor, targetCell);
 						}
 					}
 				}

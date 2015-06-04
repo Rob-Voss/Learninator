@@ -14,17 +14,29 @@ var PIXI = PIXI || {};
 	 */
 	var World = function (options) {
 		this.canvas = options.canvas;
-		this.graph = options.graph;
 		this.ctx = this.canvas.getContext("2d");
 		this.width = this.canvas.width;
 		this.height = this.canvas.height;
 
-		this.grid = this.graph.cells;
-		this.cellW = this.canvas.width / this.graph.width;
-		this.cellH = this.canvas.height / this.graph.height;
-		this.path = this.graph.path;
+		this.grid = options.grid;
+		this.cellWidth = this.canvas.width / this.grid.width;
+		this.cellHeight = this.canvas.height / this.grid.height;
+		this.path = this.grid.path;
+		this.rewardGraph = options.rewardGraph;
 
 		this.clock = 0;
+		this.numItems = 20;
+		this.entities = [];
+		this.types = ['Wall', 'Nom', 'Gnar'];
+		this.pause = false;
+
+		if (options.raycast) {
+			this.raycast = options.raycast;
+			this.player = new Player(0, 0, Math.PI * 0.3);
+			this.camera = new Camera(options.displayCanvas, 320, 0.8);
+			this.map = new Map(this.grid.width);
+			this.map.randomize();
+		}
 
 		/**
 		* 1s = 1000ms (remember that setInterval and setTimeout run on milliseconds)
@@ -32,20 +44,11 @@ var PIXI = PIXI || {};
 		*/
 		this.fps = 60;
 		this.interval = 1000 / this.fps;
-		this.numItems = 30;
-		this.entities = [];
-		this.types = ['Wall', 'Nom', 'Gnar'];
 
-		// create a renderer instance.
 		this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view:this.canvas}, true);
 		this.renderer.backgroundColor = 0xFFFFFF;
-		// add the renderer view element to the DOM
 		document.body.appendChild(this.renderer.view);
-		// create an new instance of a pixi stage
 		this.stage = new PIXI.Container();
-
-		// When set to true, the canvas will redraw everything
-		this.pause = false;
 
 		var _this = this;
 
@@ -56,6 +59,7 @@ var PIXI = PIXI || {};
 
 		this.agents = options.agents || [];
 		for (var a = 0, al = this.agents.length; a < al; a++) {
+//			this.agents[a].sprite.tint = this.rewardGraph.hexStyles[a];
 			this.stage.addChild(this.agents[a].sprite);
 			for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
 				this.stage.addChild(this.agents[a].eyes[ei].shape);
@@ -68,10 +72,17 @@ var PIXI = PIXI || {};
 		}
 
 		requestAnimationFrame(animate);
+
 		function animate() {
 			requestAnimationFrame(animate);
 			if (!_this.pause) {
 				_this.tick();
+				if (_this.raycast) {
+					var controls = {left:false,right:false,forward:false,back:false};
+//					_this.map.update(_this.clock);
+					_this.player.update(controls, _this.map, _this.clock, _this.agents[0]);
+					_this.camera.render(_this.player, _this.map);
+				}
 				_this.renderer.render(_this.stage);
 			}
 		}
@@ -89,9 +100,9 @@ var PIXI = PIXI || {};
 		 */
 		addEntity: function (entity) {
 			if (entity.type !== 0) {
-				Utility.getGridLocation(entity, this.grid, this.cellW, this.cellH);
+				var cell = this.grid.getGridLocation(entity.pos);
+				cell.population.splice(0, 0, entity.id);
 				this.stage.addChild(entity.sprite);
-				this.grid[entity.gridLocation.x][entity.gridLocation.y].population.push(entity.id);
 				this.entities.push(entity);
 			}
 		},
@@ -110,37 +121,13 @@ var PIXI = PIXI || {};
 		 */
 		deleteEntity: function (entity) {
 			if (entity.type !== 0) {
-				var index = this.grid[entity.gridLocation.x][entity.gridLocation.y].population.indexOf(entity.id);
+				var cell = this.grid.getGridLocation(entity.pos),
+					index = cell.population.indexOf(entity.id);
 				if (index > -1) {
-					Utility.getGridLocation(entity, this.grid, this.cellW, this.cellH);
+					cell.population.splice(index, 1);
 					this.stage.removeChild(entity.sprite);
-					this.grid[entity.gridLocation.x][entity.gridLocation.y].population.splice(index, 1);
 					this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
 				}
-			}
-		},
-		/**
-		 * Draw the solution
-		 * @returns {undefined}
-		 */
-		drawSolution: function () {
-			var _this = this;
-			var path = this.path;
-			this.ctx.fillStyle = "rgba(0,165,0,.1)";
-			this.ctx.strokeStyle = "rgb(0,0,0)";
-			for (var i = 0; i < this.path.length; i++) {
-				var V = path[i];
-				var vW = this.cellW,
-					vH = this.cellH,
-					vX = V.x,
-					vY = V.y,
-					// Get the cell X coords and multiply by the cell width
-					x = _this.graph.cells[vX][vY].x * vW,
-					// Get the cell Y coords and multiply by the cell height
-					y = _this.graph.cells[vX][vY].y * vH;
-				(function () {
-					_this.ctx.fillRect(x, y, vW, vH);
-				})();
 			}
 		},
 		/**
@@ -150,12 +137,7 @@ var PIXI = PIXI || {};
 			this.clock++;
 
 			// Tick ALL OF teh items!
-			this.redraw = true;
 			var smallWorld = {
-				width:this.width,
-				height:this.height,
-				cellW:this.cellW,
-				cellH:this.cellH,
 				grid:this.grid,
 				walls: this.walls,
 				entities: this.entities
@@ -169,7 +151,7 @@ var PIXI = PIXI || {};
 
 			for (var e = 0; e < this.entities.length; e++) {
 				this.entities[e].age += 1;
-				Utility.getGridLocation(this.entities[e], this.grid, this.cellW, this.cellH);
+				this.entities[e].gridLocation = this.grid.getGridLocation(this.entities[e].pos);
 				if (this.entities[e].age > 10000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 					this.deleteEntity(this.entities[e]);
 				}

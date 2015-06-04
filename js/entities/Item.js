@@ -15,49 +15,35 @@ var Utility = Utility || {};
 	 */
 	var Item = function (type, v, w, h, r) {
 		this.id = Utility.guid();
-		this.type = type || 1; // type of item
-		this.pos = v || new Vec(0, 0); // position
-		this.gridLocation = new Vec(0, 0);
-		this.width = w || 20; // width of item
-		this.height = h || 20; // height of item
-		this.radius = r || 10; // default radius
+		this.type = type || 1;
+		this.pos = v || new Vec(0, 0);
+		this.gridLocation = new Cell(0, 0);
+		this.width = w || 20;
+		this.height = h || 20;
+		this.radius = r || 10;
 		this.age = 0;
 		this.cleanUp = false;
 		var _this = this;
 
-		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');
-		// create a new Sprite using the texture
 		this.sprite = new PIXI.Sprite(this.texture);
-		// Add in interactivity
 		this.sprite.interactive = true;
-
-		// center the sprites anchor point
-		this.sprite.anchor.x = 0.5;
-		this.sprite.anchor.y = 0.5;
-
-		// move the sprite t the center of the screen
-		this.sprite.position.x = this.pos.x;
-		this.sprite.position.y = this.pos.y;
-		this.sprite.entity = _this;
-
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.sprite.anchor.set(0.5, 0.5);
+		this.sprite.position.set(this.pos.x, this.pos.y);
 		this.sprite
 			.on('mousedown', this.onDragStart)
 			.on('touchstart', this.onDragStart)
-			// set the mouseup and touchend callback...
 			.on('mouseup', this.onDragEnd)
 			.on('mouseupoutside', this.onDragEnd)
 			.on('touchend', this.onDragEnd)
 			.on('touchendoutside', this.onDragEnd)
-			// set the mouseover callback...
 			.on('mouseover', this.onMouseOver)
-			// set the mouseout callback...
 			.on('mouseout', this.onMouseOut)
-			// events for drag move
 			.on('mousemove', this.onDragMove)
 			.on('touchmove', this.onDragMove);
-
-
+		this.sprite.entity = _this;
 	};
 
 	/**
@@ -65,13 +51,8 @@ var Utility = Utility || {};
 	 * @type Item
 	 */
 	Item.prototype = {
-		/**
-		 * Determine if a point is inside the shape's bounds
-		 * @param {Vec} v
-		 * @returns {Boolean}
-		 */
-		contains: function (event, mouse) {
-			return this.pos.distFrom(mouse.pos) < this.radius;
+		updateLocation: function() {
+			
 		},
 		onDragStart: function(event) {
 			this.data = event.data;
@@ -81,8 +62,8 @@ var Utility = Utility || {};
 		onDragMove: function() {
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
-				this.position.x = this.entity.pos.x = newPosition.x;
-				this.position.y = this.entity.pos.y = newPosition.y;
+				this.position.set(newPosition.x, newPosition.y);
+				this.entity.pos.set(newPosition.x, newPosition.y);
 			}
 		},
 		onDragEnd: function() {

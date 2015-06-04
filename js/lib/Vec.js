@@ -12,13 +12,6 @@ var Vec = Vec || {};
 	var Vec = function (x, y) {
 		this.x = x;
 		this.y = y;
-		this.visited = false;
-		this.population = [];
-
-		// When solving the maze, this represents the previous node in the navigated path.
-		this.parent = null;
-
-		this.heuristic = 0;
 	};
 
 	Vec.prototype = {
@@ -71,7 +64,7 @@ var Vec = Vec || {};
 		 */
 		clamp: function (min, max) {
 			// This function assumes min < max, if this assumption
-			//isn't true it will not operate correctly
+			// isn't true it will not operate correctly
 			if (this.x < min.x) {
 				this.x = min.x;
 			} else if (this.x > max.x) {
@@ -121,17 +114,6 @@ var Vec = Vec || {};
 		 */
 		distanceTo: function (v) {
 			return Math.sqrt(this.distanceToSquared(v));
-		},
-
-		/**
-		 * Distance from the referenced Vector
-		 * @param {Vec} v
-		 * @returns {Number}
-		 */
-		distFrom: function (v) {
-			var dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
-
-			return dist;
 		},
 		/**
 		 * Divides the x and y components of this vector by a scalar value
@@ -260,22 +242,6 @@ var Vec = Vec || {};
 			return this.divideScalar(this.length());
 		},
 		/**
-		 * Calculate the path to the origin
-		 * @returns {Array}
-		 */
-		pathToOrigin: function () {
-			var path = [this],
-					p = this.parent;
-
-			while (p) {
-				path.push(p);
-				p = p.parent;
-			}
-			path.reverse();
-
-			return path;
-		},
-		/**
 		 * Rotates the vector by 90 degrees
 		 * @return {Vec} Returns itself.
 		 * @chainable
@@ -395,22 +361,8 @@ var Vec = Vec || {};
 			this.y *= scale;
 		},
 		/**
-		 * Score
-		 * @returns {Number}
-		 */
-		score: function () {
-			var total = 0,
-					p = this.parent;
-
-			while (p) {
-				++total;
-				p = p.parent;
-			}
-			return total;
-		},
-		/**
 		 * Sets the length of the vector
-		 * @param {Number}l  The length to set this vector to
+		 * @param {Number} l The length to set this vector to
 		 * @return {Vec} Returns itself.
 		 */
 		setLength: function (l) {
@@ -448,13 +400,6 @@ var Vec = Vec || {};
 		 */
 		toArray: function () {
 			return [this.x, this.y];
-		},
-		/**
-		 * Mark it as visited
-		 * @return {undefined}
-		 */
-		visit: function () {
-			this.visited = true;
 		}
 	};
 

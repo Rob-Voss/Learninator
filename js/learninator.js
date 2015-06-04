@@ -28,34 +28,28 @@ var uiCanvas;
 function start() {
 	worldCanvas = document.getElementById("world_canvas");
 	graphCanvas = document.getElementById("graph_canvas");
-	uiCanvas = document.getElementById("ui_canvas");;
+	displayCanvas = document.getElementById("display_canvas");;
 
 	var mazeOptions = {
 		canvas: worldCanvas,
-		horizCells: 4,
-		vertCells: 4,
+		horizCells: 10,
+		vertCells: 10,
 		closed: true
 	};
 	var maze = new Maze(mazeOptions);
 
 	var worldOptions = {
 		canvas: worldCanvas,
-		graph: maze.graph,
+		displayCanvas: displayCanvas,
+		raycast: true,
+		grid: maze.grid,
 		walls: maze.walls,
-		agents: [new Agent(), new Agent('Worker')]
+		rewardGraph: new Graph(graphCanvas, [{'name':'Normal'}/*, {'name':'Worker'}, {'name':'Worker'}, {'name':'Worker'}*/]),
+		agents: [new Agent()/*, new Agent('Worker'), new Agent('Worker'), new Agent('Worker')*/]
 	};
 	W = new World(worldOptions);
-	W.rewardGraph = new Graph(graphCanvas, [{'name':'Normal'}, {'name':'Worker'}]);
 
 	// Globals blech
 	W.memoryBank = document.getElementById('memoryBank');
 	W.brainSpecs = document.getElementById('brainSpecs');
 }
-
-function solve() {
-	W.redraw = true;
-	W.maze.solve();
-	W.maze.drawSolution();
-	W.pause = true;
-}
-

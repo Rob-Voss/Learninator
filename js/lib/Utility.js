@@ -73,34 +73,6 @@ var Utility = Utility || {};
 	};
 
 	/**
-	 * Return the location within a grid
-	 * @param {Object} entity
-	 * @param {Array} cells
-	 * @param {Number} width
-	 * @param {Number} height
-	 * @returns {Number}
-	 */
-	Utility.getGridLocation = function(entity, cells, width, height) {
-		for(var h = 0; h < cells.length; h++) {
-			var hCell = cells[h];
-			for(var v = 0; v < hCell.length; v++) {
-				var vCell = hCell[v],
-					topLeft = vCell.x * width,
-					topRight = topLeft + width,
-					bottomLeft = vCell.y * height,
-					bottomRight = bottomLeft + height;
-				if ((entity.pos.x >= topLeft && entity.pos.x <= topRight) &&
-					(entity.pos.y >= bottomLeft && entity.pos.y <= bottomRight)) {
-						entity.gridLocation.x = h;
-						entity.gridLocation.y = v;
-
-						return cells[h][v];
-				}
-			}
-		}
-	};
-
-	/**
 	 * A helper function to get check for colliding walls/items
 	 * @param {Vec} v1
 	 * @param {Vec} v2

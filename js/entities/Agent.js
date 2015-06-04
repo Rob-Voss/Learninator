@@ -33,44 +33,32 @@ var PIXI = PIXI || {};
 		this.id = Utility.guid();
 		this.type = 3; // type of agent
 		this.worker = (type === 'Worker') ? true : false;
-		this.pos = v || new Vec(1, 1); // position
-		this.gridLocation = new Vec(0, 0);
-		this.width = w || 20; // width of agent
-		this.height = h || 20; // height of agent
-		this.radius = r || 10; // default radius
+		this.pos = v || new Vec(1, 1);
+		this.gridLocation = new Cell(0, 0);
+		this.width = w || 20;
+		this.height = h || 20;
+		this.radius = r || 10;
+		var _this = this;
 
-		// create a texture from an image path
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
-		// create a new Sprite using the texture
 		this.sprite = new PIXI.Sprite(this.texture);
-		this.sprite.tint = (this.worker ? 0x0000FF : 0xFF0000);
-		// Add in interactivity
 		this.sprite.interactive = true;
+		this.sprite.width = this.width;
+		this.sprite.height = this.height;
+		this.sprite.anchor.set(0.5, 0.5);
+		this.sprite.position.set(this.pos.x, this.pos.y);
 		this.sprite
 			.on('mousedown', this.onMouseClick)
 			.on('touchstart', this.onMouseClick)
-			// set the mouseup and touchend callback...
 			.on('mouseup', this.onMouseUp)
 			.on('mouseupoutside', this.onMouseUp)
 			.on('touchend', this.onMouseUp)
 			.on('touchendoutside', this.onMouseUp)
-			// set the mouseover callback...
 			.on('mouseover', this.onMouseOver)
-			// set the mouseout callback...
 			.on('mouseout', this.onMouseOut)
-			// events for drag move
 			.on('mousemove', this.onDragMove)
 			.on('touchmove', this.onDragMove);
-
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-
-		// center the sprites anchor point
-		this.sprite.anchor.set(0.5, 0.5);
-
-		// move the sprite t the center of the screen
-		this.sprite.position.x = this.pos.x;
-		this.sprite.position.y = this.pos.y;
+		this.sprite.entity = _this;
 
 		this.digested = [];
 
@@ -165,8 +153,6 @@ var PIXI = PIXI || {};
 			brainOpts.layer_defs = layerDefs;
 			brainOpts.tdtrainer_options = trainerOpts;
 
-		var _this = this;
-
 		if (this.worker) {
 			this.brain = new Worker('js/entities/Brain.js');
 			this.brain.addEventListener('message', function (e) {
@@ -233,13 +219,13 @@ var PIXI = PIXI || {};
 			if (this.actionIndex === 0 && proximityReward > 0.75)
 				forwardReward = 0.1 * proximityReward;
 
-			// agents like to eat good things
+			// Agents like to eat good things
 			var digestionReward = this.digestionSignal;
 			this.digestionSignal = 0.0;
 
 			var reward = proximityReward + forwardReward + digestionReward;
+			// pass to brain for learning
 			if (this.worker) {
-				// pass to brain for learning
 				this.brain.postMessage({cmd:'backward', msg:'Backward', input:reward});
 			} else {
 				this.brain.backward(reward);
@@ -265,14 +251,13 @@ var PIXI = PIXI || {};
 				}
 			}
 
+			// Get action from brain
 			if (this.worker) {
-				// Get action from brain
 				this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
 			} else {
 				this.previousActionIdx = this.actionIndex;
 				var actionIdx = this.brain.forward(inputArray),
 					action = this.actions[actionIdx];
-				// Get action from brain
 				this.actionIndex = actionIdx;
 
 				// Demultiplex into behavior variables
@@ -285,7 +270,7 @@ var PIXI = PIXI || {};
 		 * @param {Object} smallWorld
 		 * @returns {undefined}
 		 */
-		tick: function (smallWorld) {				
+		tick: function (smallWorld) {
 			this.oldPos = this.pos; // Back up the old position
 			this.oldAngle = this.angle; // and angle
 
@@ -299,7 +284,7 @@ var PIXI = PIXI || {};
 				var result = Utility.collisionCheck(this.pos, new Vec(X, Y), smallWorld.walls, smallWorld.entities);
 				if (result) {
 					// eye collided with an entity
-					eye.sensedProximity = result.vecI.distFrom(this.pos);
+					eye.sensedProximity = result.vecI.distanceTo(this.pos);
 					eye.sensedType = result.type;
 				} else {
 					eye.sensedProximity = eye.maxRange;
@@ -336,11 +321,11 @@ var PIXI = PIXI || {};
 			if (this.angle > 2 * Math.PI)
 				this.angle -= 2 * Math.PI;
 			this.sprite.rotation = -this.angle;
-			
+
 			// The agent is trying to move from pos to oPos so we need to check walls
 			var derped = Utility.collisionCheck(this.oldPos, this.pos, smallWorld.walls);
 			if (derped) {
-				var d = this.pos.distFrom(derped.vecI);
+				var d = this.pos.distanceTo(derped.vecI);
 				// The agent derped! Wall collision! Reset their position
 				if (derped && d <= this.radius) {
 					this.pos = this.oldPos;
@@ -350,27 +335,26 @@ var PIXI = PIXI || {};
 			// Handle boundary conditions
 			if (this.pos.x < 2)
 				this.pos.x = 2;
-			if (this.pos.x > smallWorld.width)
-				this.pos.x = smallWorld.width;
+			if (this.pos.x > smallWorld.grid.width * smallWorld.grid.cellWidth)
+				this.pos.x = smallWorld.grid.width * smallWorld.grid.cellWidth;
 			if (this.pos.y < 2)
 				this.pos.y = 2;
-			if (this.pos.y > smallWorld.height)
-				this.pos.y = smallWorld.height;
+			if (this.pos.y > smallWorld.grid.height * smallWorld.grid.cellHeight)
+				this.pos.y = smallWorld.grid.height * smallWorld.grid.cellHeight;
 
-			this.sprite.position.x = this.pos.x;
-			this.sprite.position.y = this.pos.y;
+			this.sprite.position.set(this.pos.x, this.pos.y);
 
+			this.gridLocation = smallWorld.grid.getGridLocation(this.pos);
 			// Gather up all the entities nearby based on cell population
-			var nearby = [],
-				cell = Utility.getGridLocation(this, smallWorld.grid, smallWorld.cellW, smallWorld.cellH);
-			for (var i = 0; i < cell.population.length; i++) {
-				var id = cell.population[i],
+			var nearby = [];
+			for (var i = 0; i < this.gridLocation.population.length; i++) {
+				var id = this.gridLocation.population[i],
 					entity = smallWorld.entities.find(Utility.getId, id);
 				if (entity) {
 					nearby.push(entity);
 				}
 			}
-			
+
 			for (var ei = 0; ei < this.numEyes; ei++) {
 				var eye = this.eyes[ei];
 				switch (eye.sensedType) {
@@ -403,7 +387,7 @@ var PIXI = PIXI || {};
 			// Apply the outputs of agents on the environment
 			this.digested = [];
 			for (var j = 0, n = nearby.length; j < n; j++) {
-				var dist = this.pos.distFrom(nearby[j].pos);
+				var dist = this.pos.distanceTo(nearby[j].pos);
 				if (dist < (nearby[j].radius + this.radius)) {
 					var result = Utility.collisionCheck(this.pos, nearby[j].pos, smallWorld.walls);
 					if (!result) {
@@ -482,8 +466,8 @@ var PIXI = PIXI || {};
 		onDragMove: function() {
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
-				this.position.x = newPosition.x;
-				this.position.y = newPosition.y;
+				this.position.set(newPosition.x, newPosition.y);
+				this.entity.pos.set(newPosition.x, newPosition.y);
 			}
 		},
 		onDragEnd: function() {

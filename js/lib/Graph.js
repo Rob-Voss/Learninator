@@ -28,31 +28,14 @@ var Graph = Graph || {};
 		this.maxy = -9999;
 		this.miny = 9999;
 
-		if (legend !== null) {
-			this.numlines = legend.length;
-			this.pts = new Array(this.numlines);
-			for (var i = 0; i < this.numlines; i++) {
-				this.pts[i] = [];
-			}
-			this.legend = legend;
-			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
-		} else {
-			this.cells = [];
-			this.path = [];
-			this.removedEdges = [];
-
-			for (var i = 0; i < this.width; i++) {
-				this.cells.push([]);
-				var row = this.cells[i];
-
-				for (var j = 0; j < this.height; j++) {
-					var v = new Vec(i, j, this);
-					row.push(v);
-				}
-			}
+		this.numlines = legend.length;
+		this.pts = new Array(this.numlines);
+		for (var i = 0; i < this.numlines; i++) {
+			this.pts[i] = [];
 		}
-
-
+		this.legend = legend;
+		this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
+		this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
 	};
 
 	Graph.prototype = {
@@ -164,128 +147,6 @@ var Graph = Graph || {};
 				}
 				ctx.stroke();
 			}
-		},
-		/**
-		 * Get a vector at a specific point
-		 * @param {Number} x
-		 * @param {Number} y
-		 * @returns {Vec}
-		 */
-		getVecAt: function (x, y) {
-			if (x >= this.width || y >= this.height || x < 0 || y < 0) {
-				return null;
-			}
-
-			if (!this.cells[x]) {
-				return null;
-			}
-
-			return this.cells[x][y];
-		},
-		/**
-		 * Get the distance between two vectors
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @returns {Number}
-		 */
-		getVecDistance: function (v1, v2) {
-			var xDist = Math.abs(v1.x - v2.x),
-				yDist = Math.abs(v1.y - v2.y);
-
-			return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-		},
-		/**
-		 * Returns true if there is an edge between v1 and v2
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @returns {Boolean}
-		 */
-		areConnected: function (v1, v2) {
-			if (!v1 || !v2) {
-				return false;
-			}
-
-			if (Math.abs(v1.x - v2.x) > 1 || Math.abs(v1.y - v2.y) > 1) {
-				return false;
-			}
-
-			var removedEdge = _.detect(this.removedEdges, function (edge) {
-				return _.include(edge, v1) && _.include(edge, v2);
-			});
-
-			return removedEdge === undefined;
-		},
-		/**
-		 * Returns all neighbors of this Vec that aren't separated by an edge
-		 * @param {Vec} v
-		 * @returns {unresolved}
-		 */
-		unvisitedNeighbors: function (v) {
-			return _.select(this.connectedNeighbors(v), function (c) {
-				var unv = !c.visited;
-				return unv;
-			});
-		},
-		/**
-		 * Returns all neighbors of this Vec that are separated by an edge
-		 * @param {Vec} v
-		 * @returns {unresolved}
-		 */
-		connectedNeighbors: function (v) {
-			var _this = this;
-			return _.select(this.neighbors(v), function (c) {
-				var con = _this.areConnected(v, c);
-				return con;
-			});
-		},
-		/**
-		 * Returns all neighbors of this Vec that are NOT separated by an edge
-		 * This means there is a maze path between both cells._this
-		 * @param {Vec} v
-		 * @returns {unresolved}
-		 */
-		disconnectedNeighbors: function (v) {
-			var _this = this;
-			return _.reject(this.neighbors(v), function (c) {
-				var disc = _this.areConnected(v, c);
-				return disc;
-			});
-		},
-		/**
-		 * Returns all neighbors of this cell, regardless if they are connected or not.
-		 * @param {Vec} v
-		 * @returns {Array|@exp;Array}
-		 */
-		neighbors: function (v) {
-			var neighbors = [],
-				topCell = this.getVecAt(v.x, v.y - 1),
-				rightCell = this.getVecAt(v.x + 1, v.y),
-				bottomCell = this.getVecAt(v.x, v.y + 1),
-				leftCell = this.getVecAt(v.x - 1, v.y);
-
-			if (v.y > 0 && topCell) {
-				neighbors.push(topCell);
-			}
-			if (v.x < this.width && rightCell) {
-				neighbors.push(rightCell);
-			}
-			if (v.y < this.height && bottomCell) {
-				neighbors.push(bottomCell);
-			}
-			if (v.x > 0 && leftCell) {
-				neighbors.push(leftCell);
-			}
-
-			return neighbors;
-		},
-		/**
-		 * Remove the edge from between two Vec
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 * @returns {undefined}
-		 */
-		removeEdgeBetween: function (v1, v2) {
-			this.removedEdges.push([v1, v2]);
 		}
 	};
 
