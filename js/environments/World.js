@@ -59,7 +59,7 @@ var PIXI = PIXI || {};
 
 		this.agents = options.agents || [];
 		for (var a = 0, al = this.agents.length; a < al; a++) {
-//			this.agents[a].sprite.tint = this.rewardGraph.hexStyles[a];
+			this.agents[a].sprite.tint = this.rewardGraph.hexStyles[a];
 			this.stage.addChild(this.agents[a].sprite);
 			for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
 				this.stage.addChild(this.agents[a].eyes[ei].shape);
@@ -138,12 +138,15 @@ var PIXI = PIXI || {};
 
 			// Tick ALL OF teh items!
 			var smallWorld = {
+				map:this.map,
 				grid:this.grid,
 				walls: this.walls,
 				entities: this.entities
 			};
 			for (var i = 0, al = this.agents.length; i < al; i++) {
 				this.agents[i].tick(smallWorld);
+				this.agents[i].player.x = this.agents[i].pos.x;
+				this.agents[i].player.y = this.agents[i].pos.y;
 				for (var j = 0, dl = this.agents[i].digested.length; j < dl; j++) {
 					this.deleteEntity(this.agents[i].digested[j]);
 				}

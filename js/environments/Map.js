@@ -9,7 +9,7 @@ function Bitmap(src, width, height) {
 function Map(size) {
 	this.size = size;
 	this.wallGrid = new Uint8Array(size * size);
-	this.wallTexture = new Bitmap('img/wall_texture.jpg', 1024, 1024);
+	this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
 	this.light = 0;
 }
 

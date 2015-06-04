@@ -38,6 +38,7 @@ var PIXI = PIXI || {};
 		this.width = w || 20;
 		this.height = h || 20;
 		this.radius = r || 10;
+		this.player = new Player(this.pos.x, this.pos.y, this.angle);
 		var _this = this;
 
 		this.texture = PIXI.Texture.fromImage("img/Agent.png");
@@ -409,6 +410,9 @@ var PIXI = PIXI || {};
 			// actions on the environment
 			this.backward();
 
+			this.player.rotate(this.angle);
+			this.player.walk(1, smallWorld.map, this.player.direction);
+			
 			if (this.digested.length > 0) {
 				if (this.worker) {
 					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});

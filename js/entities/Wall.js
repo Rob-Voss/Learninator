@@ -20,6 +20,15 @@ var Wall = Wall || {};
 		this.shape.moveTo(this.v1.x, this.v1.y);
 		this.shape.lineTo(this.v2.x, this.v2.y);
 		this.shape.endFill();
+
+		function Bitmap(src, width, height) {
+			this.image = new Image();
+			this.image.src = src;
+			this.width = width;
+			this.height = height;
+		}
+
+		this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
 	};
 
 	Wall.prototype = {
