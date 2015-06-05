@@ -410,9 +410,6 @@ var PIXI = PIXI || {};
 			// actions on the environment
 			this.backward();
 
-			this.player.rotate(this.angle);
-			this.player.walk(1, smallWorld.map, this.player.direction);
-			
 			if (this.digested.length > 0) {
 				if (this.worker) {
 					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});

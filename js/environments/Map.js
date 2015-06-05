@@ -1,4 +1,3 @@
-
 function Bitmap(src, width, height) {
 	this.image = new Image();
 	this.image.src = src;
@@ -26,7 +25,6 @@ Map.prototype.randomize = function () {
 	for (var i = 0; i < this.size * this.size; i++) {
 		this.wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
 	}
-	console.log('Done');
 };
 
 Map.prototype.cast = function (point, angle, range) {

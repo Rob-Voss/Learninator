@@ -83,10 +83,13 @@ Player.prototype.walk = function (distance, map, direction) {
 		this.x += dx;
 	if (map.get(this.x, this.y + dy) <= 0)
 		this.y += dy;
-	this.paces += distance;
+	if (this.paces >= 0)
+		this.paces += distance;
+	else
+		this.paces = 0;
 };
 
-Player.prototype.update = function (controls, map, seconds, agent) {
+Player.prototype.update = function (controls, map, seconds) {
 	if (controls.left)
 		this.rotate(-Math.PI * seconds);
 	if (controls.right)

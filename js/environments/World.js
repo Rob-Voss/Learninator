@@ -32,10 +32,8 @@ var PIXI = PIXI || {};
 
 		if (options.raycast) {
 			this.raycast = options.raycast;
-			this.player = new Player(0, 0, Math.PI * 0.3);
 			this.camera = new Camera(options.displayCanvas, 320, 0.8);
 			this.map = new Map(this.grid.width);
-			this.map.randomize();
 		}
 
 		/**
@@ -54,6 +52,7 @@ var PIXI = PIXI || {};
 
 		this.walls = options.walls || [];
 		for (var w = 0, wl = this.walls.length; w < wl; w++) {
+			this.map.wallGrid[w] = 1;
 			this.stage.addChild(this.walls[w].shape);
 		}
 
@@ -78,10 +77,21 @@ var PIXI = PIXI || {};
 			if (!_this.pause) {
 				_this.tick();
 				if (_this.raycast) {
-					var controls = {left:false,right:false,forward:false,back:false};
-//					_this.map.update(_this.clock);
-					_this.player.update(controls, _this.map, _this.clock, _this.agents[0]);
-					_this.camera.render(_this.player, _this.map);
+					var seconds = (_this.clock - _this.lastTime) / 1000,
+						controls = {
+							left:false,
+							right:false,
+							forward:false,
+							back:false
+						};
+					_this.lastTime = _this.clock;
+					_this.map.update(seconds);
+					_this.agents[0].player.x = _this.agents[0].pos.x;
+					_this.agents[0].player.y = _this.agents[0].pos.y;
+					_this.agents[0].player.direction = _this.agents[0].angle;
+
+					_this.agents[0].player.update(controls, _this.map, seconds);
+					_this.camera.render(_this.agents[0].player, _this.map);
 				}
 				_this.renderer.render(_this.stage);
 			}
@@ -145,8 +155,6 @@ var PIXI = PIXI || {};
 			};
 			for (var i = 0, al = this.agents.length; i < al; i++) {
 				this.agents[i].tick(smallWorld);
-				this.agents[i].player.x = this.agents[i].pos.x;
-				this.agents[i].player.y = this.agents[i].pos.y;
 				for (var j = 0, dl = this.agents[i].digested.length; j < dl; j++) {
 					this.deleteEntity(this.agents[i].digested[j]);
 				}
