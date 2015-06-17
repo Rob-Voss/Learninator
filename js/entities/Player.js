@@ -11,11 +11,33 @@ function Camera(canvas, resolution, focalLength, isMobile) {
 }
 
 Camera.prototype.render = function (player, map) {
+	this.drawSky(player.direction, map.skybox, map.light);
+	this.drawColumns(player, map);
+};
+
+Camera.prototype.drawSky = function(direction, sky, ambient) {
+	var width = sky.width * (this.height / sky.height) * 2;
+	var left = (direction / Math.PI * 2) * -width;
+
+	this.ctx.save();
+	this.ctx.drawImage(sky.image, left, 0, width, this.height);
+	if (left < width - this.width) {
+		this.ctx.drawImage(sky.image, left + width, 0, width, this.height);
+	}
+	if (ambient > 0) {
+		this.ctx.fillStyle = '#ffffff';
+		this.ctx.globalAlpha = ambient * 0.1;
+		this.ctx.fillRect(0, this.height * 0.5, this.width, this.height * 0.5);
+	}
+	this.ctx.restore();
+};
+
+Camera.prototype.drawColumns = function(player, map) {
 	this.ctx.save();
 	for (var column = 0; column < this.resolution; column++) {
-		var x = column / this.resolution - 0.5;
-		var angle = Math.atan2(x, this.focalLength);
-		var ray = map.cast(player, player.direction + angle, this.range);
+		var x = column / this.resolution - 0.5,
+			angle = Math.atan2(x, this.focalLength),
+			ray = map.cast(player, player.direction + angle, this.range);
 		this.drawColumn(column, ray, angle, map);
 	}
 	this.ctx.restore();
@@ -77,29 +99,36 @@ Player.prototype.rotate = function (angle) {
 };
 
 Player.prototype.walk = function (distance, map, direction) {
-	var dx = Math.cos(direction) * distance;
-	var dy = Math.sin(direction) * distance;
-	if (map.get(this.x + dx, this.y) <= 0)
+	var x = this.x + 1,
+		y = this.y + 1,
+		dx = Math.cos(direction) * distance,
+		dy = Math.sin(direction) * distance;
+	if (map.get(x + dx, y) <= 0)
 		this.x += dx;
-	if (map.get(this.x, this.y + dy) <= 0)
+	if (map.get(x, y + dy) <= 0)
 		this.y += dy;
-	if (this.paces >= 0)
-		this.paces += distance;
-	else
-		this.paces = 0;
+
+	this.paces += distance;
 };
 
-Player.prototype.update = function (controls, map, seconds) {
-	if (controls.left)
-		this.rotate(-Math.PI * seconds);
-	if (controls.right)
-		this.rotate(Math.PI * seconds);
-	if (controls.forward)
-		this.walk(3 * seconds, map, this.direction);
-	if (controls.backward)
-		this.walk(-3 * seconds, map, this.direction);
-	if (controls.sideLeft)
-		this.walk(3 * seconds, map, this.direction - Math.PI / 2);
-	if (controls.sideRight)
-		this.walk(-3 * seconds, map, this.direction - Math.PI / 2);
+Player.prototype.update = function (angle, map, seconds) {
+	var octant = Math.round( 8 * angle / (2*Math.PI) + 8 ) % 8;
+	switch (octant) {
+		case 2:
+			// left
+			this.rotate(-Math.PI * seconds);
+			break;
+		case 6:
+			// right
+			this.rotate(Math.PI * seconds);
+			break;
+		case 4:
+			// forward
+			this.walk(3 * seconds, map, this.direction);
+			break;
+		case 7:
+			// backward
+			this.walk(-3 * seconds, map, this.direction);
+			break;
+	}
 };

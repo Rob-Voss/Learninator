@@ -16,11 +16,13 @@ var Brain = Brain || {};
 	 * @param {Number} state1
 	 * @returns {undefined}
 	 */
-	var Experience = function (state0, action0, reward0, state1) {
-		this.state0 = state0;
-		this.action0 = action0;
-		this.reward0 = reward0;
-		this.state1 = state1;
+	class Experience {
+		constructor (state0, action0, reward0, state1) {
+			this.state0 = state0;
+			this.action0 = action0;
+			this.reward0 = reward0;
+			this.state1 = state1;
+		}
 	};
 
 	/**
@@ -30,126 +32,128 @@ var Brain = Brain || {};
 	 * @param {Object} options
 	 * @returns {Brain}
 	 */
-	Brain = function (options) {
-		var opt = options || {};
-		// experience replay
-		this.experience = [];
+	class Brain {
+		constructor (options) {
+			var opt = options || {};
+			// experience replay
+			this.experience = [];
 
-		// in number of time steps, of temporal memory
-		// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
-		// current x so to have no information from previous time step going into value
-		// function, set to 0.
-		this.temporal_window = opt.temporal_window ? opt.temporal_window : 1;
+			// in number of time steps, of temporal memory
+			// the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
+			// current x so to have no information from previous time step going into value
+			// function, set to 0.
+			this.temporal_window = opt.temporal_window ? opt.temporal_window : 1;
 
-		// size of experience replay memory
-		this.experience_size = opt.experience_size ? opt.experience_size : 30000;
+			// size of experience replay memory
+			this.experience_size = opt.experience_size ? opt.experience_size : 30000;
 
-		// number of examples in experience replay memory before we begin learning
-		this.start_learn_threshold = opt.start_learn_threshold ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
+			// number of examples in experience replay memory before we begin learning
+			this.start_learn_threshold = opt.start_learn_threshold ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
 
-		// gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
-		this.gamma = opt.gamma ? opt.gamma : 0.8;
+			// gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
+			this.gamma = opt.gamma ? opt.gamma : 0.8;
 
-		// number of steps we will learn for
-		this.learning_steps_total = opt.learning_steps_total ? opt.learning_steps_total : 100000;
+			// number of steps we will learn for
+			this.learning_steps_total = opt.learning_steps_total ? opt.learning_steps_total : 100000;
 
-		// how many steps of the above to perform only random actions (in the beginning)?
-		this.learning_steps_burnin = opt.learning_steps_burnin ? opt.learning_steps_burnin : 3000;
+			// how many steps of the above to perform only random actions (in the beginning)?
+			this.learning_steps_burnin = opt.learning_steps_burnin ? opt.learning_steps_burnin : 3000;
 
-		// what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
-		this.epsilon_min = opt.epsilon_min ? opt.epsilon_min : 0.05;
+			// what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
+			this.epsilon_min = opt.epsilon_min ? opt.epsilon_min : 0.05;
 
-		// what epsilon to use at test time? (i.e. when learning is disabled)
-		this.epsilon_test_time = opt.epsilon_test_time ? opt.epsilon_test_time : 0.01;
+			// what epsilon to use at test time? (i.e. when learning is disabled)
+			this.epsilon_test_time = opt.epsilon_test_time ? opt.epsilon_test_time : 0.01;
 
-		this.num_states = opt.num_states || 9 * 3;
-		this.num_actions = opt.num_actions || 5;
+			this.num_states = opt.num_states || 9 * 3;
+			this.num_actions = opt.num_actions || 5;
 
-		// advanced feature. Sometimes a random action should be biased towards some values
-		// for example in flappy bird, we may want to choose to not flap more often
-		if (typeof opt.random_action_distribution !== 'undefined') {
-			// this better sum to 1 by the way, and be of length this.num_actions
-			this.random_action_distribution = opt.random_action_distribution;
-			if (this.random_action_distribution.length !== this.num_actions) {
-				console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
-			}
-			var a = this.random_action_distribution;
-			var s = 0.0;
-			for (var k = 0; k < a.length; k++) {
-				s += a[k];
-			}
-			if (Math.abs(s - 1.0) > 0.0001) {
-				console.log('TROUBLE. random_action_distribution should sum to 1!');
-			}
-		} else {
-			this.random_action_distribution = [];
-		}
-
-		// states that go into neural net to predict optimal action look as
-		// x0,a0,x1,a1,x2,a2,...xt
-		// this variable controls the size of that temporal window.
-		// Actions are encoded as 1-of-k hot vectors
-		this.net_inputs = this.num_states * this.temporal_window + this.num_actions * this.temporal_window + this.num_states;
-		// must be at least 2, but if we want more context even more
-		this.window_size = Math.max(this.temporal_window, 2);
-		this.state_window = new Array(this.window_size);
-		this.action_window = new Array(this.window_size);
-		this.reward_window = new Array(this.window_size);
-		this.net_window = new Array(this.window_size);
-
-		// create [state -> value of all possible actions] modeling net for the value function
-		var layer_defs = [];
-		if (typeof opt.layer_defs !== 'undefined') {
-			// this is an advanced usage feature, because size of the input to the network, and number of
-			// actions must check out. This is not very pretty Object Oriented programming but I can't see
-			// a way out of it :(
-			layer_defs = opt.layer_defs;
-			if (layer_defs.length < 2) {
-				console.log('TROUBLE! must have at least 2 layers');
-			}
-			if (layer_defs[0].type !== 'input') {
-				console.log('TROUBLE! first layer must be input layer!');
-			}
-			if (layer_defs[layer_defs.length - 1].type !== 'regression') {
-				console.log('TROUBLE! last layer must be input regression!');
-			}
-			if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
-				console.log('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
-			}
-			if (layer_defs[layer_defs.length - 1].num_neurons !== this.num_actions) {
-				console.log('TROUBLE! Number of regression neurons should be num_actions!');
-			}
-		} else {
-			// create a very simple neural net by default
-			layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.net_inputs});
-			if (typeof opt.hidden_layer_sizes !== 'undefined') {
-				// allow user to specify this via the option, for convenience
-				var hl = opt.hidden_layer_sizes;
-				for (var q = 0; q < hl.length; q++) {
-					layer_defs.push({type: 'fc', num_neurons: hl[q], activation: 'relu'}); // relu by default
+			// advanced feature. Sometimes a random action should be biased towards some values
+			// for example in flappy bird, we may want to choose to not flap more often
+			if (typeof opt.random_action_distribution !== 'undefined') {
+				// this better sum to 1 by the way, and be of length this.num_actions
+				this.random_action_distribution = opt.random_action_distribution;
+				if (this.random_action_distribution.length !== this.num_actions) {
+					console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
 				}
+				var a = this.random_action_distribution;
+				var s = 0.0;
+				for (var k = 0; k < a.length; k++) {
+					s += a[k];
+				}
+				if (Math.abs(s - 1.0) > 0.0001) {
+					console.log('TROUBLE. random_action_distribution should sum to 1!');
+				}
+			} else {
+				this.random_action_distribution = [];
 			}
-			layer_defs.push({type: 'regression', num_neurons: this.num_actions}); // value function output
-		}
-		this.value_net = new convnetjs.Net();
-		this.value_net.makeLayers(layer_defs);
 
-		// and finally we need a Temporal Difference Learning trainer!
-		var tdtrainer_options = {learning_rate: 0.01, momentum: 0.0, batch_size: 64, l2_decay: 0.01};
-		if (typeof opt.tdtrainer_options !== 'undefined') {
-			tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
-		}
-		this.tdtrainer = new convnetjs.SGDTrainer(this.value_net, tdtrainer_options);
+			// states that go into neural net to predict optimal action look as
+			// x0,a0,x1,a1,x2,a2,...xt
+			// this variable controls the size of that temporal window.
+			// Actions are encoded as 1-of-k hot vectors
+			this.net_inputs = this.num_states * this.temporal_window + this.num_actions * this.temporal_window + this.num_states;
+			// must be at least 2, but if we want more context even more
+			this.window_size = Math.max(this.temporal_window, 2);
+			this.state_window = new Array(this.window_size);
+			this.action_window = new Array(this.window_size);
+			this.reward_window = new Array(this.window_size);
+			this.net_window = new Array(this.window_size);
 
-		// various housekeeping variables
-		this.age = 0; // incremented every backward()
-		this.forward_passes = 0; // incremented every forward()
-		this.epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
-		this.latest_reward = 0;
-		this.last_input_array = [];
-		this.average_reward_window = new Window(1000, 10);
-		this.average_loss_window = new Window(1000, 10);
-		this.learning = true;
+			// create [state -> value of all possible actions] modeling net for the value function
+			var layer_defs = [];
+			if (typeof opt.layer_defs !== 'undefined') {
+				// this is an advanced usage feature, because size of the input to the network, and number of
+				// actions must check out. This is not very pretty Object Oriented programming but I can't see
+				// a way out of it :(
+				layer_defs = opt.layer_defs;
+				if (layer_defs.length < 2) {
+					console.log('TROUBLE! must have at least 2 layers');
+				}
+				if (layer_defs[0].type !== 'input') {
+					console.log('TROUBLE! first layer must be input layer!');
+				}
+				if (layer_defs[layer_defs.length - 1].type !== 'regression') {
+					console.log('TROUBLE! last layer must be input regression!');
+				}
+				if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
+					console.log('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
+				}
+				if (layer_defs[layer_defs.length - 1].num_neurons !== this.num_actions) {
+					console.log('TROUBLE! Number of regression neurons should be num_actions!');
+				}
+			} else {
+				// create a very simple neural net by default
+				layer_defs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.net_inputs});
+				if (typeof opt.hidden_layer_sizes !== 'undefined') {
+					// allow user to specify this via the option, for convenience
+					var hl = opt.hidden_layer_sizes;
+					for (var q = 0; q < hl.length; q++) {
+						layer_defs.push({type: 'fc', num_neurons: hl[q], activation: 'relu'}); // relu by default
+					}
+				}
+				layer_defs.push({type: 'regression', num_neurons: this.num_actions}); // value function output
+			}
+			this.value_net = new convnetjs.Net();
+			this.value_net.makeLayers(layer_defs);
+
+			// and finally we need a Temporal Difference Learning trainer!
+			var tdtrainer_options = {learning_rate: 0.01, momentum: 0.0, batch_size: 64, l2_decay: 0.01};
+			if (typeof opt.tdtrainer_options !== 'undefined') {
+				tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
+			}
+			this.tdtrainer = new convnetjs.SGDTrainer(this.value_net, tdtrainer_options);
+
+			// various housekeeping variables
+			this.age = 0; // incremented every backward()
+			this.forward_passes = 0; // incremented every forward()
+			this.epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
+			this.latest_reward = 0;
+			this.last_input_array = [];
+			this.average_reward_window = new Window(1000, 10);
+			this.average_loss_window = new Window(1000, 10);
+			this.learning = true;
+		};
 
 		/**
 		 * Returns a random action
@@ -157,7 +161,7 @@ var Brain = Brain || {};
 		 * at "rest"/default state.
 		 * @returns {Number}
 		 */
-		this.random_action = function () {
+		random_action () {
 			if (this.random_action_distribution.length === 0) {
 				return Utility.randi(0, this.num_actions);
 			} else {
@@ -179,7 +183,7 @@ var Brain = Brain || {};
 		 * @param {type} s
 		 * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
 		 */
-		this.policy = function (s) {
+		policy (s) {
 			var svol = new convnetjs.Vol(1, 1, this.net_inputs);
 			svol.w = s;
 
@@ -201,7 +205,7 @@ var Brain = Brain || {};
 		 * @param {type} xt
 		 * @returns {Array|@exp;Array}
 		 */
-		this.getNetInput = function (xt) {
+		getNetInput (xt) {
 			var w = [];
 			w = w.concat(xt); // start with current state
 			// and now go backwards and append states and actions from history temporal_window times
@@ -226,7 +230,7 @@ var Brain = Brain || {};
 		 * @param {Array} input_array
 		 * @returns {Number|maxact.action}
 		 */
-		this.forward = function (input_array) {
+		forward (input_array) {
 			this.forward_passes += 1;
 			this.last_input_array = input_array; // back this up
 
@@ -273,7 +277,7 @@ var Brain = Brain || {};
 		 * @param {Number} reward
 		 * @returns {undefined}
 		 */
-		this.backward = function (reward) {
+		backward (reward) {
 			this.latest_reward = reward;
 			this.average_reward_window.add(reward);
 			this.reward_window.shift();
@@ -324,7 +328,7 @@ var Brain = Brain || {};
 			}
 		};
 
-		this.visSelf = function (element) {
+		visSelf (element) {
 			element.innerHTML = ''; // erase element first
 
 			// element is a DOM element that this function fills with brain-related information
@@ -343,7 +347,6 @@ var Brain = Brain || {};
 	};
 
 	var _Brain;
-
 	self.onmessage = function (e) {
 		var data = e.data;
 		switch (data.cmd) {
@@ -351,35 +354,35 @@ var Brain = Brain || {};
 				importScripts('../lib/convnet.min.js');
 				importScripts('../lib/Utility.js');
 				importScripts('../lib/Window.js');
-				_Brain = new Brain(data.option);
-				self.postMessage({cmd:'init',msg:'complete'});
+				_Brain = new Brain(data.input);
+				self.postMessage({cmd:'init', msg:'complete'});
 				break;
 			case 'load':
 				_Brain.value_net.fromJSON(data.input);
 				_Brain.learning = false;
-				self.postMessage({cmd:'load',msg:'complete'});
+				self.postMessage({cmd:'load', msg:'complete'});
 				break;
 			case 'forward':
 				var actionIndex = _Brain.forward(data.input);
-				self.postMessage({cmd:'forward',msg:'complete',input:actionIndex});
+				self.postMessage({cmd:'forward', msg:'complete', input:actionIndex});
 				break;
 			case 'backward':
 				_Brain.backward(data.input);
-				self.postMessage({cmd:'backward',msg:'complete'});
+				self.postMessage({cmd:'backward', msg:'complete'});
 				break;
 			case 'getAverage':
 				var avg = _Brain.average_reward_window.getAverage().toFixed(1);
-				self.postMessage({cmd:'getAverage',msg:'complete',input:avg});
+				self.postMessage({cmd:'getAverage', msg:'complete', input:avg});
 				break;
 			case 'stop':
-				self.postMessage({cmd:'stop',msg:'complete'});
+				self.postMessage({cmd:'stop', msg:'complete'});
 				close(); // Terminates the worker.
 				break;
 			default:
-				self.postMessage({cmd:'error',msg:'Unknown command: ' + data.cmd});
+				self.postMessage({cmd:'error', msg:'Unknown command: ' + data.cmd});
 		}
 	};
-
+	
 	global.Brain = Brain;
 
 })(this);

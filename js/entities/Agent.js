@@ -10,199 +10,213 @@ var PIXI = PIXI || {};
 	 * @param {Number} angle
 	 * @returns {Eye}
 	 */
-	var Eye = function (angle) {
-		this.angle = angle; // Angle relative to agent its on
-		this.maxRange = 85; // Max range of the eye's vision
-		this.sensedProximity = 85; // What the eye is seeing. will be set in world.tick()
-		this.sensedType = -1; // what does the eye see?
+	class Eye {
+		constructor (angle) {
+			this.angle = angle; // Angle relative to agent its on
+			this.maxRange = 85; // Max range of the eye's vision
+			this.sensedProximity = 85; // What the eye is seeing. will be set in world.tick()
+			this.sensedType = -1; // what does the eye see?
 
-		this.shape = new PIXI.Graphics();
-		this.shape.lineStyle(1, 0x000000);
+			this.shape = new PIXI.Graphics();
+			this.shape.lineStyle(1, 0x000000);
+		}
+	};
+
+	class Ticker {
+		constructor(agent) {
+
+		}
+
 	};
 
 	/**
 	 * A single agent
 	 * @param {Number} type
 	 * @param {Vec} v
-	 * @param {Number} w
-	 * @param {Number} h
 	 * @param {Number} r
 	 * @returns {Agent_L3.Agent}
 	 */
-	var Agent = function (type, v, w, h, r) {
-		this.id = Utility.guid();
-		this.type = 3; // type of agent
-		this.worker = (type === 'Worker') ? true : false;
-		this.pos = v || new Vec(1, 1);
-		this.gridLocation = new Cell(0, 0);
-		this.width = w || 20;
-		this.height = h || 20;
-		this.radius = r || 10;
-		this.player = new Player(this.pos.x, this.pos.y, this.angle);
-		var _this = this;
+	class Agent {
+		constructor (type, display) {
+			this.id = Utility.guid();
+			this.type = 3; // type of agent
+			this.worker = (type === 'Worker') ? true : false;
+			this.name = (type === 'Worker') ? 'Worker' : 'Normal';
+			this.pos = new Vec(5, 5);
+			this.gridLocation = new Cell(0, 0);
+			(display) ? this.camera = new Camera(display, 320, 0.8) : undefined;
+			this.width = 20;
+			this.height = 20;
+			this.radius = 10;
+			this.angle = 0;
+			this.rewardBonus = 0.0;
+			this.digestionSignal = 0.0;
+			this.pts = [];
+			this.digested = [];
+			// Agent outputs on the world
+			this.rot1 = 0.0; // Rotation speed of 1st wheel
+			this.rot2 = 0.0; // Rotation speed of 2nd wheel
+			this.previousActionIdx = -1;
+			this.direction = '';
 
-		this.texture = PIXI.Texture.fromImage("img/Agent.png");
-		this.sprite = new PIXI.Sprite(this.texture);
-		this.sprite.interactive = true;
-		this.sprite.width = this.width;
-		this.sprite.height = this.height;
-		this.sprite.anchor.set(0.5, 0.5);
-		this.sprite.position.set(this.pos.x, this.pos.y);
-		this.sprite
-			.on('mousedown', this.onMouseClick)
-			.on('touchstart', this.onMouseClick)
-			.on('mouseup', this.onMouseUp)
-			.on('mouseupoutside', this.onMouseUp)
-			.on('touchend', this.onMouseUp)
-			.on('touchendoutside', this.onMouseUp)
-			.on('mouseover', this.onMouseOver)
-			.on('mouseout', this.onMouseOut)
-			.on('mousemove', this.onDragMove)
-			.on('touchmove', this.onDragMove);
-		this.sprite.entity = _this;
+			// Remember the Agent's old position
+			this.oldPos = this.pos;
 
-		this.digested = [];
+			// Remember the Agent's old angle
+			this.oldAngle = this.angle;
 
-		// Remember the Agent's old position
-		this.oldPos = this.pos;
+			// The number of item types the Agent's eys can see (wall, green, red thing proximity)
+			this.numTypes = 3;
 
-		// The direction the Agent is facing
-		this.angle = 0;
+			// The number of Agent's eyes
+			this.numEyes = 9;
 
-		// The number of item types the Agent's eys can see (wall, green, red thing proximity)
-		this.numTypes = 3;
+			// The number of Agent's eyes, each one sees the number of knownTypes
+			this.numInputs = this.numEyes * this.numTypes;
 
-		// The number of Agent's eyes
-		this.numEyes = 9;
+			// Amount of temporal memory. 0 = agent lives in-the-moment :)
+			this.temporalWindow = 1;
 
-		// The number of Agent's eyes, each one sees the number of knownTypes
-		this.numInputs = this.numEyes * this.numTypes;
+			// The Agent's eyes
+			this.eyes = [];
+			for (var k = 0; k < this.numEyes; k++) {
+				this.eyes.push(new Eye((k - this.numTypes-1) * 0.25));
+			}
 
-		// The number of possible angles the Agent can turn
-		this.numActions = 5;
+			// The Agent's actions
+			this.actions = [];
+			this.actions.push([1, 1]);
+			this.actions.push([0.8, 1]);
+			this.actions.push([1, 0.8]);
+			this.actions.push([0.5, 0]);
+			this.actions.push([0, 0.5]);
 
-		// Amount of temporal memory. 0 = agent lives in-the-moment :)
-		this.temporalWindow = 1;
+			// The number of possible angles the Agent can turn
+			this.numActions = this.actions.length;
 
-		// Size of the network
-		this.networkSize = this.numInputs * this.temporalWindow + this.numActions * this.temporalWindow + this.numInputs;
+			// Size of the network
+			this.networkSize = this.numInputs * this.temporalWindow + this.numActions * this.temporalWindow + this.numInputs;
 
-		// The Agent's eyes
-		this.eyes = [];
-		for (var k = 0; k < this.numEyes; k++) {
-			this.eyes.push(new Eye((k - this.numTypes) * 0.25));
-		}
+			var _this = this;
+			
+			/**
+			 * The value function network computes a value of taking any of the possible actions
+			 * given an input state.
+			 *
+			 * Here we specify one explicitly the hard way but we could also use
+			 * opt.hidden_layer_sizes = [20,20] instead to just insert simple relu hidden layers.
+			 * @type {Array}
+			 */
+			var layerDefsTD = [];
+				layerDefsTD.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
+				layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+				layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+				layerDefsTD.push({type: 'regression', num_neurons: this.numActions});
 
-		// The Agent's actions
-		this.actions = [];
-		this.actions.push([1, 1]);
-		this.actions.push([0.8, 1]);
-		this.actions.push([1, 0.8]);
-		this.actions.push([0.5, 0]);
-		this.actions.push([0, 0.5]);
+			/**
+			 * The options for the Temporal Difference learner that trains the above net
+			 * by backpropping the temporal difference learning rule.
+			 * @type {Object}
+			 */
+			var trainerOptsTD = {};
+				trainerOptsTD.learning_rate = 0.001;
+				trainerOptsTD.momentum = 0.0;
+				trainerOptsTD.batch_size = 64;
+				trainerOptsTD.l2_decay = 0.01;
 
-		this.rewardBonus = 0.0;
-		this.digestionSignal = 0.0;
-		this.pts = [];
+			/**
+			 * Options for the Brain
+			 * @type {Object}
+			 */
+			var brainOptsTD = {};
+				brainOptsTD.num_states = this.numInputs;
+				brainOptsTD.num_actions = this.numActions;
+				brainOptsTD.temporal_window = this.temporalWindow;
+				brainOptsTD.experience_size = 30000;
+				brainOptsTD.start_learn_threshold = 1000;
+				brainOptsTD.gamma = 0.7;
+				brainOptsTD.learning_steps_total = 200000;
+				brainOptsTD.learning_steps_burnin = 3000;
+				brainOptsTD.epsilon_min = 0.05;
+				brainOptsTD.epsilon_test_time = 0.05;
+				brainOptsTD.layer_defs = layerDefsTD;
+				brainOptsTD.tdtrainer_options = trainerOptsTD;
 
-		// Agent outputs on the world
-		this.rot1 = 0.0; // Rotation speed of 1st wheel
-		this.rot2 = 0.0; // Rotation speed of 2nd wheel
-
-		this.previousActionIdx = -1;
-
-		/**
-		 * The value function network computes a value of taking any of the possible actions
-		 * given an input state.
-		 *
-		 * Here we specify one explicitly the hard way but we could also use
-		 * opt.hidden_layer_sizes = [20,20] instead to just insert simple relu hidden layers.
-		 * @type {Array}
-		 */
-		var layerDefs = [];
-			layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
-			layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-			layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-			layerDefs.push({type: 'regression', num_neurons: this.numActions});
-
-		/**
-		 * The options for the Temporal Difference learner that trains the above net
-		 * by backpropping the temporal difference learning rule.
-		 * @type {Object}
-		 */
-		var trainerOpts = {};
-			trainerOpts.learning_rate = 0.001;
-			trainerOpts.momentum = 0.0;
-			trainerOpts.batch_size = 64;
-			trainerOpts.l2_decay = 0.01;
-
-		/**
-		 * Options for the Brain
-		 * @type {Object}
-		 */
-		var brainOpts = {};
-			brainOpts.num_states = this.numInputs;
-			brainOpts.num_actions = this.numActions;
-			brainOpts.temporal_window = this.temporalWindow;
-			brainOpts.experience_size = 30000;
-			brainOpts.start_learn_threshold = 1000;
-			brainOpts.gamma = 0.7;
-			brainOpts.learning_steps_total = 200000;
-			brainOpts.learning_steps_burnin = 3000;
-			brainOpts.epsilon_min = 0.05;
-			brainOpts.epsilon_test_time = 0.05;
-			brainOpts.layer_defs = layerDefs;
-			brainOpts.tdtrainer_options = trainerOpts;
-
-		if (this.worker) {
-			this.brain = new Worker('js/entities/Brain.js');
-			this.brain.addEventListener('message', function (e) {
-				var data = e.data;
-				switch (data.cmd) {
-					case 'init':
-						if (data.msg === 'load') {
-							_this.loadMemory();
-						}
-					break;
-					case 'forward':
-						_this.previousActionIdx = _this.actionIndex;
-						// Get action from brain
-						_this.actionIndex = data.input;
-
-						//this.actionIndex = this.brain.forward(inputArray);
-						var action = _this.actions[_this.actionIndex];
-
-						// Demultiplex into behavior variables
-						_this.rot1 = action[0] * 1;
-						_this.rot2 = action[1] * 1;
+			if (this.worker) {
+				this.brain = new Worker('js/entities/Brain.js');
+				this.brain.onmessage = function (e) {
+					var data = e.data;
+					switch (data.cmd) {
+						case 'init':
+							if (data.msg === 'load') {
+								_this.loadMemory();
+							}
+							if (data.msg === 'complete') {
+								
+							}
 						break;
-					case 'backward':
+						case 'forward':
+							if (data.msg === 'complete') {
+								_this.previousActionIdx = _this.actionIndex;
+								_this.actionIndex = data.input;
 
-						break;
-					case 'getAverage':
-						_this.pts.push(data.input);
-						break;
-					default:
-						console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-				}
-			}, false);
+								// Demultiplex into behavior variables
+								_this.rot1 = _this.actions[_this.actionIndex][0] * 1;
+								_this.rot2 = _this.actions[_this.actionIndex][1] * 1;
+							}
+							break;
+						case 'backward':
+							if (data.msg === 'complete') {
+								
+							}
+							break;
+						case 'getAverage':
+							if (data.msg === 'complete') {
+								_this.pts.push(data.input);
+							}
+							break;
+						case 'error':
+						default:
+							console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+					}
+				};
 
-			this.brain.postMessage({cmd:'init', msg:'Start', input:brainOpts});
-		} else {
-			this.brain = new Brain(brainOpts);
-		}
-	};
+				this.brain.postMessage({cmd:'init', input:brainOptsTD});
+			} else {
+				this.brainOpts = brainOptsTD;
+				this.brain = new Brain(brainOptsTD);
+			}
 
-	/**
-	 * Agent prototype
-	 * @type {Agent}
-	 */
-	Agent.prototype = {
+			this.texture = PIXI.Texture.fromImage("img/Agent.png");
+			this.sprite = new PIXI.Sprite(this.texture);
+			this.sprite.width = this.width;
+			this.sprite.height = this.height;
+			this.sprite.anchor.set(0.5, 0.5);
+			this.sprite.position.set(this.pos.x, this.pos.y);
+			
+			if (global.world.interactive == true) {
+				this.sprite.interactive = true;
+				this.sprite
+					.on('mousedown', this.onDragStart)
+					.on('touchstart', this.onDragStart)
+					.on('mouseup', this.onDragEnd)
+					.on('mouseupoutside', this.onDragEnd)
+					.on('touchend', this.onDragEnd)
+					.on('touchendoutside', this.onDragEnd)
+					.on('mouseover', this.onMouseOver)
+					.on('mouseout', this.onMouseOut)
+					.on('mousemove', this.onDragMove)
+					.on('touchmove', this.onDragMove);
+				this.sprite.entity = _this;
+			}
+
+		};
+
 		/**
 		 * In backward pass agent learns.
 		 * @returns {undefined}
 		 */
-		backward: function () {
+		backward () {
 			// Compute the reward
 			var proximityReward = 0.0;
 			for (var ei = 0; ei < this.numEyes; ei++) {
@@ -227,51 +241,52 @@ var PIXI = PIXI || {};
 			var reward = proximityReward + forwardReward + digestionReward;
 			// pass to brain for learning
 			if (this.worker) {
-				this.brain.postMessage({cmd:'backward', msg:'Backward', input:reward});
+				this.brain.postMessage({cmd:'backward', input:reward});
 			} else {
 				this.brain.backward(reward);
 			}
-		},
+		};
+
 		/**
 		 * In forward pass the agent simply behaves in the environment
 		 * @returns {undefined}
 		 */
-		forward: function () {
+		forward () {
 			// Create input to brain
 			var inputArray = new Array(this.numEyes * this.numTypes);
 
 			for (var i = 0; i < this.numEyes; i++) {
 				var e = this.eyes[i];
-				inputArray[i * 3] = 1.0;
-				inputArray[i * 3 + 1] = 1.0;
-				inputArray[i * 3 + 2] = 1.0;
-				if (e.sensedType !== -1) {
-					// sensedType is 0 for wall, 1 for food and 2 for poison
-					// lets do a 1-of-k encoding into the input array
-					inputArray[i * 3 + e.sensedType] = e.sensedProximity / e.maxRange; // normalize to [0,1]
+				for (var nt=0; nt<this.numTypes; nt++) {
+					inputArray[i * this.numTypes + nt] = 1.0;
+					if (e.sensedType !== -1) {
+						// sensedType is 0 for wall, 1 for food and 2 for poison
+						// lets do a 1-of-k encoding into the input array
+						// normalize to [0,1]
+						inputArray[i * this.numTypes + e.sensedType] = e.sensedProximity / e.maxRange;
+					}
 				}
 			}
 
 			// Get action from brain
 			if (this.worker) {
-				this.brain.postMessage({cmd:'forward', msg:'Forward', input:inputArray});
+				this.brain.postMessage({cmd:'forward', input:inputArray});
 			} else {
 				this.previousActionIdx = this.actionIndex;
-				var actionIdx = this.brain.forward(inputArray),
-					action = this.actions[actionIdx];
-				this.actionIndex = actionIdx;
+				this.actionIndex = this.brain.forward(inputArray);
 
 				// Demultiplex into behavior variables
-				this.rot1 = action[0] * 1;
-				this.rot2 = action[1] * 1;
+				this.rot1 = this.actions[this.actionIndex][0] * 1;
+				this.rot2 = this.actions[this.actionIndex][1] * 1;
 			}
-		},
+		};
+
 		/**
 		 * Tick the agent
 		 * @param {Object} smallWorld
 		 * @returns {undefined}
 		 */
-		tick: function (smallWorld) {
+		tick (smallWorld) {
 			this.oldPos = this.pos; // Back up the old position
 			this.oldAngle = this.angle; // and angle
 
@@ -314,14 +329,14 @@ var PIXI = PIXI || {};
 			this.pos = newPos.add(newPos2);
 
 			this.angle -= this.rot1;
-			if (this.angle < 0)
+			if (this.angle < 0) {
 				this.angle += 2 * Math.PI;
+			}
 
 			this.angle += this.rot2;
-
-			if (this.angle > 2 * Math.PI)
+			if (this.angle > 2 * Math.PI) {
 				this.angle -= 2 * Math.PI;
-			this.sprite.rotation = -this.angle;
+			}
 
 			// The agent is trying to move from pos to oPos so we need to check walls
 			var derped = Utility.collisionCheck(this.oldPos, this.pos, smallWorld.walls);
@@ -344,8 +359,10 @@ var PIXI = PIXI || {};
 				this.pos.y = smallWorld.grid.height * smallWorld.grid.cellHeight;
 
 			this.sprite.position.set(this.pos.x, this.pos.y);
+			this.sprite.rotation = -this.angle;
 
 			this.gridLocation = smallWorld.grid.getGridLocation(this.pos);
+			this.direction = Utility.getDirection(this.angle);
 			// Gather up all the entities nearby based on cell population
 			var nearby = [];
 			for (var i = 0; i < this.gridLocation.population.length; i++) {
@@ -355,6 +372,31 @@ var PIXI = PIXI || {};
 					nearby.push(entity);
 				}
 			}
+
+			// Apply the outputs of agents on the environment
+			this.digested = [];
+			for (var j = 0, n = nearby.length; j < n; j++) {
+				var dist = this.pos.distanceTo(nearby[j].pos);
+				if (dist < (nearby[j].radius + this.radius)) {
+					var result = Utility.collisionCheck(this.pos, nearby[j].pos, smallWorld.walls);
+					if (!result) {
+						// Nom Noms!
+						switch (nearby[j].type) {
+							case 1:// The sweet meats
+								this.digestionSignal += 5.0;
+								break;
+							case 2:// The gnar gnar meats
+								this.digestionSignal += -6.0;
+								break;
+						}
+						this.digested.push(nearby[j]);
+					}
+				}
+			}
+			
+			// This is where the agents learns based on the feedback of their
+			// actions on the environment
+			this.backward();
 
 			for (var ei = 0; ei < this.numEyes; ei++) {
 				var eye = this.eyes[ei];
@@ -385,117 +427,102 @@ var PIXI = PIXI || {};
 				eye.shape.lineTo(aEyeX, aEyeY);
 			}
 
-			// Apply the outputs of agents on the environment
-			this.digested = [];
-			for (var j = 0, n = nearby.length; j < n; j++) {
-				var dist = this.pos.distanceTo(nearby[j].pos);
-				if (dist < (nearby[j].radius + this.radius)) {
-					var result = Utility.collisionCheck(this.pos, nearby[j].pos, smallWorld.walls);
-					if (!result) {
-						// Nom Noms!
-						switch (nearby[j].type) {
-							case 1:// The sweet meats
-								this.digestionSignal += 5.0;
-								break;
-							case 2:// The gnar gnar meats
-								this.digestionSignal += -6.0;
-								break;
-						}
-						this.digested.push(nearby[j]);
-					}
-				}
-			}
-
-			// This is where the agents learns based on the feedback of their
-			// actions on the environment
-			this.backward();
-
 			if (this.digested.length > 0) {
 				if (this.worker) {
-					this.brain.postMessage({cmd:'getAverage', msg:'getAverage'});
+					this.brain.postMessage({cmd:'getAverage'});
 				} else {
 					this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
 				}
 			}
-		},
+		};
+
 		/**
 		 * Load the brains from the field
 		 * @returns {undefined}
 		 */
-		loadMemory: function () {
+		loadMemory () {
 			if (this.worker) {
 				var specs = JSON.parse(document.getElementById('memoryBank').value);
-				this.brain.postMessage({cmd:'load', msg:'', input:specs});
+				this.brain.postMessage({cmd:'load', input:specs});
 			} else {
 				$.getJSON(document.getElementById('memoryBank'), function(data) {
 					this.brain.value_net.fromJSON(data);
 				});
 			}
-		},
+		};
+
 		/**
 		 * Download the brains to the field
 		 * @returns {undefined}
 		 */
-		saveMemory: function () {
+		saveMemory () {
 			if (this.worker) {
-				this.brain.postMessage({cmd:'save', msg:'', input:''});
+				this.brain.postMessage({cmd:'save', input:''});
 			} else {
 				var j = this.brain.value_net.toJSON();
 				document.getElementById('memoryBank').value = JSON.stringify(j);
 			}
-		},
+		};
+
 		/**
 		 * Get to learninating
 		 * @returns {undefined}
 		 */
-		startLearnin: function () {
+		startLearnin () {
 			this.brain.learning = true;
-		},
+		};
+
 		/**
 		 * Stop learninating
 		 * @returns {undefined}
 		 */
-		stopLearnin: function () {
+		stopLearnin () {
 			this.brain.learning = false;
-		},
+		};
 
-		onDragStart: function(event) {
+		onDragStart (event) {
 			this.data = event.data;
 			this.alpha = 0.5;
 			this.dragging = true;
-		},
-		onDragMove: function() {
+		};
+
+		onDragMove () {
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
 				this.position.set(newPosition.x, newPosition.y);
 				this.entity.pos.set(newPosition.x, newPosition.y);
 			}
-		},
-		onDragEnd: function() {
+		};
+
+		onDragEnd () {
 			this.alpha = 1;
 			this.dragging = false;
 			// set the interaction data to null
 			this.data = null;
-		},
-		onMouseDown: function() {
+		};
+
+		onMouseDown () {
 			this.isdown = true;
 			this.alpha = 1;
-		},
-		onMouseUp: function() {
+		};
+
+		onMouseUp () {
 			this.isdown = false;
-		},
-		onMouseOver: function() {
+		};
+
+		onMouseOver () {
 			this.isOver = true;
 			if (this.isdown) {
 				return;
 			}
-		},
-		onMouseOut: function() {
+		};
+		
+		onMouseOut () {
 			this.isOver = false;
 			if (this.isdown) {
 				return;
 			}
-		}
+		};
 	};
 
 	global.Agent = Agent;

@@ -10,42 +10,42 @@ var Graph = Graph || {};
 	 * @param {Object} options
 	 * @returns {Graph_L3.Graph}
 	 */
-	var Graph = function (canvas, legend, options) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
+	class Graph {
+		constructor (canvas, legend, options) {
+			this.canvas = canvas;
+			this.ctx = canvas.getContext("2d");
 
-		var options = options || {};
-		this.step_horizon = options.step_horizon || 1000;
+			var options = options || {};
+			this.step_horizon = options.step_horizon || 1000;
 
-		this.width = options.width || canvas.width;
-		this.height = options.height || canvas.height;
+			this.width = options.width || canvas.width;
+			this.height = options.height || canvas.height;
 
-		if (typeof options.maxy !== 'undefined')
-			this.maxy_forced = options.maxy;
-		if (typeof options.miny !== 'undefined')
-			this.miny_forced = options.miny;
+			if (typeof options.maxy !== 'undefined')
+				this.maxy_forced = options.maxy;
+			if (typeof options.miny !== 'undefined')
+				this.miny_forced = options.miny;
 
-		this.maxy = -9999;
-		this.miny = 9999;
+			this.maxy = -9999;
+			this.miny = 9999;
 
-		this.numlines = legend.length;
-		this.pts = new Array(this.numlines);
-		for (var i = 0; i < this.numlines; i++) {
-			this.pts[i] = [];
-		}
-		this.legend = legend;
-		this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
-		this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
-	};
+			this.numlines = legend.length;
+			this.pts = new Array(this.numlines);
+			for (var i = 0; i < this.numlines; i++) {
+				this.pts[i] = [];
+			}
+			this.legend = legend;
+			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
+			this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
+		};
 
-	Graph.prototype = {
 		/**
 		 * Add a point to the graph
 		 * @param {Number} step
 		 * @param {Number} yl
 		 * @returns {undefined}
 		 */
-		addPoint: function(step, idx, yl) {
+		addPoint (step, idx, yl) {
 			// in ms
 			var time = new Date().getTime(),
 				n = yl.length;
@@ -74,12 +74,13 @@ var Graph = Graph || {};
 			}
 			if (step > this.step_horizon)
 				this.step_horizon *= 2;
-		},
+		};
+		
 		/**
 		 * Draw it
 		 * @returns {undefined}
 		 */
-		drawPoints: function () {
+		drawPoints () {
 			var pad = 25;
 			var H = this.height;
 			var W = this.width;
@@ -147,7 +148,7 @@ var Graph = Graph || {};
 				}
 				ctx.stroke();
 			}
-		}
+		};
 	};
 
 	global.Graph = Graph;

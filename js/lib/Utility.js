@@ -23,6 +23,12 @@ var Utility = Utility || {};
 		return u * c;
 	};
 
+	Utility.getDirection = function(angle) {
+		var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
+			octant = Math.round( 8 * angle / (2*Math.PI) + 8 ) % 8;
+		return directions[octant];
+	}
+
 	/**
 	 * Return a random Float within the range of a-b
 	 * @param {Float} a
@@ -107,14 +113,16 @@ var Utility = Utility || {};
 
 		// Collide with items
 		if (entities) {
-			for (var e = 0, el = entities.length; e < el; e++) {
+			for (var e=0, el=entities.length; e<el; e++) {
 				var entity = entities[e];
-				var iResult = Utility.linePointIntersect(v1, v2, entity.pos, entity.radius);
+				var iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius);
 				if (iResult) {
 					iResult.type = entity.type;
 					iResult.id = entity.id;
 					iResult.radius = entity.radius;
-					iResult.pos = entity.pos;
+					iResult.position = entity.position;
+					iResult.vx = entity.velocity.x; // velocty information
+          			iResult.vy = entity.velocity.y;
 					if (!minRes) {
 						minRes = iResult;
 					} else {

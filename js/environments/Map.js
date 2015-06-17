@@ -6,8 +6,16 @@ function Bitmap(src, width, height) {
 }
 
 function Map(size) {
-	this.size = size;
-	this.wallGrid = new Uint8Array(size * size);
+	this.size = size * 2;
+	this.wallGrid = [];
+	for (var i = 0; i < this.size; i++) {
+		this.wallGrid.push([]);
+		var row = this.wallGrid[i];
+		for (var j = 0; j < this.size; j++) {
+			row.push([]);
+		}
+	}
+	this.skybox = new Bitmap('img/Sky.jpg', 2000, 750);
 	this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
 	this.light = 0;
 }
@@ -18,12 +26,26 @@ Map.prototype.get = function (x, y) {
 	if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) {
 		return -1;
 	}
-	return this.wallGrid[y * this.size + x];
+	return this.wallGrid[x][y];
+};
+
+Map.prototype.populate = function (grid) {
+	for (var i = 0; i < this.size/2; i++) {
+		for (var j = 0; j < this.size/2; j++) {
+			var con = grid.connectedNeighbors(grid.cells[i][j]),
+				disc = grid.disconnectedNeighbors(grid.cells[i][j]);
+			for (var z = 0; z < con.length; z++) {
+				this.wallGrid[con[z].x+1][con[z].y+1] = [1];
+			}
+		}
+	}
 };
 
 Map.prototype.randomize = function () {
-	for (var i = 0; i < this.size * this.size; i++) {
-		this.wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
+	for (var i = 0; i < this.size; i++) {
+		for (var j = 0; j < this.size; j++) {
+			this.wallGrid[i][j] = Math.random() < 0.3 ? 1 : 0;
+		}
 	}
 };
 
@@ -82,10 +104,9 @@ Map.prototype.cast = function (point, angle, range) {
 };
 
 Map.prototype.update = function (seconds) {
-	this.light = 1;
-//	if (this.light > 0) {
-//		this.light = Math.max(this.light - 10 * seconds, 0);
-//	} else if (Math.random() * 5 < seconds) {
-//		this.light = 2;
-//	}
+	if (this.light > 0) {
+		this.light = Math.max(this.light - 10 * seconds, 0);
+	} else if (Math.random() * 5 < seconds) {
+		this.light = 2;
+	}
 };
