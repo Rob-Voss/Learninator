@@ -22,9 +22,9 @@ var Utility = Utility || {};
 			this.width = 20;
 			this.height = 20;
 			this.radius = radius || 10;
-			this.interactive = interactive || true;
 			this.age = 0;
 			this.cleanUp = false;
+			this.interactive = interactive || true;
 
 			// Remember the Item's old position
 			this.oldPos = this.position;
@@ -60,10 +60,10 @@ var Utility = Utility || {};
 
 		tick (smallWorld) {
 			this.age += 1;
-			this.oldPos = this.position; // Back up the old position
-			this.oldAngle = this.angle; // and angle
 
 			if (smallWorld.movingEntities) {
+				this.oldPos = new Vec(this.position.x, this.position.y);
+				
 				var width = smallWorld.grid.width * smallWorld.grid.cellWidth - 2,
 					height = smallWorld.grid.height * smallWorld.grid.cellHeight - 2;
 				
@@ -94,12 +94,13 @@ var Utility = Utility || {};
 					// The item derped! Wall collision! Reset their position
 					if (result && d <= this.radius) {
 						this.position = this.oldPos;
+						this.velocity.x *= -1;
+						this.velocity.y *= -1;
 					}
 				}
-
-				this.sprite.position.set(this.position.x, this.position.y);
+				// Handle boundary conditions.. bounce item
+				Utility.boundaryCheck(this, width, height);
 			}
-			this.gridLocation = smallWorld.grid.getGridLocation(this.position);
 		};
 
 		onDragStart (event) {
@@ -112,14 +113,14 @@ var Utility = Utility || {};
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
 				this.position.set(newPosition.x, newPosition.y);
-				this.entity.pos.set(newPosition.x, newPosition.y);
+				this.entity.position.set(newPosition.x, newPosition.y);
 			}
 		};
 
 		onDragEnd () {
 			this.alpha = 1;
 			this.dragging = false;
-			this.entity.pos.set(this.position.x, this.position.y);
+			this.entity.position.set(this.position.x, this.position.y);
 			// set the interaction data to null
 			this.data = null;
 		};

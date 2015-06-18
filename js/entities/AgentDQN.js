@@ -1,4 +1,4 @@
-var Agent = Agent || {};
+var AgentDQN = AgentDQN || {};
 var Eye = Eye || {};
 var Utility = Utility || {};
 var PIXI = PIXI || {};
@@ -95,7 +95,7 @@ var PIXI = PIXI || {};
 			this.sprite.height = this.height;
 			this.sprite.anchor.set(0.5, 0.5);
 			this.sprite.position.set(this.position.x, this.position.y);
-			
+
 			if (this.interactive == true) {
 				this.sprite.interactive = true;
 				this.sprite
@@ -166,9 +166,6 @@ var PIXI = PIXI || {};
 				this.position = this.oldPos;
 			}
 
-			// Handle boundary conditions.. bounce agent
-			Utility.boundaryCheck(this, width, height);
-
 			// Check for food
 			// Gather up all the entities nearby based on cell population
 			this.digested = [];
@@ -211,9 +208,6 @@ var PIXI = PIXI || {};
 		 * @returns {undefined}
 		 */
 		tick (smallWorld) {
-			var width = smallWorld.grid.width * smallWorld.grid.cellWidth - 2,
-				height = smallWorld.grid.height * smallWorld.grid.cellHeight - 2;
-
 			this.oldPos = new Vec(this.position.x, this.position.y);
 			this.oldAngle = this.angle;
 
@@ -223,22 +217,22 @@ var PIXI = PIXI || {};
 			}
 
 			// Let the agents behave in the world based on their input
-			this.act(smallWorld.walls, smallWorld.entities, width, height);
-
-			// This is where the agents learns based on the feedback of their actions on the environment
-			this.learn();
+			this.act(smallWorld.walls, smallWorld.entities, smallWorld.width, smallWorld.height);
 
 			// Loop through the eyes and draw them
 			for (var ei=0; ei<this.numEyes; ei++) {
 				this.eyes[ei].draw(this);
 			}
 
-			this.sprite.position.set(this.oldPos.x, this.oldPos.y);
-			this.gridLocation = smallWorld.grid.getGridLocation(this.oldPos);
+			// Handle boundary conditions.. bounce agent
+			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
+			
+			// This is where the agents learns based on the feedback of their actions on the environment
+			this.learn();
 		};
 	};
 
-	global.Agent = Agent;
+	global.AgentDQN = AgentDQN;
 
 }(this));
 

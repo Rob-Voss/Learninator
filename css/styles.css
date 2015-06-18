@@ -25,16 +25,6 @@ canvas {
 	color: #FFFFFF;
 }
 
-#ui_canvas {
-	z-index: 1;
-	position: absolute;
-}
-
-#world_canvas {
-	z-index: 0;
-	position: absolute;
-}
-
 .button {
     width: 100px;
     height: 50px;

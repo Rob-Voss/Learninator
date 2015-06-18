@@ -33,7 +33,7 @@ var PIXI = PIXI || {};
 			this.fps = 60;
 			this.interval = 1000 / this.fps;
 			this.clock = 0;
-			this.numItems = 20;
+			this.numItems = options.numItems || 20;
 			this.entities = [];
 			this.types = ['Wall', 'Nom', 'Gnar'];
 
@@ -54,23 +54,19 @@ var PIXI = PIXI || {};
 			var _this = this;
 			
 			for (var w=0, wl=this.walls.length; w<wl; w++) {
-				var wall = this.walls[w];
-				this.stage.addChild(wall.shape);
+				this.stage.addChild(this.walls[w].shape);
 			}
 
 			for (var a=0, al=this.agents.length; a<al; a++) {
-				var agent = this.agents[a];
-				this.stage.addChild(agent.sprite);
-				for (var ei=0; ei<agent.eyes.length; ei++) {
-					var eye = agent.eyes[ei];
-					this.stage.addChild(eye.shape);
+				this.stage.addChild(this.agents[a].sprite);
+				for (var ei=0; ei<this.agents[a].eyes.length; ei++) {
+					this.stage.addChild(this.agents[a].eyes[ei].shape);
 				}
 			}
-
+			
 			this.populate();
 			for (var e=0, el=this.entities.length; e<el; e++) {
-				var entity = this.entities[e];
-				this.stage.addChild(entity.sprite);
+				this.stage.addChild(this.entities[e].sprite);
 			}
 
 			requestAnimationFrame(animate);
@@ -90,8 +86,14 @@ var PIXI = PIXI || {};
 		 */
 		addEntity (entity) {
 			if (entity.type !== 0) {
-				var cell = this.grid.getGridLocation(entity.position);
+				var cell = this.grid.getGridLocation(entity.position),
+					locText = new PIXI.Text(entity.gridLocation.x + ':' + entity.gridLocation.y, {font: "10px Arial", fill: "#006400", align: "center"}),
+					posText = new PIXI.Text(entity.position.x + ':' + entity.position.y, {font: "10px Arial", fill: "#000000", align: "center"});
 				cell.population.splice(0, 0, entity.id);
+				posText.position.set(-20, 10);
+				locText.position.set(0, 10);
+				entity.sprite.addChild(posText);
+				entity.sprite.addChild(locText);
 				this.stage.addChild(entity.sprite);
 				this.entities.push(entity);
 			}
@@ -136,30 +138,36 @@ var PIXI = PIXI || {};
 				grid:this.grid,
 				walls: this.walls,
 				entities: this.entities,
+				width: this.grid.width * this.grid.cellWidth - 2,
+				height: this.grid.height * this.grid.cellHeight - 2,
 				movingEntities: this.movingEntities
 			};
+			
 			for (var i=0, al=this.agents.length; i<al; i++) {
-				var agent = this.agents[i];
-				agent.sprite.tint = (this.tinting) ? this.rewardGraph.hexStyles[i] : 0xFFFFFF;
-				agent.tick(smallWorld);
-				for (var j=0, dl=agent.digested.length; j<dl; j++) {
-					this.deleteEntity(agent.digested[j]);
+				this.agents[i].tick(smallWorld);
+				this.agents[i].gridLocation = this.grid.getGridLocation(this.agents[i].position);
+				
+				for (var j=0, dl=this.agents[i].digested.length; j<dl; j++) {
+					this.deleteEntity(this.agents[i].digested[j]);
 				}
 
 				if (this.raycast) {
 					this.map.update(seconds);
-					agent.player = new Player(agent.gridLocation.x, agent.gridLocation.y, agent.angle);
-					agent.player.update(agent.angle, this.map, seconds);
-					agent.camera.render(agent.player, this.map);
+					this.agents[i].player = new Player(this.agents[i].gridLocation.x, this.agents[i].gridLocation.y, agent.angle);
+					this.agents[i].player.update(this.agents[i].angle, this.map, seconds);
+					this.agents[i].camera.render(this.agents[i].player, this.map);
 				}
 			}
 
 			for (var e=0; e<this.entities.length; e++) {
-				var entity = this.entities[e];
-				entity.tick(smallWorld);
+				this.entities[e].tick(smallWorld);
+				this.entities[e].gridLocation = this.grid.getGridLocation(this.entities[e].position);
 
-				if (entity.age > 10000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
-					this.deleteEntity(entity);
+				this.entities[e].sprite.getChildAt(0).text = this.entities[e].gridLocation.x + ':' + this.entities[e].gridLocation.y;
+				this.entities[e].sprite.getChildAt(1).text = this.entities[e].position.x + ':' + this.entities[e].position.y;
+
+				if (this.entities[e].age > 1000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
+					this.deleteEntity(this.entities[e]);
 				}
 			}
 
@@ -171,13 +179,12 @@ var PIXI = PIXI || {};
 			}
 
 			for (var i=0, al=this.agents.length; i<al; i++) {
-				var agent = this.agents[i];
 				// Throw some points on a Graph
-				if (this.clock % 100 === 0 && agent.pts.length !== 0) {
-					this.rewardGraph.addPoint(this.clock / 100, i, agent.pts);
+				if (this.clock % 100 === 0 && this.agents[i].pts.length !== 0) {
+					this.rewardGraph.addPoint(this.clock / 100, i, this.agents[i].pts);
 					this.rewardGraph.drawPoints();
 					// Clear them up since we've drawn them
-					agent.pts = Array();
+					this.agents[i].pts = Array();
 				}
 			}
 		

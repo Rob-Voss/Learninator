@@ -31,23 +31,23 @@ var Utility = Utility || {};
 
 	/**
 	 * Return a random Float within the range of a-b
-	 * @param {Float} a
-	 * @param {Float} b
+	 * @param {Float} lo
+	 * @param {Float} hi
 	 * @returns {Number}
 	 */
-	Utility.randf = function(a, b) {
-		return Math.random() * (b - a) + a;
-	};
+	Utility.randf = function(lo, hi) {
+		return Math.random() * (hi-lo) + lo;
+	}
 
 	/**
 	 * Return a random Integer within the range of a-b
-	 * @param {Float} a
-	 * @param {Float} b
+	 * @param {Float} lo
+	 * @param {Float} hi
 	 * @returns {Number}
 	 */
-	Utility.randi = function(a, b) {
-		return Math.floor(Math.random() * (b - a) + a);
-	};
+	Utility.randi = function(lo, hi) {
+		return Math.floor(this.randf(lo,hi));
+	}
 
 	/**
 	 * Return a random Number
@@ -78,6 +78,33 @@ var Utility = Utility || {};
 		return false;
 	};
 
+	Utility.boundaryCheck = function(entity, width, height) {
+		// handle boundary conditions.. bounce agent
+		if(entity.position.x < 1) {
+			entity.position.x = 1;
+			entity.velocity.x = 0;
+			entity.velocity.y = 0;
+		}
+		if(entity.position.x > width) {
+			entity.position.x = width;
+			entity.velocity.x = 0;
+			entity.velocity.y = 0;
+		}
+		if(entity.position.y < 1) {
+			entity.position.y = 1;
+			entity.velocity.x = 0;
+			entity.velocity.y = 0;
+		}
+		if(entity.position.y > height) {
+			entity.position.y = height;
+			entity.velocity.x = 0;
+			entity.velocity.y = 0;
+		}
+		
+		entity.position.x = entity.sprite.position.x = Math.round(entity.position.x);
+		entity.position.y = entity.sprite.position.y = Math.round(entity.position.y);
+	};
+
 	/**
 	 * A helper function to get check for colliding walls/items
 	 * @param {Vec} v1
@@ -93,7 +120,7 @@ var Utility = Utility || {};
 		if (walls) {
 			// @TODO Need to check the current cell first so we
 			// don't loop through all the walls
-			for (var i = 0, wl = walls.length; i < wl; i++) {
+			for (var i=0, wl=walls.length; i<wl; i++) {
 				var wall = walls[i];
 				var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 				if (wResult) {
@@ -121,7 +148,7 @@ var Utility = Utility || {};
 					iResult.id = entity.id;
 					iResult.radius = entity.radius;
 					iResult.position = entity.position;
-					iResult.vx = entity.velocity.x; // velocty information
+					iResult.vx = entity.velocity.x; // velocity information
           			iResult.vy = entity.velocity.y;
 					if (!minRes) {
 						minRes = iResult;

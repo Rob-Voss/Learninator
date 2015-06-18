@@ -176,7 +176,7 @@ var Maze = Maze || {};
 		 * @returns {undefined}
 		 */
 		generate () {
-			var initialCell = this.grid.getCellAt(1, 1);
+			var initialCell = this.grid.getCellAt(0, 0);
 			this.recurse(initialCell);
 		};
 
