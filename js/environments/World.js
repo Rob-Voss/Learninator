@@ -1,17 +1,20 @@
 var World = World || {};
 var Agent = Agent || {};
+var Item = Item || {};
 var Utility = Utility || {};
+var Vec = Vec || {};
+var Map = Map || {};
 var PIXI = PIXI || {};
 
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * Make a World
-	 * @param {Object} options
-	 * @returns {World}
-	 */
-	class World {
+    /**
+     * Make a World
+     * @param {Object} options
+     * @returns {World}
+     */
+    class World {
 		constructor (options) {
 			this.canvas = options.canvas;
 			this.ctx = this.canvas.getContext("2d");
@@ -27,9 +30,9 @@ var PIXI = PIXI || {};
 			this.agents = options.agents || [];
 
 			/**
-			* 1s = 1000ms (remember that setInterval and setTimeout run on milliseconds)
-			* 1000ms / 60(fps) = 16.7ms (we'll round this to 17)
-			*/
+			 * 1s = 1000ms (remember that setInterval and setTimeout run on milliseconds)
+			 * 1000ms / 60(fps) = 16.7ms (we'll round this to 17)
+			 */
 			this.fps = 60;
 			this.interval = 1000 / this.fps;
 			this.clock = 0;
@@ -39,20 +42,30 @@ var PIXI = PIXI || {};
 
 			this.pause = false;
 			this.tinting = false;
-			this.raycast = options.raycast || false;
 			this.movingEntities = options.movingEntities || false;
 			this.interactive = options.interactive || false;
 
-			this.map = new Map(this.grid.width);
-			this.map.populate(this.grid);
+			this.raycast = options.raycast || false;
+			if (this.raycast) {
+				this.map = new Map(this.grid.width);
+				this.map.populate(this.grid);
+			}
 
+			// PIXI gewdness
 			this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view:this.canvas}, true);
 			this.renderer.backgroundColor = 0xFFFFFF;
 			document.body.appendChild(this.renderer.view);
 			this.stage = new PIXI.Container();
 
-			var _this = this;
-			
+			// Populating and tracking
+			for (var k=0; k<this.numItems; k++) {
+				var width = this.width - 10,
+					height = this.height - 10,
+					x = Utility.randi(5, width),
+					y = Utility.randi(5, height);
+				this.addEntity(new Item(Utility.randi(1, 3), new Vec(x, y), 10, this.interactive));
+			}
+
 			for (var w=0, wl=this.walls.length; w<wl; w++) {
 				this.stage.addChild(this.walls[w].shape);
 			}
@@ -63,8 +76,7 @@ var PIXI = PIXI || {};
 					this.stage.addChild(this.agents[a].eyes[ei].shape);
 				}
 			}
-			
-			this.populate();
+
 			for (var e=0, el=this.entities.length; e<el; e++) {
 				this.stage.addChild(this.entities[e].sprite);
 			}
@@ -77,53 +89,49 @@ var PIXI = PIXI || {};
 					_this.renderer.render(_this.stage);
 				}
 			}
-		};
 
-		/**
-		 * Add an item to the world canvas and set it to redraw
-		 * @param {Item||Agent} entity
-		 * @returns {undefined}
-		 */
+			var _this = this;
+
+			return this;
+		}
+
+        /**
+         * Add an item to the world canvas and set it to redraw
+         * @param entity
+         */
 		addEntity (entity) {
 			if (entity.type !== 0) {
-				var cell = this.grid.getGridLocation(entity.position),
-					locText = new PIXI.Text(entity.gridLocation.x + ':' + entity.gridLocation.y, {font: "10px Arial", fill: "#006400", align: "center"}),
-					posText = new PIXI.Text(entity.position.x + ':' + entity.position.y, {font: "10px Arial", fill: "#000000", align: "center"});
-				cell.population.splice(0, 0, entity.id);
-				posText.position.set(-20, 10);
-				locText.position.set(0, 10);
-				entity.sprite.addChild(posText);
-				entity.sprite.addChild(locText);
+				// Insert the population
+                entity.gridLocation = this.grid.getGridLocation(entity.position);
+				entity.gridLocation.population.splice(0, 0, entity.id);
 				this.stage.addChild(entity.sprite);
 				this.entities.push(entity);
-			}
-		};
 
-		/**
-		 * Randomly create an entity at the Vec
-		 * @param {Vec} pos
-		 * @returns {undefined}
-		 */
-		addRandEntity (pos) {
-			this.addEntity(new Item(Utility.randi(1, 3), pos, 10, this.interactive));
-		};
+                var locText = new PIXI.Text(entity.gridLocation.x + ':' + entity.gridLocation.y, {font: "10px Arial", fill: "#006400", align: "center"}),
+                    posText = new PIXI.Text(entity.position.x + ':' + entity.position.y, {font: "10px Arial", fill: "#000000", align: "center"});
+                posText.position.set(-20, 10);
+                locText.position.set(0, 10);
+                entity.sprite.addChild(posText);
+                entity.sprite.addChild(locText);
+
+            }
+		}
 
 		/**
 		 * Add an item to the world canvas and set it to redraw
-		 * @param {Item||Agent} entity
-		 * @returns {undefined}
+		 * @param entity
 		 */
 		deleteEntity (entity) {
 			if (entity.type !== 0) {
-				var cell = this.grid.getGridLocation(entity.position),
-					index = cell.population.indexOf(entity.id);
+				entity.gridLocation = this.grid.getGridLocation(entity.position);
+				var index = entity.gridLocation.population.indexOf(entity.id);
 				if (index > -1) {
-					cell.population.splice(index, 1);
+					entity.gridLocation.population.splice(index, 1);
 					this.stage.removeChild(entity.sprite);
 					this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
 				}
 			}
-		};
+		}
 
 		/**
 		 * Tick the environment
@@ -142,20 +150,22 @@ var PIXI = PIXI || {};
 				height: this.grid.height * this.grid.cellHeight - 2,
 				movingEntities: this.movingEntities
 			};
-			
-			for (var i=0, al=this.agents.length; i<al; i++) {
-				this.agents[i].tick(smallWorld);
-				this.agents[i].gridLocation = this.grid.getGridLocation(this.agents[i].position);
-				
-				for (var j=0, dl=this.agents[i].digested.length; j<dl; j++) {
-					this.deleteEntity(this.agents[i].digested[j]);
+
+			for (var ai=0, ac=this.agents.length; ai<ac; ai++) {
+				this.agents[ai].tick(smallWorld);
+				this.agents[ai].gridLocation = this.grid.getGridLocation(this.agents[ai].position);
+
+				// Destroy the eaten entities
+				for (var j=0, dl=this.agents[ai].digested.length; j<dl; j++) {
+					this.deleteEntity(this.agents[ai].digested[j]);
 				}
 
+				// If we have raycasting turned on then update the sub classes etc
 				if (this.raycast) {
 					this.map.update(seconds);
-					this.agents[i].player = new Player(this.agents[i].gridLocation.x, this.agents[i].gridLocation.y, agent.angle);
-					this.agents[i].player.update(this.agents[i].angle, this.map, seconds);
-					this.agents[i].camera.render(this.agents[i].player, this.map);
+					this.agents[ai].player = new Player(this.agents[ai].gridLocation.x, this.agents[ai].gridLocation.y, this.agents[ai].angle);
+					this.agents[ai].player.update(this.agents[ai].angle, this.map, seconds);
+					this.agents[ai].camera.render(this.agents[ai].player, this.map);
 				}
 			}
 
@@ -163,9 +173,7 @@ var PIXI = PIXI || {};
 				this.entities[e].tick(smallWorld);
 				this.entities[e].gridLocation = this.grid.getGridLocation(this.entities[e].position);
 
-				this.entities[e].sprite.getChildAt(0).text = this.entities[e].gridLocation.x + ':' + this.entities[e].gridLocation.y;
-				this.entities[e].sprite.getChildAt(1).text = this.entities[e].position.x + ':' + this.entities[e].position.y;
-
+				// Loop through and destroy old items
 				if (this.entities[e].age > 1000 && this.clock % 100 === 0 && Utility.randf(0, 1) < 0.1) {
 					this.deleteEntity(this.entities[e]);
 				}
@@ -175,34 +183,21 @@ var PIXI = PIXI || {};
 			if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
 				var x = Utility.randi(5, this.width - 2),
 					y = Utility.randi(5, this.height - 2);
-				this.addRandEntity(new Vec(x, y));
+				this.addEntity(new Item(Utility.randi(1, 3), new Vec(x, y), 10, this.interactive));
 			}
 
 			for (var i=0, al=this.agents.length; i<al; i++) {
-				// Throw some points on a Graph
 				if (this.clock % 100 === 0 && this.agents[i].pts.length !== 0) {
+					// Throw some points on a Graph
 					this.rewardGraph.addPoint(this.clock / 100, i, this.agents[i].pts);
 					this.rewardGraph.drawPoints();
 					// Clear them up since we've drawn them
-					this.agents[i].pts = Array();
+					this.agents[i].pts = [];
 				}
 			}
-		
-		};
 
-		/**
-		 * Populate the World with Items
-		 * @returns {undefined}
-		 */
-		populate () {
-			for (var k = 0; k < this.numItems; k++) {
-				var x = Utility.randi(5, this.width - 10),
-					y = Utility.randi(5, this.height - 10);
-				this.addRandEntity(new Vec(x, y));
-			}
-		};
-		
-	};
+		}
+	}
 
 	global.World = World;
 

@@ -25,7 +25,7 @@ var Array = Array || {};
 				maxi = 0,
 				mini = 0;
 
-		for (var i = 1; i < arr.length; i++) {
+		for (var i=1; i<arr.length; i++) {
 			if (arr[i] > maxv) {
 				maxv = arr[i];
 				maxi = i;
@@ -58,7 +58,7 @@ var Array = Array || {};
 			var thisArg = arguments[1];
 			var value;
 
-			for (var i = 0; i < length; i++) {
+			for (var i=0; i<length; i++) {
 				value = list[i];
 				if (predicate.call(thisArg, value, i, list)) {
 					return value;
@@ -67,6 +67,7 @@ var Array = Array || {};
 			return undefined;
 		};
 	}
+	
 	if (!Array.prototype.findIndex) {
 		Array.prototype.findIndex = function (predicate) {
 			if (this == null) {
@@ -80,7 +81,7 @@ var Array = Array || {};
 			var thisArg = arguments[1];
 			var value;
 
-			for (var i = 0; i < length; i++) {
+			for (var i=0; i<length; i++) {
 				value = list[i];
 				if (predicate.call(thisArg, value, i, list)) {
 					return i;
@@ -89,6 +90,7 @@ var Array = Array || {};
 			return -1;
 		};
 	}
+
 	global.Array = Array;
 
 }(this));

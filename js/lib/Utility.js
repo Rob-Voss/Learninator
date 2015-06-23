@@ -23,12 +23,6 @@ var Utility = Utility || {};
 		return u * c;
 	};
 
-	Utility.getDirection = function(angle) {
-		var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
-			octant = Math.round( 8 * angle / (2*Math.PI) + 8 ) % 8;
-		return directions[octant];
-	}
-
 	/**
 	 * Return a random Float within the range of a-b
 	 * @param {Float} lo
@@ -78,6 +72,24 @@ var Utility = Utility || {};
 		return false;
 	};
 
+	Utility.loadJSON = function(file, callback) {   
+		var xobj = new XMLHttpRequest();
+		xobj.overrideMimeType("application/json");
+		xobj.open('GET', file, true);
+		xobj.onreadystatechange = function () {
+			if (xobj.readyState == 4 && xobj.status == "200") {
+				callback(xobj.responseText);
+			}
+		};
+		xobj.send(null);  
+	};
+	
+	Utility.getDirection = function(angle) {
+		var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
+			octant = Math.round( 8 * angle / (2*Math.PI) + 8 ) % 8;
+		return directions[octant];
+	};
+
 	Utility.boundaryCheck = function(entity, width, height) {
 		// handle boundary conditions.. bounce agent
 		if(entity.position.x < 1) {
@@ -103,6 +115,8 @@ var Utility = Utility || {};
 		
 		entity.position.x = entity.sprite.position.x = Math.round(entity.position.x);
 		entity.position.y = entity.sprite.position.y = Math.round(entity.position.y);
+
+		return entity;
 	};
 
 	/**
@@ -163,42 +177,7 @@ var Utility = Utility || {};
 
 		return minRes;
 	};
-	/**
-	 * Max and min of an array
-	 * @param {Array} a
-	 * @returns {Object}
-	 */
-	Utility.maxmin = function(a) {
-		if (a.length === 0) {
-			return {};
-		}
-
-		var maxv = a[0],
-			minv = a[0],
-			maxi = 0,
-			mini = 0,
-			result = {};
-
-		for (var i = 0, il = a.length; i < il; i++) {
-			var item = a[i];
-			if (item > maxv) {
-				maxv = item;
-				maxi = i;
-			} else if (item < minv) {
-				minv = item;
-				mini = i;
-			}
-		}
-
-		result.maxi = maxi;
-		result.maxv = maxv;
-		result.mini = mini;
-		result.minv = minv;
-		result.dv = maxv - minv;
-
-		return result;
-	};
-
+	
 	/**
 	 * Returns string representation of float but truncated to length of d digits
 	 * @param {Number} x

@@ -16,6 +16,8 @@ var Window = Window || {};
 			this.size = typeof (size) === 'undefined' ? 100 : size;
 			this.minsize = typeof (minSize) === 'undefined' ? 20 : minSize;
 			this.sum = 0;
+
+			return this;
 		};
 
 		/**

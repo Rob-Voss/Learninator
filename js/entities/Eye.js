@@ -11,18 +11,20 @@ var PIXI = PIXI || {};
 	 */
 	class Eye {
 		constructor (angle) {
-			this.angle = angle; // Angle relative to agent its on
-			this.maxRange = 85; // Max range of the eye's vision
-			this.sensedProximity = 85; // What the eye is seeing. will be set in world.tick()
-			this.sensedType = -1; // what does the eye see?
+			this.angle = angle;
+			this.maxRange = 85;
+			this.sensedProximity = 85;
+			this.sensedType = -1;
 			this.velocity = new Vec(0, 0);
 			this.numInputs = 5;
 			
 			// PIXI graphics
 			this.shape = new PIXI.Graphics();
 			this.shape.lineStyle(1, 0x000000);
-		};
 
+			return this;
+		}
+		
 		sense (agent, walls, entities) {
 			this.shape.clear();
 
@@ -47,7 +49,7 @@ var PIXI = PIXI || {};
 				this.vx = 0;
 				this.vy = 0;
 			}	
-		};
+		}
 
 		draw (agent) {
 			switch (this.sensedType) {
@@ -76,7 +78,7 @@ var PIXI = PIXI || {};
 			this.shape.moveTo(agent.oldPos.x, agent.oldPos.y);
 			this.shape.lineTo(aEyeX, aEyeY);
 		}
-	};
+	}
 
 	global.Eye = Eye;
 

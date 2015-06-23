@@ -19,6 +19,8 @@ var Cell = Cell || {};
 			this.parent = null;
 			this.heuristic = 0;
 			this.population = [];
+
+			return this;
 		};
 
 		/**
@@ -36,19 +38,6 @@ var Cell = Cell || {};
 			path.reverse();
 
 			return path;
-		};
-
-		/**
-		 * Sets the X and Y
-		 * @param {Number} x The x
-		 * @param {Number} y The y
-		 * @return {Vec} Returns itself.
-		 */
-		set (x, y) {
-			this.x = x;
-			this.y = y;
-
-			return this;
 		};
 
 		/**
@@ -106,6 +95,8 @@ var Cell = Cell || {};
 					row.push(c);
 				}
 			}
+
+			return this;
 		};
 		
 		/**

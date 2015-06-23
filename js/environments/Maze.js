@@ -34,6 +34,8 @@ var Maze = Maze || {};
 
 			this.draw(options.closed);
 			this.solve();
+
+			return this;
 		};
 
 		/**

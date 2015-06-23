@@ -24,15 +24,13 @@ var Utility = Utility || {};
 			this.radius = radius || 10;
 			this.age = 0;
 			this.cleanUp = false;
-			this.interactive = interactive || true;
+			this.interactive = interactive || false;
 
 			// Remember the Item's old position
 			this.oldPos = this.position;
 
 			// Remember the Item's old angle
 			this.oldAngle = this.angle;
-
-			var _this = this;
 
 			this.texture = PIXI.Texture.fromImage((this.type === 1) ? 'img/Nom.png' : 'img/Gnar.png');
 			this.sprite = new PIXI.Sprite(this.texture);
@@ -56,50 +54,60 @@ var Utility = Utility || {};
 					.on('touchmove', this.onDragMove);
 				this.sprite.entity = _this;
 			}
+
+			var _this = this;
+			
+			return this;
+		};
+
+		move (smallWorld) {
+			this.oldPos = new Vec(this.position.x, this.position.y);
+				
+			this.position.x += this.velocity.x;
+			this.position.y += this.velocity.y;
+
+			if(this.position.x < 2) {
+				this.position.x = 2;
+				this.velocity.x *= -1;
+			}
+			if(this.position.x > smallWorld.width) {
+				this.position.x = smallWorld.width;
+				this.velocity.x *= -1;
+			}
+			if(this.position.y < 2) {
+				this.position.y = 2;
+				this.velocity.y *= -1;
+			}
+			if(this.position.y > smallWorld.height) {
+				this.position.y = smallWorld.height;
+				this.velocity.y *= -1;
+			}
+
+			// The item is trying to move from pos to oPos so we need to check walls
+			var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
+			if (result) {
+				var d = this.position.distanceTo(result.vecI);
+				// The item derped! Wall collision! Reset their position
+				if (result && d <= this.radius) {
+					this.position = this.oldPos;
+					this.velocity.x *= -1;
+					this.velocity.y *= -1;
+				}
+			}
+
+			// Handle boundary conditions.. bounce item
+			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
+
+			// Update the item's gridLocation label
+			this.sprite.getChildAt(0).text = this.gridLocation.x + ':' + this.gridLocation.y;
+			this.sprite.getChildAt(1).text = this.position.x + ':' + this.position.y;
 		};
 
 		tick (smallWorld) {
 			this.age += 1;
 
 			if (smallWorld.movingEntities) {
-				this.oldPos = new Vec(this.position.x, this.position.y);
-				
-				var width = smallWorld.grid.width * smallWorld.grid.cellWidth - 2,
-					height = smallWorld.grid.height * smallWorld.grid.cellHeight - 2;
-				
-				this.position.x += this.velocity.x;
-				this.position.y += this.velocity.y;
-
-				if(this.position.x < 2) {
-					this.position.x = 2;
-					this.velocity.x *= -1;
-				}
-				if(this.position.x > width) {
-					this.position.x = width;
-					this.velocity.x *= -1;
-				}
-				if(this.position.y < 2) {
-					this.position.y = 2;
-					this.velocity.y *= -1;
-				}
-				if(this.position.y > height) {
-					this.position.y = height;
-					this.velocity.y *= -1;
-				}
-
-				// The item is trying to move from pos to oPos so we need to check walls
-				var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
-				if (result) {
-					var d = this.position.distanceTo(result.vecI);
-					// The item derped! Wall collision! Reset their position
-					if (result && d <= this.radius) {
-						this.position = this.oldPos;
-						this.velocity.x *= -1;
-						this.velocity.y *= -1;
-					}
-				}
-				// Handle boundary conditions.. bounce item
-				Utility.boundaryCheck(this, width, height);
+				this.move(smallWorld);
 			}
 		};
 
@@ -113,14 +121,16 @@ var Utility = Utility || {};
 			if(this.dragging) {
 				var newPosition = this.data.getLocalPosition(this.parent);
 				this.position.set(newPosition.x, newPosition.y);
-				this.entity.position.set(newPosition.x, newPosition.y);
+				this.entity.position.x = newPosition.x;
+				this.entity.position.y = newPosition.y;
 			}
 		};
 
 		onDragEnd () {
 			this.alpha = 1;
 			this.dragging = false;
-			this.entity.position.set(this.position.x, this.position.y);
+			this.entity.position.x = this.position.x;
+			this.entity.position.y = this.position.y;
 			// set the interaction data to null
 			this.data = null;
 		};

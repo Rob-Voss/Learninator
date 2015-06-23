@@ -30,6 +30,8 @@ var Wall = Wall || {};
 			}
 
 			this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
+
+			return this;
 		};
 
 		get v1() {

@@ -4,21 +4,22 @@ var Utility = Utility || {};
 var PIXI = PIXI || {};
 
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * A single agent
-	 * @returns {Agent_L3.Agent}
-	 */
-	class AgentDQN {
+    /**
+     * A single agent
+     */
+    class AgentDQN {
 		constructor (interactive, display) {
 			this.id = Utility.guid();
 			this.type = 3;
-			this.name = 'DQN Agent Normal';
+			this.name = 'DQN Agent';
 			(display) ? this.camera = new Camera(display, 320, 0.8) : undefined;
-			this.position = new Vec(5, 5);
-			this.velocity = new Vec(0, 0);
-			this.gridLocation = new Cell(0, 0);
+            this.gridLocation = new Cell(0, 0);
+			this.position = new Vec(300, 300, 0, 0);
+			this.velocity = {};
+            this.velocity.x = this.position.vx;
+            this.velocity.y = this.position.vy;
 			this.width = 20;
 			this.height = 20;
 			this.radius = 10;
@@ -40,14 +41,37 @@ var PIXI = PIXI || {};
 			// Remember the Agent's old angle
 			this.oldAngle = this.angle;
 
+			// PIXI gewdness
+			this.texture = PIXI.Texture.fromImage("img/Agent.png");
+			this.sprite = new PIXI.Sprite(this.texture);
+			this.sprite.width = this.width;
+			this.sprite.height = this.height;
+			this.sprite.anchor.set(0.5, 0.5);
+			this.sprite.position.set(this.position.x, this.position.y);
+			if (this.interactive === true) {
+				this.sprite.interactive = true;
+				this.sprite
+					.on('mousedown', this.onDragStart)
+					.on('touchstart', this.onDragStart)
+					.on('mouseup', this.onDragEnd)
+					.on('mouseupoutside', this.onDragEnd)
+					.on('touchend', this.onDragEnd)
+					.on('touchendoutside', this.onDragEnd)
+					.on('mouseover', this.onMouseOver)
+					.on('mouseout', this.onMouseOut)
+					.on('mousemove', this.onDragMove)
+					.on('touchmove', this.onDragMove);
+				this.sprite.entity = _this;
+			}
+
 			// The number of item types the Agent's eys can see (wall, green, red thing proximity)
-			this.numTypes = 3;
+			this.numTypes = 5;
 
 			// The number of Agent's eyes
 			this.numEyes = 30;
 
 			// The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
-			this.numStates = this.numEyes * 5 + 2;
+			this.numStates = this.numEyes * this.numTypes + 2;
 
 			// The Agent's eyes
 			this.eyes = [];
@@ -87,48 +111,36 @@ var PIXI = PIXI || {};
             brainOptsDQN.num_hidden_units = 100 // number of neurons in hidden layer
 
 			this.brainOpts = brainOptsDQN;
-			this.brain = new RL.DQNAgent(env, this.brainOpts);
+ 			this.brain = new RL.DQNAgent(env, this.brainOpts);
+ 			//this.load('js/wateragent.json');
+			
+			return this;
+		}
 
-			this.texture = PIXI.Texture.fromImage("img/Agent.png");
-			this.sprite = new PIXI.Sprite(this.texture);
-			this.sprite.width = this.width;
-			this.sprite.height = this.height;
-			this.sprite.anchor.set(0.5, 0.5);
-			this.sprite.position.set(this.position.x, this.position.y);
+		load (file) {
+			var _Brain = this.brain;
+			Utility.loadJSON(file, function(data) {
+				_Brain.fromJSON(JSON.parse(data));
+				_Brain.epsilon = 0.05;
+				_Brain.alpha = 0;
+			});
+		}
 
-			if (this.interactive == true) {
-				this.sprite.interactive = true;
-				this.sprite
-					.on('mousedown', this.onDragStart)
-					.on('touchstart', this.onDragStart)
-					.on('mouseup', this.onDragEnd)
-					.on('mouseupoutside', this.onDragEnd)
-					.on('touchend', this.onDragEnd)
-					.on('touchendoutside', this.onDragEnd)
-					.on('mouseover', this.onMouseOver)
-					.on('mouseout', this.onMouseOut)
-					.on('mousemove', this.onDragMove)
-					.on('touchmove', this.onDragMove);
-				this.sprite.entity = _this;
-			}
-
-		};
-
-        act (walls, entities, width, height) {
+        act () {
             // in forward pass the agent simply behaves in the environment
-            var ne = this.numEyes * 5;
+            var ne = this.numEyes * this.numTypes;
             var inputArray = new Array(this.numStates);
             for(var i=0; i<this.numEyes; i++) {
-                var e = this.eyes[i];
-                inputArray[i*5] = 1.0;
-                inputArray[i*5+1] = 1.0;
-                inputArray[i*5+2] = 1.0;
-                inputArray[i*5+3] = e.vx; // velocity information of the sensed target
-                inputArray[i*5+4] = e.vy;
-                if(e.sensed_type !== -1) {
+                var eye = this.eyes[i];
+                inputArray[i*this.numTypes] = 1.0;
+                inputArray[i*this.numTypes+1] = 1.0;
+                inputArray[i*this.numTypes+2] = 1.0;
+                inputArray[i*this.numTypes+3] = eye.vx; // velocity information of the sensed target
+                inputArray[i*this.numTypes+4] = eye.vy;
+                if(eye.sensedType !== -1) {
                     // sensedType is 0 for wall, 1 for food and 2 for poison.
                     // lets do a 1-of-k encoding into the input array
-                    inputArray[i*5 + e.sensedType] = e.sensedProximity/e.maxRange; // normalize to [0,1]
+                    inputArray[i*this.numTypes + eye.sensedType] = eye.sensedProximity / eye.maxRange; // normalize to [0,1]
                 }
             }
 
@@ -137,7 +149,15 @@ var PIXI = PIXI || {};
             inputArray[ne+1] = this.velocity.y;
 
             this.action = this.brain.act(inputArray);
-            
+        }
+
+        learn () {
+            var reward = this.digestionSignal;
+            this.lastReward = reward; // for vis
+            this.brain.learn(reward);
+        }
+
+		move (smallWorld) {
 			// execute agent's desired action
 			var speed = 1;
 			if(this.action === 0) {
@@ -159,48 +179,9 @@ var PIXI = PIXI || {};
 			this.position.x += this.velocity.x; 
 			this.position.y += this.velocity.y;
 
-			// The agent is trying to move from pos to oPos so we need to check walls
-			var result = Utility.collisionCheck(this.oldPos, this.position, walls);
-			if (result) {
-				// The agent derped! Wall collision! Reset their position
-				this.position = this.oldPos;
-			}
-
-			// Check for food
-			// Gather up all the entities nearby based on cell population
-			this.digested = [];
-			for (var j=0, n=this.gridLocation.population.length; j<n; j++) {
-				var entity = entities.find(Utility.getId, this.gridLocation.population[j]);
-				if (entity) {
-					var dist = this.position.distanceTo(entity.position);
-					if (dist < entity.radius + this.radius) {
-						var result = Utility.collisionCheck(this.position, entity.position, walls);
-						if (!result) {
-							// Nom Noms!
-							switch (entity.type) {
-								case 1:// The sweet meats
-									this.digestionSignal += 5.0;
-									break;
-								case 2:// The gnar gnar meats
-									this.digestionSignal += -6.0;
-									break;
-							}
-							this.digested.push(entity);
-						}
-					}
-				}
-			}
-
-			if (this.digested.length > 0) {
-				this.pts.push(this.lastReward);
-			}
-        };
-
-        learn () {
-            var reward = this.digestionSignal;
-            this.lastReward = reward; // for vis
-            this.brain.learn(reward);
-        };
+			// Handle boundary conditions.. bounce agent
+			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
+		}
 
 		/**
 		 * Tick the agent
@@ -217,20 +198,48 @@ var PIXI = PIXI || {};
 			}
 
 			// Let the agents behave in the world based on their input
-			this.act(smallWorld.walls, smallWorld.entities, smallWorld.width, smallWorld.height);
+			this.act();
+
+			this.move(smallWorld);
 
 			// Loop through the eyes and draw them
 			for (var ei=0; ei<this.numEyes; ei++) {
 				this.eyes[ei].draw(this);
 			}
 
-			// Handle boundary conditions.. bounce agent
-			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
-			
+			// Check for food
+			// Gather up all the entities nearby based on cell population
+			this.digested = [];
+			for (var j=0, n=this.gridLocation.population.length; j<n; j++) {
+				var entity = smallWorld.entities.find(Utility.getId, this.gridLocation.population[j]);
+				if (entity) {
+					var dist = this.position.distanceTo(entity.position);
+					if (dist < entity.radius + this.radius) {
+						var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls);
+						if (!result) {
+							// Nom Noms!
+							switch (entity.type) {
+								case 1:// The sweet meats
+									this.digestionSignal += 1.0;
+									break;
+								case 2:// The gnar gnar meats
+									this.digestionSignal += -1.0;
+									break;
+							}
+							this.digested.push(entity);
+						}
+					}
+				}
+			}
+
 			// This is where the agents learns based on the feedback of their actions on the environment
 			this.learn();
-		};
-	};
+			
+			if (this.digested.length > 0) {
+				this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
+			}
+		}
+	}
 
 	global.AgentDQN = AgentDQN;
 

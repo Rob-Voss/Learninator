@@ -31,12 +31,14 @@ var Graph = Graph || {};
 
 			this.numlines = legend.length;
 			this.pts = new Array(this.numlines);
-			for (var i = 0; i < this.numlines; i++) {
+			for (var i=0; i<this.numlines; i++) {
 				this.pts[i] = [];
 			}
 			this.legend = legend;
 			this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
 			this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
+
+			return this;
 		};
 
 		/**
@@ -49,7 +51,7 @@ var Graph = Graph || {};
 			// in ms
 			var time = new Date().getTime(),
 				n = yl.length;
-			for (var k = 0; k < n; k++) {
+			for (var k=0; k<n; k++) {
 				var y = yl[k];
 				if (y > this.maxy * 0.99)
 					this.maxy = y * 1.05;
@@ -98,14 +100,14 @@ var Graph = Graph || {};
 			ctx.strokeStyle = "#999";
 			ctx.beginPath();
 			var ng = 10;
-			for (var gl = 0; gl <= ng; gl++) {
+			for (var gl=0; gl<=ng; gl++) {
 				var xpos = gl / ng * (W - 2 * pad) + pad;
 				ctx.moveTo(xpos, pad);
 				ctx.lineTo(xpos, H - pad);
 				ctx.fillText(f2t(gl / ng * this.step_horizon / 1000) + 'k', xpos, H - pad + 14);
 			}
 
-			for (var v = 0; v <= ng; v++) {
+			for (var v=0; v<=ng; v++) {
 				var ypos = v / ng * (H - 2 * pad) + pad;
 				ctx.moveTo(pad, ypos);
 				ctx.lineTo(W - pad, ypos);
@@ -113,14 +115,14 @@ var Graph = Graph || {};
 			}
 			ctx.stroke();
 			var agentN = [];
-			for (var z = 0; z < this.numlines; z++) {
+			for (var z=0; z<this.numlines; z++) {
 				agentN[z] = this.pts[z].length;
 				if (agentN[z] < 2)
 					return;
 			}
 
 			// Draw legend
-			for (var l = 0; l < this.numlines; l++) {
+			for (var l=0; l<this.numlines; l++) {
 				ctx.fillStyle = this.styles[l];
 				ctx.fillText(this.legend[l].name, W - pad - 100, pad + 20 + l * 16);
 			}
@@ -133,7 +135,7 @@ var Graph = Graph || {};
 				return {tx: tx, ty: ty};
 			};
 
-			for (var k = 0; k < this.numlines; k++) {
+			for (var k=0; k<this.numlines; k++) {
 				ctx.strokeStyle = this.styles[k];
 				ctx.beginPath();
 				for (var i = 0; i < agentN[k]; i++) {

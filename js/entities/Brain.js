@@ -22,6 +22,8 @@ var Brain = Brain || {};
 			this.action0 = action0;
 			this.reward0 = reward0;
 			this.state1 = state1;
+
+			return this;
 		}
 	};
 
@@ -153,6 +155,8 @@ var Brain = Brain || {};
 			this.average_reward_window = new Window(1000, 10);
 			this.average_loss_window = new Window(1000, 10);
 			this.learning = true;
+
+			return this;
 		};
 
 		/**
@@ -326,23 +330,6 @@ var Brain = Brain || {};
 				avcost = avcost / this.tdtrainer.batch_size;
 				this.average_loss_window.add(avcost);
 			}
-		};
-
-		visSelf (element) {
-			element.innerHTML = ''; // erase element first
-
-			// element is a DOM element that this function fills with brain-related information
-			var brainvis = document.createElement('div'),
-				// basic information
-				desc = document.createElement('div'),
-				t = '<br>';
-			t += 'Age: ' + this.age + '<br>';
-			t += 'Avg Loss: ' + this.average_loss_window.getAverage() + '<br />';
-			t += 'Avg Reward: ' + this.average_reward_window.getAverage() + '<br />';
-			desc.innerHTML = t;
-			brainvis.appendChild(desc);
-
-			element.appendChild(brainvis);
 		};
 	};
 

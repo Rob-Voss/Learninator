@@ -10,10 +10,14 @@ var Vec = Vec || {};
 	 * @returns {Vec}
 	 */
 	class Vec {
-		constructor (x, y) {
+		constructor (x, y, vx, vy) {
 			this.x = x;
 			this.y = y;
-		};
+			this.vx = vx || 0;
+			this.vy = vy || 0;
+
+			return this;
+		}
 			
 		/**
 		 * Adds a vector to this one
@@ -22,7 +26,7 @@ var Vec = Vec || {};
 		 */
 		add (v) {
 			return new Vec(this.x + v.x, this.y + v.y);
-		};
+		}
 		
 		/**
 		 * Adds two vectors to each other and stores the result in this vector
@@ -35,7 +39,7 @@ var Vec = Vec || {};
 			this.y = a.y + b.y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Adds a scalar value to the x and y components of this vector
@@ -47,8 +51,15 @@ var Vec = Vec || {};
 			this.y += s;
 
 			return this;
-		};
+		}
 		
+		advance () {
+			this.x += this.vx;
+  			this.y += this.vy;
+
+			return this;
+		}
+
 		/**
 		 * Ceils the vector components
 		 * @return {Vec} Returns itself.
@@ -58,7 +69,7 @@ var Vec = Vec || {};
 			this.y = Math.ceil(this.y);
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Clamps the vectors components to be between min and max
@@ -82,7 +93,7 @@ var Vec = Vec || {};
 			}
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Creates a new instance of Vector, with the same components as this vector
@@ -91,7 +102,7 @@ var Vec = Vec || {};
 		 */
 		clone () {
 			return new Vec(this.x, this.y);
-		};
+		}
 		
 		/**
 		 * Copies the passed vector's components to this vector
@@ -103,7 +114,7 @@ var Vec = Vec || {};
 			this.y = v.y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Calculates the square distance to the passed vector
@@ -111,9 +122,11 @@ var Vec = Vec || {};
 		 * @return {Number} The square distance
 		 */
 		distanceToSquared (v) {
-			var dx = this.x - v.x, dy = this.y - v.y;
+			var dx = this.x - v.x, 
+				dy = this.y - v.y;
+
 			return dx * dx + dy * dy;
-		};
+		}
 		
 		/**
 		 * Calculates the distance to the passed vector
@@ -122,7 +135,7 @@ var Vec = Vec || {};
 		 */
 		distanceTo (v) {
 			return Math.sqrt(this.distanceToSquared(v));
-		};
+		}
 		
 		/**
 		 * Divides the x and y components of this vector by a scalar value
@@ -139,7 +152,7 @@ var Vec = Vec || {};
 			}
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Performs the dot product between this vector and the passed one and returns the result
@@ -148,7 +161,7 @@ var Vec = Vec || {};
 		 */
 		dot (v) {
 			return this.x * v.x + this.y * v.y;
-		};
+		}
 		
 		/**
 		 * Checks if this vector is equal to another
@@ -157,7 +170,7 @@ var Vec = Vec || {};
 		 */
 		equals (v) {
 			return ((v.x === this.x) && (v.y === this.y));
-		};
+		}
 		
 		/**
 		 * Floors the vector components
@@ -168,7 +181,7 @@ var Vec = Vec || {};
 			this.y = Math.floor(this.y);
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Performs a linear interpolation between this vector and the passed vector
@@ -181,7 +194,7 @@ var Vec = Vec || {};
 			this.y += (v.y - this.y) * alpha;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Calculates the square length of the vector
@@ -189,7 +202,7 @@ var Vec = Vec || {};
 		 */
 		lengthSq () {
 			return this.dot(this);
-		};
+		}
 		
 		/**
 		 * Calculates the length of the vector
@@ -199,7 +212,7 @@ var Vec = Vec || {};
 			var length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
 
 			return length;
-		};
+		}
 		
 		/**
 		 * Sets this vector components to the maximum value when compared to the passed vector's components
@@ -216,7 +229,7 @@ var Vec = Vec || {};
 			}
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Sets this vector components to the minimum value when compared to the passed vector's components
@@ -233,8 +246,31 @@ var Vec = Vec || {};
 			}
 
 			return this;
-		};
+		}
 		
+		minDist (vec) {
+			var minDist = Infinity,
+				max = Math.max(Math.abs(this.vx), Math.abs(this.vy), Math.abs(vec.vx), Math.abs(vec.vy)),
+				slice = 1 / max,
+				x, y, distSquared,
+				// Get the middle of each vector
+				vec1 = {}, 
+				vec2 = {};
+			vec1.x = this.x + this.width / 2;
+			vec1.y = this.y + this.height / 2;
+			vec2.x = vec.x + vec.width / 2;
+			vec2.y = vec.y + vec.height / 2;
+
+			for (var percent=0; percent<1; percent+=slice) {
+				x = (vec1.x + this.vx * percent) - (vec2.x + vec.vx * percent);
+				y = (vec1.y + this.vy * percent) - (vec2.y + vec.vy * percent);
+				distSquared = x * x + y * y;
+				minDist = Math.min(minDist, distSquared);
+			}
+
+			return Math.sqrt(minDist);
+		}
+
 		/**
 		 * Multiplies the x and y components of this vector by a scalar value
 		 * @param {Number} s The value to multiply by
@@ -245,7 +281,7 @@ var Vec = Vec || {};
 			this.y *= s;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Negates this vector (multiplies by -1)
@@ -253,7 +289,7 @@ var Vec = Vec || {};
 		 */
 		negate () {
 			return this.multiplyScalar(-1);
-		};
+		}
 		
 		/**
 		 * Normalizes this vector (divides by its length)
@@ -261,7 +297,7 @@ var Vec = Vec || {};
 		 */
 		normalize () {
 			return this.divideScalar(this.length());
-		};
+		}
 		
 		/**
 		 * Rotates the vector by 90 degrees
@@ -274,7 +310,7 @@ var Vec = Vec || {};
 			this.y = -x;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Project this vector on to another vector.
@@ -287,7 +323,7 @@ var Vec = Vec || {};
 			this.y = amt * v.y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Project this vector onto a vector of unit length.
@@ -300,7 +336,7 @@ var Vec = Vec || {};
 			this.y = amt * v.y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Reflect this vector on an arbitrary axis.
@@ -315,7 +351,7 @@ var Vec = Vec || {};
 			this.y -= y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Reflect this vector on an arbitrary axis (represented by a unit vector)
@@ -330,7 +366,7 @@ var Vec = Vec || {};
 			this.y -= y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Rotates the vector by an arbitrary angle around an arbitrary point in space
@@ -344,7 +380,7 @@ var Vec = Vec || {};
 				anchor.x + (dist * Math.cos(angle)),
 				anchor.y + (dist * Math.sin(angle))
 			);
-		};
+		}
 		
 		/**
 		 * Rotate the Vec clockwise
@@ -356,7 +392,7 @@ var Vec = Vec || {};
 				Y = -this.x * Math.sin(angle) + this.y * Math.cos(angle);
 
 			return new Vec(X, Y);
-		};
+		}
 		
 		/**
 		 * Round the Vector
@@ -367,7 +403,7 @@ var Vec = Vec || {};
 			this.y = Math.round(this.y);
 
 			return this;
-		};
+		}
 		
 		/**
 		 * In place vector operations
@@ -377,7 +413,9 @@ var Vec = Vec || {};
 		scale (scale) {
 			this.x *= scale;
 			this.y *= scale;
-		};
+
+			return this;
+		}
 		
 		/**
 		 * Sets the length of the vector
@@ -392,7 +430,7 @@ var Vec = Vec || {};
 			}
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Subtracts a vector from this one
@@ -401,7 +439,7 @@ var Vec = Vec || {};
 		 */
 		sub (v) {
 			return new Vec(this.x - v.x, this.y - v.y);
-		};
+		}
 		
 		/**
 		 * Subtracts two vectors from each other and stores the result in this vector
@@ -414,16 +452,16 @@ var Vec = Vec || {};
 			this.y = a.y - b.y;
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Returns an array with the components of this vector as the elements
 		 * @return {Vec} Returns an array of [x,y] form
 		 */
 		toArray () {
-			return [this.x, this.y];
+			return [this.x, this.y, this.velocity.x, this.velocity.y];
 		}
-	};
+	}
 
 	global.Vec = Vec;
 
