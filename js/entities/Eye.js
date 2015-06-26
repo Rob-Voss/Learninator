@@ -1,21 +1,17 @@
-var Eye = Eye || {};
-var PIXI = PIXI || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * Eye sensor has a maximum range and senses walls
-	 * @param {Number} angle
-	 * @returns {Eye}
-	 */
-	class Eye {
+    /**
+     * Eye sensor has a maximum range and senses walls
+     * @param {Number} angle
+     * @returns {Eye}
+     */
+    class Eye {
 		constructor (angle) {
 			this.angle = angle;
 			this.maxRange = 85;
 			this.sensedProximity = 85;
 			this.sensedType = -1;
-			this.velocity = new Vec(0, 0);
 			this.numInputs = 5;
 			
 			// PIXI graphics
@@ -27,6 +23,9 @@ var PIXI = PIXI || {};
 		
 		sense (agent, walls, entities) {
 			this.shape.clear();
+            if (agent.collision !== true) {
+                walls = [];
+            }
 
 			var X = agent.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
 				Y = agent.position.y + this.maxRange * Math.cos(agent.angle + this.angle),

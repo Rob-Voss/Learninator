@@ -1,26 +1,20 @@
-var AgentWorker = AgentWorker || {};
-var Eye = Eye || {};
-var Utility = Utility || {};
-var PIXI = PIXI || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * A single agent
-	 * @param {Number} type
-	 * @param {Vec} v
-	 * @param {Number} r
-	 * @returns {Agent_L3.Agent}
-	 */
-	class AgentWorker {
+    /**
+     * A single agent
+     * @param {Number} type
+     * @param {Vec} v
+     * @param {Number} r
+     * @returns {Agent_L3.Agent}
+     */
+    class AgentWorker extends Interactive {
 		constructor (type, display) {
 			this.id = Utility.guid();
 			this.type = 3; // type of agent
 			this.name = 'Worker Agent';
 			(display) ? this.camera = new Camera(display, 320, 0.8) : undefined;
 			this.position = new Vec(5, 5);
-			this.velocity = new Vec(0, 0);
 			this.gridLocation = new Cell(0, 0);
 			this.width = 20;
 			this.height = 20;
@@ -185,7 +179,7 @@ var PIXI = PIXI || {};
 			this.brain.postMessage({cmd:'init', input:brainOptsTD});
 
 			return this;
-		};
+		}
 
 		/**
 		 * The agent simply behaves in the environment
@@ -215,20 +209,20 @@ var PIXI = PIXI || {};
 			// Demultiplex into behavior variables
 			this.rot1 = this.actions[this.actionIndex][0] * 1;
 			this.rot2 = this.actions[this.actionIndex][1] * 1;
-			
-			// Steer the agent according to outputs of wheel velocities
-			var v = new Vec(0, this.radius / 2.0),
-				v = v.rotate(this.angle + Math.PI / 2),
-				w1pos = this.position.add(v), // Positions of wheel 1
-				w2pos = this.position.sub(v), // Positions of wheel 2
-				vv = this.position.sub(w2pos),
-				vv = vv.rotate(-this.rot1),
-				vv2 = this.position.sub(w1pos),
-				vv2 = vv2.rotate(this.rot2),
-				newPos = w2pos.add(vv),
-				newPos2 = w1pos.add(vv2);
 
-			newPos.scale(0.5);
+            // Steer the agent according to outputs of wheel velocities
+            var v = new Vec(0, this.radius / 2.0);
+            v = v.rotate(this.angle + Math.PI / 2);
+            var w1pos = this.position.add(v), // Positions of wheel 1
+                w2pos = this.position.sub(v); // Positions of wheel 2
+            var vv = this.position.sub(w2pos);
+            vv = vv.rotate(-this.rot1);
+            var vv2 = this.position.sub(w1pos);
+            vv2 = vv2.rotate(this.rot2);
+            var newPos = w2pos.add(vv),
+                newPos2 = w1pos.add(vv2);
+
+            newPos.scale(0.5);
 			newPos2.scale(0.5);
 
 			this.position = newPos.add(newPos2);
@@ -277,7 +271,7 @@ var PIXI = PIXI || {};
 
 			// Get action from brain
 			this.brain.postMessage({cmd:'forward', input:inputArray});
-		};
+		}
 
 		/**
 		 * In backward pass agent learns.
@@ -308,7 +302,7 @@ var PIXI = PIXI || {};
 			var reward = proximityReward + forwardReward + digestionReward;
 			// pass to brain for learning
 			this.brain.postMessage({cmd:'backward', input:reward});
-		};
+		}
 
 		/**
 		 * Tick the agent
@@ -344,8 +338,8 @@ var PIXI = PIXI || {};
 			if (this.digested.length > 0) {
 				this.brain.postMessage({cmd:'getAverage'});
 			}
-		};
-	};
+		}
+	}
 
 	global.AgentWorker = AgentWorker;
 

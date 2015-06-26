@@ -1,22 +1,17 @@
-var convnetjs = convnetjs || {};
-var Utility = Utility || {};
-var Window = Window || {};
-var Brain = Brain || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * An agent is in state0 and does action0 environment then assigns reward0
-	 * and provides the new state state1
-	 * Experience nodes store all this information, which is used in the Q-learning update step
-	 * @param {Number} state0
-	 * @param {Number} action0
-	 * @param {Number} reward0
-	 * @param {Number} state1
-	 * @returns {undefined}
-	 */
-	class Experience {
+    /**
+     * An agent is in state0 and does action0 environment then assigns reward0
+     * and provides the new state state1
+     * Experience nodes store all this information, which is used in the Q-learning update step
+     * @param {Number} state0
+     * @param {Number} action0
+     * @param {Number} reward0
+     * @param {Number} state1
+     * @returns {undefined}
+     */
+    class Experience {
 		constructor (state0, action0, reward0, state1) {
 			this.state0 = state0;
 			this.action0 = action0;
@@ -25,7 +20,7 @@ var Brain = Brain || {};
 
 			return this;
 		}
-	};
+	}
 
 	/**
 	 * A Brain object does all the magic.
@@ -179,7 +174,7 @@ var Brain = Brain || {};
 					}
 				}
 			}
-		};
+		}
 
 		/**
 		 * Compute the value of doing any action in this state and return the
@@ -201,7 +196,7 @@ var Brain = Brain || {};
 				}
 			}
 			return {action: maxk, value: maxval};
-		};
+		}
 
 		/**
 		 * Return s = (x,a,x,a,x,a,xt) state vector.
@@ -227,7 +222,7 @@ var Brain = Brain || {};
 				w = w.concat(action1ofk);
 			}
 			return w;
-		};
+		}
 
 		/**
 		 * Compute forward (behavior) pass given the input neuron signals from body
@@ -274,7 +269,7 @@ var Brain = Brain || {};
 			this.action_window.push(action);
 
 			return action;
-		};
+		}
 
 		/**
 		 *
@@ -331,7 +326,7 @@ var Brain = Brain || {};
 				this.average_loss_window.add(avcost);
 			}
 		};
-	};
+	}
 
 	var _Brain;
 	self.onmessage = function (e) {

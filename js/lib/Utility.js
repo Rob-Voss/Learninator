@@ -65,6 +65,13 @@ var Utility = Utility || {};
 		}).indexOf(id);
 	};
 
+    /**
+     * Get the object with the matching id property
+     * @param element
+     * @param index
+     * @param array
+     * @returns {boolean}
+     */
 	Utility.getId = function(element, index, array) {
 		if (element.id === this) {
 			return true;
@@ -72,45 +79,62 @@ var Utility = Utility || {};
 		return false;
 	};
 
+    /**
+     * Load JSON
+     * @param file
+     * @param callback
+     */
 	Utility.loadJSON = function(file, callback) {   
-		var xobj = new XMLHttpRequest();
-		xobj.overrideMimeType("application/json");
-		xobj.open('GET', file, true);
-		xobj.onreadystatechange = function () {
-			if (xobj.readyState == 4 && xobj.status == "200") {
-				callback(xobj.responseText);
+		var xObj = new XMLHttpRequest();
+        xObj.overrideMimeType("application/json");
+        xObj.open('GET', file, true);
+        xObj.onreadystatechange = function () {
+			if (xObj.readyState === 4 && xObj.status === "200") {
+				callback(xObj.responseText);
 			}
 		};
-		xobj.send(null);  
+        xObj.send(null);
 	};
-	
+
+    /**
+     * Calculate the direction.
+     * @param angle
+     * @returns {string}
+     */
 	Utility.getDirection = function(angle) {
 		var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
 			octant = Math.round( 8 * angle / (2*Math.PI) + 8 ) % 8;
 		return directions[octant];
 	};
 
+    /**
+     * Check the edges of the world
+     * @param entity
+     * @param width
+     * @param height
+     * @returns {*}
+     */
 	Utility.boundaryCheck = function(entity, width, height) {
 		// handle boundary conditions.. bounce agent
 		if(entity.position.x < 1) {
 			entity.position.x = 1;
-			entity.velocity.x = 0;
-			entity.velocity.y = 0;
+			entity.position.vx = 0;
+			entity.position.vy = 0;
 		}
 		if(entity.position.x > width) {
 			entity.position.x = width;
-			entity.velocity.x = 0;
-			entity.velocity.y = 0;
+			entity.position.vx = 0;
+			entity.position.vy = 0;
 		}
 		if(entity.position.y < 1) {
 			entity.position.y = 1;
-			entity.velocity.x = 0;
-			entity.velocity.y = 0;
+			entity.position.vx = 0;
+			entity.position.vy = 0;
 		}
 		if(entity.position.y > height) {
 			entity.position.y = height;
-			entity.velocity.x = 0;
-			entity.velocity.y = 0;
+			entity.position.vx = 0;
+			entity.position.vy = 0;
 		}
 		
 		entity.position.x = entity.sprite.position.x = Math.round(entity.position.x);
@@ -132,13 +156,13 @@ var Utility = Utility || {};
 
 		// Collide with walls
 		if (walls) {
-			// @TODO Need to check the current cell first so we
-			// don't loop through all the walls
 			for (var i=0, wl=walls.length; i<wl; i++) {
-				var wall = walls[i];
-				var wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
+				var wall = walls[i],
+                    wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
 				if (wResult) {
 					wResult.type = 0; // 0 is wall
+                    wResult.vx = v1.vx; // velocity information
+                    wResult.vy = v1.vy;
 					if (!minRes) {
 						minRes = wResult;
 					} else {
@@ -155,15 +179,15 @@ var Utility = Utility || {};
 		// Collide with items
 		if (entities) {
 			for (var e=0, el=entities.length; e<el; e++) {
-				var entity = entities[e];
-				var iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius);
+				var entity = entities[e],
+                    iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius);
 				if (iResult) {
 					iResult.type = entity.type;
 					iResult.id = entity.id;
 					iResult.radius = entity.radius;
 					iResult.position = entity.position;
-					iResult.vx = entity.velocity.x; // velocity information
-          			iResult.vy = entity.velocity.y;
+					iResult.vx = entity.position.vx; // velocity information
+          			iResult.vy = entity.position.vy;
 					if (!minRes) {
 						minRes = iResult;
 					} else {

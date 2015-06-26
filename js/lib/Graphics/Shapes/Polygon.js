@@ -96,7 +96,7 @@ var Polygon = function(x, y, points, scale) {
     //recalculate scaled points, edges, and normals
     this.recalc();
 
-    //internal shape type
+    //internal Shapes type
     this._shapetype = C.SHAPE.POLYGON;
 };
 

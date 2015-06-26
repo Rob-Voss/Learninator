@@ -1,27 +1,51 @@
-var Grid = Grid || {};
-var Cell = Cell || {};
-
 (function (global) {
-	"use strict";
+   "use strict";
 
-	/**
-	 *
-	 * @param {type} x
-	 * @param {type} y
-	 * @returns {Cell}
-	 */
-	class Cell {
-		constructor (x, y) {
+    /**
+     *
+     * @param {type} x
+     * @param {type} y
+     * @returns {Cell}
+     */
+    class Cell {
+		constructor (x, y, width, height) {
 			this.x = x;
 			this.y = y;
 			this.visited = false;
-			// When solving the maze, this represents the previous node in the navigated path.
 			this.parent = null;
 			this.heuristic = 0;
 			this.population = [];
+            this.populationCounts = {};
+
+            this.coords = {
+                top: {
+                    left: {
+                        x: x * width,
+                        y: y * height
+                    },
+                    right: {
+                        x: x * width + width,
+                        y: y * height
+                    }
+                },
+                bottom: {
+                    left: {
+                        x: x * width,
+                        y: y * height + height
+                    },
+                    right: {
+                        x: x * width + width,
+                        y: y * height + height
+                    }
+                }
+            };
 
 			return this;
-		};
+		}
+
+        updatePopulation () {
+
+        }
 
 		/**
 		 * Calculate the path to the origin
@@ -38,7 +62,7 @@ var Cell = Cell || {};
 			path.reverse();
 
 			return path;
-		};
+		}
 
 		/**
 		 * Score
@@ -53,7 +77,7 @@ var Cell = Cell || {};
 				p = p.parent;
 			}
 			return total;
-		};
+		}
 
 		/**
 		 * Mark it as visited
@@ -61,8 +85,8 @@ var Cell = Cell || {};
 		 */
 		visit () {
 			this.visited = true;
-		};
-	};
+		}
+	}
 
 
 	/**
@@ -73,8 +97,6 @@ var Cell = Cell || {};
 	 */
 	class Grid {
 		constructor (canvas, options) {
-			var options = options || {};
-
 			this.canvas = canvas;
 			this.ctx = canvas.getContext("2d");
 			this.width = options.width || 5;
@@ -86,18 +108,18 @@ var Cell = Cell || {};
 			this.path = [];
 			this.removedEdges = [];
 
-			for (var i = 0; i < this.width; i++) {
+			for (var i=0; i<this.width; i++) {
 				this.cells.push([]);
 				var row = this.cells[i];
 
-				for (var j = 0; j < this.height; j++) {
-					var c = new Cell(i, j);
+				for (var j=0; j<this.height; j++) {
+					var c = new Cell(i, j, this.cellWidth, this.cellHeight);
 					row.push(c);
 				}
 			}
 
 			return this;
-		};
+		}
 		
 		/**
 		 * Returns true if there is an edge between c1 and c2
@@ -119,7 +141,7 @@ var Cell = Cell || {};
 			});
 
 			return removedEdge === undefined;
-		};
+		}
 
 		/**
 		 * Returns all neighbors of this Cell that are separated by an edge
@@ -132,7 +154,7 @@ var Cell = Cell || {};
 				var con = _this.areConnected(c, c0);
 				return con;
 			});
-		};
+		}
 
 		/**
 		 * Returns all neighbors of this Cell that are NOT separated by an edge
@@ -146,7 +168,7 @@ var Cell = Cell || {};
 				var disc = _this.areConnected(c, c0);
 				return disc;
 			});
-		};
+		}
 
 		/**
 		 * Get a Cell at a specific point
@@ -160,7 +182,7 @@ var Cell = Cell || {};
 			}
 
 			return this.cells[x][y];
-		};
+		}
 
 		/**
 		 * Get the distance between two Cell
@@ -173,7 +195,7 @@ var Cell = Cell || {};
 				yDist = Math.abs(c1.y - c2.y);
 
 			return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-		};
+		}
 
 		/**
 		 * Return the location within a grid
@@ -181,21 +203,17 @@ var Cell = Cell || {};
 		 * @returns {Number}
 		 */
 		getGridLocation (pos) {
-			for(var h = 0; h < this.width; h++) {
-				var hCell = this.cells[h];
-				for(var v = 0; v < this.height; v++) {
-					var vCell = hCell[v],
-						topLeft = vCell.x * this.cellWidth,
-						topRight = topLeft + this.cellWidth,
-						bottomLeft = vCell.y * this.cellHeight,
-						bottomRight = bottomLeft + this.cellHeight;
-					if ((pos.x >= topLeft && pos.x <= topRight) &&
-						(pos.y >= bottomLeft && pos.y <= bottomRight)) {
-							return this.cells[h][v];
+			for(var x=0; x<this.width; x++) {
+				var xCell = this.cells[x];
+				for(var y=0; y<this.height; y++) {
+					var yCell = xCell[y];
+					if ((pos.x >= yCell.coords.top.left.x && pos.x <= yCell.coords.bottom.right.x) &&
+                        (pos.y >= yCell.coords.top.left.y && pos.y <= yCell.coords.bottom.right.y)) {
+							return this.cells[x][y];
 					}
 				}
 			}
-		};
+		}
 
 		/**
 		 * Returns all neighbors of this cell, regardless if they are connected or not.
@@ -223,7 +241,7 @@ var Cell = Cell || {};
 			}
 
 			return neighbors;
-		};
+		}
 
 		/**
 		 * Remove the edge from between two Cells
@@ -233,7 +251,7 @@ var Cell = Cell || {};
 		 */
 		removeEdgeBetween (c1, c2) {
 			this.removedEdges.push([c1, c2]);
-		};
+		}
 
 		/**
 		 * Returns all neighbors of this Cell that aren't separated by an edge
@@ -245,8 +263,8 @@ var Cell = Cell || {};
 				var unv = !c0.visited;
 				return unv;
 			});
-		};
-	};
+		}
+	}
 
 	global.Cell = Cell;
 	global.Grid = Grid;

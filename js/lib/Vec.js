@@ -1,20 +1,20 @@
-var Vec = Vec || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * A 2D vector utility
-	 * @param {Number} x
-	 * @param {Number} y
-	 * @returns {Vec}
-	 */
-	class Vec {
-		constructor (x, y, vx, vy) {
-			this.x = x;
-			this.y = y;
+    /**
+     * A 2D vector utility
+     * @param {Number} x
+     * @param {Number} y
+     * @returns {Vec}
+     */
+    class Vec {
+		constructor (x, y, vx, vy, ax, ay) {
+			this.x = x || 0;
+			this.y = y || 0;
 			this.vx = vx || 0;
 			this.vy = vy || 0;
+            this.ax = ax || 0;
+            this.ay = ay || 0;
 
 			return this;
 		}
@@ -25,7 +25,10 @@ var Vec = Vec || {};
 		 * @return {Vec} Returns itself.
 		 */
 		add (v) {
-			return new Vec(this.x + v.x, this.y + v.y);
+            for (var prop in v) {
+                this[prop] + v[prop];
+            }
+			return this;
 		}
 		
 		/**
@@ -35,8 +38,9 @@ var Vec = Vec || {};
 		 * @return {Vec} Returns itself.
 		 */
 		addVectors (a, b) {
-			this.x = a.x + b.x;
-			this.y = a.y + b.y;
+            for (var prop in a) {
+                this[prop] = a[prop] + b[prop];
+            }
 
 			return this;
 		}
@@ -52,7 +56,11 @@ var Vec = Vec || {};
 
 			return this;
 		}
-		
+
+        /**
+         * This will add the velocity x,y to the position x,y
+         * @returns {Vec}
+         */
 		advance () {
 			this.x += this.vx;
   			this.y += this.vy;
@@ -101,7 +109,7 @@ var Vec = Vec || {};
 		 * @return {Vec} Returns a new Vector with the same values
 		 */
 		clone () {
-			return new Vec(this.x, this.y);
+			return new Vec(this.x, this.y, this.vx, this.vy, this.ax, this.ay);
 		}
 		
 		/**
@@ -110,8 +118,9 @@ var Vec = Vec || {};
 		 * @return {Vec} Returns itself.
 		 */
 		copy (v) {
-			this.x = v.x;
-			this.y = v.y;
+            for (var prop in v) {
+                this[prop] = v[prop];
+            }
 
 			return this;
 		}
@@ -247,7 +256,12 @@ var Vec = Vec || {};
 
 			return this;
 		}
-		
+
+        /**
+         * Get this distance
+         * @param vec
+         * @returns {number}
+         */
 		minDist (vec) {
 			var minDist = Infinity,
 				max = Math.max(Math.abs(this.vx), Math.abs(this.vy), Math.abs(vec.vx), Math.abs(vec.vy)),
@@ -302,7 +316,6 @@ var Vec = Vec || {};
 		/**
 		 * Rotates the vector by 90 degrees
 		 * @return {Vec} Returns itself.
-		 * @chainable
 		 */
 		perp () {
 			var x = this.x;
@@ -459,7 +472,7 @@ var Vec = Vec || {};
 		 * @return {Vec} Returns an array of [x,y] form
 		 */
 		toArray () {
-			return [this.x, this.y, this.velocity.x, this.velocity.y];
+			return [this.x, this.y, this.vx, this.vy, this.ax, this.ay];
 		}
 	}
 

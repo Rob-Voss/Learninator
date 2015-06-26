@@ -1,14 +1,12 @@
-var Maze = Maze || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * A maze
-	 * @param {Object} options
-	 * @returns {undefined}
-	 */
-	class Maze {
+    /**
+     * A maze
+     * @param {Object} options
+     * @returns {undefined}
+     */
+    class Maze {
 		constructor (options) {
 			this.canvas = options.canvas;
 			this.ctx = this.canvas.getContext("2d");
@@ -23,20 +21,20 @@ var Maze = Maze || {};
 			this.cellStack = [];
 			this.path = [];
 
-			this.graphOptions = {
+			this.gridOptions = {
 				'width': this.xCellCount,
 				'height': this.yCellCount,
 				'cellWidth': this.cellWidth,
 				'cellHeight': this.cellHeight
 			};
 
-			this.grid = new Grid(this.canvas, this.graphOptions);
+			this.grid = new Grid(this.canvas, this.gridOptions);
 
 			this.draw(options.closed);
 			this.solve();
 
 			return this;
-		};
+		}
 
 		/**
 		 * Add a Wall to the Maze
@@ -46,7 +44,7 @@ var Maze = Maze || {};
 		 */
 		addWall (v1, v2) {
 			this.walls.push(new Wall(v1, v2));
-		};
+		}
 		
 		/**
 		 * Return the walls
@@ -54,7 +52,7 @@ var Maze = Maze || {};
 		 */
 		walls () {
 			return this.walls;
-		};
+		}
 
 		/**
 		 * Return the Graph's Cells
@@ -62,7 +60,7 @@ var Maze = Maze || {};
 		 */
 		graphCells () {
 			return this.grid.cells;
-		};
+		}
 
 		/**
 		 * Draw it
@@ -72,18 +70,18 @@ var Maze = Maze || {};
 			this.generate();
 			this.drawBorders(closed);
 			this.drawMaze();
-		};
+		}
 
 		/**
 		 * Draw the borders
 		 * @returns {undefined}
 		 */
 		drawBorders (closed) {
-			this.addWall(new Vec(closed ? 0 : this.cellWidth, 0), new Vec(this.width, 0));
-			this.addWall(new Vec(this.width, 0), new Vec(this.width, this.height));
-			this.addWall(new Vec(this.width - (closed ? 0 : this.cellWidth), this.height), new Vec(0, this.height));
-			this.addWall(new Vec(0, this.height), new Vec(0, 0));
-		};
+			this.addWall(new Vec(closed ? 1 : this.cellWidth, 1), new Vec(this.width -1, 1));
+			this.addWall(new Vec(this.width -1, 1), new Vec(this.width -1, this.height -1));
+			this.addWall(new Vec(this.width - (closed ? 1 : this.cellWidth), this.height -1), new Vec(1, this.height -1));
+			this.addWall(new Vec(1, this.height -1), new Vec(1, 1));
+		}
 
 		/**
 		 * Draw the solution
@@ -108,7 +106,7 @@ var Maze = Maze || {};
 					_this.ctx.fillRect(x, y, vW, vH);
 				})();
 			}
-		};
+		}
 
 		/**
 		 * Draw the Maze
@@ -171,7 +169,7 @@ var Maze = Maze || {};
 					}
 				}
 			}
-		};
+		}
 
 		/**
 		 * Build the maze
@@ -180,7 +178,7 @@ var Maze = Maze || {};
 		generate () {
 			var initialCell = this.grid.getCellAt(0, 0);
 			this.recurse(initialCell);
-		};
+		}
 
 		/**
 		 * Recurse through a Cell's neighboors
@@ -201,7 +199,7 @@ var Maze = Maze || {};
 					this.recurse(waitingCell);
 				}
 			}
-		};
+		}
 
 		/**
 		 * Solve the Maze
@@ -247,8 +245,8 @@ var Maze = Maze || {};
 					}
 				});
 			}
-		};
-	};
+		}
+	}
 
 	global.Maze = Maze;
 

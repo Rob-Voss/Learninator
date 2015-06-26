@@ -1,24 +1,22 @@
-var Item = Item || {};
-var Utility = Utility || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * Item is circle thing on the floor that agent can interact with (see or eat, etc)
-	 * @param {String} type
-	 * @param {Vec} position
-	 * @param {Number} radius
-	 * @param {Boolean} interactive
-	 * @returns {undefined}
-	 */
-	class Item {
+    /**
+     * Item is circle thing on the floor that agent can interact with (see or eat, etc)
+     * @param {String} type
+     * @param {Vec} position
+     * @param {Number} radius
+     * @param {Boolean} interactive
+     * @returns {undefined}
+     */
+    class Item extends Interactive {
 		constructor (type, position, radius, interactive) {
+            super();
+
 			this.id = Utility.guid();
 			this.type = type || 1;
-			this.position = position || new Vec(0, 0);
-			this.velocity = new Vec(Math.random()*5-2.5, Math.random()*5-2.5);
-			this.gridLocation = new Cell(0, 0);
+			this.position = position || new Vec(0, 0, Math.random()*5-2.5, Math.random()*5-2.5);
+            this.gridLocation = new Cell(0, 0);
 			this.width = 20;
 			this.height = 20;
 			this.radius = radius || 10;
@@ -27,7 +25,7 @@ var Utility = Utility || {};
 			this.interactive = interactive || false;
 
 			// Remember the Item's old position
-			this.oldPos = this.position;
+			this.oldPos = this.position.clone();
 
 			// Remember the Item's old angle
 			this.oldAngle = this.angle;
@@ -38,50 +36,49 @@ var Utility = Utility || {};
 			this.sprite.height = this.height;
 			this.sprite.anchor.set(0.5, 0.5);
 			this.sprite.position.set(this.position.x, this.position.y);
-			
-			if (this.interactive == true) {
-				this.sprite.interactive = true;
+            this.sprite.interactive = this.interactive;
+
+            var _this = this;
+
+			if (this.interactive === true) {
 				this.sprite
-					.on('mousedown', this.onDragStart)
-					.on('touchstart', this.onDragStart)
-					.on('mouseup', this.onDragEnd)
-					.on('mouseupoutside', this.onDragEnd)
-					.on('touchend', this.onDragEnd)
-					.on('touchendoutside', this.onDragEnd)
-					.on('mouseover', this.onMouseOver)
-					.on('mouseout', this.onMouseOut)
-					.on('mousemove', this.onDragMove)
-					.on('touchmove', this.onDragMove);
+					.on('mousedown', super.onDragStart)
+					.on('touchstart', super.onDragStart)
+					.on('mouseup', super.onDragEnd)
+					.on('mouseupoutside', super.onDragEnd)
+					.on('touchend', super.onDragEnd)
+					.on('touchendoutside', super.onDragEnd)
+					.on('mouseover', super.onMouseOver)
+					.on('mouseout', super.onMouseOut)
+					.on('mousemove', super.onDragMove)
+					.on('touchmove', super.onDragMove);
 				this.sprite.entity = _this;
 			}
 
-			var _this = this;
-			
 			return this;
-		};
+		}
 
 		move (smallWorld) {
-			this.oldPos = new Vec(this.position.x, this.position.y);
-				
-			this.position.x += this.velocity.x;
-			this.position.y += this.velocity.y;
+			this.oldPos = this.position.clone();
 
 			if(this.position.x < 2) {
 				this.position.x = 2;
-				this.velocity.x *= -1;
+				this.position.vx *= -1;
 			}
 			if(this.position.x > smallWorld.width) {
 				this.position.x = smallWorld.width;
-				this.velocity.x *= -1;
+				this.position.vx *= -1;
 			}
 			if(this.position.y < 2) {
 				this.position.y = 2;
-				this.velocity.y *= -1;
+				this.position.vy *= -1;
 			}
 			if(this.position.y > smallWorld.height) {
 				this.position.y = smallWorld.height;
-				this.velocity.y *= -1;
+				this.position.vy *= -1;
 			}
+            this.position.advance();
+            this.position.ceil();
 
 			// The item is trying to move from pos to oPos so we need to check walls
 			var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
@@ -90,18 +87,14 @@ var Utility = Utility || {};
 				// The item derped! Wall collision! Reset their position
 				if (result && d <= this.radius) {
 					this.position = this.oldPos;
-					this.velocity.x *= -1;
-					this.velocity.y *= -1;
+					this.position.vx *= -1;
+					this.position.vy *= -1;
 				}
 			}
 
 			// Handle boundary conditions.. bounce item
 			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
-
-			// Update the item's gridLocation label
-			this.sprite.getChildAt(0).text = this.gridLocation.x + ':' + this.gridLocation.y;
-			this.sprite.getChildAt(1).text = this.position.x + ':' + this.position.y;
-		};
+		}
 
 		tick (smallWorld) {
 			this.age += 1;
@@ -109,55 +102,12 @@ var Utility = Utility || {};
 			if (smallWorld.movingEntities) {
 				this.move(smallWorld);
 			}
-		};
 
-		onDragStart (event) {
-			this.data = event.data;
-			this.alpha = 0.5;
-			this.dragging = true;
-		};
-
-		onDragMove () {
-			if(this.dragging) {
-				var newPosition = this.data.getLocalPosition(this.parent);
-				this.position.set(newPosition.x, newPosition.y);
-				this.entity.position.x = newPosition.x;
-				this.entity.position.y = newPosition.y;
-			}
-		};
-
-		onDragEnd () {
-			this.alpha = 1;
-			this.dragging = false;
-			this.entity.position.x = this.position.x;
-			this.entity.position.y = this.position.y;
-			// set the interaction data to null
-			this.data = null;
-		};
-
-		onMouseDown () {
-			this.isdown = true;
-			this.alpha = 1;
-		};
-
-		onMouseUp () {
-			this.isdown = false;
-		};
-
-		onMouseOver () {
-			this.isOver = true;
-			if (this.isdown) {
-				return;
-			}
-		};
-		
-		onMouseOut () {
-			this.isOver = false;
-			if (this.isdown) {
-				return;
-			}
-		};
-	};
+            // Update the item's gridLocation label
+            this.sprite.getChildAt(0).text = this.gridLocation.x + ':' + this.gridLocation.y;
+            this.sprite.getChildAt(1).text = this.position.x + ':' + this.position.y;
+		}
+	}
 
 	global.Item = Item;
 

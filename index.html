@@ -18,33 +18,33 @@
 			/*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
 		</style>
 
-		<script src="js/entities/AgentDQN.js"></script>
-<!-- 		<script src="js/entities/AgentWorker.js"></script>
-		<script src="js/entities/Agent.js"></script> -->
-		<script src="js/entities/Brain.js"></script>
-		<script src="js/entities/Eye.js"></script>
-		<script src="js/entities/Item.js"></script>
-		<script src="js/entities/Player.js"></script>
-		<script src="js/entities/Wall.js"></script>
-
 		<script src="js/environments/Map.js"></script>
 		<script src="js/environments/Maze.js"></script>
 		<script src="js/environments/World.js"></script>
 
 		<script src="js/lib/Array.js"></script>
-		<script src="js/lib/Graph.js"></script>
+		<script src="js/lib/Graphics/Graph.js"></script>
+        <script src="js/lib/Interactive.js"></script>
 		<script src="js/lib/Grid.js"></script>
 		<script src="js/lib/Utility.js"></script>
 		<script src="js/lib/Vec.js"></script>
 		<script src="js/lib/Window.js"></script>
 
-		<script src="js/lib/convnet.min.js"></script>
-		<script src="js/lib/rl.js"></script>
-		
-<!-- 		<script src="js/lib/ga.js"></script> -->
-		<script src="js/lib/pixi.min.js"></script>
-		<script src="js/lib/underscore.min.js"></script>
-		<script src="js/lib/dat.gui.min.js"></script>
+        <script src="js/entities/AgentDQN.js"></script>
+<!--        <script src="js/entities/AgentWorker.js"></script> -->
+        <script src="js/entities/Agent.js"></script>
+        <script src="js/entities/Brain.js"></script>
+        <script src="js/entities/Eye.js"></script>
+        <script src="js/entities/Item.js"></script>
+        <script src="js/entities/Player.js"></script>
+        <script src="js/entities/Wall.js"></script>
+
+<!--        <script src="js/lib/ga.js"></script> -->
+		<script src="js/lib/External/convnet.min.js"></script>
+		<script src="js/lib/External/rl.js"></script>
+		<script src="js/lib/External/pixi.min.js"></script>
+		<script src="js/lib/External/underscore.min.js"></script>
+		<script src="js/lib/External/dat.gui.min.js"></script>
 		
 		<script>
 			/**
@@ -58,16 +58,16 @@
 			 */
 			function start() {
 //  			var agentW = new AgentWorker();
-// 				var agent = new Agent();
 				var agent = new AgentDQN();
+//                var agent = new Agent();
  				var chosenAgents = [agent];
  				
  				var maze = new Maze({
 						canvas: document.getElementById("world"),
 						width: document.getElementById("world").width,
 						height: document.getElementById("world").height,
-						xCellCount: 1,
-						yCellCount: 1,
+						xCellCount: 0,
+						yCellCount: 0,
 						closed: true
 					}),
 					world = new World({
@@ -76,7 +76,7 @@
 						walls: maze.walls,
 						rewardGraph: new Graph(document.getElementById("rewardGraph"), chosenAgents),
 						agents: chosenAgents,
-						numItems: 30,
+						numItems: 1,
 						raycast: false,
 						interactive: false,
 						movingEntities: true
@@ -98,12 +98,15 @@
 				aFolder.add(chosenAgents[0], 'rot1').step(0.1).listen();
 				aFolder.add(chosenAgents[0], 'rot2').step(0.1).listen();
 				aFolder.add(chosenAgents[0], 'direction').listen();
-				aFolder.add(chosenAgents[0].position, 'x').step(1).listen();
-				aFolder.add(chosenAgents[0].position, 'y').step(1).listen();
-				aFolder.add(chosenAgents[0].velocity, 'x').step(1).listen();
-				aFolder.add(chosenAgents[0].velocity, 'y').step(1).listen();
-				aFolder.add(chosenAgents[0].gridLocation, 'x').step(1).listen();
-				aFolder.add(chosenAgents[0].gridLocation, 'y').step(1).listen();				
+                aFolder.add(chosenAgents[0], 'collision').listen();
+				aFolder.add(chosenAgents[0].position, 'x').listen().name('Pos X');
+				aFolder.add(chosenAgents[0].position, 'y').listen().name('Pos Y');
+				aFolder.add(chosenAgents[0].position, 'vx').listen().name('Vel X');
+				aFolder.add(chosenAgents[0].position, 'vy').listen().name('Vel Y');
+                aFolder.add(chosenAgents[0].position, 'ax').listen().name('Acc X');
+                aFolder.add(chosenAgents[0].position, 'ay').listen().name('Acc Y');
+				aFolder.add(chosenAgents[0].gridLocation, 'x').listen().name('Grid X');
+				aFolder.add(chosenAgents[0].gridLocation, 'y').listen().name('Grid Y');
 			}
 
 		</script>

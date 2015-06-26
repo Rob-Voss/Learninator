@@ -1,25 +1,19 @@
-var AgentDQN = AgentDQN || {};
-var Eye = Eye || {};
-var Utility = Utility || {};
-var PIXI = PIXI || {};
-
 (function (global) {
     "use strict";
 
     /**
      * A single agent
      */
-    class AgentDQN {
+    class AgentDQN extends Interactive {
 		constructor (interactive, display) {
+            super();
+
 			this.id = Utility.guid();
 			this.type = 3;
 			this.name = 'DQN Agent';
-			(display) ? this.camera = new Camera(display, 320, 0.8) : undefined;
-            this.gridLocation = new Cell(0, 0);
+			this.camera = (display) ? new Camera(display, 320, 0.8) : undefined;
+            this.gridLocation = new Cell();
 			this.position = new Vec(300, 300, 0, 0);
-			this.velocity = {};
-            this.velocity.x = this.position.vx;
-            this.velocity.y = this.position.vy;
 			this.width = 20;
 			this.height = 20;
 			this.radius = 10;
@@ -31,9 +25,9 @@ var PIXI = PIXI || {};
 			this.digestionSignal = 0.0;
 			this.pts = [];
 			this.digested = [];
-			this.previousActionIdx = -1;
 			this.direction = '';
 			this.interactive = interactive || false;
+            this.collision = false;
 
 			// Remember the Agent's old position
 			this.oldPos = this.position;
@@ -48,19 +42,22 @@ var PIXI = PIXI || {};
 			this.sprite.height = this.height;
 			this.sprite.anchor.set(0.5, 0.5);
 			this.sprite.position.set(this.position.x, this.position.y);
-			if (this.interactive === true) {
-				this.sprite.interactive = true;
+            this.sprite.interactive = this.interactive;
+
+            var _this = this;
+
+            if (this.interactive === true) {
 				this.sprite
-					.on('mousedown', this.onDragStart)
-					.on('touchstart', this.onDragStart)
-					.on('mouseup', this.onDragEnd)
-					.on('mouseupoutside', this.onDragEnd)
-					.on('touchend', this.onDragEnd)
-					.on('touchendoutside', this.onDragEnd)
-					.on('mouseover', this.onMouseOver)
-					.on('mouseout', this.onMouseOut)
-					.on('mousemove', this.onDragMove)
-					.on('touchmove', this.onDragMove);
+					.on('mousedown', super.onDragStart)
+					.on('touchstart', super.onDragStart)
+					.on('mouseup', super.onDragEnd)
+					.on('mouseupoutside', super.onDragEnd)
+					.on('touchend', super.onDragEnd)
+					.on('touchendoutside', super.onDragEnd)
+					.on('mouseover', super.onMouseOver)
+					.on('mouseout', super.onMouseOut)
+					.on('mousemove', super.onDragMove)
+					.on('touchmove', super.onDragMove);
 				this.sprite.entity = _this;
 			}
 
@@ -89,8 +86,6 @@ var PIXI = PIXI || {};
 			// The number of possible angles the Agent can turn
 			this.numActions = this.actions.length;
 
-			var _this = this;
-	
 			var env = {};
             env.getNumStates = function() {
                 return _this.numStates;
@@ -112,7 +107,7 @@ var PIXI = PIXI || {};
 
 			this.brainOpts = brainOptsDQN;
  			this.brain = new RL.DQNAgent(env, this.brainOpts);
- 			//this.load('js/wateragent.json');
+ 			this.load('js/wateragent.json');
 			
 			return this;
 		}
@@ -145,8 +140,8 @@ var PIXI = PIXI || {};
             }
 
             // proprioception and orientation
-            inputArray[ne+0] = this.velocity.x;
-            inputArray[ne+1] = this.velocity.y;
+            inputArray[ne+0] = this.position.vx;
+            inputArray[ne+1] = this.position.vy;
 
             this.action = this.brain.act(inputArray);
         }
@@ -161,24 +156,31 @@ var PIXI = PIXI || {};
 			// execute agent's desired action
 			var speed = 1;
 			if(this.action === 0) {
-				this.velocity.x += -speed;
+				this.position.vx += -speed;
 			}
 			if(this.action === 1) {
-				this.velocity.x += speed;
+				this.position.vx += speed;
 			}
 			if(this.action === 2) {
-				this.velocity.y += -speed;
+				this.position.vy += -speed;
 			}
 			if(this.action === 3) {
-				this.velocity.y += speed;
+				this.position.vy += speed;
 			}
 
 			// forward the agent by velocity
-			this.velocity.x *= 0.95; 
-			this.velocity.y *= 0.95;
-			this.position.x += this.velocity.x; 
-			this.position.y += this.velocity.y;
+			this.position.vx *= 0.95;
+			this.position.vy *= 0.95;
+			this.position.advance();
 
+            if (this.collision) {
+                // The agent is trying to move from pos to oPos so we need to check walls
+                var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
+                if (result) {
+                	// The agent derped! Wall collision! Reset their position
+                	this.position = this.oldPos;
+                }
+            }
 			// Handle boundary conditions.. bounce agent
 			Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
 		}
@@ -189,12 +191,12 @@ var PIXI = PIXI || {};
 		 * @returns {undefined}
 		 */
 		tick (smallWorld) {
-			this.oldPos = new Vec(this.position.x, this.position.y);
+			this.oldPos = this.position.clone();
 			this.oldAngle = this.angle;
 
 			// Loop through the eyes and check the walls and nearby entities
-			for (var ei=0; ei<this.numEyes; ei++) {
-				this.eyes[ei].sense(this, smallWorld.walls, smallWorld.entities);
+			for (var e=0; e<this.numEyes; e++) {
+				this.eyes[e].sense(this, smallWorld.walls, smallWorld.entities);
 			}
 
 			// Let the agents behave in the world based on their input
@@ -210,8 +212,9 @@ var PIXI = PIXI || {};
 			// Check for food
 			// Gather up all the entities nearby based on cell population
 			this.digested = [];
-			for (var j=0, n=this.gridLocation.population.length; j<n; j++) {
-				var entity = smallWorld.entities.find(Utility.getId, this.gridLocation.population[j]);
+            var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y);
+			for (var j=0; j<cell.population.length; j++) {
+				var entity = smallWorld.entities.find(Utility.getId, cell.population[j]);
 				if (entity) {
 					var dist = this.position.distanceTo(entity.position);
 					if (dist < entity.radius + this.radius) {
@@ -226,6 +229,7 @@ var PIXI = PIXI || {};
 									this.digestionSignal += -1.0;
 									break;
 							}
+                            entity.cleanup = true;
 							this.digested.push(entity);
 						}
 					}
