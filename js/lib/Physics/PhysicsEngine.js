@@ -1,10 +1,10 @@
 PhysicsEngine.prototype.step = function (elapsed) {
-    var gx = GRAVITY_X * elapsed;
-    var gy = GRAVITY_Y * elapsed;
-    var entity;
-    var entities = this.entities;
+    var gx = GRAVITY_X * elapsed,
+        gy = GRAVITY_Y * elapsed,
+        entity,
+        entities = this.entities;
 
-    for (var i = 0, length = entities.length; i < length; i++) {
+    for (var i=0, length=entities.length; i<length; i++) {
         entity = entities[i];
         switch (entity.type) {
             case PhysicsEntity.DYNAMIC:

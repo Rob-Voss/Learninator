@@ -1,125 +1,145 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<title>Learninator</title>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Learninator</title>
 
-		<link rel="stylesheet" type="text/css" href="css/styles.css">
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
 
-		<style>
-		/* following three (cascaded) are equivalent to above three meta viewport statements */
-		/* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
-		/* see http://dev.w3.org/csswg/css-device-adapt/ */
-			@-ms-viewport { width: 100vw ; zoom: 100% ; }
-			@viewport { width: 100vw ; zoom: 100% ; }
-			@-ms-viewport { user-zoom: fixed ; }
-			@viewport { user-zoom: fixed ; }
-			/*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
-		</style>
+    <style>
+        /* following three (cascaded) are equivalent to above three meta viewport statements */
+        /* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
+        /* see http://dev.w3.org/csswg/css-device-adapt/ */
+        @-ms-viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
 
-		<script src="js/environments/Map.js"></script>
-		<script src="js/environments/Maze.js"></script>
-		<script src="js/environments/World.js"></script>
+        @viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
 
-		<script src="js/lib/Array.js"></script>
-		<script src="js/lib/Graphics/Graph.js"></script>
-        <script src="js/lib/Interactive.js"></script>
-		<script src="js/lib/Grid.js"></script>
-		<script src="js/lib/Utility.js"></script>
-		<script src="js/lib/Vec.js"></script>
-		<script src="js/lib/Window.js"></script>
+        @-ms-viewport {
+            user-zoom: fixed ;
+        }
 
-        <script src="js/entities/AgentDQN.js"></script>
-<!--        <script src="js/entities/AgentWorker.js"></script> -->
-        <script src="js/entities/Agent.js"></script>
-        <script src="js/entities/Brain.js"></script>
-        <script src="js/entities/Eye.js"></script>
-        <script src="js/entities/Item.js"></script>
-        <script src="js/entities/Player.js"></script>
-        <script src="js/entities/Wall.js"></script>
+        @viewport {
+            user-zoom: fixed ;
+        }
 
-<!--        <script src="js/lib/ga.js"></script> -->
-		<script src="js/lib/External/convnet.min.js"></script>
-		<script src="js/lib/External/rl.js"></script>
-		<script src="js/lib/External/pixi.min.js"></script>
-		<script src="js/lib/External/underscore.min.js"></script>
-		<script src="js/lib/External/dat.gui.min.js"></script>
-		
-		<script>
-			/**
-			 * Global world object
-			 * @type {World}
-			 */
-			var world = world || {};
+        /*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
+    </style>
 
-			/**
-			 * Create existence!
-			 */
-			function start() {
-//  			var agentW = new AgentWorker();
-				var agent = new AgentDQN();
-//                var agent = new Agent();
- 				var chosenAgents = [agent];
- 				
- 				var maze = new Maze({
-						canvas: document.getElementById("world"),
-						width: document.getElementById("world").width,
-						height: document.getElementById("world").height,
-						xCellCount: 0,
-						yCellCount: 0,
-						closed: true
-					}),
-					world = new World({
-						canvas: document.getElementById("world"),
-						grid: maze.grid,
-						walls: maze.walls,
-						rewardGraph: new Graph(document.getElementById("rewardGraph"), chosenAgents),
-						agents: chosenAgents,
-						numItems: 1,
-						raycast: false,
-						interactive: false,
-						movingEntities: true
-					});
+    <script src="js/environments/Map.js"></script>
+    <script src="js/environments/Maze.js"></script>
+    <script src="js/environments/World.js"></script>
 
-				var wGUI = new dat.GUI(),
-					wFolder = wGUI.addFolder('World'),
-					aFolder = wFolder.addFolder('Agents');
+    <script src="js/lib/Array.js"></script>
+    <script src="js/lib/Graphics/Graph.js"></script>
+    <script src="js/lib/Interactive.js"></script>
+    <script src="js/lib/Grid.js"></script>
+    <script src="js/lib/Utility.js"></script>
+    <script src="js/lib/Vec.js"></script>
+    <script src="js/lib/Window.js"></script>
 
-				wFolder.add(world, 'numItems');
-				wFolder.add(world, 'pause');
-				wFolder.add(world, 'raycast');
-				wFolder.add(world, 'tinting');
-				wFolder.add(world, 'interactive');
-				wFolder.add(world, 'movingEntities');
+    <!--        <script src="js/entities/AgentWorker.js"></script> -->
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentTD.js"></script>
+    <script src="js/entities/AgentDQN.js"></script>
+    <script src="js/entities/Brain.js"></script>
+    <script src="js/entities/Eye.js"></script>
+    <script src="js/entities/Item.js"></script>
+    <script src="js/entities/Player.js"></script>
+    <script src="js/entities/Wall.js"></script>
 
-				aFolder.add(chosenAgents[0], 'angle').step(0.1).listen();
-				aFolder.add(chosenAgents[0], 'oldAngle').step(0.1).listen();
-				aFolder.add(chosenAgents[0], 'rot1').step(0.1).listen();
-				aFolder.add(chosenAgents[0], 'rot2').step(0.1).listen();
-				aFolder.add(chosenAgents[0], 'direction').listen();
-                aFolder.add(chosenAgents[0], 'collision').listen();
-				aFolder.add(chosenAgents[0].position, 'x').listen().name('Pos X');
-				aFolder.add(chosenAgents[0].position, 'y').listen().name('Pos Y');
-				aFolder.add(chosenAgents[0].position, 'vx').listen().name('Vel X');
-				aFolder.add(chosenAgents[0].position, 'vy').listen().name('Vel Y');
-                aFolder.add(chosenAgents[0].position, 'ax').listen().name('Acc X');
-                aFolder.add(chosenAgents[0].position, 'ay').listen().name('Acc Y');
-				aFolder.add(chosenAgents[0].gridLocation, 'x').listen().name('Grid X');
-				aFolder.add(chosenAgents[0].gridLocation, 'y').listen().name('Grid Y');
-			}
+    <!--        <script src="js/lib/ga.js"></script> -->
+    <script src="js/lib/External/convnet.min.js"></script>
+    <script src="js/lib/External/rl.js"></script>
+    <script src="js/lib/External/pixi.min.js"></script>
+    <script src="js/lib/External/underscore.min.js"></script>
+    <script src="js/lib/External/dat.gui.min.js"></script>
 
-		</script>
-	</head>
-	<body onload="start();">
-		<div id="wrap">
-			<canvas id="world" width="600" height="600"></canvas>
-		</div>
-		<p><canvas id="rewardGraph" width="300" height="150"></canvas></p>
-<!-- 		<p>
-			<canvas id="displayNormal" width="240" height="160"></canvas>
-			<canvas id="displayWorker" width="240" height="160"></canvas>
-		</p>
+    <script>
+        /**
+         * Global world object
+         * @type {World}
+         */
+        var world = world || {};
+
+        /**
+         * Create existence!
+         */
+        function start() {
+//  		var agentW = new AgentWorker();
+            var agent = new AgentDQN();
+//          var agent = new AgentTD();
+            var chosenAgents = [agent];
+
+            var maze = new Maze({
+                    canvas: document.getElementById("world"),
+                    width: document.getElementById("world").width,
+                    height: document.getElementById("world").height,
+                    xCount: 1,
+                    yCount: 1,
+                    closed: true
+                }),
+                world = new World({
+                    canvas: document.getElementById("world"),
+                    rewardGraph: new Graph(document.getElementById("rewardGraph"), chosenAgents),
+                    agents: chosenAgents,
+                    grid: maze.grid,
+                    walls: maze.walls,
+                    numItems: 40,
+                    cheats: false,
+                    raycast: false,
+                    interactive: false,
+                    movingEntities: true
+                });
+
+            var wGUI = new dat.GUI(),
+                wFolder = wGUI.addFolder('World'),
+                aFolder = wFolder.addFolder('Agents');
+
+            wFolder.add(world, 'numItems');
+            wFolder.add(world, 'pause');
+            wFolder.add(world, 'cheats');
+            wFolder.add(world, 'raycast');
+            wFolder.add(world, 'tinting');
+            wFolder.add(world, 'interactive');
+            wFolder.add(world, 'movingEntities');
+
+            aFolder.add(chosenAgents[0], 'angle').step(0.1).listen();
+            aFolder.add(chosenAgents[0], 'oldAngle').step(0.1).listen();
+            aFolder.add(chosenAgents[0], 'rot1').step(0.1).listen();
+            aFolder.add(chosenAgents[0], 'rot2').step(0.1).listen();
+            aFolder.add(chosenAgents[0], 'direction').listen();
+            aFolder.add(chosenAgents[0], 'collision').listen();
+            aFolder.add(chosenAgents[0].position, 'x').listen().name('Pos X');
+            aFolder.add(chosenAgents[0].position, 'y').listen().name('Pos Y');
+            aFolder.add(chosenAgents[0].position, 'vx').listen().name('Vel X');
+            aFolder.add(chosenAgents[0].position, 'vy').listen().name('Vel Y');
+            aFolder.add(chosenAgents[0].position, 'ax').listen().name('Acc X');
+            aFolder.add(chosenAgents[0].position, 'ay').listen().name('Acc Y');
+            aFolder.add(chosenAgents[0].gridLocation, 'x').listen().name('Grid X');
+            aFolder.add(chosenAgents[0].gridLocation, 'y').listen().name('Grid Y');
+        }
+
+    </script>
+</head>
+<body onload="start();">
+<div id="wrap">
+    <canvas id="world" width="600" height="600"></canvas>
+</div>
+<p>
+    <canvas id="rewardGraph" width="300" height="150"></canvas>
+</p>
+<!--
+<p>
+    <canvas id="displayNormal" width="240" height="160"></canvas>
+    <canvas id="displayWorker" width="240" height="160"></canvas>
+</p>
 -->
-	</body>
+</body>
 </html>

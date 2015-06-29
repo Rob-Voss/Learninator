@@ -17,7 +17,7 @@ var inherit = require('../utils/inherit'),
  * @param width {Number} The overall wisth of this rectangle
  * @param height {Number} The overall height of this rectangle
  */
-var Rectangle = function(x, y, width, height) {
+var Rectangle = function (x, y, width, height) {
     /**
      * @property position
      * @type Vector
@@ -70,7 +70,7 @@ inherit(Rectangle, Object, {
      * @method clone
      * @return {Rectangle} a copy of the rectangle
      */
-    clone: function() {
+    clone: function () {
         return new Rectangle(this.x, this.y, this._width, this._height);
     },
 
@@ -82,7 +82,7 @@ inherit(Rectangle, Object, {
      * @return {Rectangle} Returns itself.
      * @chainable
      */
-    copy: function(rect) {
+    copy: function (rect) {
         this.x = rect.x;
         this.y = rect.y;
         this.width = rect.width;
@@ -99,15 +99,15 @@ inherit(Rectangle, Object, {
      * @param y {Number} The Y coord of the point to test
      * @return {Boolean} if the x/y coords are within this Rectangle
      */
-    contains: function(x, y) {
-        if(this._width <= 0 || this._height <= 0)
+    contains: function (x, y) {
+        if (this._width <= 0 || this._height <= 0)
             return false;
 
         var x1 = this.x;
-        if(x >= x1 && x <= x1 + this._width) {
+        if (x >= x1 && x <= x1 + this._width) {
             var y1 = this.y;
 
-            if(y >= y1 && y <= y1 + this._height) {
+            if (y >= y1 && y <= y1 + this._height) {
                 return true;
             }
         }
@@ -122,11 +122,11 @@ inherit(Rectangle, Object, {
      * @param rect {Rectangle} The rectangle to check if this overlaps
      * @return {Boolean} if the rectangle overlaps
      */
-    overlaps: function(rect) {
+    overlaps: function (rect) {
         return this.right > rect.x &&
-                this.x < rect.right &&
-                this.bottom > rect.y &&
-                this.y < rect.bottom;
+            this.x < rect.right &&
+            this.bottom > rect.y &&
+            this.y < rect.bottom;
     },
 
     /**
@@ -135,7 +135,7 @@ inherit(Rectangle, Object, {
      * @method toPolygon
      * @return {Polygon} The new polygon
      */
-    toPolygon: function(pos) {
+    toPolygon: function (pos) {
         pos = pos || this.position;
 
         return new Polygon(this.x - pos.x, this.y - pos.y, [
@@ -153,10 +153,10 @@ inherit(Rectangle, Object, {
      * @param rectangle {Rectangle} The rectangle to check against
      * @return {Boolean} True if they are equal
      */
-    equals: function(rect) {
+    equals: function (rect) {
         return this.position.equals(rect.position) &&
-                this._width === rect._width &&
-                this._height === rect._height;
+            this._width === rect._width &&
+            this._height === rect._height;
     },
 
     /**
@@ -167,7 +167,7 @@ inherit(Rectangle, Object, {
      * @param [output] {Rectangle} The rectangle object to output to, a new one is created by default
      * @return {Rectangle} a new rectangle object that is the combonation of both
      */
-    union: function(rect, out) {
+    union: function (rect, out) {
         out = out || new Rectangle();
 
         out.x = math.min(this.x, rect.x);
@@ -187,10 +187,10 @@ inherit(Rectangle, Object, {
  * @default 0
  */
 Object.defineProperty(Rectangle.prototype, 'x', {
-    get: function() {
+    get: function () {
         return this.position.x;
     },
-    set: function(v) {
+    set: function (v) {
         this.position.x = v;
     }
 });
@@ -203,10 +203,10 @@ Object.defineProperty(Rectangle.prototype, 'x', {
  * @default 0
  */
 Object.defineProperty(Rectangle.prototype, 'y', {
-    get: function() {
+    get: function () {
         return this.position.y;
     },
-    set: function(v) {
+    set: function (v) {
         this.position.y = v;
     }
 });
@@ -220,10 +220,10 @@ Object.defineProperty(Rectangle.prototype, 'y', {
  * @default 0
  */
 Object.defineProperty(Rectangle.prototype, 'width', {
-    get: function() {
+    get: function () {
         return this._width;
     },
-    set: function(w) {
+    set: function (w) {
         this._width = w || 0;
         this.halfWidth = this._width / 2;
     }
@@ -237,10 +237,10 @@ Object.defineProperty(Rectangle.prototype, 'width', {
  * @defualt 0
  */
 Object.defineProperty(Rectangle.prototype, 'height', {
-    get: function() {
+    get: function () {
         return this._height;
     },
-    set: function(h) {
+    set: function (h) {
         this._height = h || 0;
         this.halfHeight = this._height / 2;
     }
@@ -254,7 +254,7 @@ Object.defineProperty(Rectangle.prototype, 'height', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'right', {
-    get: function() {
+    get: function () {
         return this.x + this._width;
     }
 });
@@ -267,7 +267,7 @@ Object.defineProperty(Rectangle.prototype, 'right', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'left', {
-    get: function() {
+    get: function () {
         return this.x;
     }
 });
@@ -280,7 +280,7 @@ Object.defineProperty(Rectangle.prototype, 'left', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'top', {
-    get: function() {
+    get: function () {
         return this.y;
     }
 });
@@ -293,7 +293,7 @@ Object.defineProperty(Rectangle.prototype, 'top', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'bottom', {
-    get: function() {
+    get: function () {
         return this.y + this._height;
     }
 });
@@ -306,7 +306,7 @@ Object.defineProperty(Rectangle.prototype, 'bottom', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'perimeter', {
-    get: function() {
+    get: function () {
         return 2 * (this._width + this._height);
     }
 });
@@ -319,7 +319,7 @@ Object.defineProperty(Rectangle.prototype, 'perimeter', {
  * @readOnly
  */
 Object.defineProperty(Rectangle.prototype, 'area', {
-    get: function() {
+    get: function () {
         return this._width * this._height;
     }
 });

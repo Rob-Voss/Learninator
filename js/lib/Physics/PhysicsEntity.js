@@ -108,7 +108,7 @@
 
     // Dynamic entities will be completely changing and are
     // affected by all aspects of the physics system
-    PhysicsEntity.DYNAMIC   = 'dynamic';
+    PhysicsEntity.DYNAMIC = 'dynamic';
 
     // Solver Constants
 
