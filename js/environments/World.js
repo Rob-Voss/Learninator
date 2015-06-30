@@ -25,6 +25,7 @@
             this.numItems = options.numItems || 20;
             this.movingEntities = options.movingEntities || false;
             this.interactive = options.interactive || false;
+            this.tinting = options.tinting || true;
             this.raycast = options.raycast || false;
             if (this.raycast) {
                 this.map = new Map(this.grid.width);
@@ -38,7 +39,6 @@
             this.types = ['Wall', 'Nom', 'Gnar'];
 
             this.pause = false;
-            this.tinting = false;
 
             // PIXI gewdness
             this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
@@ -119,8 +119,12 @@
             var width = this.width - 10,
                 height = this.height - 10,
                 type = Utility.randi(1, 3),
-                pos = new Vec(Utility.randi(5, width), Utility.randi(5, height), Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
-            var entity = new Item(type, pos, 10, this.interactive);
+                x = Utility.randi(5, width),
+                y = Utility.randi(5, height),
+                vx = Math.random() * 5 - 2.5,
+                vy = Math.random() * 5 - 2.5,
+                position = new Vec(x, y, vx, vy),
+                entity = new Item(type, position, this.grid, {interactive:this.interactive,collision:this.collison,display:undefined});
 
             // Insert the population
             this.entities.push(entity);
@@ -217,11 +221,7 @@
 
             // If we have less then the number of items allowed throw a random one in
             if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-                var width = this.width - 10,
-                    height = this.height - 10,
-                    type = Utility.randi(1, 3),
-                    vec = new Vec(Utility.randi(5, width), Utility.randi(5, height));
-                this.addEntity(new Item(type, vec, 10, this.interactive));
+                this.addEntity();
             }
 
             // If the cheats flag is on then update population

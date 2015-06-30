@@ -117,13 +117,13 @@ var Utility = Utility || {};
     Utility.boundaryCheck = function (entity, width, height) {
         // handle boundary conditions.. bounce agent
         if (entity.position.x < 1) {
-            entity.position.x = 1;
+            entity.position.x = 2;
         }
         if (entity.position.x > width) {
             entity.position.x = width;
         }
         if (entity.position.y < 1) {
-            entity.position.y = 1;
+            entity.position.y = 2;
         }
         if (entity.position.y > height) {
             entity.position.y = height;

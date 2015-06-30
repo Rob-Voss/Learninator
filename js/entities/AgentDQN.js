@@ -4,17 +4,20 @@
     class AgentDQN extends Agent {
         /**
          * Initialize the DQN Agent
-         * @param interactive
-         * @param display
+         * @param position
+         * @param grid
+         * @param options
          * @returns {AgentDQN}
          */
-        constructor(interactive, display) {
-            super('DQN', interactive, display);
+        constructor(position, grid, options) {
+            super('DQN', position, grid, options);
 
-            this.stick = +1;
-            this.carrot = -1;
+            this.carrot = +1;
+            this.stick = -1;
 
-            return this;
+            var _this = this;
+
+            return _this;
         }
 
         /**
@@ -49,9 +52,8 @@
          * Agent's chance to learn
          */
         learn() {
-            var reward = this.digestionSignal;
-            this.lastReward = reward; // for vis
-            this.brain.learn(reward);
+            this.lastReward = this.digestionSignal; // for vis
+            this.brain.learn(this.digestionSignal);
         }
 
         /**
@@ -61,22 +63,27 @@
         move(smallWorld) {
             // execute agent's desired action
             var speed = 1;
-            if (this.action === 0) {
-                this.position.vx += -speed;
-            }
-            if (this.action === 1) {
-                this.position.vx += speed;
-            }
-            if (this.action === 2) {
-                this.position.vy += -speed;
-            }
-            if (this.action === 3) {
-                this.position.vy += speed;
+            switch (this.action) {
+                case 0:
+                    this.position.vx += -speed;
+                    break;
+                case 1:
+                    this.position.vx += speed;
+                    break;
+                case 2:
+                    this.position.vy += -speed;
+                    break;
+                case 3:
+                    this.position.vy += speed;
+                    break;
             }
 
             // forward the agent by velocity
             this.position.vx *= 0.95;
             this.position.vy *= 0.95;
+
+            this.position.advance();
+            this.position.round();
 
             if (this.collision) {
                 // The agent is trying to move from pos to oPos so we need to check walls
@@ -89,9 +96,6 @@
 
             // Handle boundary conditions.. bounce agent
             Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
-
-            this.position.advance();
-            this.position.round();
         }
 
     }

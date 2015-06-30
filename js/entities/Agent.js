@@ -1,30 +1,23 @@
 (function (global) {
     "use strict";
 
-    class Agent extends Interactive {
+    class Agent extends Entity {
         /**
          * Initialize the Agent
-         * @param type
-         * @param interactive
-         * @param display
-         * @returns {AgentDQN}
+         * @param brainType
+         * @param position
+         * @param grid
+         * @param options
+         * @returns {Agent}
          */
-        constructor(type, interactive, display) {
-            super();
+        constructor(brainType, position, grid, options) {
+            var opts = options || {interactive: false, collision: false, display: undefined};
+            super('Agent', position, grid, opts);
+            var _this = this;
 
-            this.id = Utility.guid();
+            this.brainType = brainType;
+            this.name = brainType + ' Agent';
             this.type = 3;
-            this.brainType = type;
-            this.name = type + ' Agent';
-            this.camera = (display) ? new Camera(display, 320, 0.8) : undefined;
-            this.gridLocation = new Cell(0, 0);
-            this.position = new Vec(5, 5);
-            this.width = 20;
-            this.height = 20;
-            this.radius = 10;
-            this.angle = 0;
-            this.rot1 = 0.0;
-            this.rot2 = 0.0;
             this.lastReward = 0;
             this.digestionSignal = 0.0;
             this.rewardBonus = 0.0;
@@ -32,28 +25,12 @@
             this.pts = [];
             this.digested = [];
             this.direction = 'N';
-            this.interactive = interactive || false;
-            this.collision = true;
+            this.interactive = opts.interactive;
+            this.collision = opts.collision;
 
-            // Remember the Agent's old position
-            this.oldPos = this.position.clone();
+            this.loadBrain(brainType);
 
-            // Remember the Agent's old angle
-            this.oldAngle = this.angle;
-
-            var _this = this;
-
-            // PIXI gewdness
-            this.texture = PIXI.Texture.fromImage("img/Agent.png");
-            this.sprite = new PIXI.Sprite(this.texture);
-            this.sprite.texture.baseTexture.on('loaded', function () {
-
-            });
-
-            super.init(_this);
-            this.loadBrain(type);
-
-            return this;
+            return _this;
         }
 
         /**
@@ -193,10 +170,10 @@
                      * @type {Array}
                      */
                     var layerDefsTD = [];
-                    layerDefsTD.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
-                    layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-                    layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-                    layerDefsTD.push({type: 'regression', num_neurons: this.numActions});
+                    layerDefsTD.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.networkSize});
+                    layerDefsTD.push({type: 'fc', numNeurons: 50, activation: 'relu'});
+                    layerDefsTD.push({type: 'fc', numNeurons: 50, activation: 'relu'});
+                    layerDefsTD.push({type: 'regression', numNeurons: this.numActions});
 
                     /**
                      * The options for the Temporal Difference learner that trains the above net
@@ -204,28 +181,28 @@
                      * @type {Object}
                      */
                     var trainerOptsTD = {};
-                    trainerOptsTD.learning_rate = 0.001;
+                    trainerOptsTD.learningRate = 0.001;
                     trainerOptsTD.momentum = 0.0;
-                    trainerOptsTD.batch_size = 64;
-                    trainerOptsTD.l2_decay = 0.01;
+                    trainerOptsTD.batchSize = 64;
+                    trainerOptsTD.l2Decay = 0.01;
 
                     /**
                      * Options for the Brain
                      * @type {Object}
                      */
                     var brainOptsTD = {};
-                    brainOptsTD.num_states = this.numStates;
-                    brainOptsTD.num_actions = this.numActions;
-                    brainOptsTD.temporal_window = this.temporalWindow;
-                    brainOptsTD.experience_size = 30000;
-                    brainOptsTD.start_learn_threshold = 1000;
+                    brainOptsTD.numStates = this.numStates;
+                    brainOptsTD.numActions = this.numActions;
+                    brainOptsTD.temporalWindow = this.temporalWindow;
+                    brainOptsTD.experienceSize = 30000;
+                    brainOptsTD.startLearnThreshold = 1000;
                     brainOptsTD.gamma = 0.7;
-                    brainOptsTD.learning_steps_total = 200000;
-                    brainOptsTD.learning_steps_burnin = 3000;
-                    brainOptsTD.epsilon_min = 0.05;
-                    brainOptsTD.epsilon_test_time = 0.05;
-                    brainOptsTD.layer_defs = layerDefsTD;
-                    brainOptsTD.tdtrainer_options = trainerOptsTD;
+                    brainOptsTD.learningStepsTotal = 200000;
+                    brainOptsTD.learningStepsBurnin = 3000;
+                    brainOptsTD.epsilonMin = 0.05;
+                    brainOptsTD.epsilonTestTime = 0.05;
+                    brainOptsTD.layerDefs = layerDefsTD;
+                    brainOptsTD.tdTrainerOpts = trainerOptsTD;
 
                     this.brainOpts = brainOptsTD;
                     this.brain = new Brain(this.brainOpts);
@@ -333,7 +310,7 @@
                     if (dist < entity.radius + this.radius) {
                         var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls);
                         if (!result) {
-                            this.digestionSignal += (entity.type === 1) ? this.stick : this.carrot;
+                            this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
                             this.digested.push(entity);
                             entity.cleanup = true;
                         }
@@ -347,7 +324,7 @@
             if (this.digested.length > 0) {
                 switch (this.type) {
                     case 'TD':
-                        this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
+                        this.pts.push(this.brain.averageRewardWindow.getAverage().toFixed(1));
                         break;
                     case 'DQN':
                         if (this.digested.length > 0) {

@@ -10,11 +10,12 @@
          */
         constructor(interactive, display) {
             super('TD', interactive, display);
+            var _this = this;
 
-            this.stick = +5;
-            this.carrot = -6;
+            this.carrot = +5;
+            this.stick = -6;
 
-            return this;
+            return _this;
         }
 
         /**
@@ -108,6 +109,9 @@
                 this.angle -= 2 * Math.PI;
             }
 
+            this.position.advance();
+            this.position.round();
+
             if (this.collision) {
                 // The agent is trying to move from pos to oPos so we need to check walls
                 var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
@@ -122,9 +126,6 @@
 
             this.sprite.rotation = -this.angle;
             this.direction = Utility.getDirection(this.angle);
-
-            this.position.advance();
-            this.position.round();
         }
 
     }

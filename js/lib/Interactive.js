@@ -2,17 +2,26 @@
     "use strict";
 
     class Interactive {
-        constructor() {
 
+        /**
+         * New interactive based object
+         * @param options
+         */
+        constructor(options) {
+            this.interactive = options.interactive || false;
         }
 
+        /**
+         * Initialize interactivity
+         * @param entity
+         */
         init(entity) {
             entity.sprite.width = entity.width;
             entity.sprite.height = entity.height;
             entity.sprite.anchor.set(0.5, 0.5);
             entity.sprite.position.set(entity.position.x, entity.position.y);
-            entity.sprite.interactive = entity.interactive;
-            if (entity.interactive === true) {
+            entity.sprite.interactive = this.interactive;
+            if (entity.sprite.interactive === true) {
                 entity.sprite
                     .on('mousedown', this.onDragStart)
                     .on('touchstart', this.onDragStart)
@@ -28,12 +37,19 @@
             }
         }
 
+        /**
+         * Perform the start of a drag
+         * @param event
+         */
         onDragStart(event) {
             this.data = event.data;
             this.alpha = 0.5;
             this.dragging = true;
         }
 
+        /**
+         * Perform the move of a drag
+         */
         onDragMove() {
             if (this.dragging) {
                 var newPosition = this.data.getLocalPosition(this.parent);
@@ -43,6 +59,9 @@
             }
         }
 
+        /**
+         * Perform the end of a drag
+         */
         onDragEnd() {
             this.alpha = 1;
             this.dragging = false;
@@ -52,15 +71,24 @@
             this.data = null;
         }
 
+        /**
+         * Perform the action for mouse down
+         */
         onMouseDown() {
             this.isdown = true;
             this.alpha = 1;
         }
 
+        /**
+         * Perform the action for mouse up
+         */
         onMouseUp() {
             this.isdown = false;
         }
 
+        /**
+         * Perform the action for mouse over
+         */
         onMouseOver() {
             this.isOver = true;
             if (this.isdown) {
@@ -68,6 +96,9 @@
             }
         }
 
+        /**
+         * Perform the action for mouse out
+         */
         onMouseOut() {
             this.isOver = false;
             if (this.isdown) {
