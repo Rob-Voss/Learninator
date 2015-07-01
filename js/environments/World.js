@@ -9,13 +9,14 @@
          */
         constructor(options) {
             this.canvas = options.canvas;
+            this.ctx = this.canvas.getContext("2d");
+            this.width = this.canvas.width;
+            this.height = this.canvas.height;
+
             this.rewardGraph = options.rewardGraph;
             this.walls = options.walls || [];
             this.agents = options.agents || [];
             this.grid = options.grid || new Grid(this.canvas);
-            this.ctx = this.canvas.getContext("2d");
-            this.width = this.canvas.width;
-            this.height = this.canvas.height;
             this.path = this.grid.path;
             this.cellWidth = this.width / this.grid.xCount;
             this.cellHeight = this.height / this.grid.yCount;
@@ -26,6 +27,7 @@
             this.movingEntities = options.movingEntities || false;
             this.interactive = options.interactive || false;
             this.tinting = options.tinting || true;
+
             this.raycast = options.raycast || false;
             if (this.raycast) {
                 this.map = new Map(this.grid.width);
@@ -67,11 +69,13 @@
             }
 
             // Add the agents
+            var eyes = new PIXI.Container();
             for (var a = 0; a < this.agents.length; a++) {
-                this.stage.addChild(this.agents[a].sprite);
                 for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                    this.stage.addChild(this.agents[a].eyes[ei].shape);
+                    eyes.addChild(this.agents[a].eyes[ei].shape);
                 }
+                this.agents[a].sprite.addChild(eyes);
+                this.stage.addChild(this.agents[a].sprite);
                 this.grid.getGridLocation(this.agents[a]);
             }
 
@@ -101,10 +105,10 @@
             requestAnimationFrame(animate);
             function animate() {
                 if (!_this.pause) {
+                    requestAnimationFrame(animate);
                     _this.tick();
                     _this.renderer.render(_this.stage);
                 }
-                requestAnimationFrame(animate);
             }
 
             var _this = this;
@@ -116,15 +120,14 @@
          * Add an entity to the world
          */
         addEntity() {
-            var width = this.width - 10,
-                height = this.height - 10,
-                type = Utility.randi(1, 3),
-                x = Utility.randi(5, width),
-                y = Utility.randi(5, height),
+            var type = Utility.randi(1, 3),
+                x = Utility.randi(5, this.width - 10),
+                y = Utility.randi(5, this.height - 10),
                 vx = Math.random() * 5 - 2.5,
                 vy = Math.random() * 5 - 2.5,
                 position = new Vec(x, y, vx, vy),
-                entity = new Item(type, position, this.grid, {interactive:this.interactive,collision:this.collison,display:undefined});
+                entityOpts = {interactive:this.interactive, collision:this.collision},
+                entity = new Item(type, position, this.grid, entityOpts);
 
             // Insert the population
             this.entities.push(entity);
@@ -170,7 +173,6 @@
                 cheats: this.cheats
             };
 
-
             // Reset the cell's population's
             for (var cx = 0; cx < this.grid.cells.length; cx++) {
                 for (var cy = 0; cy < this.grid.cells[cx].length; cy++) {
@@ -191,7 +193,7 @@
                 this.grid.getGridLocation(this.agents[a]);
 
                 // If we have raycasting turned on then update the sub classes etc
-                if (this.raycast) {
+                if (this.raycast && this.map !== undefined) {
                     this.map.update(seconds);
                     this.agents[a].player = new Player(this.agents[a].gridLocation.x, this.agents[a].gridLocation.y, this.agents[a].angle);
                     this.agents[a].player.update(this.agents[a].angle, this.map, seconds);

@@ -15,7 +15,55 @@
             this.carrot = +1;
             this.stick = -1;
 
+            // The number of item types the Agent's eys can see (wall, green, red thing proximity)
+            this.numTypes = 5;
+
+            // The number of Agent's eyes
+            this.numEyes = 30;
+
+            // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
+            this.numStates = this.numEyes * this.numTypes + 2;
+
+            // The Agent's eyes
+            this.eyes = [];
+            for (var k = 0; k < this.numEyes; k++) {
+                this.eyes.push(new Eye(k * 0.21));
+            }
+
+            // The Agent's actions
+            this.actions = [];
+            this.actions.push(0);
+            this.actions.push(1);
+            this.actions.push(2);
+            this.actions.push(3);
+
+            // The number of possible angles the Agent can turn
+            this.numActions = this.actions.length;
+
             var _this = this;
+
+            var env = {};
+            env.getNumStates = function () {
+                return _this.numStates;
+            };
+            env.getMaxNumActions = function () {
+                return _this.numActions;
+            };
+
+            this.brainOpts = {
+                update: 'qlearn', // qlearn | sarsa
+                gamma: 0.9, // discount factor, [0, 1)
+                epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                alpha: 0.005, // value function learning rate
+                experience_add_every: 5, // number of time steps before we add another experience to replay memory
+                experience_size: 10000, // size of experience
+                learning_steps_per_iteration: 5,
+                tderror_clamp: 1.0, // for robustness
+                num_hidden_units: 100 // number of neurons in hidden layer
+            };
+
+            this.brain = new RL.DQNAgent(env, this.brainOpts);
+            this.load('js/wateragent.json');
 
             return _this;
         }
@@ -81,21 +129,6 @@
             // forward the agent by velocity
             this.position.vx *= 0.95;
             this.position.vy *= 0.95;
-
-            this.position.advance();
-            this.position.round();
-
-            if (this.collision) {
-                // The agent is trying to move from pos to oPos so we need to check walls
-                var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
-                if (result) {
-                    // The agent derped! Wall collision! Reset their position
-                    this.position = this.oldPos.clone();
-                }
-            }
-
-            // Handle boundary conditions.. bounce agent
-            Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
         }
 
     }

@@ -50,6 +50,7 @@
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
     <script src="js/entities/AgentTD.js"></script>
+    <script src="js/entities/AgentRLTD.js"></script>
     <script src="js/entities/AgentDQN.js"></script>
     <script src="js/entities/Item.js"></script>
     <script src="js/entities/Player.js"></script>
@@ -80,12 +81,12 @@
                 canvas: document.getElementById("world"),
                 width: document.getElementById("world").width,
                 height: document.getElementById("world").height,
-                xCount: 1,
-                yCount: 1,
+                xCount: 4,
+                yCount: 4,
                 closed: true
             });
             var entityOptions = {interactive:false,collision:false,display:undefined},
-                agent = new AgentDQN(new Vec(5, 5), maze.grid, entityOptions),
+                agent = new AgentDQN(new Vec(300, 300), maze.grid, entityOptions),
                 chosenAgents = [agent];
 
             var worldOptions = {
@@ -97,7 +98,7 @@
                 numItems: 40,
                 cheats: true,
                 tinting: true,
-                interactive: true,
+                interactive: false,
                 movingEntities: true,
                 raycast: false
             };

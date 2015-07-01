@@ -8,19 +8,15 @@
          * @param options
          */
         constructor(options) {
-            this.interactive = options.interactive || false;
+
         }
 
         /**
          * Initialize interactivity
          * @param entity
          */
-        init(entity) {
-            entity.sprite.width = entity.width;
-            entity.sprite.height = entity.height;
-            entity.sprite.anchor.set(0.5, 0.5);
-            entity.sprite.position.set(entity.position.x, entity.position.y);
-            entity.sprite.interactive = this.interactive;
+        interactive(entity) {
+            entity.sprite.interactive = entity.interactive;
             if (entity.sprite.interactive === true) {
                 entity.sprite
                     .on('mousedown', this.onDragStart)

@@ -1,12 +1,12 @@
 (function (global) {
     "use strict";
 
-    /**
-     * Eye sensor has a maximum range and senses walls
-     * @param {Number} angle
-     * @returns {Eye}
-     */
     class Eye {
+        /**
+         * Eye sensor has a maximum range and senses walls
+         * @param {Number} angle
+         * @returns {Eye}
+         */
         constructor(angle) {
             this.angle = angle;
             this.maxRange = 85;
@@ -21,6 +21,12 @@
             return this;
         }
 
+        /**
+         * Sense the surroundings
+         * @param agent
+         * @param walls
+         * @param entities
+         */
         sense(agent, walls, entities) {
             this.shape.clear();
             if (agent.collision !== true) {
@@ -50,6 +56,10 @@
             }
         }
 
+        /**
+         * Draw the lines for the eyes
+         * @param agent
+         */
         draw(agent) {
             switch (this.sensedType) {
                 // Is it wall or nothing?

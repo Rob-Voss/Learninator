@@ -162,8 +162,6 @@
             return this;
         }
 
-    ;
-
         /**
          * Returns a random action
          * In the future we can set some actions to be more or less likely

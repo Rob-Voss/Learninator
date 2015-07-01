@@ -112,27 +112,31 @@ var Utility = Utility || {};
      * @param entity
      * @param width
      * @param height
-     * @returns {*}
      */
     Utility.boundaryCheck = function (entity, width, height) {
         // handle boundary conditions.. bounce agent
         if (entity.position.x < 1) {
-            entity.position.x = 2;
+            entity.position.x = 1;
+            entity.position.vx = 0;
+            entity.position.vy = 0;
         }
         if (entity.position.x > width) {
             entity.position.x = width;
+            entity.position.vx = 0;
+            entity.position.vy = 0;
         }
         if (entity.position.y < 1) {
-            entity.position.y = 2;
+            entity.position.y = 1;
+            entity.position.vx = 0;
+            entity.position.vy = 0;
         }
         if (entity.position.y > height) {
             entity.position.y = height;
+            entity.position.vx = 0;
+            entity.position.vy = 0;
         }
 
-        entity.position.x = entity.sprite.position.x = Math.round(entity.position.x);
-        entity.position.y = entity.sprite.position.y = Math.round(entity.position.y);
-
-        return entity;
+        entity.sprite.position.set(entity.position.x, entity.position.y);
     };
 
     /**

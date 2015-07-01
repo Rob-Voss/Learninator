@@ -12,10 +12,9 @@
          */
         constructor(typeId, position, grid, options) {
             super(typeId === 1 ? 'Nom' : 'Gnar', position, grid, options);
-            this.type = typeId || 1;
 
-            this.age = 0;
-            this.cleanUp = false;
+            this.name = typeId === 1 ? 'Nom' : 'Gnar';
+            this.type = typeId || 1;
 
             var _this = this;
 
@@ -28,16 +27,16 @@
          */
         move(smallWorld) {
             if (this.position.x < 1) {
-                this.position.vx *= Utility.randf(0.01, 1);
+                this.position.vx *= -1;
             }
             if (this.position.x > smallWorld.width) {
-                this.position.vx *= Utility.randf(-0.01, -1);
+                this.position.vx *= -1;
             }
             if (this.position.y < 1) {
-                this.position.vy *= Utility.randf(0.01, 1);
+                this.position.vy *= -1;
             }
             if (this.position.y > smallWorld.height) {
-                this.position.vy *= Utility.randf(-0.01, -1);
+                this.position.vy *= -1;
             }
 
             this.position.advance();

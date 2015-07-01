@@ -15,16 +15,19 @@
             super(opts);
 
             this.id = Utility.guid();
-            this.name = type || 'Derps';
-            this.camera = opts.display;
-            this.position = position || new Vec(0, 0);
-            this.gridLocation = grid.getGridLocation(this);
+            this.position = position || new Vec(5, 5);
+            grid.getGridLocation(this);
+            this.age = 0;
             this.angle = 0;
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.width = 20;
             this.height = 20;
             this.radius = 10;
+            this.cleanUp = false;
+            this.camera = opts.display;
+            this.interactive = opts.interactive;
+            this.collision = opts.collision;
 
             // Remember the old position
             this.oldPos = this.position.clone();
@@ -42,11 +45,10 @@
             this.sprite.height = this.height;
             this.sprite.anchor.set(0.5, 0.5);
             this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.interactive = this.interactive;
 
             var _this = this;
 
-            super.init(_this);
+            super.interactive(_this);
 
             return _this;
         }
