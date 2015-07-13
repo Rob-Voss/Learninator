@@ -3,45 +3,48 @@ var Graph = Graph || {};
 (function (global) {
     "use strict";
 
-    /**
-     * Graph
-     * @param {HTMLCanvasElement} canvas
-     * @param {Array} legend
-     * @param {Object} options
-     * @returns {Graph_L3.Graph}
-     */
     class Graph {
-        constructor(canvas, legend, options) {
+
+        /**
+         * Graph
+         * @param {HTMLCanvasElement} canvas
+         * @param {Object} opts
+         * @returns {Graph_L3.Graph}
+         */
+        constructor(canvas, opts) {
             this.canvas = canvas;
-            this.ctx = canvas.getContext("2d");
+            this.ctx = this.canvas.getContext("2d");
 
-            var options = options || {};
-            this.step_horizon = options.step_horizon || 1000;
+            this.stepHorizon = opts.stepHorizon || 1000;
+            this.width = opts.width || this.canvas.width;
+            this.height = opts.height || this.canvas.height;
 
-            this.width = options.width || canvas.width;
-            this.height = options.height || canvas.height;
-
-            if (typeof options.maxy !== 'undefined')
-                this.maxy_forced = options.maxy;
-            if (typeof options.miny !== 'undefined')
-                this.miny_forced = options.miny;
+            if (typeof opts.maxy !== 'undefined') {
+                this.maxyForced = opts.maxy;
+            }
+            if (typeof opts.miny !== 'undefined') {
+                this.minyForced = opts.miny;
+            }
 
             this.maxy = -9999;
             this.miny = 9999;
 
-            this.numlines = legend.length;
-            this.pts = new Array(this.numlines);
-            for (var i = 0; i < this.numlines; i++) {
-                this.pts[i] = [];
-            }
-            this.legend = legend;
             this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
             this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
 
-            return this;
+            var _this = this;
+
+            return _this;
         }
 
-    ;
+        setLegend(legend) {
+            this.legend = legend;
+            this.numLines = this.legend.length;
+            this.pts = new Array(this.numLines);
+            for (var i = 0; i < this.numLines; i++) {
+                this.pts[i] = [];
+            }
+        }
 
         /**
          * Add a point to the graph
@@ -52,35 +55,40 @@ var Graph = Graph || {};
         addPoint(step, idx, yl) {
             // in ms
             var time = new Date().getTime(),
-                n = yl.length;
+                n = yl.length,
+                point = {
+                    step: step,
+                    time: time,
+                    yl: yl
+                };
+            
             for (var k = 0; k < n; k++) {
                 var y = yl[k];
-                if (y > this.maxy * 0.99)
+                if (y > this.maxy * 0.99) {
                     this.maxy = y * 1.05;
-                if (y < this.miny * 1.01)
+                }
+                if (y < this.miny * 1.01) {
                     this.miny = y * 0.95;
+                }
             }
 
-            if (typeof this.maxy_forced !== 'undefined')
-                this.maxy = this.maxy_forced;
-            if (typeof this.miny_forced !== 'undefined')
-                this.miny = this.miny_forced;
+            if (typeof this.maxyForced !== 'undefined') {
+                this.maxy = this.maxyForced;
+            }
+            if (typeof this.minyForced !== 'undefined') {
+                this.miny = this.minyForced;
+            }
 
-            var point = {
-                step: step,
-                time: time,
-                yl: yl
-            };
             if (this.pts[idx] !== undefined) {
                 this.pts[idx].push(point);
             } else {
                 console.log('this.pts[' + idx + '] = undefined. this.pts=' + this.pts);
             }
-            if (step > this.step_horizon)
-                this.step_horizon *= 2;
-        }
 
-    ;
+            if (step > this.stepHorizon) {
+                this.stepHorizon *= 2;
+            }
+        }
 
         /**
          * Draw it
@@ -108,7 +116,7 @@ var Graph = Graph || {};
                 var xpos = gl / ng * (W - 2 * pad) + pad;
                 ctx.moveTo(xpos, pad);
                 ctx.lineTo(xpos, H - pad);
-                ctx.fillText(f2t(gl / ng * this.step_horizon / 1000) + 'k', xpos, H - pad + 14);
+                ctx.fillText(f2t(gl / ng * this.stepHorizon / 1000) + 'k', xpos, H - pad + 14);
             }
 
             for (var v = 0; v <= ng; v++) {
@@ -119,14 +127,14 @@ var Graph = Graph || {};
             }
             ctx.stroke();
             var agentN = [];
-            for (var z = 0; z < this.numlines; z++) {
+            for (var z = 0; z < this.numLines; z++) {
                 agentN[z] = this.pts[z].length;
                 if (agentN[z] < 2)
                     return;
             }
 
             // Draw legend
-            for (var l = 0; l < this.numlines; l++) {
+            for (var l = 0; l < this.numLines; l++) {
                 ctx.fillStyle = this.styles[l];
                 ctx.fillText(this.legend[l].name, W - pad - 100, pad + 20 + l * 16);
             }
@@ -139,7 +147,7 @@ var Graph = Graph || {};
                 return {tx: tx, ty: ty};
             };
 
-            for (var k = 0; k < this.numlines; k++) {
+            for (var k = 0; k < this.numLines; k++) {
                 ctx.strokeStyle = this.styles[k];
                 ctx.beginPath();
                 for (var i = 0; i < agentN[k]; i++) {
@@ -155,10 +163,7 @@ var Graph = Graph || {};
                 ctx.stroke();
             }
         }
-
-    ;
     }
-    ;
 
     global.Graph = Graph;
 

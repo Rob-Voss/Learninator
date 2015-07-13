@@ -147,10 +147,11 @@
         },
         xytos: function (x, y) {
             return x * this.gh + y;
-        },
-    }
+        }
+    };
 
     class AgentRLTD extends Agent {
+
         /**
          * Initialize the DQN Agent
          * @param position
@@ -159,7 +160,7 @@
          * @returns {AgentDQN}
          */
         constructor(position, grid, options) {
-            super('RLTD', position, grid, options);
+            super(position, grid, options);
 
             this.carrot = +1;
             this.stick = -1;

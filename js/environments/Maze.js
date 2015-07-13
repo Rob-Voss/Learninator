@@ -9,12 +9,12 @@
     class Maze {
         constructor(environment) {
             this.canvas = environment.canvas;
-            this.ctx = this.canvas.getContext("2d");
-
-            this.width = environment.width;
-            this.height = environment.height;
             this.xCount = environment.xCount;
             this.yCount = environment.yCount;
+            this.ctx = this.canvas.getContext("2d");
+
+            this.width = this.canvas.width;
+            this.height = this.canvas.height;
             this.cellWidth = this.width / this.xCount;
             this.cellHeight = this.height / this.yCount;
             this.walls = [];

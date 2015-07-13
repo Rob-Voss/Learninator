@@ -7,16 +7,28 @@
          * @param type
          * @param position
          * @param grid
-         * @param options
+         * @param opts
          * @returns {Entity}
          */
-        constructor(type, position, grid, options) {
-            var opts = options || {interactive: false, collision: false, display: undefined};
-            super(opts);
+        constructor(type, position, grid, opts) {
+            var defaults = {
+                interactive: false,
+                collision: false,
+                display: undefined
+            };
+            super(opts || defaults);
 
             this.id = Utility.guid();
             this.position = position || new Vec(5, 5);
-            grid.getGridLocation(this);
+            this.camera = opts.display;
+            this.interactive = opts.interactive;
+            this.collision = opts.collision;
+            if (grid !== undefined) {
+                grid.getGridLocation(this);
+            } else {
+                this.gridLocation = new Vec(0, 0);
+            }
+
             this.age = 0;
             this.angle = 0;
             this.rot1 = 0.0;
@@ -25,9 +37,6 @@
             this.height = 20;
             this.radius = 10;
             this.cleanUp = false;
-            this.camera = opts.display;
-            this.interactive = opts.interactive;
-            this.collision = opts.collision;
 
             // Remember the old position
             this.oldPos = this.position.clone();
@@ -38,7 +47,7 @@
             this.texture = PIXI.Texture.fromImage('img/' + type + '.png');
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.texture.baseTexture.on('loaded', function () {
-
+                // after load function here
             });
 
             this.sprite.width = this.width;

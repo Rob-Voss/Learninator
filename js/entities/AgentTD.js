@@ -2,15 +2,16 @@
     "use strict";
 
     class AgentTD extends Agent {
+
         /**
-         * Initialize the DQN Agent
+         * Initialize the TD Agent
          * @param position
          * @param grid
-         * @param options
+         * @param opts
          * @returns {AgentDQN}
          */
-        constructor(position, grid, options) {
-            super('TD', position, grid, options);
+        constructor(position, grid, opts) {
+            super(position, grid, opts);
 
             this.carrot = +5;
             this.stick = -6;

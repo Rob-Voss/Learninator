@@ -4,18 +4,19 @@
     class Agent extends Entity {
         /**
          * Initialize the Agent
-         * @param brainType
          * @param position
          * @param grid
-         * @param options
+         * @param opts
          * @returns {Agent}
          */
-        constructor(brainType, position, grid, options) {
-            super('Agent', position, grid, options);
+        constructor(position, grid, opts) {
+            super('Agent', position, grid, opts);
 
+            this.brainType = opts.brainType;
+            this.rewardGraph = opts.rewardGraph;
+
+            this.name = this.brainType + ' Agent';
             this.type = 3;
-            this.brainType = brainType;
-            this.name = brainType + ' Agent';
             this.lastReward = 0;
             this.digestionSignal = 0.0;
             this.rewardBonus = 0.0;

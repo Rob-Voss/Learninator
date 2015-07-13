@@ -13,13 +13,13 @@
             this.width = this.canvas.width;
             this.height = this.canvas.height;
 
-            this.rewardGraph = options.rewardGraph;
+            // Basics for the environment
             this.walls = options.walls || [];
             this.agents = options.agents || [];
             this.grid = options.grid || new Grid(this.canvas);
-            this.path = this.grid.path;
             this.cellWidth = this.width / this.grid.xCount;
             this.cellHeight = this.height / this.grid.yCount;
+            this.path = this.grid.path;
 
             // World options
             this.cheats = options.cheats || false;
@@ -28,6 +28,7 @@
             this.interactive = options.interactive || false;
             this.tinting = options.tinting || true;
 
+            // Raycasting POV stuffz
             this.raycast = options.raycast || false;
             if (this.raycast) {
                 this.map = new Map(this.grid.width);

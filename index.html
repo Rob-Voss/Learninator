@@ -74,37 +74,37 @@
          * Create existence!
          */
         function start() {
-//  		var agentW = new AgentWorker();
-//          var agent = new AgentTD();
+  		    var worldCanvas = document.getElementById("world"),
+                mazeOpts = {
+                    canvas: worldCanvas,
+                    xCount: 4,
+                    yCount: 4,
+                    closed: true
+                },
+                maze = new Maze(mazeOpts);
 
-            var maze = new Maze({
-                canvas: document.getElementById("world"),
-                width: document.getElementById("world").width,
-                height: document.getElementById("world").height,
-                xCount: 4,
-                yCount: 4,
-                closed: true
-            });
-            var entityOptions = {interactive:false,collision:false,display:undefined},
-                agent = new AgentDQN(new Vec(300, 300), maze.grid, entityOptions),
-                chosenAgents = [agent];
+            var agentOpts = {
+                    collision: false,
+                    brainType: 'TD',
+                    display: undefined,
+                    rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
+                },
+                agent = new AgentTD(new Vec(300, 300), maze.grid, agentOpts);
+            agentOpts.rewardGraph.setLegend([agent]);
 
-            var worldOptions = {
-                canvas: document.getElementById("world"),
-                rewardGraph: new Graph(document.getElementById("rewardGraph"), chosenAgents),
-                agents: chosenAgents,
-                grid: maze.grid,
-                walls: maze.walls,
-                numItems: 40,
-                cheats: true,
-                tinting: true,
-                interactive: false,
-                movingEntities: true,
-                raycast: false
-            };
-
-            var world = new World(worldOptions);
-            world.agents = chosenAgents;
+            var worldOpts = {
+                    canvas: worldCanvas,
+                    agents: [agent],
+                    grid: maze.grid,
+                    walls: maze.walls,
+                    numItems: 40,
+                    cheats: true,
+                    tinting: true,
+                    interactive: false,
+                    movingEntities: false,
+                    raycast: false
+                },
+                world = new World(worldOpts);
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
@@ -118,20 +118,20 @@
             wFolder.add(world, 'interactive');
             wFolder.add(world, 'movingEntities');
 
-            aFolder.add(chosenAgents[0], 'angle').step(0.1).listen();
-            aFolder.add(chosenAgents[0], 'oldAngle').step(0.1).listen();
-            aFolder.add(chosenAgents[0], 'rot1').step(0.1).listen();
-            aFolder.add(chosenAgents[0], 'rot2').step(0.1).listen();
-            aFolder.add(chosenAgents[0], 'direction').listen();
-            aFolder.add(chosenAgents[0], 'collision').listen();
-            aFolder.add(chosenAgents[0].position, 'x').listen().name('Pos X');
-            aFolder.add(chosenAgents[0].position, 'y').listen().name('Pos Y');
-            aFolder.add(chosenAgents[0].position, 'vx').listen().name('Vel X');
-            aFolder.add(chosenAgents[0].position, 'vy').listen().name('Vel Y');
-            aFolder.add(chosenAgents[0].position, 'ax').listen().name('Acc X');
-            aFolder.add(chosenAgents[0].position, 'ay').listen().name('Acc Y');
-            aFolder.add(chosenAgents[0].gridLocation, 'x').listen().name('Grid X');
-            aFolder.add(chosenAgents[0].gridLocation, 'y').listen().name('Grid Y');
+            aFolder.add(world.agents[0], 'angle').step(0.1).listen();
+            aFolder.add(world.agents[0], 'oldAngle').step(0.1).listen();
+            aFolder.add(world.agents[0], 'rot1').step(0.1).listen();
+            aFolder.add(world.agents[0], 'rot2').step(0.1).listen();
+            aFolder.add(world.agents[0], 'direction').listen();
+            aFolder.add(world.agents[0], 'collision').listen();
+            aFolder.add(world.agents[0].position, 'x').listen().name('Pos X');
+            aFolder.add(world.agents[0].position, 'y').listen().name('Pos Y');
+            aFolder.add(world.agents[0].position, 'vx').listen().name('Vel X');
+            aFolder.add(world.agents[0].position, 'vy').listen().name('Vel Y');
+            aFolder.add(world.agents[0].position, 'ax').listen().name('Acc X');
+            aFolder.add(world.agents[0].position, 'ay').listen().name('Acc Y');
+            aFolder.add(world.agents[0].gridLocation, 'x').listen().name('Grid X');
+            aFolder.add(world.agents[0].gridLocation, 'y').listen().name('Grid Y');
         }
 
     </script>
