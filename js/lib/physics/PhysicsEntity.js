@@ -1,7 +1,7 @@
 (function (global) {
     "use strict";
 
-    // The physics entity will take on a Shapes, collision
+    // The physics entity will take on a shapes, collision
     // and type based on its parameters. These entities are
     // built as functional objects so that they can be
     // instantiated by using the 'new' keyword.

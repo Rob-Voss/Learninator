@@ -2861,7 +2861,7 @@ function earcut(data, holeIndices, dim) {
 
     if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
 
-    // if the Shapes is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    // if the shapes is not too simple, we'll use z-order curve hash later; calculate polygon bbox
     if (data.length > 80 * dim) {
         minX = maxX = data[0];
         minY = maxY = data[1];
@@ -7328,8 +7328,8 @@ Object.defineProperties(DisplayObject.prototype, {
     },
 
     /**
-     * Sets a mask for the displayObject. A mask is an object that limits the visibility of an object to the Shapes of the mask applied to it.
-     * In PIXI a regular mask must be a PIXI.Graphics object. This allows for much faster masking in canvas as it utilises Shapes clipping.
+     * Sets a mask for the displayObject. A mask is an object that limits the visibility of an object to the shapes of the mask applied to it.
+     * In PIXI a regular mask must be a PIXI.Graphics object. This allows for much faster masking in canvas as it utilises shapes clipping.
      * To remove a mask, set this property to null.
      *
      * @member {Graphics}
@@ -7630,7 +7630,7 @@ function Graphics()
     this.graphicsData = [];
 
     /**
-     * The tint applied to the graphic Shapes. This is a hex value. Apply a value of 0xFFFFFF to reset the tint.
+     * The tint applied to the graphic shapes. This is a hex value. Apply a value of 0xFFFFFF to reset the tint.
      *
      * @member {number}
      * @default 0xFFFFFF
@@ -7638,7 +7638,7 @@ function Graphics()
     this.tint = 0xFFFFFF;
 
     /**
-     * The previous tint applied to the graphic Shapes. Used to compare to the current tint and check if theres change.
+     * The previous tint applied to the graphic shapes. Used to compare to the current tint and check if theres change.
      *
      * @member {number}
      * @private
@@ -7647,7 +7647,7 @@ function Graphics()
     this._prevTint = 0xFFFFFF;
 
     /**
-     * The blend mode to be applied to the graphic Shapes. Apply a value of blendModes.NORMAL to reset the blend mode.
+     * The blend mode to be applied to the graphic shapes. Apply a value of blendModes.NORMAL to reset the blend mode.
      *
      * @member {number}
      * @default CONST.BLEND_MODES.NORMAL;
@@ -7672,7 +7672,7 @@ function Graphics()
     this._webGL = {};
 
     /**
-     * Whether this Shapes is being used as a mask.
+     * Whether this shapes is being used as a mask.
      *
      * @member {boolean}
      */
@@ -8402,7 +8402,7 @@ Graphics.prototype._renderCanvas = function (renderer)
 };
 
 /**
- * Retrieves the bounds of the graphic Shapes as a rectangle object
+ * Retrieves the bounds of the graphic shapes as a rectangle object
  *
  * @return {Rectangle} the rectangular bounding area
  */
@@ -8701,9 +8701,9 @@ Graphics.prototype.destroyCachedSprite = function ()
 };*/
 
 /**
- * Draws the given Shapes to this Graphics object. Can be any of Circle, Rectangle, Ellipse, Line or Polygon.
+ * Draws the given shapes to this Graphics object. Can be any of Circle, Rectangle, Ellipse, Line or Polygon.
  *
- * @param shape {Circle|Rectangle|Ellipse|Line|Polygon} The Shapes object to draw.
+ * @param shape {Circle|Rectangle|Ellipse|Line|Polygon} The shapes object to draw.
  * @return {GraphicsData} The generated GraphicsData object.
  */
 Graphics.prototype.drawShape = function (shape)
@@ -8767,8 +8767,8 @@ Graphics.prototype.destroy = function () {
  * @param lineAlpha {number} the alpha of the line to draw
  * @param fillColor {number} the color of the fill
  * @param fillAlpha {number} the alpha of the fill
- * @param fill      {boolean} whether or not the Shapes is filled with a colour
- * @param shape     {Circle|Rectangle|Ellipse|Line|Polygon} The Shapes object to draw.
+ * @param fill      {boolean} whether or not the shapes is filled with a colour
+ * @param shape     {Circle|Rectangle|Ellipse|Line|Polygon} The shapes object to draw.
  */
 function GraphicsData(lineWidth, lineColor, lineAlpha, fillColor, fillAlpha, fill, shape)
 {
@@ -8806,17 +8806,17 @@ function GraphicsData(lineWidth, lineColor, lineAlpha, fillColor, fillAlpha, fil
     this._fillTint = fillColor;
 
     /*
-     * @member {boolean} whether or not the Shapes is filled with a colour
+     * @member {boolean} whether or not the shapes is filled with a colour
      */
     this.fill = fill;
 
     /*
-     * @member {Circle|Rectangle|Ellipse|Line|Polygon} The Shapes object to draw.
+     * @member {Circle|Rectangle|Ellipse|Line|Polygon} The shapes object to draw.
      */
     this.shape = shape;
 
     /*
-     * @member {number} The type of the Shapes, see the Const.Shapes file for all the existing types,
+     * @member {number} The type of the shapes, see the Const.shapes file for all the existing types,
      */
     this.type = shape.type;
 }
@@ -9148,7 +9148,7 @@ GraphicsRenderer.prototype.switchMode = function (webGL, type)
  *
  * @private
  * @param graphicsData {Graphics} The graphics object containing all the necessary properties
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildRectangle = function (graphicsData, webGLData)
 {
@@ -9214,7 +9214,7 @@ GraphicsRenderer.prototype.buildRectangle = function (graphicsData, webGLData)
  *
  * @private
  * @param graphicsData {Graphics} The graphics object containing all the necessary properties
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildRoundedRectangle = function (graphicsData, webGLData)
 {
@@ -9336,7 +9336,7 @@ GraphicsRenderer.prototype.quadraticBezierCurve = function (fromX, fromY, cpX, c
  *
  * @private
  * @param graphicsData {Graphics} The graphics object to draw
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildCircle = function (graphicsData, webGLData)
 {
@@ -9417,7 +9417,7 @@ GraphicsRenderer.prototype.buildCircle = function (graphicsData, webGLData)
  *
  * @private
  * @param graphicsData {Graphics} The graphics object containing all the necessary properties
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildLine = function (graphicsData, webGLData)
 {
@@ -9446,7 +9446,7 @@ GraphicsRenderer.prototype.buildLine = function (graphicsData, webGLData)
     // if the first point is the last point - gonna have issues :)
     if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y)
     {
-        // need to clone as we are going to slightly modify the Shapes..
+        // need to clone as we are going to slightly modify the shapes..
         points = points.slice();
 
         points.pop();
@@ -9632,7 +9632,7 @@ GraphicsRenderer.prototype.buildLine = function (graphicsData, webGLData)
  *
  * @private
  * @param graphicsData {Graphics} The graphics object containing all the necessary properties
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildComplexPoly = function (graphicsData, webGLData)
 {
@@ -9694,7 +9694,7 @@ GraphicsRenderer.prototype.buildComplexPoly = function (graphicsData, webGLData)
  *
  * @private
  * @param graphicsData {WebGLGraphicsData} The graphics object containing all the necessary properties
- * @param webGLData {object} an object containing all the webGL-specific information to create this Shapes
+ * @param webGLData {object} an object containing all the webGL-specific information to create this shapes
  */
 GraphicsRenderer.prototype.buildPoly = function (graphicsData, webGLData)
 {

@@ -59,7 +59,7 @@ var Rectangle = function (x, y, width, height) {
      */
     this.halfHeight = this._height / 2;
 
-    //internal Shapes type
+    //internal shapes type
     this._shapetype = C.SHAPE.RECTANGLE;
 };
 

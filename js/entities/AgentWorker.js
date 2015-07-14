@@ -10,6 +10,7 @@
      */
     class AgentWorker extends Interactive {
 		constructor (type, display) {
+            super();
 			this.id = Utility.guid();
 			this.type = 3; // type of agent
 			this.name = 'Worker Agent';

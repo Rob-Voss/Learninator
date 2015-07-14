@@ -9,8 +9,8 @@
          */
         constructor(angle) {
             this.angle = angle;
-            this.maxRange = 85;
-            this.sensedProximity = 85;
+            this.maxRange = 120;
+            this.sensedProximity = 120;
             this.sensedType = -1;
             this.numInputs = 5;
 

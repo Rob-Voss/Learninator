@@ -4,30 +4,29 @@
     class Entity extends Interactive {
         /**
          * Initialize the Entity
-         * @param type
+         * @param typeId
          * @param position
          * @param grid
          * @param opts
          * @returns {Entity}
          */
-        constructor(type, position, grid, opts) {
-            var defaults = {
-                interactive: false,
-                collision: false,
-                display: undefined
-            };
-            super(opts || defaults);
+        constructor(typeId, position, grid, opts) {
+            var entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent'],
+                defaults = {
+                    interactive: false,
+                    collision: false,
+                    display: undefined
+                };
+            opts = opts || defaults;
+            super(opts);
 
             this.id = Utility.guid();
+            this.name = entityTypes[typeId];
+            this.type = typeId || 1;
             this.position = position || new Vec(5, 5);
-            this.camera = opts.display;
             this.interactive = opts.interactive;
             this.collision = opts.collision;
-            if (grid !== undefined) {
-                grid.getGridLocation(this);
-            } else {
-                this.gridLocation = new Vec(0, 0);
-            }
+            this.gridLocation = new Vec(0, 0);
 
             this.age = 0;
             this.angle = 0;
@@ -36,7 +35,6 @@
             this.width = 20;
             this.height = 20;
             this.radius = 10;
-            this.cleanUp = false;
 
             // Remember the old position
             this.oldPos = this.position.clone();
@@ -44,7 +42,7 @@
             // Remember the old angle
             this.oldAngle = this.angle;
 
-            this.texture = PIXI.Texture.fromImage('img/' + type + '.png');
+            this.texture = PIXI.Texture.fromImage('img/' + entityTypes[typeId] + '.png');
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.texture.baseTexture.on('loaded', function () {
                 // after load function here
@@ -62,6 +60,9 @@
             return _this;
         }
 
+        move() {
+
+        }
     }
 
     global.Entity = Entity;

@@ -70,13 +70,11 @@
             }
 
             // Add the agents
-            var eyes = new PIXI.Container();
             for (var a = 0; a < this.agents.length; a++) {
-                for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                    eyes.addChild(this.agents[a].eyes[ei].shape);
-                }
-                this.agents[a].sprite.addChild(eyes);
                 this.stage.addChild(this.agents[a].sprite);
+                for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
+                    this.stage.addChild(this.agents[a].eyes[ei].shape);
+                }
                 this.grid.getGridLocation(this.agents[a]);
             }
 
@@ -127,7 +125,7 @@
                 vx = Math.random() * 5 - 2.5,
                 vy = Math.random() * 5 - 2.5,
                 position = new Vec(x, y, vx, vy),
-                entityOpts = {interactive:this.interactive, collision:this.collision},
+                entityOpts = {interactive: this.interactive, collision: this.collision},
                 entity = new Item(type, position, this.grid, entityOpts);
 
             // Insert the population
@@ -188,7 +186,7 @@
                 this.entities[e].gridLocation.population.push(this.entities[e].id);
             }
 
-            // Loop through the agents of the world and make them do work son!
+            // Loop through the agents of the world and make them do work!
             for (var a = 0; a < this.agents.length; a++) {
                 this.agents[a].tick(smallWorld);
                 this.grid.getGridLocation(this.agents[a]);

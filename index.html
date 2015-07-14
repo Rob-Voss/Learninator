@@ -42,7 +42,7 @@
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
-    <script src="js/lib/Graphics/Graph.js"></script>
+    <script src="js/lib/graphics/Graph.js"></script>
 
     <!--        <script src="js/entities/AgentWorker.js"></script> -->
     <script src="js/entities/Brain.js"></script>
@@ -53,15 +53,16 @@
     <script src="js/entities/AgentRLTD.js"></script>
     <script src="js/entities/AgentDQN.js"></script>
     <script src="js/entities/Item.js"></script>
+    <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Player.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <!--        <script src="js/lib/ga.js"></script> -->
-    <script src="js/lib/External/convnet.min.js"></script>
-    <script src="js/lib/External/rl.js"></script>
-    <script src="js/lib/External/pixi.min.js"></script>
-    <script src="js/lib/External/underscore.min.js"></script>
-    <script src="js/lib/External/dat.gui.min.js"></script>
+    <script src="js/lib/external/convnet.min.js"></script>
+    <script src="js/lib/external/rl.js"></script>
+    <script src="js/lib/external/pixi.min.js"></script>
+    <script src="js/lib/external/underscore.min.js"></script>
+    <script src="js/lib/external/dat.gui.min.js"></script>
 
     <script>
         /**
@@ -84,7 +85,7 @@
                 maze = new Maze(mazeOpts);
 
             var agentOpts = {
-                    collision: false,
+                    collision: true,
                     brainType: 'TD',
                     display: undefined,
                     rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
@@ -98,7 +99,7 @@
                     grid: maze.grid,
                     walls: maze.walls,
                     numItems: 40,
-                    cheats: true,
+                    cheats: false,
                     tinting: true,
                     interactive: false,
                     movingEntities: false,

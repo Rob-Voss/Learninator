@@ -129,7 +129,6 @@
 
         /**
          * The agent learns
-         * @returns {undefined}
          */
         learn() {
             // Compute the reward
@@ -196,18 +195,18 @@
                 var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
                 if (result) {
                     // The agent derped! Wall collision! Reset their position
-                    this.position = this.oldPos.clone();
+                    this.position = this.oldPos;
                 }
             }
+
+            // Handle boundary conditions.. bounce agent
+            Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
 
             //this.position.round();
             //this.position.advance();
 
             this.sprite.rotation = -this.angle;
             this.direction = Utility.getDirection(this.angle);
-
-            // Handle boundary conditions.. bounce agent
-            Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
         }
 
     }

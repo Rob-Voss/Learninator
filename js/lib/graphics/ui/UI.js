@@ -65,7 +65,7 @@ var UI = UI || {};
             this.ctx.clearRect(0, 0, this.width, this.height);
         },
         /**
-         * Determine if a point is inside the Shapes's bounds
+         * Determine if a point is inside the shapes's bounds
          * @param {Vec} v
          * @returns {Boolean}
          */

@@ -156,11 +156,11 @@
          * Initialize the DQN Agent
          * @param position
          * @param grid
-         * @param options
+         * @param opts
          * @returns {AgentDQN}
          */
-        constructor(position, grid, options) {
-            super(position, grid, options);
+        constructor(position, grid, opts) {
+            super(position, grid, opts);
 
             this.carrot = +1;
             this.stick = -1;
@@ -196,8 +196,6 @@
 
             // Size of the network
             this.networkSize = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
-
-            var _this = this;
 
             var env = {};
             env.getNumStates = function () {
@@ -251,6 +249,8 @@
             };
 
             this.brain = new RL.TDAgent(env, this.brainOpts);
+
+            var _this = this;
 
             return _this;
         }
@@ -355,8 +355,8 @@
                 }
             }
 
-            //this.position.round();
-            //this.position.advance();
+            this.position.round();
+            this.position.advance();
 
             this.sprite.rotation = -this.angle;
             this.direction = Utility.getDirection(this.angle);

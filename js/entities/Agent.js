@@ -10,12 +10,20 @@
          * @returns {Agent}
          */
         constructor(position, grid, opts) {
-            super('Agent', position, grid, opts);
+            super(3, position, grid, opts);
 
             this.brainType = opts.brainType;
             this.rewardGraph = opts.rewardGraph;
+            this.camera = opts.display;
 
             this.name = this.brainType + ' Agent';
+
+            // The Agent's eyes
+            this.eyes = [];
+            for (var k = 0; k < opts.numEyes; k++) {
+                this.eyes.push(new Eye(k * 0.21));
+            }
+
             this.type = 3;
             this.lastReward = 0;
             this.digestionSignal = 0.0;
@@ -31,7 +39,7 @@
         }
 
         /**
-         * Load a pretrained agent
+         * Load a pre-trained agent
          * @param file
          */
         load(file) {
@@ -103,6 +111,43 @@
 
             }
         }
+
+        /**
+         * Agent's chance to learn
+         */
+        backward() {
+            this.lastReward = this.digestionSignal; // for vis
+            this.brain.learn(this.digestionSignal);
+        }
+
+        /**
+         * Agent's chance to act on the world
+         */
+        forward() {
+            // in forward pass the agent simply behaves in the environment
+            var ne = this.numEyes * this.numTypes;
+            var inputArray = new Array(this.numStates);
+            for (var i = 0; i < this.numEyes; i++) {
+                var eye = this.eyes[i];
+                inputArray[i * this.numTypes] = 1.0;
+                inputArray[i * this.numTypes + 1] = 1.0;
+                inputArray[i * this.numTypes + 2] = 1.0;
+                inputArray[i * this.numTypes + 3] = eye.vx; // velocity information of the sensed target
+                inputArray[i * this.numTypes + 4] = eye.vy;
+                if (eye.sensedType !== -1) {
+                    // sensedType is 0 for wall, 1 for food and 2 for poison.
+                    // lets do a 1-of-k encoding into the input array
+                    inputArray[i * this.numTypes + eye.sensedType] = eye.sensedProximity / eye.maxRange; // normalize to [0,1]
+                }
+            }
+
+            // proprioception and orientation
+            inputArray[ne + 0] = this.position.vx;
+            inputArray[ne + 1] = this.position.vy;
+
+            this.action = this.brain.act(inputArray);
+        }
+
     }
 
     global.Agent = Agent;

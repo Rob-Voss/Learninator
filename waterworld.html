@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>REINFORCEjs: WaterWorld demo</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://code.jquery.com/ui/1.11.4/themes/trontastic/jquery-ui.css" rel="stylesheet">
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/waterworld.css" rel="stylesheet">
+
+    <!-- jquery and jqueryui -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <!-- bootstrap -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <!-- d3js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <!-- flotjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+
+    <!-- rljs -->
+    <script src="js/lib/external/rl.js"></script>
+
+    <script src="js/lib/Interactive.js"></script>
+    <script src="js/lib/Utility.js"></script>
+    <script src="js/lib/Vec.js"></script>
+
+    <script src="js/entities/Entity.js"></script>
+    <script src="js/entities/Eye.js"></script>
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentDQN.js"></script>
+    <script src="js/entities/Item.js"></script>
+    <script src="js/entities/Wall.js"></script>
+
+    <script src="js/lib/external/pixi.min.js"></script>
+
+    <!-- environment dynamics -->
+    <script src="js/environments/WaterWorld.js"></script>
+
+    <script type="text/javascript">
+        /**
+         * Global world object
+         * @type {World}
+         */
+        var world = world || {};
+
+        // flot stuff
+        var nflot = 1000,
+            smoothRewardHistory = [],
+            smoothReward = [],
+            flott = 0;
+
+        var simulation = {
+            speed: 2,
+            currentIntervalID: null,
+            skipDraw: false
+        };
+
+        /**
+         *
+         */
+        function tick() {
+            if (simulation.speed === 3) {
+                for (var k = 0; k < 50; k++) {
+                    world.tick();
+                }
+            } else {
+                world.tick();
+            }
+            world.draw();
+
+            for (var a = 0, ac = world.agents.length; a < ac; a++) {
+                var agent = world.agents[a],
+                    rew = world.agents[a].lastReward;
+
+                if (smoothReward[a] == null) {
+                    smoothReward[a] = rew;
+                }
+                smoothReward[a] = smoothReward[a] * 0.999 + rew * 0.001;
+                flott += 1;
+                if (flott === 50) {
+                    for (var i = 0, hl = smoothRewardHistory[a].length; i <= hl; i++) {
+                        // record smooth reward
+                        if (hl >= nflot) {
+                            smoothRewardHistory[a] = smoothRewardHistory[a].slice(1);
+                        }
+                        smoothRewardHistory[a].push(smoothReward[a]);
+                        flott = 0;
+                    }
+
+                }
+
+                if (typeof agent.expi !== 'undefined') {
+                    $("#expi").html(agent.expi);
+                }
+                if (typeof agent.tderror !== 'undefined') {
+                    $("#tde").html(agent.tderror.toFixed(3));
+                }
+            }
+        }
+
+        /**
+         *
+         */
+        function initFlot() {
+            var container = $("#flotreward"),
+                    series = [];
+            for (var a = 0, ac = world.agents.length; a < ac; a++) {
+                series[a] = {data: getFlotRewards(a), lines: {fill: true}};
+            }
+
+            var plot = $.plot(container, series, {
+                grid: {
+                    borderWidth: 1,
+                    minBorderMargin: 20,
+                    labelMargin: 10,
+                    backgroundColor: {
+                        colors: ["#FFF", "#e4f4f4"]
+                    },
+                    margin: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                    }
+                },
+                xaxis: {
+                    min: 0,
+                    max: nflot
+                },
+                yaxis: {
+                    min: -0.1,
+                    max: 0.1
+                }
+            });
+
+            setInterval(function () {
+                for (var an = 0, al = world.agents.length; an < al; an++) {
+                    series[an].data = getFlotRewards(an);
+                }
+                plot.setData(series);
+                plot.draw();
+            }, 100);
+        }
+
+        /**
+         *
+         * @param n
+         * @returns {Array}
+         */
+        function getFlotRewards(n) {
+            // zip rewards into flot data
+            var res = [];
+            if (smoothRewardHistory[n] == null) {
+                smoothRewardHistory[n] = [];
+            }
+            for (var i = 0, hl = smoothRewardHistory[n].length; i < hl; i++) {
+                res.push([i, smoothRewardHistory[n][i]]);
+            }
+            return res;
+        }
+
+        function goveryfast() {
+            window.clearInterval(simulation.currentIntervalID);
+            simulation.currentIntervalID = setInterval(tick, 0);
+            simulation.skipDraw = true;
+            simulation.speed = 3;
+        }
+
+        function gofast() {
+            window.clearInterval(simulation.currentIntervalID);
+            simulation.currentIntervalID = setInterval(tick, 0);
+            simulation.skipDraw = true;
+            simulation.speed = 2;
+        }
+
+        function gonormal() {
+            window.clearInterval(simulation.currentIntervalID);
+            simulation.currentIntervalID = setInterval(tick, 30);
+            simulation.skipDraw = false;
+            simulation.speed = 1;
+        }
+
+        function goslow() {
+            window.clearInterval(simulation.currentIntervalID);
+            simulation.currentIntervalID = setInterval(tick, 200);
+            simulation.skipDraw = false;
+            simulation.speed = 0;
+        }
+
+        function saveAgent() {
+            var brain = world.agents[0].brain;
+            $("#mysterybox").fadeIn();
+            $("#mysterybox").val(JSON.stringify(brain.toJSON()));
+        }
+
+        function resetAgent() {
+            eval($("#agentspec").val());
+            var a = new Agent(new Vec(300, 300), {}, {brainType: 'DQN'}),
+                env = a,
+                brain = new RL.DQNAgent(env, spec);
+            world.agents[0].brain = brain;
+        }
+
+        function loadAgent() {
+            $.getJSON("agentzoo/wateragent.json", function (data) {
+                var agent = world.agents[0].brain;
+                agent.fromJSON(data);
+                agent.epsilon = 0.05;
+                $("#slider").slider('value', agent.epsilon);
+                $("#eps").html(agent.epsilon.toFixed(2));
+                // kill learning rate to not learn
+                agent.alpha = 0;
+            });
+        }
+
+        function start() {
+            eval($("#agentspec").val());
+
+            world = new WaterWorld(document.getElementById("canvas"));
+            for (var k = 0; k < 2; k++) {
+                var a = new Agent(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30});
+                var env = {};
+                env.getNumStates = function () {
+                    return a.numStates;
+                };
+                env.getMaxNumActions = function () {
+                    return a.numActions;
+                };
+
+                a.brain = new RL.DQNAgent(env, spec); // give agent a TD brain
+                world.agents.push(a);
+            }
+
+            $("#slider").slider({
+                min: 0,
+                max: 1,
+                value: world.agents[0].brain.epsilon,
+                step: 0.01,
+                slide: function (event, ui) {
+                    world.agents[0].brain.epsilon = ui.value;
+                    $("#eps").html(ui.value.toFixed(2));
+                }
+            });
+            $("#eps").html(world.agents[0].brain.epsilon.toFixed(2));
+            $("#slider").slider('value', world.agents[0].brain.epsilon);
+
+            initFlot();
+            gonormal();
+        }
+    </script>
+</head>
+<body onload="start();">
+<h2>WaterWorld: Deep Q Learning</h2>
+
+<div id="wrap">
+    <textarea id="agentspec" style="width:100%;height:250px;">
+    // agent parameter spec to play with (this gets eval()'d on Agent reset)
+    var spec = {}
+    spec.update = 'qlearn'; // qlearn | sarsa
+    spec.gamma = 0.9; // discount factor, [0, 1)
+    spec.epsilon = 0.2; // initial epsilon for epsilon-greedy policy, [0, 1)
+    spec.alpha = 0.005; // value function learning rate
+    spec.experience_add_every = 5; // number of time steps before we add another experience to replay memory
+    spec.experience_size = 10000; // size of experience
+    spec.learning_steps_per_iteration = 5;
+    spec.tderror_clamp = 1.0; // for robustness
+    spec.num_hidden_units = 100 // number of neurons in hidden layer
+    </textarea>
+
+    <div style="text-align:center;">
+        <button class="btn btn-danger" onclick="resetAgent()" style="width:150px;height:50px;margin-bottom:5px;">Reinit agent</button>
+        <button class="btn btn-success" onclick="goveryfast()" style="width:150px;height:50px;margin-bottom:5px;">Go very fast</button>
+        <button class="btn btn-success" onclick="gofast()" style="width:150px;height:50px;margin-bottom:5px;">Go fast</button>
+        <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:50px;margin-bottom:5px;">Go normal</button>
+        <button class="btn btn-success" onclick="goslow()" style="width:150px;height:50px;margin-bottom:5px;">Go slow</button>
+
+        <canvas id="canvas" width="700" height="500"></canvas>
+    </div>
+
+    <div id="brain_info_div"></div>
+
+    <button class="btn btn-primary" onclick="loadAgent()" style="width:200px;height:35px;margin-bottom:5px;margin-right:20px;">Load a Pretrained Agent</button>
+
+    <br>
+    Exploration epsilon: <span id="eps">0.15</span>
+
+    <div id="slider"></div>
+
+    <br>
+
+    <div id="expi"></div>
+    <div id="tde"></div>
+
+    <div id="flotreward" style="width:800px; height: 400px;"></div>
+
+    <textarea id="mysterybox" style="width:100%;display:none;">mystery text box</textarea>
+</div>
+</body>
+</html>

@@ -2,19 +2,19 @@
     "use strict";
 
     class Item extends Entity {
+
         /**
          * Initialize the Item
          * @param typeId
          * @param position
          * @param grid
-         * @param options
+         * @param opts
          * @returns {Item}
          */
-        constructor(typeId, position, grid, options) {
-            super(typeId === 1 ? 'Nom' : 'Gnar', position, grid, options);
+        constructor(typeId, position, grid, opts) {
+            super(typeId, position, grid, opts);
 
-            this.name = typeId === 1 ? 'Nom' : 'Gnar';
-            this.type = typeId || 1;
+            this.cleanUp = false;
 
             var _this = this;
 

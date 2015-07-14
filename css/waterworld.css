@@ -1,0 +1,21 @@
+
+#wrap {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h2 {
+    text-align: center;
+}
+
+body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+canvas {
+    border: 1px solid black;
+}
+canvas {
+    border: 1px solid white;
+}
