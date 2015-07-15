@@ -29,21 +29,16 @@
          */
         sense(agent, walls, entities) {
             this.shape.clear();
-            if (agent.collision !== true) {
-                walls = [];
-            }
-
             var X = agent.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
                 Y = agent.position.y + this.maxRange * Math.cos(agent.angle + this.angle),
                 result = Utility.collisionCheck(agent.position, new Vec(X, Y), walls, entities);
-
             if (result) {
                 // eye collided with an entity
                 this.sensedProximity = result.vecI.distanceTo(agent.position);
                 this.sensedType = result.type;
                 if ('vx' in result) {
-                    this.vx = result.vx;
-                    this.vy = result.vy;
+                    this.vx = result.position.vx;
+                    this.vy = result.position.vy;
                 } else {
                     this.vx = 0;
                     this.vy = 0;

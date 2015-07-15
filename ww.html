@@ -25,7 +25,6 @@
     <!-- rljs -->
     <script src="js/lib/external/rl.js"></script>
 
-    <script src="js/lib/Interactive.js"></script>
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
 
@@ -33,7 +32,6 @@
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
     <script src="js/entities/AgentDQN.js"></script>
-    <script src="js/entities/Item.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <script src="js/lib/external/pixi.min.js"></script>
@@ -221,18 +219,11 @@
             eval($("#agentspec").val());
 
             world = new WaterWorld(document.getElementById("canvas"));
-            for (var k = 0; k < 2; k++) {
-                var a = new Agent(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30});
-                var env = {};
-                env.getNumStates = function () {
-                    return a.numStates;
-                };
-                env.getMaxNumActions = function () {
-                    return a.numActions;
-                };
 
-                a.brain = new RL.DQNAgent(env, spec); // give agent a TD brain
-                world.agents.push(a);
+            for (var k = 0; k < 2; k++) {
+                var opts = {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec},
+                    agent = new AgentDQN(new Vec(300, 300), {}, opts);
+                world.agents.push(agent);
             }
 
             $("#slider").slider({

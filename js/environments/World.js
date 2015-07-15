@@ -4,32 +4,33 @@
     class World {
         /**
          * Make a World
-         * @param {Object} options
+         * @param {Object} opts
          * @returns {World}
          */
-        constructor(options) {
-            this.canvas = options.canvas;
+        constructor(opts) {
+            this.canvas = opts.canvas;
             this.ctx = this.canvas.getContext("2d");
             this.width = this.canvas.width;
             this.height = this.canvas.height;
 
             // Basics for the environment
-            this.walls = options.walls || [];
-            this.agents = options.agents || [];
-            this.grid = options.grid || new Grid(this.canvas);
+            this.walls = opts.walls || [];
+            this.agents = opts.agents || [];
+            this.grid = opts.grid || new Grid(this.canvas);
             this.cellWidth = this.width / this.grid.xCount;
             this.cellHeight = this.height / this.grid.yCount;
             this.path = this.grid.path;
 
             // World options
-            this.cheats = options.cheats || false;
-            this.numItems = options.numItems || 20;
-            this.movingEntities = options.movingEntities || false;
-            this.interactive = options.interactive || false;
-            this.tinting = options.tinting || true;
+            this.cheats = opts.cheats || false;
+            this.numItems = opts.numItems || 20;
+            this.movingEntities = opts.movingEntities || false;
+            this.collision = opts.collision || false;
+            this.interactive = opts.interactive || false;
+            this.tinting = opts.tinting || true;
 
             // Raycasting POV stuffz
-            this.raycast = options.raycast || false;
+            this.raycast = opts.raycast || false;
             if (this.raycast) {
                 this.map = new Map(this.grid.width);
                 this.map.populate(this.grid);
@@ -39,7 +40,6 @@
             this.interval = 1000 / this.fps;
             this.clock = 0;
             this.entities = [];
-            this.types = ['Wall', 'Nom', 'Gnar'];
 
             this.pause = false;
 
@@ -101,6 +101,8 @@
                 this.stage.addChild(this.populationCounts);
             }
 
+            var _this = this;
+
             requestAnimationFrame(animate);
             function animate() {
                 if (!_this.pause) {
@@ -109,8 +111,6 @@
                     _this.renderer.render(_this.stage);
                 }
             }
-
-            var _this = this;
 
             return this;
         }
@@ -126,7 +126,7 @@
                 vy = Math.random() * 5 - 2.5,
                 position = new Vec(x, y, vx, vy),
                 entityOpts = {interactive: this.interactive, collision: this.collision},
-                entity = new Item(type, position, this.grid, entityOpts);
+                entity = new Entity(type, position, this.grid, entityOpts);
 
             // Insert the population
             this.entities.push(entity);
@@ -206,8 +206,8 @@
 
                 if (this.clock % 100 === 0 && this.agents[a].pts.length !== 0) {
                     // Throw some points on a Graph
-                    this.rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
-                    this.rewardGraph.drawPoints();
+                    this.agents[a].rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
+                    this.agents[a].rewardGraph.drawPoints();
                     // Clear them up since we've drawn them
                     this.agents[a].pts = [];
                 }

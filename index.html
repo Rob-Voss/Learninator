@@ -37,27 +37,22 @@
     <script src="js/environments/World.js"></script>
 
     <script src="js/lib/Array.js"></script>
-    <script src="js/lib/Interactive.js"></script>
     <script src="js/lib/Grid.js"></script>
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
     <script src="js/lib/graphics/Graph.js"></script>
 
-    <!--        <script src="js/entities/AgentWorker.js"></script> -->
     <script src="js/entities/Brain.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentTD.js"></script>
-    <script src="js/entities/AgentRLTD.js"></script>
     <script src="js/entities/AgentDQN.js"></script>
-    <script src="js/entities/Item.js"></script>
+    <script src="js/entities/AgentTD.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Player.js"></script>
     <script src="js/entities/Wall.js"></script>
 
-    <!--        <script src="js/lib/ga.js"></script> -->
     <script src="js/lib/external/convnet.min.js"></script>
     <script src="js/lib/external/rl.js"></script>
     <script src="js/lib/external/pixi.min.js"></script>
@@ -86,11 +81,14 @@
 
             var agentOpts = {
                     collision: true,
+                    interactive: false,
                     brainType: 'TD',
-                    display: undefined,
+                    numEyes: 9,
+                    numTypes: 3,
                     rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
                 },
                 agent = new AgentTD(new Vec(300, 300), maze.grid, agentOpts);
+//                agent = new AgentDQN(new Vec(300, 300), maze.grid, agentOpts);
             agentOpts.rewardGraph.setLegend([agent]);
 
             var worldOpts = {
@@ -99,8 +97,9 @@
                     grid: maze.grid,
                     walls: maze.walls,
                     numItems: 40,
-                    cheats: false,
+                    cheats: true,
                     tinting: true,
+                    collision: true,
                     interactive: false,
                     movingEntities: false,
                     raycast: false
