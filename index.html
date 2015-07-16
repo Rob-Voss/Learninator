@@ -47,6 +47,7 @@
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentOld.js"></script>
     <script src="js/entities/AgentDQN.js"></script>
     <script src="js/entities/AgentTD.js"></script>
     <script src="js/entities/Entity.js"></script>
@@ -87,8 +88,9 @@
                     numTypes: 3,
                     rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
                 },
-                agent = new AgentTD(new Vec(300, 300), maze.grid, agentOpts);
-//                agent = new AgentDQN(new Vec(300, 300), maze.grid, agentOpts);
+                agent = new AgentOld();
+//                agent = new AgentTD(new Vec(3, 3), maze.grid, agentOpts);
+//                agent = new AgentDQN(new Vec(3, 3), maze.grid, agentOpts);
             agentOpts.rewardGraph.setLegend([agent]);
 
             var worldOpts = {

@@ -1,25 +1,21 @@
 (function (global) {
     "use strict";
 
-    class Eye {
-        /**
-         * Eye sensor has a maximum range and senses walls
-         * @param {Number} angle
-         * @returns {Eye}
-         */
-        constructor(angle) {
-            this.angle = angle;
-            this.maxRange = 120;
-            this.sensedProximity = 120;
-            this.sensedType = -1;
-            this.numInputs = 5;
+    /**
+     * Eye sensor has a maximum range and senses walls
+     * @param {Number} angle
+     * @returns {Eye}
+     */
+    var Eye = function (angle) {
+        this.angle = angle;
+        this.maxRange = 120;
+        this.sensedProximity = 120;
+        this.sensedType = -1;
+        this.numInputs = 5;
 
-            // PIXI graphics
-            this.shape = new PIXI.Graphics();
-            this.shape.lineStyle(1, 0x000000);
-
-            return this;
-        }
+        // PIXI graphics
+        this.shape = new PIXI.Graphics();
+        this.shape.lineStyle(1, 0x000000);
 
         /**
          * Sense the surroundings
@@ -27,7 +23,7 @@
          * @param walls
          * @param entities
          */
-        sense(agent, walls, entities) {
+        this.sense = function (agent, walls, entities) {
             this.shape.clear();
             var X = agent.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
                 Y = agent.position.y + this.maxRange * Math.cos(agent.angle + this.angle),
@@ -49,31 +45,31 @@
                 this.vx = 0;
                 this.vy = 0;
             }
-        }
+        };
 
         /**
          * Draw the lines for the eyes
          * @param agent
          */
-        draw(agent) {
+        this.draw = function (agent) {
             switch (this.sensedType) {
                 // Is it wall or nothing?
-                case -1:
-                case 0:
-                    this.shape.lineStyle(0.5, 0x000000);
-                    break;
-                // It is noms
-                case 1:
-                    this.shape.lineStyle(0.5, 0xFF0000);
-                    break;
-                // It is gnar gnar
-                case 2:
-                    this.shape.lineStyle(0.5, 0x00FF00);
-                    break;
-                // Is it another Agent
-                case 3:
-                    this.shape.lineStyle(0.5, 0xFAFAFA);
-                    break;
+            case -1:
+            case 0:
+                this.shape.lineStyle(0.5, 0x000000);
+                break;
+            // It is noms
+            case 1:
+                this.shape.lineStyle(0.5, 0xFF0000);
+                break;
+            // It is gnar gnar
+            case 2:
+                this.shape.lineStyle(0.5, 0x00FF00);
+                break;
+            // Is it another Agent
+            case 3:
+                this.shape.lineStyle(0.5, 0xFAFAFA);
+                break;
             }
 
             var aEyeX = agent.oldPos.x + this.sensedProximity * Math.sin(agent.oldAngle + this.angle),
@@ -82,8 +78,10 @@
             // Draw the agent's line of sights
             this.shape.moveTo(agent.oldPos.x, agent.oldPos.y);
             this.shape.lineTo(aEyeX, aEyeY);
-        }
-    }
+        };
+
+        return this;
+    };
 
     global.Eye = Eye;
 

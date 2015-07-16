@@ -78,7 +78,7 @@
         };
 
         this.brain = new Brain(this.brainOpts);
-        //this.load('js/mazeagent.json');
+        this.load('js/mazeagent.json');
 
         /**
          * Agent's chance to act on the world
@@ -157,10 +157,12 @@
             vv = vv.rotate(-this.rot1);
             var vv2 = this.position.sub(w1pos);
             vv2 = vv2.rotate(this.rot2);
-            var newPos = w2pos.add(vv);
+            var newPos = w2pos.add(vv),
+                newPos2 = w1pos.add(vv2);
+
             newPos.scale(0.5);
-            var newPos2 = w1pos.add(vv2);
             newPos2.scale(0.5);
+
             this.position = newPos.add(newPos2);
 
             this.angle -= this.rot1;
@@ -172,6 +174,7 @@
             if (this.angle > 2 * Math.PI) {
                 this.angle -= 2 * Math.PI;
             }
+
             //this.position.advance();
             if (this.collision) {
                 // The agent is trying to move from pos to oPos so we need to check walls
@@ -183,14 +186,14 @@
             }
 
             // Handle boundary conditions.. bounce agent
-            if (this.position.x < 0) {
-                this.position.x = 0;
+            if (this.position.x < 1) {
+                this.position.x = 1;
             }
             if (this.position.x > smallWorld.width) {
                 this.position.x = smallWorld.width;
             }
-            if (this.position.y < 0) {
-                this.position.y = 0;
+            if (this.position.y < 1) {
+                this.position.y = 1;
             }
             if (this.position.y > smallWorld.height) {
                 this.position.y = smallWorld.height;
@@ -199,16 +202,11 @@
             this.position.round();
             this.direction = Utility.getDirection(this.angle);
             this.sprite.position.set(this.position.x, this.position.y);
-
             this.sprite.rotation = -this.angle;
-        }
+        };
 
         return this;
     };
-
-    AgentTD.prototype = {
-
-    }
 
     global.AgentTD = AgentTD;
 

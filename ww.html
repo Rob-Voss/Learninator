@@ -93,10 +93,10 @@
                 }
 
                 if (typeof agent.expi !== 'undefined') {
-                    $("#expi").html(agent.expi);
+                    $("#expi"+a).html(agent.expi);
                 }
                 if (typeof agent.tderror !== 'undefined') {
-                    $("#tde").html(agent.tderror.toFixed(3));
+                    $("#tde"+a).html(agent.tderror.toFixed(3));
                 }
             }
         }
@@ -191,15 +191,13 @@
 
         function saveAgent() {
             var brain = world.agents[0].brain;
-            $("#mysterybox").fadeIn();
-            $("#mysterybox").val(JSON.stringify(brain.toJSON()));
+            $("#mysterybox0").fadeIn();
+            $("#mysterybox0").val(JSON.stringify(brain.toJSON()));
         }
 
         function resetAgent() {
             eval($("#agentspec").val());
-            var a = new Agent(new Vec(300, 300), {}, {brainType: 'DQN'}),
-                env = a,
-                brain = new RL.DQNAgent(env, spec);
+            var agent = new AgentDQN(new Vec(5, 5), [], {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec});
             world.agents[0].brain = brain;
         }
 
@@ -208,8 +206,8 @@
                 var agent = world.agents[0].brain;
                 agent.fromJSON(data);
                 agent.epsilon = 0.05;
-                $("#slider").slider('value', agent.epsilon);
-                $("#eps").html(agent.epsilon.toFixed(2));
+                $("#slider0").slider('value', agent.epsilon);
+                $("#eps0").html(agent.epsilon.toFixed(2));
                 // kill learning rate to not learn
                 agent.alpha = 0;
             });
@@ -220,24 +218,24 @@
 
             world = new WaterWorld(document.getElementById("canvas"));
 
-            for (var k = 0; k < 2; k++) {
-                var opts = {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec},
-                    agent = new AgentDQN(new Vec(300, 300), {}, opts);
+            for (var k = 0; k < 1; k++) {
+                var agent = new AgentDQN(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec});
                 world.agents.push(agent);
-            }
 
-            $("#slider").slider({
-                min: 0,
-                max: 1,
-                value: world.agents[0].brain.epsilon,
-                step: 0.01,
-                slide: function (event, ui) {
-                    world.agents[0].brain.epsilon = ui.value;
-                    $("#eps").html(ui.value.toFixed(2));
-                }
-            });
-            $("#eps").html(world.agents[0].brain.epsilon.toFixed(2));
-            $("#slider").slider('value', world.agents[0].brain.epsilon);
+                $("#slider"+k).slider({
+                    min: 0,
+                    max: 1,
+                    value: world.agents[k].brain.epsilon,
+                    step: 0.01,
+                    slide: function (event, ui) {
+                        world.agents[k].brain.epsilon = ui.value;
+                        $("#eps"+k).html(ui.value.toFixed(2));
+                    }
+                });
+                $("#eps"+k).html(world.agents[k].brain.epsilon.toFixed(2));
+                $("#slider"+k).slider('value', world.agents[k].brain.epsilon);
+
+            }
 
             initFlot();
             gonormal();
@@ -276,10 +274,14 @@
 
     <button class="btn btn-primary" onclick="loadAgent()" style="width:200px;height:35px;margin-bottom:5px;margin-right:20px;">Load a Pretrained Agent</button>
 
-    <br>
-    Exploration epsilon: <span id="eps">0.15</span>
-
-    <div id="slider"></div>
+    <p>
+    Exploration epsilon 0: <span id="eps0">0.15</span>
+    <div id="slider0"></div>
+    </p>
+    <p>
+    Exploration epsilon 1: <span id="eps1">0.15</span>
+    <div id="slider1"></div>
+    </p>
 
     <br>
 

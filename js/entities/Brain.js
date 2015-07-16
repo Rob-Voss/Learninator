@@ -18,7 +18,7 @@
         this.state1 = state1;
 
         return this;
-    }
+    };
 
     /**
      * A Brain object does all the magic.
@@ -36,50 +36,50 @@
         // the ACTUAL input to the net will be (x,a) temporalWindow times, and followed by
         // current x so to have no information from previous time step going into value
         // function, set to 0.
-        this.temporalWindow = opt.temporalWindow ? opt.temporalWindow : 1;
+        this.temporalWindow = opt.temporalWindow || 1;
 
         // size of experience replay memory
-        this.experienceSize = opt.experienceSize ? opt.experienceSize : 30000;
+        this.experienceSize = opt.experienceSize || 30000;
 
         // number of examples in experience replay memory before we begin learning
-        this.startLearnThreshold = opt.startLearnThreshold ? opt.startLearnThreshold : Math.floor(Math.min(this.experienceSize * 0.1, 1000));
+        this.startLearnThreshold = opt.startLearnThreshold || Math.floor(Math.min(this.experienceSize * 0.1, 1000));
 
         // gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
-        this.gamma = opt.gamma ? opt.gamma : 0.8;
+        this.gamma = opt.gamma || 0.8;
 
         // number of steps we will learn for
-        this.learningStepsTotal = opt.learningStepsTotal ? opt.learningStepsTotal : 100000;
+        this.learningStepsTotal = opt.learningStepsTotal || 100000;
 
         // how many steps of the above to perform only random actions (in the beginning)?
-        this.learningStepsBurnin = opt.learningStepsBurnin ? opt.learningStepsBurnin : 3000;
+        this.learningStepsBurnin = opt.learningStepsBurnin || 3000;
 
         // what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
-        this.epsilonMin = opt.epsilonMin ? opt.epsilonMin : 0.05;
+        this.epsilonMin = opt.epsilonMin || 0.05;
 
         // what epsilon to use at test time? (i.e. when learning is disabled)
-        this.epsilonTestTime = opt.epsilonTestTime ? opt.epsilonTestTime : 0.01;
+        this.epsilonTestTime = opt.epsilonTestTime || 0.01;
 
         this.numStates = opt.numStates || 9 * 3;
         this.numActions = opt.numActions || 5;
 
         // advanced feature. Sometimes a random action should be biased towards some values
         // for example in flappy bird, we may want to choose to not flap more often
-        if (typeof opt.randomActionDistribution !== 'undefined') {
+        if (typeof opt.randomActionDistribution === 'undefined') {
+            this.randomActionDistribution = [];
+        } else {
             // this better sum to 1 by the way, and be of length this.numActions
             this.randomActionDistribution = opt.randomActionDistribution;
             if (this.randomActionDistribution.length !== this.numActions) {
                 console.log('TROUBLE. randomActionDistribution should be same length as numActions.');
             }
-            var a = this.randomActionDistribution;
-            var s = 0.0;
+            var a = this.randomActionDistribution,
+                s = 0.0;
             for (var k = 0; k < a.length; k++) {
                 s += a[k];
             }
             if (Math.abs(s - 1.0) > 0.0001) {
                 console.log('TROUBLE. randomActionDistribution should sum to 1!');
             }
-        } else {
-            this.randomActionDistribution = [];
         }
 
         // states that go into neural net to predict optimal action look as
@@ -96,7 +96,20 @@
 
         // create [state -> value of all possible actions] modeling net for the value function
         var layerDefs = [];
-        if (typeof opt.layerDefs !== 'undefined') {
+        if (typeof opt.layerDefs === 'undefined') {
+            // create a very simple neural net by default
+            layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.netInputs});
+            if (typeof opt.hiddenLayerSizes === 'undefined') {
+                //
+            } else {
+                // allow user to specify this via the option, for convenience
+                var hl = opt.hiddenLayerSizes;
+                for (var q = 0; q < hl.length; q++) {
+                    layerDefs.push({type: 'fc', numNeurons: hl[q], activation: 'relu'}); // relu by default
+                }
+            }
+            layerDefs.push({type: 'regression', numNeurons: this.numActions}); // value function output
+        } else {
             // this is an advanced usage feature, because size of the input to the network, and number of
             // actions must check out. This is not very pretty Object Oriented programming but I can't see
             // a way out of it :(
@@ -116,26 +129,12 @@
             if (layerDefs[layerDefs.length - 1].numNeurons !== this.numActions) {
                 console.log('TROUBLE! Number of regression neurons should be numActions!');
             }
-        } else {
-            // create a very simple neural net by default
-            layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.netInputs});
-            if (typeof opt.hiddenLayerSizes !== 'undefined') {
-                // allow user to specify this via the option, for convenience
-                var hl = opt.hiddenLayerSizes;
-                for (var q = 0; q < hl.length; q++) {
-                    layerDefs.push({type: 'fc', numNeurons: hl[q], activation: 'relu'}); // relu by default
-                }
-            }
-            layerDefs.push({type: 'regression', numNeurons: this.numActions}); // value function output
         }
         this.valueNet = new convnetjs.Net();
         this.valueNet.makeLayers(layerDefs);
         var tdTrainerOpts = {};
 
-        if (typeof opt.tdTrainerOpts !== 'undefined') {
-            // allow user to overwrite this
-            tdTrainerOpts = opt.tdTrainerOpts;
-        } else {
+        if (typeof opt.tdTrainerOpts === 'undefined') {
             // or we need a Temporal Difference Learning trainer!
             tdTrainerOpts = {
                 learningRate: 0.01,
@@ -143,6 +142,9 @@
                 batchSize: 64,
                 l2Decay: 0.01
             };
+        } else {
+            // allow user to overwrite this
+            tdTrainerOpts = opt.tdTrainerOpts;
         }
         this.tdtrainer = new convnetjs.SGDTrainer(this.valueNet, tdTrainerOpts);
 
@@ -201,7 +203,7 @@
                 action: maxk,
                 value: maxval
             };
-        }
+        };
 
         /**
          * Return s = (x,a,x,a,x,a,xt) state vector.
