@@ -64,22 +64,22 @@
 
         // advanced feature. Sometimes a random action should be biased towards some values
         // for example in flappy bird, we may want to choose to not flap more often
-        if (typeof opt.randomActionDistribution === 'undefined') {
-            this.randomActionDistribution = [];
-        } else {
+        if (typeof opt.randomActionDistribution !== 'undefined') {
             // this better sum to 1 by the way, and be of length this.numActions
             this.randomActionDistribution = opt.randomActionDistribution;
             if (this.randomActionDistribution.length !== this.numActions) {
                 console.log('TROUBLE. randomActionDistribution should be same length as numActions.');
             }
-            var a = this.randomActionDistribution,
-                s = 0.0;
+            var a = this.randomActionDistribution;
+            var s = 0.0;
             for (var k = 0; k < a.length; k++) {
                 s += a[k];
             }
             if (Math.abs(s - 1.0) > 0.0001) {
                 console.log('TROUBLE. randomActionDistribution should sum to 1!');
             }
+        } else {
+            this.randomActionDistribution = [];
         }
 
         // states that go into neural net to predict optimal action look as
@@ -96,20 +96,7 @@
 
         // create [state -> value of all possible actions] modeling net for the value function
         var layerDefs = [];
-        if (typeof opt.layerDefs === 'undefined') {
-            // create a very simple neural net by default
-            layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.netInputs});
-            if (typeof opt.hiddenLayerSizes === 'undefined') {
-                //
-            } else {
-                // allow user to specify this via the option, for convenience
-                var hl = opt.hiddenLayerSizes;
-                for (var q = 0; q < hl.length; q++) {
-                    layerDefs.push({type: 'fc', numNeurons: hl[q], activation: 'relu'}); // relu by default
-                }
-            }
-            layerDefs.push({type: 'regression', numNeurons: this.numActions}); // value function output
-        } else {
+        if (typeof opt.layerDefs !== 'undefined') {
             // this is an advanced usage feature, because size of the input to the network, and number of
             // actions must check out. This is not very pretty Object Oriented programming but I can't see
             // a way out of it :(
@@ -129,12 +116,26 @@
             if (layerDefs[layerDefs.length - 1].numNeurons !== this.numActions) {
                 console.log('TROUBLE! Number of regression neurons should be numActions!');
             }
+        } else {
+            // create a very simple neural net by default
+            layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.netInputs});
+            if (typeof opt.hiddenLayerSizes !== 'undefined') {
+                // allow user to specify this via the option, for convenience
+                var hl = opt.hiddenLayerSizes;
+                for (var q = 0; q < hl.length; q++) {
+                    layerDefs.push({type: 'fc', numNeurons: hl[q], activation: 'relu'}); // relu by default
+                }
+            }
+            layerDefs.push({type: 'regression', numNeurons: this.numActions}); // value function output
         }
         this.valueNet = new convnetjs.Net();
         this.valueNet.makeLayers(layerDefs);
         var tdTrainerOpts = {};
 
-        if (typeof opt.tdTrainerOpts === 'undefined') {
+        if (typeof opt.tdTrainerOpts !== 'undefined') {
+            // allow user to overwrite this
+            tdTrainerOpts = opt.tdTrainerOpts;
+        } else {
             // or we need a Temporal Difference Learning trainer!
             tdTrainerOpts = {
                 learningRate: 0.01,
@@ -142,9 +143,6 @@
                 batchSize: 64,
                 l2Decay: 0.01
             };
-        } else {
-            // allow user to overwrite this
-            tdTrainerOpts = opt.tdTrainerOpts;
         }
         this.tdtrainer = new convnetjs.SGDTrainer(this.valueNet, tdTrainerOpts);
 

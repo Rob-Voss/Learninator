@@ -40,7 +40,6 @@
         };
 
         this.brain = new RL.DQNAgent(this, this.brainOpts);
-        //this.load('js/wateragent.json');
 
         /**
          * Agent's chance to act on the world
@@ -142,7 +141,7 @@
             }
 
             this.position.round();
-            this.sprite.position.set(this.position.x, this.position.y);
+            //this.sprite.position.set(this.position.x, this.position.y);
         }
 
         return this;

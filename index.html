@@ -88,8 +88,8 @@
                     numTypes: 3,
                     rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
                 },
-                agent = new AgentOld();
-//                agent = new AgentTD(new Vec(3, 3), maze.grid, agentOpts);
+//                agent = new AgentOld();
+                agent = new AgentTD(new Vec(5, 5), maze.grid, agentOpts);
 //                agent = new AgentDQN(new Vec(3, 3), maze.grid, agentOpts);
             agentOpts.rewardGraph.setLegend([agent]);
 
@@ -103,7 +103,7 @@
                     tinting: true,
                     collision: true,
                     interactive: false,
-                    movingEntities: false,
+                    movingEntities: true,
                     raycast: false
                 },
                 world = new World(worldOpts);

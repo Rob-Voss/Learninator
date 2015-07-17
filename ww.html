@@ -34,7 +34,7 @@
     <script src="js/entities/AgentDQN.js"></script>
     <script src="js/entities/Wall.js"></script>
 
-    <script src="js/lib/external/pixi.min.js"></script>
+    <script src="js/lib/external/pixi.js"></script>
 
     <!-- environment dynamics -->
     <script src="js/environments/WaterWorld.js"></script>
@@ -49,7 +49,7 @@
         // flot stuff
         var nflot = 1000,
             smoothRewardHistory = [],
-            smoothReward = [],
+            smoothReward = [null],
             flott = 0;
 
         var simulation = {
@@ -62,15 +62,6 @@
          *
          */
         function tick() {
-            if (simulation.speed === 3) {
-                for (var k = 0; k < 50; k++) {
-                    world.tick();
-                }
-            } else {
-                world.tick();
-            }
-            world.draw();
-
             for (var a = 0, ac = world.agents.length; a < ac; a++) {
                 var agent = world.agents[a],
                     rew = world.agents[a].lastReward;
@@ -92,11 +83,11 @@
 
                 }
 
-                if (typeof agent.expi !== 'undefined') {
-                    $("#expi"+a).html(agent.expi);
+                if (typeof world.agents[a].brain.expi !== 'undefined') {
+                    $("#expi"+a).html(world.agents[a].brain.expi);
                 }
-                if (typeof agent.tderror !== 'undefined') {
-                    $("#tde"+a).html(agent.tderror.toFixed(3));
+                if (typeof world.agents[a].brain.tderror !== 'undefined') {
+                    $("#tde"+a).html(world.agents[a].brain.tderror.toFixed(3));
                 }
             }
         }
@@ -106,7 +97,7 @@
          */
         function initFlot() {
             var container = $("#flotreward"),
-                    series = [];
+                series = [];
             for (var a = 0, ac = world.agents.length; a < ac; a++) {
                 series[a] = {data: getFlotRewards(a), lines: {fill: true}};
             }
@@ -197,12 +188,14 @@
 
         function resetAgent() {
             eval($("#agentspec").val());
-            var agent = new AgentDQN(new Vec(5, 5), [], {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec});
-            world.agents[0].brain = brain;
+
+            var agent = new AgentDQN(new Vec(5, 5), [], {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec}),
+                brain = new RL.DQNAgent(agent, spec);
+            world.agents[1].brain = brain;
         }
 
         function loadAgent() {
-            $.getJSON("agentzoo/wateragent.json", function (data) {
+            $.getJSON("js/wateragent.json", function (data) {
                 var agent = world.agents[0].brain;
                 agent.fromJSON(data);
                 agent.epsilon = 0.05;
@@ -215,13 +208,13 @@
 
         function start() {
             eval($("#agentspec").val());
+            var agents = [];
+            for (var k = 0; k < 2; k++) {
+                agents.push(new AgentDQN(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec}));
+            }
+            world = new WaterWorld(document.getElementById("worldCanvas"), agents);
 
-            world = new WaterWorld(document.getElementById("canvas"));
-
-            for (var k = 0; k < 1; k++) {
-                var agent = new AgentDQN(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec});
-                world.agents.push(agent);
-
+            for (var k = 0; k < agents.length; k++) {
                 $("#slider"+k).slider({
                     min: 0,
                     max: 1,
@@ -234,9 +227,9 @@
                 });
                 $("#eps"+k).html(world.agents[k].brain.epsilon.toFixed(2));
                 $("#slider"+k).slider('value', world.agents[k].brain.epsilon);
-
             }
 
+            loadAgent();
             initFlot();
             gonormal();
         }
@@ -246,6 +239,36 @@
 <h2>WaterWorld: Deep Q Learning</h2>
 
 <div id="wrap">
+    <div style="text-align:center;">
+        <button class="btn btn-danger" onclick="resetAgent()" style="width:150px;height:50px;margin-bottom:5px;">Reinit agent</button>
+        <button class="btn btn-success" onclick="goveryfast()" style="width:150px;height:50px;margin-bottom:5px;">Go very fast</button>
+        <button class="btn btn-success" onclick="gofast()" style="width:150px;height:50px;margin-bottom:5px;">Go fast</button>
+        <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:50px;margin-bottom:5px;">Go normal</button>
+        <button class="btn btn-success" onclick="goslow()" style="width:150px;height:50px;margin-bottom:5px;">Go slow</button>
+        <canvas id="worldCanvas" width="700" height="500"></canvas>
+    </div>
+
+    <div id="brain_info_div"></div>
+
+    <button class="btn btn-primary" onclick="loadAgent()" style="width:200px;height:35px;margin-bottom:5px;margin-right:20px;">Load a Pretrained Agent</button>
+
+    <p>
+        Exploration epsilon 0: <span id="eps0">0.15</span>
+        <div id="slider0"></div>
+        <div id="expi0"></div>
+        <div id="tde0"></div>
+    </p>
+    <p>
+        Exploration epsilon 1: <span id="eps1">0.15</span>
+        <div id="slider1"></div>
+        <div id="expi1"></div>
+        <div id="tde1"></div>
+    </p>
+
+    <br>
+    <div id="flotreward" style="width:800px; height: 400px;"></div>
+
+    <textarea id="mysterybox" style="width:100%;display:none;">mystery text box</textarea>
     <textarea id="agentspec" style="width:100%;height:250px;">
     // agent parameter spec to play with (this gets eval()'d on Agent reset)
     var spec = {}
@@ -260,37 +283,6 @@
     spec.num_hidden_units = 100 // number of neurons in hidden layer
     </textarea>
 
-    <div style="text-align:center;">
-        <button class="btn btn-danger" onclick="resetAgent()" style="width:150px;height:50px;margin-bottom:5px;">Reinit agent</button>
-        <button class="btn btn-success" onclick="goveryfast()" style="width:150px;height:50px;margin-bottom:5px;">Go very fast</button>
-        <button class="btn btn-success" onclick="gofast()" style="width:150px;height:50px;margin-bottom:5px;">Go fast</button>
-        <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:50px;margin-bottom:5px;">Go normal</button>
-        <button class="btn btn-success" onclick="goslow()" style="width:150px;height:50px;margin-bottom:5px;">Go slow</button>
-
-        <canvas id="canvas" width="700" height="500"></canvas>
-    </div>
-
-    <div id="brain_info_div"></div>
-
-    <button class="btn btn-primary" onclick="loadAgent()" style="width:200px;height:35px;margin-bottom:5px;margin-right:20px;">Load a Pretrained Agent</button>
-
-    <p>
-    Exploration epsilon 0: <span id="eps0">0.15</span>
-    <div id="slider0"></div>
-    </p>
-    <p>
-    Exploration epsilon 1: <span id="eps1">0.15</span>
-    <div id="slider1"></div>
-    </p>
-
-    <br>
-
-    <div id="expi"></div>
-    <div id="tde"></div>
-
-    <div id="flotreward" style="width:800px; height: 400px;"></div>
-
-    <textarea id="mysterybox" style="width:100%;display:none;">mystery text box</textarea>
 </div>
 </body>
 </html>

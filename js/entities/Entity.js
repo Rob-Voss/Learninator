@@ -33,6 +33,9 @@
         this.oldPos = this.position;
         this.oldAngle = this.angle;
 
+
+        var _this = this;
+
         this.texture = PIXI.Texture.fromImage('img/' + entityTypes[typeId] + '.png');
         this.sprite = new PIXI.Sprite(this.texture);
         this.sprite.texture.baseTexture.on('loaded', function () {
@@ -43,10 +46,9 @@
         this.sprite.height = this.height;
         this.sprite.anchor.set(0.5, 0.5);
         this.sprite.position.set(this.position.x, this.position.y);
-
-        var _this = this;
-
         this.sprite.interactive = this.interactive;
+
+        this.shape = new PIXI.Graphics();
         if (this.sprite.interactive === true) {
             this.sprite
                 .on('mousedown', _this.onDragStart)
@@ -62,16 +64,19 @@
             this.sprite.entity = _this;
         }
 
-        return _this;
-    };
-
-    Entity.prototype = {
+        this.draw = function () {
+            this.shape.clear();
+            this.shape.lineStyle(0);
+            this.shape.beginFill(this.type === 1 ? 0xFF0000 : 0x00FF00);
+            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+            this.shape.endFill();
+        };
 
         /**
          * Move around
          * @param {Object} smallWorld
          */
-        move: function (smallWorld) {
+        this.move = function (smallWorld) {
             this.oldPos = this.position;
 
             // Move the items
@@ -95,13 +100,13 @@
 
             this.position.round();
             this.sprite.position.set(this.position.x, this.position.y);
-        },
+        };
 
         /**
          * Do work son
          * @param {Object} smallWorld
          */
-        tick: function (smallWorld) {
+        this.tick = function (smallWorld) {
             this.age += 1;
 
             if (smallWorld.movingEntities) {
@@ -112,76 +117,82 @@
                 this.sprite.getChildAt(0).text = this.gridLocation.x + ':' + this.gridLocation.y;
                 this.sprite.getChildAt(1).text = this.position.x + ':' + this.position.y;
             }
-        },
+        };
 
         /**
          * Perform the start of a drag
          * @param event
          */
-        onDragStart: function (event) {
+        this.onDragStart = function (event) {
             this.data = event.data;
             this.alpha = 0.5;
             this.dragging = true;
-        },
+        };
 
         /**
          * Perform the move of a drag
          */
-        onDragMove: function () {
+        this.onDragMove = function () {
             if (this.dragging) {
                 var newPosition = this.data.getLocalPosition(this.parent);
                 this.position.set(newPosition.x, newPosition.y);
                 this.entity.position.set(newPosition.x, newPosition.y);
                 this.entity.position.round();
             }
-        },
+        };
 
         /**
          * Perform the end of a drag
          */
-        onDragEnd: function () {
+        this.onDragEnd = function () {
             this.alpha = 1;
             this.dragging = false;
             this.entity.position.set(this.position.x, this.position.y);
             this.entity.position.round();
             // set the interaction data to null
             this.data = null;
-        },
+        };
 
         /**
          * Perform the action for mouse down
          */
-        onMouseDown: function () {
+        this.onMouseDown = function () {
             this.isdown = true;
             this.alpha = 1;
-        },
+        };
 
         /**
          * Perform the action for mouse up
          */
-        onMouseUp: function () {
+        this.onMouseUp = function () {
             this.isdown = false;
-        },
+        };
 
         /**
          * Perform the action for mouse over
          */
-        onMouseOver: function () {
+        this.onMouseOver = function () {
             this.isOver = true;
             if (this.isdown) {
                 return;
             }
-        },
+        };
 
         /**
          * Perform the action for mouse out
          */
-        onMouseOut: function () {
+        this.onMouseOut = function () {
             this.isOver = false;
             if (this.isdown) {
                 return;
             }
-        }
+        };
+
+        return this;
+    };
+
+    Entity.prototype = {
+
     }
 
 

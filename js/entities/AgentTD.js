@@ -181,22 +181,22 @@
                 var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
                 if (result) {
                     // The agent derped! Wall collision! Reset their position
-                    this.position = this.oldPos.clone();
+                    this.position = this.oldPos;
                 }
             }
 
             // Handle boundary conditions.. bounce agent
-            if (this.position.x < 1) {
-                this.position.x = 1;
+            if (this.position.x < 2) {
+                this.position.x = 2;
             }
             if (this.position.x > smallWorld.width) {
-                this.position.x = smallWorld.width;
+                this.position.x = smallWorld.width -1;
             }
-            if (this.position.y < 1) {
-                this.position.y = 1;
+            if (this.position.y < 2) {
+                this.position.y = 2;
             }
             if (this.position.y > smallWorld.height) {
-                this.position.y = smallWorld.height;
+                this.position.y = smallWorld.height -1;
             }
 
             this.position.round();

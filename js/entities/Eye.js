@@ -11,26 +11,59 @@
         this.maxRange = 120;
         this.sensedProximity = 120;
         this.sensedType = -1;
-        this.numInputs = 5;
 
         // PIXI graphics
         this.shape = new PIXI.Graphics();
-        this.shape.lineStyle(1, 0x000000);
+
+        /**
+         * Draw the lines for the eyes
+         * @param agent
+         */
+        this.draw = function (agent) {
+            this.shape.clear();
+            switch (this.sensedType) {
+            case -1:
+            case 0:
+                // Is it wall or nothing?
+                this.shape.lineStyle(0.5, 0x000000);
+                break;
+            case 1:
+                // It is noms
+                this.shape.lineStyle(0.5, 0xFF0000);
+                break;
+            case 2:
+                // It is gnar gnar
+                this.shape.lineStyle(0.5, 0x00FF00);
+                break;
+            case 3:
+                // Is it another Agent
+                this.shape.lineStyle(0.5, 0xFAFAFA);
+                break;
+            }
+
+            var aEyeX = agent.position.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
+                aEyeY = agent.position.y + this.sensedProximity * Math.cos(agent.angle + this.angle);
+
+            // Draw the agent's line of sights
+            this.shape.moveTo(agent.position.x, agent.position.y);
+            this.shape.lineTo(aEyeX, aEyeY);
+        };
 
         /**
          * Sense the surroundings
-         * @param agent
+         * @param agentPos
+         * @param agentAngle
          * @param walls
          * @param entities
          */
-        this.sense = function (agent, walls, entities) {
+        this.sense = function (agentPos, agentAngle, walls, entities) {
             this.shape.clear();
-            var X = agent.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
-                Y = agent.position.y + this.maxRange * Math.cos(agent.angle + this.angle),
-                result = Utility.collisionCheck(agent.position, new Vec(X, Y), walls, entities);
+            var X = agentPos.x + this.maxRange * Math.sin(agentAngle + this.angle),
+                Y = agentPos.y + this.maxRange * Math.cos(agentAngle + this.angle),
+                result = Utility.collisionCheck(agentPos, new Vec(X, Y), walls, entities);
             if (result) {
                 // eye collided with an entity
-                this.sensedProximity = result.vecI.distanceTo(agent.position);
+                this.sensedProximity = result.vecI.distanceTo(agentPos);
                 this.sensedType = result.type;
                 if ('vx' in result) {
                     this.vx = result.position.vx;
@@ -45,39 +78,6 @@
                 this.vx = 0;
                 this.vy = 0;
             }
-        };
-
-        /**
-         * Draw the lines for the eyes
-         * @param agent
-         */
-        this.draw = function (agent) {
-            switch (this.sensedType) {
-                // Is it wall or nothing?
-            case -1:
-            case 0:
-                this.shape.lineStyle(0.5, 0x000000);
-                break;
-            // It is noms
-            case 1:
-                this.shape.lineStyle(0.5, 0xFF0000);
-                break;
-            // It is gnar gnar
-            case 2:
-                this.shape.lineStyle(0.5, 0x00FF00);
-                break;
-            // Is it another Agent
-            case 3:
-                this.shape.lineStyle(0.5, 0xFAFAFA);
-                break;
-            }
-
-            var aEyeX = agent.oldPos.x + this.sensedProximity * Math.sin(agent.oldAngle + this.angle),
-                aEyeY = agent.oldPos.y + this.sensedProximity * Math.cos(agent.oldAngle + this.angle);
-
-            // Draw the agent's line of sights
-            this.shape.moveTo(agent.oldPos.x, agent.oldPos.y);
-            this.shape.lineTo(aEyeX, aEyeY);
         };
 
         return this;

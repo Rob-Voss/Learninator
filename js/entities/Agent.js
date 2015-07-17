@@ -35,6 +35,14 @@
         this.digested = [];
         this.direction = 'N';
 
+        this.draw = function () {
+            this.shape.clear();
+            this.shape.lineStyle(0xFFFFFF);
+            this.shape.beginFill(0x000000);
+            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+            this.shape.endFill();
+        };
+
         this.getNumStates = function () {
             return this.numStates;
         };
@@ -63,7 +71,7 @@
         this.tick = function (smallWorld) {
             // Loop through the eyes and check the walls and nearby entities
             for (var e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this, smallWorld.walls, smallWorld.entities);
+                this.eyes[e].sense(this.position, this.angle, smallWorld.walls, smallWorld.entities);
             }
 
             // Let the agents behave in the world based on their input
