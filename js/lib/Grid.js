@@ -7,51 +7,51 @@
      * @param {type} y
      * @returns {Cell}
      */
-    class Cell {
-        constructor(x, y, width, height) {
-            this.x = x;
-            this.y = y;
-            this.visited = false;
-            this.parent = null;
-            this.heuristic = 0;
-            this.population = [];
-            this.populationCounts = {};
+    var Cell = function (x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.visited = false;
+        this.parent = null;
+        this.heuristic = 0;
+        this.population = [];
+        this.populationCounts = {};
 
-            this.coords = {
-                top: {
-                    left: {
-                        x: x * width,
-                        y: y * height
-                    },
-                    right: {
-                        x: x * width + width,
-                        y: y * height
-                    }
+        this.coords = {
+            top: {
+                left: {
+                    x: x * width,
+                    y: y * height
                 },
-                bottom: {
-                    left: {
-                        x: x * width,
-                        y: y * height + height
-                    },
-                    right: {
-                        x: x * width + width,
-                        y: y * height + height
-                    }
+                right: {
+                    x: x * width + width,
+                    y: y * height
                 }
-            };
+            },
+            bottom: {
+                left: {
+                    x: x * width,
+                    y: y * height + height
+                },
+                right: {
+                    x: x * width + width,
+                    y: y * height + height
+                }
+            }
+        };
 
-            return this;
-        }
+        return this;
+    };
 
-        updatePopulation() {
+    Cell.prototype = {
 
-        }
+        updatePopulation: function () {
 
+        },
         /**
          * Calculate the path to the origin
          * @returns {Array}
          */
-        pathToOrigin() {
+        pathToOrigin: function () {
             var path = [this],
                 p = this.parent;
 
@@ -62,13 +62,12 @@
             path.reverse();
 
             return path;
-        }
-
+        },
         /**
          * Score
          * @returns {Number}
          */
-        score() {
+        score: function () {
             var total = 0,
                 p = this.parent;
 
@@ -77,16 +76,15 @@
                 p = p.parent;
             }
             return total;
-        }
-
+        },
         /**
          * Mark it as visited
          * @return {undefined}
          */
-        visit() {
+        visit: function () {
             this.visited = true;
         }
-    }
+    };
 
 
     /**
@@ -94,39 +92,39 @@
      * @param {Object} environment
      * @returns {Grid}
      */
-    class Grid {
-        constructor(environment) {
-            this.canvas = environment.canvas;
-            this.ctx = environment.ctx;
-            this.xCount = environment.xCount || 5;
-            this.yCount = environment.yCount || 5;
-            this.cellWidth = environment.cellWidth || 100;
-            this.cellHeight = environment.cellHeight || 100;
+    var Grid = function (environment) {
+        this.canvas = environment.canvas;
+        this.ctx = environment.ctx;
+        this.xCount = environment.xCount || 5;
+        this.yCount = environment.yCount || 5;
+        this.cellWidth = environment.cellWidth || 100;
+        this.cellHeight = environment.cellHeight || 100;
 
-            this.removedEdges = [];
-            this.cells = [];
-            this.path = [];
+        this.removedEdges = [];
+        this.cells = [];
+        this.path = [];
 
-            for (var i = 0; i < this.xCount; i++) {
-                this.cells.push([]);
-                var row = this.cells[i];
+        for (var i = 0; i < this.xCount; i++) {
+            this.cells.push([]);
+            var row = this.cells[i];
 
-                for (var j = 0; j < this.yCount; j++) {
-                    var c = new Cell(i, j, this.cellWidth, this.cellHeight);
-                    row.push(c);
-                }
+            for (var j = 0; j < this.yCount; j++) {
+                var c = new Cell(i, j, this.cellWidth, this.cellHeight);
+                row.push(c);
             }
-
-            return this;
         }
 
+        return this;
+    };
+
+    Grid.prototype = {
         /**
          * Returns true if there is an edge between c1 and c2
          * @param {Cell} c1
          * @param {Cell} c2
          * @returns {Boolean}
          */
-        areConnected(c1, c2) {
+        areConnected: function (c1, c2) {
             if (!c1 || !c2) {
                 return false;
             }
@@ -140,68 +138,63 @@
             });
 
             return removedEdge === undefined;
-        }
-
+        },
         /**
          * Returns all neighbors of this Cell that are separated by an edge
          * @param {Cell} c
          * @returns {unresolved}
          */
-        connectedNeighbors(c) {
+        connectedNeighbors: function (c) {
             var _this = this;
             return _.select(this.neighbors(c), function (c0) {
                 var con = _this.areConnected(c, c0);
                 return con;
             });
-        }
-
+        },
         /**
          * Returns all neighbors of this Cell that are NOT separated by an edge
          * This means there is a maze path between both cells.
          * @param {Cell} c
          * @returns {unresolved}
          */
-        disconnectedNeighbors(c) {
+        disconnectedNeighbors: function (c) {
             var _this = this;
             return _.reject(this.neighbors(c), function (c0) {
                 var disc = _this.areConnected(c, c0);
                 return disc;
             });
-        }
-
+        },
         /**
          * Get a Cell at a specific point
          * @param {Number} x
          * @param {Number} y
          * @returns {Cell}
          */
-        getCellAt(x, y) {
+        getCellAt: function (x, y) {
             if (x >= this.xCount || y >= this.yCount || x < 0 || y < 0 || !this.cells[x]) {
                 return null;
             }
 
             return this.cells[x][y];
-        }
-
+        },
         /**
          * Get the distance between two Cell
          * @param {Cell} c1
          * @param {Cell} c2
          * @returns {Number}
          */
-        getCellDistance(c1, c2) {
+        getCellDistance: function (c1, c2) {
             var xDist = Math.abs(c1.x - c2.x),
                 yDist = Math.abs(c1.y - c2.y);
 
             return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-        }
-
+        },
         /**
          * Return the location within a grid
          * @param {Object} entity
          * @returns {Object}
          */
-        getGridLocation(entity) {
+        getGridLocation: function (entity) {
             for (var x = 0; x < this.xCount; x++) {
                 var xCell = this.cells[x];
                 for (var y = 0; y < this.yCount; y++) {
@@ -214,14 +207,13 @@
                     }
                 }
             }
-        }
-
+        },
         /**
          * Returns all neighbors of this cell, regardless if they are connected or not.
          * @param {Cell} c
          * @returns {Array}
          */
-        neighbors(c) {
+        neighbors: function (c) {
             var neighbors = [],
                 topCell = this.getCellAt(c.x, c.y - 1),
                 rightCell = this.getCellAt(c.x + 1, c.y),
@@ -242,30 +234,28 @@
             }
 
             return neighbors;
-        }
-
+        },
         /**
          * Remove the edge from between two Cells
          * @param {Cell} c1
          * @param {Cell} c2
          * @returns {undefined}
          */
-        removeEdgeBetween(c1, c2) {
+        removeEdgeBetween: function (c1, c2) {
             this.removedEdges.push([c1, c2]);
-        }
-
+        },
         /**
          * Returns all neighbors of this Cell that aren't separated by an edge
          * @param {Cell} c
          * @returns {unresolved}
          */
-        unvisitedNeighbors(c) {
+        unvisitedNeighbors: function (c) {
             return _.select(this.connectedNeighbors(c), function (c0) {
                 var unv = !c0.visited;
                 return unv;
             });
         }
-    }
+    };
 
     global.Cell = Cell;
     global.Grid = Grid;

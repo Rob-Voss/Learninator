@@ -32,33 +32,37 @@
         /*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
     </style>
 
-    <script src="js/environments/Map.js"></script>
-    <script src="js/environments/Maze.js"></script>
-    <script src="js/environments/World.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 
     <script src="js/lib/Array.js"></script>
+    <script src="js/lib/Graph.js"></script>
     <script src="js/lib/Grid.js"></script>
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
-    <script src="js/lib/graphics/Graph.js"></script>
 
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentOld.js"></script>
+    <!--<script src="js/entities/AgentDQN.js"></script>-->
+    <!--<script src="js/entities/AgentRLTD.js"></script>-->
+    <!--<script src="js/entities/AgentTD.js"></script>-->
+    <!--<script src="js/entities/AgentWorker.js"></script>-->
     <script src="js/entities/Brain.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
-    <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentOld.js"></script>
-    <script src="js/entities/AgentDQN.js"></script>
-    <script src="js/entities/AgentTD.js"></script>
-    <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Player.js"></script>
     <script src="js/entities/Wall.js"></script>
 
+    <script src="js/environments/Map.js"></script>
+    <script src="js/environments/Maze.js"></script>
+    <script src="js/environments/World.js"></script>
+    <script src="js/environments/WaterWorld.js"></script>
+    <script src="js/environments/GridWorld.js"></script>
+
     <script src="js/lib/external/convnet.min.js"></script>
     <script src="js/lib/external/rl.js"></script>
-    <script src="js/lib/external/pixi.min.js"></script>
-    <script src="js/lib/external/underscore.min.js"></script>
-    <script src="js/lib/external/dat.gui.min.js"></script>
 
     <script>
         /**
@@ -71,42 +75,60 @@
          * Create existence!
          */
         function start() {
+            var wCanv = document.createElement('canvas'),
+                rCanv = document.createElement('canvas'),
+                reward = document.getElementById("rewardGraph");
+            var div = document.getElementById('wrap');
+            wCanv.id = "world";
+            rCanv.id = "reward";
+            wCanv.width = 600;
+            wCanv.height = 600;
+            rCanv.width = 300;
+            rCanv.height = 150;
+            wCanv.style.position = "absolute";
+            rCanv.style.position = "absolute";
+            div.appendChild(wCanv);
+            div.appendChild(rCanv);
+
   		    var worldCanvas = document.getElementById("world"),
-                mazeOpts = {
+                maze = new Maze({
                     canvas: worldCanvas,
                     xCount: 4,
                     yCount: 4,
                     closed: true
-                },
-                maze = new Maze(mazeOpts);
+                });
 
-            var agentOpts = {
-                    collision: true,
-                    interactive: false,
+            var agents = [];
+            for (var k = 0; k < 2; k++) {
+//                var agent = new AgentDQN(new Vec(300, 300), maze.grid, {
+//                    brainType: 'DQN',
+//                    numEyes: 30,
+//                    numTypes: 5,
+//                    rewardGraph: reward, {canvas:reward})
+//                });
+                var agent = new AgentOld(new Vec(5, 5), maze.grid, {
                     brainType: 'TD',
                     numEyes: 9,
                     numTypes: 3,
-                    rewardGraph: new Graph(document.getElementById("rewardGraph"), {})
-                },
-//                agent = new AgentOld();
-                agent = new AgentTD(new Vec(5, 5), maze.grid, agentOpts);
-//                agent = new AgentDQN(new Vec(3, 3), maze.grid, agentOpts);
-            agentOpts.rewardGraph.setLegend([agent]);
+                    rewardGraph: new Graph({canvas:reward})
+                });
 
-            var worldOpts = {
-                    canvas: worldCanvas,
-                    agents: [agent],
-                    grid: maze.grid,
-                    walls: maze.walls,
-                    numItems: 40,
-                    cheats: true,
-                    tinting: true,
-                    collision: true,
-                    interactive: false,
-                    movingEntities: true,
-                    raycast: false
-                },
-                world = new World(worldOpts);
+                agents.push(agent);
+            }
+
+            var world = new World({
+                canvas: worldCanvas,
+                grid: maze.grid,
+                walls: maze.walls,
+                numItems: 40,
+                cheats: false,
+                tinting: true,
+                collision: true,
+                interactive: false,
+                movingEntities: false,
+                raycast: false
+            });
+            world.agents = agents;
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
@@ -120,12 +142,13 @@
             wFolder.add(world, 'interactive');
             wFolder.add(world, 'movingEntities');
 
-            aFolder.add(world.agents[0], 'angle').step(0.1).listen();
-            aFolder.add(world.agents[0], 'oldAngle').step(0.1).listen();
-            aFolder.add(world.agents[0], 'rot1').step(0.1).listen();
-            aFolder.add(world.agents[0], 'rot2').step(0.1).listen();
-            aFolder.add(world.agents[0], 'direction').listen();
-            aFolder.add(world.agents[0], 'collision').listen();
+//            aFolder.add(world.agents[0], 'angle').step(0.1).listen();
+//            aFolder.add(world.agents[0], 'oldAngle').step(0.1).listen();
+//            aFolder.add(world.agents[0], 'rot1').step(0.1).listen();
+//            aFolder.add(world.agents[0], 'rot2').step(0.1).listen();
+//            aFolder.add(world.agents[0], 'direction').listen().name('Direction');
+//            aFolder.add(world.agents[0], 'collision').listen().name('Collision');
+
             aFolder.add(world.agents[0].position, 'x').listen().name('Pos X');
             aFolder.add(world.agents[0].position, 'y').listen().name('Pos Y');
             aFolder.add(world.agents[0].position, 'vx').listen().name('Vel X');
@@ -140,7 +163,7 @@
 </head>
 <body onload="start();">
 <div id="wrap">
-    <canvas id="world" width="600" height="600"></canvas>
+    
 </div>
 <p>
     <canvas id="rewardGraph" width="300" height="150"></canvas>

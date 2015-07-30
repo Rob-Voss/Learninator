@@ -3,31 +3,32 @@
 
     /**
      * A maze
-     * @param {Object} environment
+     * @param {Object} opts
      * @returns {undefined}
      */
-    class Maze {
-        constructor(environment) {
-            this.canvas = environment.canvas;
-            this.xCount = environment.xCount;
-            this.yCount = environment.yCount;
-            this.ctx = this.canvas.getContext("2d");
+    var Maze = function (opts) {
+        this.canvas = opts.canvas;
+        this.xCount = opts.xCount;
+        this.yCount = opts.yCount;
+        this.ctx = this.canvas.getContext("2d");
 
-            this.width = this.canvas.width;
-            this.height = this.canvas.height;
-            this.cellWidth = this.width / this.xCount;
-            this.cellHeight = this.height / this.yCount;
-            this.walls = [];
-            this.cellStack = [];
-            this.path = [];
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        this.cellWidth = this.width / this.xCount;
+        this.cellHeight = this.height / this.yCount;
+        this.walls = [];
+        this.cellStack = [];
+        this.path = [];
 
-            this.grid = new Grid(this);
+        this.grid = new Grid(this);
 
-            this.draw(environment.closed);
-            this.solve();
+        this.draw(opts.closed);
 
-            return this;
-        }
+        this.solve();
+
+        return this;
+    };
+    Maze.prototype = {
 
         /**
          * Add a Wall to the Maze
@@ -35,52 +36,47 @@
          * @param {Vec} v2
          * @returns {undefined}
          */
-        addWall(v1, v2) {
+        addWall: function (v1, v2) {
             this.walls.push(new Wall(v1, v2));
-        }
-
+        },
         /**
          * Return the walls
          * @returns {Array}
          */
-        walls() {
+        walls: function () {
             return this.walls;
-        }
-
+        },
         /**
          * Return the Graph's Cells
          * @returns {Array}
          */
-        graphCells() {
+        graphCells: function () {
             return this.grid.cells;
-        }
-
+        },
         /**
          * Draw it
          * @returns {undefined}
          */
-        draw(closed) {
+        draw: function (closed) {
             this.generate();
             this.drawBorders(closed);
             this.drawMaze();
-        }
-
+        },
         /**
          * Draw the borders
          * @returns {undefined}
          */
-        drawBorders(closed) {
+        drawBorders: function (closed) {
             this.addWall(new Vec(closed ? 1 : this.cellWidth, 1), new Vec(this.width - 1, 1));
             this.addWall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1));
             this.addWall(new Vec(this.width - (closed ? 1 : this.cellWidth), this.height - 1), new Vec(1, this.height - 1));
             this.addWall(new Vec(1, this.height - 1), new Vec(1, 1));
-        }
-
+        },
         /**
          * Draw the solution
          * @returns {undefined}
          */
-        drawSolution() {
+        drawSolution: function () {
             var _this = this;
             var path = this.path;
             this.ctx.fillStyle = "rgba(0,165,0,.1)";
@@ -99,13 +95,12 @@
                     _this.ctx.fillRect(x, y, vW, vH);
                 })();
             }
-        }
-
+        },
         /**
          * Draw the Maze
          * @returns {undefined}
          */
-        drawMaze() {
+        drawMaze: function () {
             var grid = this.grid,
                 drawnEdges = [];
 
@@ -162,23 +157,21 @@
                     }
                 }
             }
-        }
-
+        },
         /**
          * Build the maze
          * @returns {undefined}
          */
-        generate() {
+        generate: function () {
             var initialCell = this.grid.getCellAt(0, 0);
             this.recurse(initialCell);
-        }
-
+        },
         /**
          * Recurse through a Cell's neighboors
          * @param {Cell} cell
          * @returns {undefined}
          */
-        recurse(cell) {
+        recurse: function (cell) {
             cell.visit();
             var neighbors = this.grid.unvisitedNeighbors(cell);
             if (neighbors.length > 0) {
@@ -192,13 +185,12 @@
                     this.recurse(waitingCell);
                 }
             }
-        }
-
+        },
         /**
          * Solve the Maze
          * @returns {undefined}
          */
-        solve() {
+        solve: function () {
             var closedSet = [],
             // Top left cell
                 startCell = this.grid.getCellAt(0, 0),
@@ -239,7 +231,7 @@
                 });
             }
         }
-    }
+    };
 
     global.Maze = Maze;
 

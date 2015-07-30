@@ -5,7 +5,7 @@
      * World object contains many agents and walls and food and stuff
      * @constructor
      */
-    var WaterWorld = function (canvas, agents) {
+    var WaterWorld = function (canvas) {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
         this.width = this.canvas.width;
@@ -23,9 +23,6 @@
         this.walls.push(new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height)));
         this.walls.push(new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height)));
         this.walls.push(new Wall(new Vec(0, 0 + this.height), new Vec(0, 0)));
-        this.agents = agents;
-
-        var _this = this;
 
         // PIXI gewdness
         this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
@@ -46,13 +43,16 @@
 
         // Add the agents
         for (var a = 0; a < this.agents.length; a++) {
-            //this.agents[a].shape.position = this.agents[a].position;
+            //var agentNum = new PIXI.Text(a, {font: "10px Arial", color: "0xFFFFFF", align: "center"});
+            //this.agents[a].shape.addChild(agentNum);
             this.stage.addChild(this.agents[a].shape);
             for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 //this.agents[a].eyes[ei].position = this.agents[a].position;
                 this.stage.addChild(this.agents[a].eyes[ei].shape);
             }
         }
+
+        var _this = this;
 
         requestAnimationFrame(animate);
         function animate() {
@@ -61,7 +61,15 @@
             _this.renderer.render(_this.stage);
         }
 
-        this.addEntity = function() {
+        return _this;
+    };
+
+    WaterWorld.prototype = {
+        /**
+         * Add an entity to the world
+         * @returns {*|Entity}
+         */
+        addEntity: function () {
             var type = Utility.randi(1, 3),
                 x = Utility.randi(20, this.width - 20),
                 y = Utility.randi(20, this.height - 20),
@@ -72,9 +80,19 @@
             this.items.push(entity);
 
             return entity;
-        };
-
-        this.draw = function () {
+        },
+        /**
+         * Remove the entity from the world
+         * @param {Object} entity
+         */
+        deleteEntity: function (entity) {
+            this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
+            this.stage.removeChild(entity.sprite);
+        },
+        /**
+         *
+         */
+        draw: function () {
             // draw walls in environment
             for (var i = 0, n = this.walls.length; i < n; i++) {
                 this.walls[i].draw();
@@ -95,9 +113,11 @@
             for (var ii = 0, ni = this.items.length; ii < ni; ii++) {
                 this.items[ii].draw();
             }
-        };
-
-        this.tick = function () {
+        },
+        /**
+         * Tick the environment
+         */
+        tick: function () {
             // tick the environment
             this.clock++;
             var smallWorld = {
@@ -174,14 +194,7 @@
             }
 
             this.draw();
-        };
-
-        return this;
-    };
-
-    WaterWorld.prototype = {
-
-
+        }
     };
 
     global.WaterWorld = WaterWorld;

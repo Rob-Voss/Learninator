@@ -1,124 +1,124 @@
 (function (global) {
     "use strict";
 
-    class World {
-        /**
-         * Make a World
-         * @param {Object} opts
-         * @returns {World}
-         */
-        constructor(opts) {
-            this.canvas = opts.canvas;
-            this.ctx = this.canvas.getContext("2d");
-            this.width = this.canvas.width;
-            this.height = this.canvas.height;
+    /**
+     * Make a World
+     * @param {Object} opts
+     * @returns {World}
+     */
+    var World = function (opts) {
+        this.canvas = opts.canvas;
+        this.ctx = this.canvas.getContext("2d");
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
 
-            // Basics for the environment
-            this.walls = opts.walls || [];
-            this.agents = opts.agents || [];
-            this.grid = opts.grid || new Grid(this.canvas);
-            this.cellWidth = this.width / this.grid.xCount;
-            this.cellHeight = this.height / this.grid.yCount;
-            this.path = this.grid.path;
+        // Basics for the environment
+        this.agents = opts.agents || [];
+        this.entities = [];
+        this.walls = opts.walls || [];
 
-            // World options
-            this.cheats = opts.cheats || false;
-            this.numItems = opts.numItems || 20;
-            this.movingEntities = opts.movingEntities || false;
-            this.collision = opts.collision || false;
-            this.interactive = opts.interactive || false;
-            this.tinting = opts.tinting || true;
+        this.grid = opts.grid || new Grid(this.canvas);
+        this.cellWidth = this.width / this.grid.xCount;
+        this.cellHeight = this.height / this.grid.yCount;
+        this.path = this.grid.path;
 
-            // Raycasting POV stuffz
-            this.raycast = opts.raycast || false;
-            if (this.raycast) {
-                this.map = new Map(this.grid.width);
-                this.map.populate(this.grid);
-            }
+        // World options
+        this.cheats = opts.cheats || false;
+        this.numItems = opts.numItems || 20;
+        this.movingEntities = opts.movingEntities || false;
+        this.collision = opts.collision || false;
+        this.interactive = opts.interactive || false;
+        this.tinting = opts.tinting || true;
 
-            this.fps = 60;
-            this.interval = 1000 / this.fps;
-            this.clock = 0;
-            this.entities = [];
-
-            this.pause = false;
-
-            // PIXI gewdness
-            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
-            this.renderer.backgroundColor = 0xFFFFFF;
-            document.body.appendChild(this.renderer.view);
-            this.stage = new PIXI.Container();
-
-            // Populating the world
-            for (var k = 0; k < this.numItems; k++) {
-                this.addEntity();
-            }
-
-            // Add the walls to the world
-            for (var w = 0; w < this.walls.length; w++) {
-                var wall = this.walls[w];
-                // If the cheats flag is on then show the wall #
-                if (this.cheats) {
-                    var wallText = new PIXI.Text(w, fontOpts = {font: "10px Arial", fill: "#640000", align: "center"}),
-                        wx = wall.v1.x === 599 ? 590 : wall.v1.x + 10,
-                        wy = wall.v1.y === 599 ? 580 : wall.v1.y;
-
-                    wallText.position.set(wx, wy);
-                    wall.shape.addChild(wallText);
-                }
-                this.stage.addChild(wall.shape);
-            }
-
-            // Add the agents
-            for (var a = 0; a < this.agents.length; a++) {
-                this.stage.addChild(this.agents[a].sprite);
-                for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                    this.stage.addChild(this.agents[a].eyes[ei].shape);
-                }
-                this.grid.getGridLocation(this.agents[a]);
-            }
-
-            // Add entities
-            for (var e = 0; e < this.entities.length; e++) {
-                this.stage.addChild(this.entities[e].sprite);
-                this.grid.getGridLocation(this.entities[e]);
-            }
-
-            // If the cheats flag is on, then show the population count for each cell
-            if (this.cheats) {
-                this.populationCounts = new PIXI.Container();
-                for (var x = 0; x < this.grid.cells.length; x++) {
-                    var xCell = this.grid.cells[x];
-                    for (var y = 0; y < this.grid.cells[x].length; y++) {
-                        var yCell = xCell[y],
-                            fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
-                            populationText = new PIXI.Text(yCell.population.length, fontOpts);
-                        populationText.position.set(yCell.coords.bottom.left.x + 100, yCell.coords.bottom.left.y - 100);
-                        yCell.populationCounts = populationText;
-                        this.populationCounts.addChild(populationText);
-                    }
-                }
-                this.stage.addChild(this.populationCounts);
-            }
-
-            var _this = this;
-
-            requestAnimationFrame(animate);
-            function animate() {
-                if (!_this.pause) {
-                    requestAnimationFrame(animate);
-                    _this.tick();
-                    _this.renderer.render(_this.stage);
-                }
-            }
-
-            return this;
+        // Raycasting POV stuffz
+        this.raycast = opts.raycast || false;
+        if (this.raycast) {
+            this.map = new Map(this.grid.width);
+            this.map.populate(this.grid);
         }
 
+        this.fps = 60;
+        this.interval = 1000 / this.fps;
+        this.clock = 0;
+        this.pause = false;
+
+        // PIXI gewdness
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
+        this.renderer.backgroundColor = 0xFFFFFF;
+        document.body.appendChild(this.renderer.view);
+        this.stage = new PIXI.Container();
+
+        // Populating the world
+        for (var k = 0; k < this.numItems; k++) {
+            this.addEntity();
+        }
+
+        // Add the walls to the world
+        for (var w = 0; w < this.walls.length; w++) {
+            var wall = this.walls[w];
+            // If the cheats flag is on then show the wall #
+            if (this.cheats) {
+                var wallText = new PIXI.Text(w, fontOpts = {font: "10px Arial", fill: "#640000", align: "center"}),
+                    wx = wall.v1.x === 599 ? 590 : wall.v1.x + 10,
+                    wy = wall.v1.y === 599 ? 580 : wall.v1.y;
+
+                wallText.position.set(wx, wy);
+                wall.shape.addChild(wallText);
+            }
+            this.stage.addChild(wall.shape);
+        }
+
+        // Add the agents
+        for (var a = 0; a < this.agents.length; a++) {
+            this.stage.addChild(this.agents[a].sprite);
+            for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
+                this.stage.addChild(this.agents[a].eyes[ei].shape);
+            }
+            this.grid.getGridLocation(this.agents[a]);
+        }
+
+        // Add entities
+        for (var e = 0; e < this.entities.length; e++) {
+            this.stage.addChild(this.entities[e].sprite);
+            this.grid.getGridLocation(this.entities[e]);
+        }
+
+        // If the cheats flag is on, then show the population count for each cell
+        if (this.cheats) {
+            this.populationCounts = new PIXI.Container();
+            for (var x = 0; x < this.grid.cells.length; x++) {
+                var xCell = this.grid.cells[x];
+                for (var y = 0; y < this.grid.cells[x].length; y++) {
+                    var yCell = xCell[y],
+                        fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
+                        populationText = new PIXI.Text(yCell.population.length, fontOpts);
+                    populationText.position.set(yCell.coords.bottom.left.x + 100, yCell.coords.bottom.left.y - 100);
+                    yCell.populationCounts = populationText;
+                    this.populationCounts.addChild(populationText);
+                }
+            }
+            this.stage.addChild(this.populationCounts);
+        }
+
+        var _this = this;
+
+        requestAnimationFrame(animate);
+        function animate() {
+            if (!_this.pause) {
+                requestAnimationFrame(animate);
+                _this.tick();
+                _this.renderer.render(_this.stage);
+            }
+        }
+
+        return this;
+    };
+
+    World.prototype = {
         /**
          * Add an entity to the world
          */
-        addEntity() {
+        addEntity: function () {
             var type = Utility.randi(1, 3),
                 x = Utility.randi(5, this.width - 10),
                 y = Utility.randi(5, this.height - 10),
@@ -142,21 +142,19 @@
                 entity.sprite.addChild(posText);
                 entity.sprite.addChild(locText);
             }
-        }
-
+        },
         /**
          * Remove the entity from the world
          * @param {Object} entity
          */
-        deleteEntity(entity) {
+        deleteEntity: function (entity) {
             this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
             this.stage.removeChild(entity.sprite);
-        }
-
+        },
         /**
          * Tick the environment
          */
-        tick() {
+        tick: function () {
             var seconds = (this.clock - this.lastTime) / 1000;
             this.lastTime = this.clock;
             this.clock++;
@@ -234,7 +232,7 @@
                 }
             }
         }
-    }
+    };
 
     global.World = World;
 

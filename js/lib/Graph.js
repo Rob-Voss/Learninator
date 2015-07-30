@@ -3,56 +3,53 @@ var Graph = Graph || {};
 (function (global) {
     "use strict";
 
-    class Graph {
+    /**
+     * Graph
+     * @param {Object} opts
+     * @returns {Graph_L3.Graph}
+     */
+    var Graph = function (opts) {
+        this.canvas = opts.canvas;
+        this.ctx = this.canvas.getContext("2d");
 
-        /**
-         * Graph
-         * @param {HTMLCanvasElement} canvas
-         * @param {Object} opts
-         * @returns {Graph_L3.Graph}
-         */
-        constructor(canvas, opts) {
-            this.canvas = canvas;
-            this.ctx = this.canvas.getContext("2d");
+        this.stepHorizon = opts.stepHorizon || 1000;
+        this.width = opts.width || this.canvas.width;
+        this.height = opts.height || this.canvas.height;
 
-            this.stepHorizon = opts.stepHorizon || 1000;
-            this.width = opts.width || this.canvas.width;
-            this.height = opts.height || this.canvas.height;
-
-            if (typeof opts.maxy !== 'undefined') {
-                this.maxyForced = opts.maxy;
-            }
-            if (typeof opts.miny !== 'undefined') {
-                this.minyForced = opts.miny;
-            }
-
-            this.maxy = -9999;
-            this.miny = 9999;
-
-            this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
-            this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
-
-            var _this = this;
-
-            return _this;
+        if (typeof opts.maxy !== 'undefined') {
+            this.maxyForced = opts.maxy;
+        }
+        if (typeof opts.miny !== 'undefined') {
+            this.minyForced = opts.miny;
         }
 
-        setLegend(legend) {
+        this.maxy = -9999;
+        this.miny = 9999;
+
+        this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
+        this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
+
+        var _this = this;
+
+        return _this;
+    };
+
+    Graph.prototype = {
+        setLegend: function (legend) {
             this.legend = legend;
             this.numLines = this.legend.length;
             this.pts = new Array(this.numLines);
             for (var i = 0; i < this.numLines; i++) {
                 this.pts[i] = [];
             }
-        }
-
+        },
         /**
          * Add a point to the graph
          * @param {Number} step
          * @param {Number} yl
          * @returns {undefined}
          */
-        addPoint(step, idx, yl) {
+        addPoint: function (step, idx, yl) {
             // in ms
             var time = new Date().getTime(),
                 n = yl.length,
@@ -61,7 +58,7 @@ var Graph = Graph || {};
                     time: time,
                     yl: yl
                 };
-            
+
             for (var k = 0; k < n; k++) {
                 var y = yl[k];
                 if (y > this.maxy * 0.99) {
@@ -88,13 +85,12 @@ var Graph = Graph || {};
             if (step > this.stepHorizon) {
                 this.stepHorizon *= 2;
             }
-        }
-
+        },
         /**
          * Draw it
          * @returns {undefined}
          */
-        drawPoints() {
+        drawPoints: function () {
             var pad = 25;
             var H = this.height;
             var W = this.width;
@@ -163,7 +159,7 @@ var Graph = Graph || {};
                 ctx.stroke();
             }
         }
-    }
+    };
 
     global.Graph = Graph;
 

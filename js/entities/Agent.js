@@ -36,11 +36,24 @@
         this.direction = 'N';
 
         this.draw = function () {
+            this.sprite.position.set(this.position.x, this.position.y);
+
             this.shape.clear();
             this.shape.lineStyle(0xFFFFFF);
-            this.shape.beginFill(0x000000);
+            switch (this.type) {
+                case 1:
+                    this.shape.beginFill(0xFF0000);
+                    break;
+                case 2:
+                    this.shape.beginFill(0x00FF00);
+                    break;
+                case 3:
+                    this.shape.beginFill(0x000000);
+                    break;
+            }
             this.shape.drawCircle(this.position.x, this.position.y, this.radius);
             this.shape.endFill();
+            this.shape.clear();
         };
 
         this.getNumStates = function () {
@@ -120,7 +133,11 @@
                 }
             }
         };
+
+        return this;
     };
+
+    Agent.prototype = {};
 
     global.Agent = Agent;
 

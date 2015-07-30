@@ -24,11 +24,11 @@
      * A Brain object does all the magic.
      * Over time it receives some inputs and some rewards and its job is to set
      * the outputs to maximize the expected reward
-     * @param {Object} options
+     * @param {Object} opts
      * @returns {Brain}
      */
-    var Brain = function (options) {
-        var opt = options || {};
+    var Brain = function (opts) {
+        var opt = opts || {};
         // experience replay
         this.experience = [];
 
@@ -70,8 +70,8 @@
             if (this.randomActionDistribution.length !== this.numActions) {
                 console.log('TROUBLE. randomActionDistribution should be same length as numActions.');
             }
-            var a = this.randomActionDistribution;
-            var s = 0.0;
+            var a = this.randomActionDistribution,
+                s = 0.0;
             for (var k = 0; k < a.length; k++) {
                 s += a[k];
             }

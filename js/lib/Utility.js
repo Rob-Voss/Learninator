@@ -4,21 +4,26 @@ var Utility = Utility || {};
     "use strict";
 
     // Random number utilities
-    var return_v = false;
-    var v_val = 0.0;
+    var retV = false,
+        vVal = 0.0;
+
     var gaussRandom = function () {
-        if (return_v) {
-            return_v = false;
-            return v_val;
+        if (retV) {
+            retV = false;
+
+            return vVal;
         }
-        var u = 2 * Math.random() - 1;
-        var v = 2 * Math.random() - 1;
-        var r = u * u + v * v;
-        if (r === 0 || r > 1)
+
+        var u = 2 * Math.random() - 1,
+            v = 2 * Math.random() - 1,
+            r = u * u + v * v,
+            c = Math.sqrt(-2 * Math.log(r) / r);
+        if (r === 0 || r > 1) {
             return gaussRandom();
-        var c = Math.sqrt(-2 * Math.log(r) / r);
-        v_val = v * c; // cache this
-        return_v = true;
+        }
+
+        vVal = v * c; // cache this
+        retV = true;
 
         return u * c;
     };
@@ -292,64 +297,6 @@ var Utility = Utility || {};
         }
         return false;
     };
-
-    /**
-     * Find the position of intersect between a line and a point
-     * @param p1
-     * @param p2
-     * @param p0
-     * @param rad
-     * @returns {*}
-     */
-    //Utility.linePointIntersect = function (p1, p2, p0, rad) {
-    //    var v = new Vec(p2.y - p1.y, -(p2.x - p1.x)); // perpendicular vector
-    //    var d = Math.abs((p2.x - p1.x) * (p1.y - p0.y) - (p1.x - p0.x) * (p2.y - p1.y));
-    //    d = d / v.length();
-    //    if (d > rad) {
-    //        return false;
-    //    }
-    //
-    //    v.normalize();
-    //    v.scale(d);
-    //    var up = p0.add(v);
-    //    var ua;
-    //    if (Math.abs(p2.x - p1.x) > Math.abs(p2.y - p1.y)) {
-    //        ua = (up.x - p1.x) / (p2.x - p1.x);
-    //    } else {
-    //        ua = (up.y - p1.y) / (p2.y - p1.y);
-    //    }
-    //    if (ua > 0.0 && ua < 1.0) {
-    //        return {vecX: ua, vecI: up};
-    //    }
-    //    return false;
-    //};
-
-    /**
-     * Line intersection helper function: line segment (v1,v2) intersect segment (v3,v4)
-     * @param p1
-     * @param p2
-     * @param p3
-     * @param p4
-     * @returns {*}
-     */
-    //Utility.lineIntersect = function (p1, p2, p3, p4) {
-    //    var denom = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
-    //    if (denom === 0.0) {
-    //        return false;
-    //    } // parallel lines
-    //    var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
-    //    var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
-    //    if (ua > 0.0 && ua < 1.0 && ub > 0.0 && ub < 1.0) {
-    //        // up is intersection point
-    //        var up = new Vec(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
-    //        return {
-    //            vecX: ua,
-    //            vecY: ub,
-    //            vecI: up
-    //        };
-    //    }
-    //    return false;
-    //};
 
     /**
      * Find the area of a triangle

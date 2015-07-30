@@ -3,41 +3,59 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>REINFORCEjs: WaterWorld demo</title>
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <title>WaterWorld</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://code.jquery.com/ui/1.11.4/themes/trontastic/jquery-ui.css" rel="stylesheet">
+    <link href="http://code.jquery.com/ui/1.11.4/themes/trontastic/jquery-ui.css" rel="stylesheet">
     <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="css/waterworld.css" rel="stylesheet">
 
-    <!-- jquery and jqueryui -->
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <!-- bootstrap -->
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <!-- d3js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-    <!-- flotjs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <style>
+        /* following three (cascaded) are equivalent to above three meta viewport statements */
+        /* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
+        /* see http://dev.w3.org/csswg/css-device-adapt/ */
+        @-ms-viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
 
-    <!-- rljs -->
+        @viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
+
+        @-ms-viewport {
+            user-zoom: fixed ;
+        }
+
+        @viewport {
+            user-zoom: fixed ;
+        }
+
+        /*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
+
     <script src="js/lib/external/rl.js"></script>
+
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentDQN.js"></script>
+    <script src="js/entities/Entity.js"></script>
+    <script src="js/entities/Eye.js"></script>
+    <script src="js/entities/Wall.js"></script>
+
+    <script src="js/environments/WaterWorld.js"></script>
 
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
-
-    <script src="js/entities/Entity.js"></script>
-    <script src="js/entities/Eye.js"></script>
-    <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentDQN.js"></script>
-    <script src="js/entities/Wall.js"></script>
-
-    <script src="js/lib/external/pixi.js"></script>
-
-    <!-- environment dynamics -->
-    <script src="js/environments/WaterWorld.js"></script>
 
     <script type="text/javascript">
         /**
@@ -48,9 +66,9 @@
 
         // flot stuff
         var nflot = 1000,
-            smoothRewardHistory = [],
-            smoothReward = [null],
-            flott = 0;
+                smoothRewardHistory = [],
+                smoothReward = [null],
+                flott = 0;
 
         var simulation = {
             speed: 2,
@@ -64,7 +82,7 @@
         function tick() {
             for (var a = 0, ac = world.agents.length; a < ac; a++) {
                 var agent = world.agents[a],
-                    rew = world.agents[a].lastReward;
+                        rew = world.agents[a].lastReward;
 
                 if (smoothReward[a] == null) {
                     smoothReward[a] = rew;
@@ -80,14 +98,13 @@
                         smoothRewardHistory[a].push(smoothReward[a]);
                         flott = 0;
                     }
-
                 }
 
                 if (typeof world.agents[a].brain.expi !== 'undefined') {
-                    $("#expi"+a).html(world.agents[a].brain.expi);
+                    $("#expi" + a).html(world.agents[a].brain.expi);
                 }
                 if (typeof world.agents[a].brain.tderror !== 'undefined') {
-                    $("#tde"+a).html(world.agents[a].brain.tderror.toFixed(3));
+                    $("#tde" + a).html(world.agents[a].brain.tderror.toFixed(3));
                 }
             }
         }
@@ -97,7 +114,7 @@
          */
         function initFlot() {
             var container = $("#flotreward"),
-                series = [];
+                    series = [];
             for (var a = 0, ac = world.agents.length; a < ac; a++) {
                 series[a] = {data: getFlotRewards(a), lines: {fill: true}};
             }
@@ -190,7 +207,7 @@
             eval($("#agentspec").val());
 
             var agent = new AgentDQN(new Vec(5, 5), [], {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec}),
-                brain = new RL.DQNAgent(agent, spec);
+                    brain = new RL.DQNAgent(agent, spec);
             world.agents[1].brain = brain;
         }
 
@@ -207,31 +224,61 @@
         }
 
         function start() {
+            var canvas = document.createElement('canvas');
+            div = document.getElementById('wrap');
+            canvas.id = "worldCanvas";
+            canvas.width = 700;
+            canvas.height = 500;
+            canvas.style.position = "absolute";
+            div.appendChild(canvas);
+
             eval($("#agentspec").val());
             var agents = [];
             for (var k = 0; k < 2; k++) {
-                agents.push(new AgentDQN(new Vec(300, 300), {}, {brainType: 'DQN', numEyes: 30, numTypes: 5, spec: spec}));
+                agents.push(new AgentDQN(new Vec(300, 300), {}, {
+                    brainType: 'DQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    spec: spec
+                }));
             }
-            world = new WaterWorld(document.getElementById("worldCanvas"), agents);
+            world = new WaterWorld(document.getElementById("worldCanvas"));
+            world.agents = agents;
 
             for (var k = 0; k < agents.length; k++) {
-                $("#slider"+k).slider({
+                $("#slider" + k).slider({
                     min: 0,
                     max: 1,
                     value: world.agents[k].brain.epsilon,
                     step: 0.01,
                     slide: function (event, ui) {
                         world.agents[k].brain.epsilon = ui.value;
-                        $("#eps"+k).html(ui.value.toFixed(2));
+                        $("#eps" + k).html(ui.value.toFixed(2));
                     }
                 });
-                $("#eps"+k).html(world.agents[k].brain.epsilon.toFixed(2));
-                $("#slider"+k).slider('value', world.agents[k].brain.epsilon);
+                $("#eps" + k).html(world.agents[k].brain.epsilon.toFixed(2));
+                $("#slider" + k).slider('value', world.agents[k].brain.epsilon);
             }
 
             loadAgent();
             initFlot();
             gonormal();
+
+            var wGUI = new dat.GUI(),
+                    wFolder = wGUI.addFolder('World'),
+                    aFolder = wFolder.addFolder('Agents');
+
+            aFolder.add(world.agents[0], 'direction').listen().name('Direction');
+            aFolder.add(world.agents[0].position, 'x').listen().name('Pos X');
+            aFolder.add(world.agents[0].position, 'y').listen().name('Pos Y');
+            aFolder.add(world.agents[0].position, 'vx').listen().name('Vel X');
+            aFolder.add(world.agents[0].position, 'vy').listen().name('Vel Y');
+
+            aFolder.add(world.agents[1], 'direction').listen().name('Direction');
+            aFolder.add(world.agents[1].position, 'x').listen().name('Pos X');
+            aFolder.add(world.agents[1].position, 'y').listen().name('Pos Y');
+            aFolder.add(world.agents[1].position, 'vx').listen().name('Vel X');
+            aFolder.add(world.agents[1].position, 'vy').listen().name('Vel Y');
         }
     </script>
 </head>
@@ -240,36 +287,40 @@
 
 <div id="wrap">
     <div style="text-align:center;">
-        <button class="btn btn-danger" onclick="resetAgent()" style="width:150px;height:50px;margin-bottom:5px;">Reinit agent</button>
-        <button class="btn btn-success" onclick="goveryfast()" style="width:150px;height:50px;margin-bottom:5px;">Go very fast</button>
-        <button class="btn btn-success" onclick="gofast()" style="width:150px;height:50px;margin-bottom:5px;">Go fast</button>
-        <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:50px;margin-bottom:5px;">Go normal</button>
-        <button class="btn btn-success" onclick="goslow()" style="width:150px;height:50px;margin-bottom:5px;">Go slow</button>
+        <button class="btn btn-primary" onclick="loadAgent()" style="width:100px;height:35px;">Load Agent</button>
+        <button class="btn btn-danger" onclick="resetAgent()" style="width:100px;height:35px;">Reinit agent</button>
+        <button class="btn btn-success" onclick="goveryfast()" style="width:100px;height:35px;">Go very fast</button>
+        <button class="btn btn-success" onclick="gofast()" style="width:100px;height:35px;">Go fast</button>
+        <button class="btn btn-success" onclick="gonormal()" style="width:100px;height:35px;">Go normal</button>
+        <button class="btn btn-success" onclick="goslow()" style="width:100px;height:35px;">Go slow</button>
+
+        <div id="flotreward" style="width:800px;height:400px;"></div>
         <canvas id="worldCanvas" width="700" height="500"></canvas>
     </div>
 
-    <div id="brain_info_div"></div>
-
-    <button class="btn btn-primary" onclick="loadAgent()" style="width:200px;height:35px;margin-bottom:5px;margin-right:20px;">Load a Pretrained Agent</button>
-
     <p>
-        Exploration epsilon 0: <span id="eps0">0.15</span>
-        <div id="slider0"></div>
-        <div id="expi0"></div>
-        <div id="tde0"></div>
-    </p>
-    <p>
-        Exploration epsilon 1: <span id="eps1">0.15</span>
-        <div id="slider1"></div>
-        <div id="expi1"></div>
-        <div id="tde1"></div>
-    </p>
+        [Agent 0]<br/>
+        Exploration epsilon:<span id="eps0">0.15</span>
 
-    <br>
-    <div id="flotreward" style="width:800px; height: 400px;"></div>
+    <div id="slider0"></div>
+    Experience:
+    <div id="expi0"></div>
+    TD Error:
+    <div id="tde0"></div>
+
+    <br/>
+    [Agent 1]<br/>
+    Exploration epsilon:<span id="eps1">0.15</span>
+
+    <div id="slider1"></div>
+    Experience:
+    <div id="expi1"></div>
+    TD Error:
+    <div id="tde1"></div>
+    </p>
 
     <textarea id="mysterybox" style="width:100%;display:none;">mystery text box</textarea>
-    <textarea id="agentspec" style="width:100%;height:250px;">
+    <textarea id="agentspec" style="width:100%;height:150px;">
     // agent parameter spec to play with (this gets eval()'d on Agent reset)
     var spec = {}
     spec.update = 'qlearn'; // qlearn | sarsa
@@ -282,7 +333,6 @@
     spec.tderror_clamp = 1.0; // for robustness
     spec.num_hidden_units = 100 // number of neurons in hidden layer
     </textarea>
-
 </div>
 </body>
 </html>

@@ -19,7 +19,6 @@
     };
 
     Vec.prototype = {
-
         /**
          * Adds a vector to this one
          * @param {Vec} v The vector to add to this one

@@ -78,17 +78,17 @@
         };
 
         /**
-         * Agent's chance to move in the world
-         * @param smallWorld
+         * Move around
+         * @param {Object} smallWorld
          */
         this.move = function (smallWorld) {
+            var oldAngle = this.angle,
+                speed = 1;
             // Apply outputs of agents on environment
-            this.oldPos = this.position.clone(); // back up old position
-            var oldAngle = this.angle;
+            this.oldPos = this.position.clone();
             this.oldAngle = oldAngle;
 
             // Execute agent's desired action
-            var speed = 1;
             switch (this.action) {
                 case 0:
                     this.position.vx += -speed;
@@ -141,15 +141,12 @@
             }
 
             this.position.round();
-            //this.sprite.position.set(this.position.x, this.position.y);
-        }
+        };
 
         return this;
     };
 
-    AgentDQN.prototype = {
-
-    }
+    AgentDQN.prototype = {};
 
     global.AgentDQN = AgentDQN;
 

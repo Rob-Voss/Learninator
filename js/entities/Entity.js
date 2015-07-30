@@ -32,8 +32,6 @@
         // Remember the old position and angle
         this.oldPos = this.position;
         this.oldAngle = this.angle;
-
-
         var _this = this;
 
         this.texture = PIXI.Texture.fromImage('img/' + entityTypes[typeId] + '.png');
@@ -65,11 +63,21 @@
         }
 
         this.draw = function () {
+            this.sprite.position.set(this.position.x, this.position.y);
+
             this.shape.clear();
-            this.shape.lineStyle(0);
-            this.shape.beginFill(this.type === 1 ? 0xFF0000 : 0x00FF00);
+            this.shape.lineStyle(0xFFFFFF);
+            switch (this.type) {
+            case 1:
+                this.shape.beginFill(0xFF0000);
+                break;
+            case 2:
+                this.shape.beginFill(0x00FF00);
+                break;
+            }
             this.shape.drawCircle(this.position.x, this.position.y, this.radius);
             this.shape.endFill();
+            this.shape.clear();
         };
 
         /**
@@ -191,10 +199,7 @@
         return this;
     };
 
-    Entity.prototype = {
-
-    }
-
+    Entity.prototype = {};
 
     global.Entity = Entity;
 

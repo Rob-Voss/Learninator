@@ -10,60 +10,49 @@ var Window = Window || {};
      * @param {Number} minSize
      * @returns {undefined}
      */
-    class Window {
-        constructor(size, minSize) {
-            this.v = [];
-            this.size = typeof (size) === 'undefined' ? 100 : size;
-            this.minsize = typeof (minSize) === 'undefined' ? 20 : minSize;
-            this.sum = 0;
+    var Window = function (size, minSize) {
+        this.v = [];
+        this.size = size === undefined ? 100 : size;
+        this.minsize = minSize === undefined ? 20 : minSize;
+        this.sum = 0;
 
-            return this;
-        }
+        return this;
+    };
 
-    ;
+    Window.prototype = {
 
         /**
          * Add a value
          * @param {type} x
          * @returns {undefined}
          */
-        add(x) {
+        add: function (x) {
             this.v.push(x);
             this.sum += x;
             if (this.v.length > this.size) {
                 var xold = this.v.shift();
                 this.sum -= xold;
             }
-        }
-
-    ;
-
+        },
         /**
          * Get the average of all
          * @returns {Window_L3.Window.v.length|Number}
          */
-        getAverage() {
+        getAverage: function () {
             if (this.v.length < this.minsize) {
                 return -1;
-            } else {
-                return this.sum / this.v.length;
             }
-        }
-
-    ;
-
+            return this.sum / this.v.length;
+        },
         /**
          * Reset the Window
          * @returns {undefined}
          */
-        reset() {
+        reset: function () {
             this.v = [];
             this.sum = 0;
         }
-
-    ;
-    }
-    ;
+    };
 
     global.Window = Window;
 
