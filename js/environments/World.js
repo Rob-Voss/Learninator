@@ -1,308 +1,239 @@
-var World = World || {};
-var Interactions = Interactions || {};
-var Utility = Utility || {};
-
 (function (global) {
-	"use strict";
+    "use strict";
 
-	/**
-	 * Make a World
-	 * @param {HTMLCanvasElement} canvas
-	 * @param {Array} walls
-	 * @param {Agent} agents
-	 * @returns {World}
-	 */
-	var World = function (canvas, walls, agents, items) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
-		this.width = canvas.width;
-		this.height = canvas.height;
+    /**
+     * Make a World
+     * @param {Object} opts
+     * @returns {World}
+     */
+    var World = function (opts) {
+        this.canvas = opts.canvas;
+        this.ctx = this.canvas.getContext("2d");
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
 
-		// An attempt to hold all the entities in this world
-		this.entities = [];
+        // Basics for the environment
+        this.agents = opts.agents || [];
+        this.entities = [];
+        this.walls = opts.walls || [];
 
-		this.randf = function(a, b) { return Math.random()*(b-a)+a; };
-		this.randi = function(a, b) { return Math.floor(Math.random()*(b-a)+a); };
+        this.grid = opts.grid || new Grid(this.canvas);
+        this.cellWidth = this.width / this.grid.xCount;
+        this.cellHeight = this.height / this.grid.yCount;
+        this.path = this.grid.path;
 
-		this.clock = 0;
-		this.simSpeed = 2;
-		this.interval = 60;
-		this.numItems = 20;
-		this.entities = [];
+        // World options
+        this.cheats = opts.cheats || false;
+        this.numItems = opts.numItems || 20;
+        this.movingEntities = opts.movingEntities || false;
+        this.collision = opts.collision || false;
+        this.interactive = opts.interactive || false;
+        this.tinting = opts.tinting || true;
 
-		this.populate();
+        // Raycasting POV stuffz
+        this.raycast = opts.raycast || false;
+        if (this.raycast) {
+            this.map = new Map(this.grid.width);
+            this.map.populate(this.grid);
+        }
 
-		this.addWalls(walls || []);
-		this.addAgents(agents || []);
-		this.addEntities(this.walls);
-		this.addEntities(this.agents);
+        this.fps = 60;
+        this.interval = 1000 / this.fps;
+        this.clock = 0;
+        this.pause = false;
 
-		// This complicates things a little but but fixes mouse co-ordinate problems
-		// when there's a border or padding. See getMouse for more detail
-		var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop;
-		if (document.defaultView && document.defaultView.getComputedStyle) {
-			this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingLeft'], 10) || 0;
-			this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['paddingTop'], 10) || 0;
-			this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderLeftWidth'], 10) || 0;
-			this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(this.canvas, null)['borderTopWidth'], 10) || 0;
-		}
+        // PIXI gewdness
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
+        this.renderer.backgroundColor = 0xFFFFFF;
+        document.body.appendChild(this.renderer.view);
+        this.stage = new PIXI.Container();
 
-		// Some pages have fixed-position bars at the top or left of the page
-		// They will mess up mouse coordinates and this fixes that
-		var html = document.body.parentNode;
-		this.htmlTop = html.offsetTop;
-		this.htmlLeft = html.offsetLeft;
+        // Populating the world
+        for (var k = 0; k < this.numItems; k++) {
+            this.addEntity();
+        }
 
-		// When set to false, the canvas will redraw everything
-		this.valid = false;
+        // Add the walls to the world
+        for (var w = 0; w < this.walls.length; w++) {
+            var wall = this.walls[w];
+            // If the cheats flag is on then show the wall #
+            if (this.cheats) {
+                var wallText = new PIXI.Text(w, fontOpts = {font: "10px Arial", fill: "#640000", align: "center"}),
+                    wx = wall.v1.x === 599 ? 590 : wall.v1.x + 10,
+                    wy = wall.v1.y === 599 ? 580 : wall.v1.y;
 
-		// Currently selected object. In the future an array for multiple selection
-		this.selection = null;
+                wallText.position.set(wx, wy);
+                wall.shape.addChild(wallText);
+            }
+            this.stage.addChild(wall.shape);
+        }
 
-		// **** Options! ****
-		this.selectionColor = '#CC0000';
-		this.selectionWidth = 1;
+        // Add the agents
+        for (var a = 0; a < this.agents.length; a++) {
+            this.stage.addChild(this.agents[a].sprite);
+            for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
+                this.stage.addChild(this.agents[a].eyes[ei].shape);
+            }
+            this.grid.getGridLocation(this.agents[a]);
+        }
 
-		this.types = ['Wall', 'Nom', 'Gnar', 'Agent'];
+        // Add entities
+        for (var e = 0; e < this.entities.length; e++) {
+            this.stage.addChild(this.entities[e].sprite);
+            this.grid.getGridLocation(this.entities[e]);
+        }
 
-		this.rewardGraph = {};
+        // If the cheats flag is on, then show the population count for each cell
+        if (this.cheats) {
+            this.populationCounts = new PIXI.Container();
+            for (var x = 0; x < this.grid.cells.length; x++) {
+                var xCell = this.grid.cells[x];
+                for (var y = 0; y < this.grid.cells[x].length; y++) {
+                    var yCell = xCell[y],
+                        fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
+                        populationText = new PIXI.Text(yCell.population.length, fontOpts);
+                    populationText.position.set(yCell.coords.bottom.left.x + 100, yCell.coords.bottom.left.y - 100);
+                    yCell.populationCounts = populationText;
+                    this.populationCounts.addChild(populationText);
+                }
+            }
+            this.stage.addChild(this.populationCounts);
+        }
 
-		var self = this;
+        var _this = this;
 
-		// Apply the Interactions class to the world
-		Interactions.apply(this, [canvas]);
+        requestAnimationFrame(animate);
+        function animate() {
+            if (!_this.pause) {
+                requestAnimationFrame(animate);
+                _this.tick();
+                _this.renderer.render(_this.stage);
+            }
+        }
 
-		setInterval(function () {
-			self.tick();
-			if (!self.valid || self.clock % 50 === 0) {
-				self.draw();
-			}
-		}, self.interval);
-	};
+        return this;
+    };
 
-	/**
-	 * World
-	 * @type World
-	 */
-	World.prototype = {
-		/**
-		 * Add an agent to the world canvas and set it to redraw
-		 * @param {Array} agents
-		 * @returns {undefined}
-		 */
-		addAgents: function (agents) {
-			this.agents = this.agents || agents;
-			this.valid = false;
-		},
-		/**
-		 * Add an item to the world canvas and set it to redraw
-		 * @param {Array} entities
-		 * @returns {undefined}
-		 */
-		addEntities: function (entities) {
-			var oE = this.entities,
-				nE = entities;
-			this.entities = oE.concat(nE);
-			this.valid = false;
-		},
-		/**
-		 * Add an item to the world canvas and set it to redraw
-		 * @param {Item||Agent} entity
-		 * @returns {undefined}
-		 */
-		addEntity: function (entity) {
-			this.entities.push(entity);
-			this.valid = false;
-		},
-		/**
-		 * Randomly create an antity at the Vec
-		 * @param {Vec} v
-		 * @returns {undefined}
-		 */
-		addRandEntity: function(v) {
-			this.addEntity(new Item(this.randi(1, 3), v, 0, 0, this.randi(7, 11)));
-		},
-		/**
-		 * Add walls
-		 * @param {Array} walls
-		 * @returns {undefined}
-		 */
-		addWalls: function (walls) {
-			this.walls = this.walls || walls;
-			this.valid = false;
-		},
-		/**
-		 * Clear the canvas
-		 * @returns {undefined}
-		 */
-		clear: function () {
-			this.ctx.clearRect(0, 0, this.width, this.height);
-		},
-		/**
-		 * A helper function to get check for colliding walls/items
-		 * @param {Vec} v1
-		 * @param {Vec} v2
-		 */
-		collisionCheck: function (v1, v2, checkWalls, checkItems) {
-			var minRes = false;
+    World.prototype = {
+        /**
+         * Add an entity to the world
+         */
+        addEntity: function () {
+            var type = Utility.randi(1, 3),
+                x = Utility.randi(5, this.width - 10),
+                y = Utility.randi(5, this.height - 10),
+                vx = Math.random() * 5 - 2.5,
+                vy = Math.random() * 5 - 2.5,
+                position = new Vec(x, y, vx, vy),
+                entityOpts = {interactive: this.interactive, collision: this.collision},
+                entity = new Entity(type, position, this.grid, entityOpts);
 
-			// Collide with walls
-			if (checkWalls) {
-				for (var i = 0, wall; wall = this.walls[i++];) {
-					minRes = wall.collisionCheck(minRes, v1, v2);
-				}
-			}
+            // Insert the population
+            this.entities.push(entity);
+            this.stage.addChild(entity.sprite);
 
-			// Collide with items
-			if (checkItems) {
-				for (var i = 0, entity; entity = this.entities[i++];) {
-					minRes = entity.collisionCheck(minRes, v1, v2);
-				}
-			}
+            // If cheats are on then show the entities grid location and x,y coords
+            if (this.cheats) {
+                var fontOpts = {font: "10px Arial", fill: "#006400", align: "center"},
+                    locText = new PIXI.Text(entity.gridLocation.x + ':' + entity.gridLocation.y, fontOpts),
+                    posText = new PIXI.Text(entity.position.x + ':' + entity.position.y, fontOpts);
+                posText.position.set(-20, 10);
+                locText.position.set(0, 10);
+                entity.sprite.addChild(posText);
+                entity.sprite.addChild(locText);
+            }
+        },
+        /**
+         * Remove the entity from the world
+         * @param {Object} entity
+         */
+        deleteEntity: function (entity) {
+            this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
+            this.stage.removeChild(entity.sprite);
+        },
+        /**
+         * Tick the environment
+         */
+        tick: function () {
+            var seconds = (this.clock - this.lastTime) / 1000;
+            this.lastTime = this.clock;
+            this.clock++;
 
-			return minRes;
-		},
-		contains: function () {
+            // Tick ALL OF teh items!
+            var smallWorld = {
+                grid: this.grid,
+                walls: this.walls,
+                entities: this.entities,
+                width: this.width - 1,
+                height: this.height - 1,
+                movingEntities: this.movingEntities,
+                cheats: this.cheats
+            };
 
-		},
-		/**
-		 * Draw the world
-		 * @returns {undefined}
-		 */
-		draw: function () {
-			this.clear();
+            // Reset the cell's population's
+            for (var cx = 0; cx < this.grid.cells.length; cx++) {
+                for (var cy = 0; cy < this.grid.cells[cx].length; cy++) {
+                    this.grid.cells[cx][cy].population = [];
+                }
+            }
 
-			// Draw the population of the world
-			for (var i = 0, entity; entity = this.entities[i++];) {
-				entity.draw(this.ctx);
-			}
-		},
-		/**
-		 * Set the speed of the world
-		 * @param {type} speed
-		 * @returns {undefined}
-		 */
-		go: function (speed) {
-			clearInterval(this.interval);
-			this.valid = false;
-			switch(speed) {
-				case 'min':
-					this.interval = setInterval(this.tick(), 200);
-					this.simSpeed = 0;
-					break;
-				case 'mid':
-					this.interval = setInterval(this.tick(), 30);
-					this.simSpeed = 1;
-					break;
-				case 'max':
-					this.interval = setInterval(this.tick(), 0);
-					this.simSpeed = 2;
-					break;
-				case 'max+':
-					this.interval = setInterval(this.tick(), 0);
-					this.valid = true;
-					this.simSpeed = 3;
-					break;
-			}
-		},
-		/**
-		 * Tick the environment
-		 */
-		tick: function () {
-			this.clock++;
+            // Loop through the entities of the world and make them do work son!
+            for (var e = 0; e < this.entities.length; e++) {
+                this.entities[e].tick(smallWorld);
+                this.grid.getGridLocation(this.entities[e]);
+                this.entities[e].gridLocation.population.push(this.entities[e].id);
+            }
 
-			// Fix input to all agents based on environment and process their eyes
-			for (var i = 0, agent; agent = this.agents[i++];) {
-				agent.tick(this);
-			}
+            // Loop through the agents of the world and make them do work!
+            for (var a = 0; a < this.agents.length; a++) {
+                this.agents[a].tick(smallWorld);
+                this.grid.getGridLocation(this.agents[a]);
 
-			// Tick ALL OF teh items!
-			this.valid = false;
-			for (var i = 0, entity; entity = this.entities[i++];) {
-				if (entity.type == 1 || entity.type == 2) {
-					entity.age += 1;
-					// Did the agent find teh noms?
-					for (var j = 0, agent; agent = this.agents[j++];) {
-						entity.cleanUp = agent.eat(this, entity);
-						if (entity.cleanUp) {
-							this.valid = true;
-							break;
-						}
-					}
+                // If we have raycasting turned on then update the sub classes etc
+                if (this.raycast && this.map !== undefined) {
+                    this.map.update(seconds);
+                    this.agents[a].player = new Player(this.agents[a].gridLocation.x, this.agents[a].gridLocation.y, this.agents[a].angle);
+                    this.agents[a].player.update(this.agents[a].angle, this.map, seconds);
+                    this.agents[a].camera.render(this.agents[a].player, this.map);
+                }
 
-					if (entity.age > 5000 && this.clock % 100 === 0 && this.randf(0, 1) < 0.1) {
-						// Keell it, it has been around way too long
-						entity.cleanUp = true;
-						this.valid = true;
-					}
-				}
-			}
+                // Destroy the eaten entities
+                for (var j = 0, dl = this.agents[a].digested.length; j < dl; j++) {
+                    this.deleteEntity(this.agents[a].digested[j]);
+                }
 
-			// Drop old the items
-			if (this.valid) {
-				var nt = [];
-				for (var i = 0, entity; entity = this.entities[i++];) {
-					if (entity.type == 1 || entity.type == 2) {
-						if (!entity.cleanUp)
-							nt.push(entity);
-					} else {
-						nt.push(entity);
-					}
-				}
-				// Swap new list
-				this.entities = nt;
-			}
+                if (this.clock % 100 === 0 && this.agents[a].pts.length !== 0) {
+                    // Throw some points on a Graph
+                    this.agents[a].rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
+                    this.agents[a].rewardGraph.drawPoints();
+                    // Clear them up since we've drawn them
+                    this.agents[a].pts = [];
+                }
+            }
 
-			// If we have less then the number of items allowed throw a random one in
-			if (this.entities.length < this.numItems && this.clock % 10 === 0 && this.randf(0, 1) < 0.25) {
-				var x = this.randf(20, this.width - 20),
-					y = this.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y));
-			}
+            // Loop through and destroy old items
+            for (var en = 0; en < this.entities.length; en++) {
+                if (this.entities[en].age > 10000 || this.entities[en].cleanUp === true) {
+                    this.deleteEntity(this.entities[en]);
+                }
+            }
 
-			// This is where the agents learns based on the feedback of their
-			// actions on the environment
-			var pts = [];
-			for (var i = 0, agent; agent = this.agents[i++];) {
-				agent.backward();
-				pts.push(agent.brain.avgRewardWindow.getAverage());
-			}
+            // If we have less then the number of items allowed throw a random one in
+            if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+                this.addEntity();
+            }
 
-			// Throw some points on a Graph
-			if (this.clock % 200 === 0) {
-				this.rewardGraph.addPoint(this.clock / 200, pts);
-				this.rewardGraph.drawPoints();
-			}
-		},
-		/**
-		 * Handle the right click on the world
-		 * @param {Object} mouse
-		 * @returns {undefined}
-		 */
-		onRightClick: function (mouse) {
+            // If the cheats flag is on then update population
+            if (this.cheats) {
+                for (var x = 0; x < this.grid.cells.length; x++) {
+                    for (var y = 0; y < this.grid.cells[x].length; y++) {
+                        this.grid.cells[x][y].populationCounts.text = this.grid.cells[x][y].population.length;
+                    }
+                }
+            }
+        }
+    };
 
-		},
-		/**
-		 * Handle the double click on the world
-		 * @param {Object} mouse
-		 * @returns {undefined}
-		 */
-		onDoubleClick: function (mouse) {
-			this.addRandEntity(new Vec(mouse.pos.x, mouse.pos.y));
-		},
-		/**
-		 * Populate the World with Items
-		 * @returns {undefined}
-		 */
-		populate: function () {
-			for (var k = 0; k < this.numItems; k++) {
-				var x = this.randf(20, this.width - 20),
-					y = this.randf(20, this.height - 20);
-				this.addRandEntity(new Vec(x, y));
-			}
-		}
-	};
-
-	global.World = World;
+    global.World = World;
 
 }(this));

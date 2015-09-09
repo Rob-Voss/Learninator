@@ -1,0 +1,15 @@
+
+h2 {
+    text-align: center;
+}
+
+body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+canvas {
+    border: 1px solid white;
+}
