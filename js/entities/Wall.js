@@ -7,17 +7,13 @@
      * @param {Vec} v2
      * @returns {Wall}
      */
-    var Wall = function (v1, v2) {
+    var Wall = function (v1, v2, opts) {
         this.v1 = v1;
         this.v2 = v2;
         this.type = 0;
 
         this.shape = new PIXI.Graphics();
-
-        this.shape.lineStyle(1, 0x000000);
-        this.shape.moveTo(this.v1.x, this.v1.y);
-        this.shape.lineTo(this.v2.x, this.v2.y);
-        this.shape.endFill();
+        this.draw();
 
         function Bitmap(src, width, height) {
             this.image = new Image();
@@ -28,15 +24,19 @@
 
         this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
 
-        this.draw = function () {
-            this.shape.lineStyle(1, 0x000000);
-            this.shape.beginFill(0x000000);
-            this.shape.moveTo(this.v1.x, this.v1.y);
-            this.shape.lineTo(this.v2.x, this.v2.y);
-            this.shape.endFill();
-        };
-
         return this;
+    };
+
+    /**
+     * Draws it
+     */
+    Wall.prototype.draw = function () {
+        this.shape.clear();
+        this.shape.lineStyle(1, 0x000000);
+        this.shape.beginFill(0x000000);
+        this.shape.moveTo(this.v1.x, this.v1.y);
+        this.shape.lineTo(this.v2.x, this.v2.y);
+        this.shape.endFill();
     };
 
     global.Wall = Wall;

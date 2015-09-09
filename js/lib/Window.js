@@ -20,7 +20,6 @@ var Window = Window || {};
     };
 
     Window.prototype = {
-
         /**
          * Add a value
          * @param {type} x

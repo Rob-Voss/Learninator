@@ -3,23 +3,26 @@
 
     /**
      * Initialize the Agent
-     * @param position
-     * @param grid
-     * @param opts
+     *
+     * @param {Vec} position
+     * @param {Object} env
+     * @param {Object} opts
      * @returns {Agent}
      */
-    var Agent = function (position, grid, opts) {
-        Entity.call(this, 3, position, grid, opts);
+    var Agent = function (position, env, opts) {
+        Entity.call(this, 3, position, env, opts);
 
         this.brainType = opts.brainType;
         this.rewardGraph = opts.rewardGraph;
-        this.camera = opts.display;
 
         // The number of item types the Agent's eyes can see
-        this.numTypes = opts.numTypes || 3;
+        this.numTypes = typeof(opts.numTypes) === 'number' ? opts.numTypes : 3;
 
         // The number of Agent's eyes
-        this.numEyes = opts.numEyes || 9;
+        this.numEyes = typeof(opts.numEyes) === 'number' ? opts.numEyes :  9;
+
+        // The number of Agent's eyes, each one sees the number of knownTypes
+        this.numInputs = this.numEyes * this.numTypes;
 
         // The Agent's eyes
         this.eyes = [];
@@ -35,109 +38,139 @@
         this.digested = [];
         this.direction = 'N';
 
-        this.draw = function () {
-            this.sprite.position.set(this.position.x, this.position.y);
+        var _this = this;
+        this.brain = {};
 
-            this.shape.clear();
-            this.shape.lineStyle(0xFFFFFF);
-            switch (this.type) {
-                case 1:
-                    this.shape.beginFill(0xFF0000);
-                    break;
-                case 2:
-                    this.shape.beginFill(0x00FF00);
-                    break;
-                case 3:
-                    this.shape.beginFill(0x000000);
-                    break;
-            }
-            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
-            this.shape.endFill();
-            this.shape.clear();
-        };
-
-        this.getNumStates = function () {
-            return this.numStates;
-        };
-
-        this.getMaxNumActions = function () {
-            return this.numActions;
-        };
-
-        /**
-         * Load a pre-trained agent
-         * @param file
-         */
-        this.load = function (file) {
-            var _Brain = this.brain;
-            Utility.loadJSON(file, function (data) {
-                _Brain.fromJSON(JSON.parse(data));
-                _Brain.epsilon = 0.05;
-                _Brain.alpha = 0;
-            });
-        };
-
-        /**
-         * Tick the agent
-         * @param {Object} smallWorld
-         */
-        this.tick = function (smallWorld) {
-            // Loop through the eyes and check the walls and nearby entities
-            for (var e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this.position, this.angle, smallWorld.walls, smallWorld.entities);
-            }
-
-            // Let the agents behave in the world based on their input
-            this.act();
-
-            // Move the agent
-            this.move(smallWorld);
-
-            // Loop through the eyes and draw them
-            for (var ei = 0; ei < this.numEyes; ei++) {
-                this.eyes[ei].draw(this);
-            }
-
-            // Check for food
-            // Gather up all the entities nearby based on cell population
-            this.digested = [];
-            var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y);
-            for (var j = 0; j < cell.population.length; j++) {
-                var entity = smallWorld.entities.find(Utility.getId, cell.population[j]);
-                if (entity) {
-                    var dist = this.position.distanceTo(entity.position);
-                    if (dist < entity.radius + this.radius) {
-                        var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls);
-                        if (!result) {
-                            this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
-                            this.digested.push(entity);
-                            entity.cleanup = true;
-                        }
+        this.brain.onmessage = function (e) {
+            var data = e.data;
+            switch (data.cmd) {
+                case 'init':
+                    if (data.msg === 'load') {
+                        _this.loadMemory();
                     }
-                }
-            }
+                    if (data.msg === 'complete') {
 
-            // This is where the agents learns based on the feedback of their actions on the environment
-            this.learn();
+                    }
+                    break;
+                case 'forward':
+                    if (data.msg === 'complete') {
+                        // Get action from brain
+                        _this.actionIndex = data.input;
 
-            if (this.digested.length > 0) {
-                switch (this.type) {
-                    case 'TD':
-                        this.pts.push(this.brain.averageRewardWindow.getAverage().toFixed(1));
-                        break;
-                    case 'DQN':
-                        if (this.digested.length > 0) {
-                            this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
-                        }
-                        break;
-                }
+                        //this.actionIndex = this.brain.forward(inputArray);
+                        var action = _this.actions[_this.actionIndex];
+
+                        // Demultiplex into behavior variables
+                        _this.rot1 = action[0] * 1;
+                        _this.rot2 = action[1] * 1;
+                    }
+                    break;
+                case 'backward':
+                    if (data.msg === 'complete') {
+
+                    }
+                    break;
+                case 'getAverage':
+                    if (data.msg === 'complete') {
+                        _this.pts.push(data.input);
+                    }
+                    break;
+                default:
+                //console.log('Unknown command: ' + data.msg);
             }
         };
 
         return this;
     };
 
-    Agent.prototype = {};
+    Agent.prototype = Object.create(Entity.prototype);
+    Agent.prototype.constructor = Entity;
+
+    Agent.prototype.getNumStates = function () {
+        return this.numStates;
+    };
+
+    Agent.prototype.getMaxNumActions = function () {
+        return this.numActions;
+    };
+
+    /**
+     * Load a pre-trained agent
+     * @param file
+     */
+    Agent.prototype.load = function (file) {
+        var _Brain = this.brain;
+        Utility.loadJSON(file, function (data) {
+            _Brain.fromJSON(JSON.parse(data));
+            _Brain.epsilon = 0.05;
+            _Brain.alpha = 0;
+        });
+
+        return this;
+    };
+
+    /**
+     * Tick the agent
+     * @param {Object} smallWorld
+     */
+    Agent.prototype.tick = function (smallWorld) {
+        // Loop through the eyes and check the walls and nearby entities
+        for (var e = 0; e < this.numEyes; e++) {
+            this.eyes[e].sense(this.position, this.angle, smallWorld.walls, nearByEntities);
+        }
+
+        // Let the agents behave in the world based on their input
+        this.act(smallWorld);
+
+        this.move(smallWorld);
+
+        // Check for food
+        // Gather up all the entities nearby based on cell population
+        this.digested = [];
+        if (smallWorld.grid === undefined) {
+
+        } else {
+            var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y),
+                nearByEntities = [];
+            for (let j = 0; j < cell.population.length; j++) {
+                var entities = smallWorld.entities,
+                    entity = entities.find(Utility.getId, cell.population[j]);
+                if (entity) {
+                    nearByEntities.push(entity);
+                }
+            }
+
+            for (let j = 0; j < nearByEntities.length; j++) {
+                var dist = this.position.distanceTo(nearByEntities[j].position);
+                if (dist < nearByEntities[j].radius + this.radius) {
+                    var result = Utility.collisionCheck(this.position, nearByEntities[j].position, smallWorld.walls);
+                    if (!result) {
+                        this.digestionSignal += (nearByEntities[j].type === 1) ? this.carrot : this.stick;
+                        this.digested.push(nearByEntities[j]);
+                        nearByEntities[j].cleanup = true;
+                    }
+                }
+            }
+        }
+
+        // This is where the agents learns based on the feedback of their actions on the environment
+        this.learn();
+
+        if (this.digested.length > 0) {
+            switch (this.type) {
+                case 'TD':
+                    this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
+                    break;
+                case 'DQN':
+                    if (this.digested.length > 0) {
+                        this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
+                    }
+                    break;
+            }
+        }
+
+        return this;
+    };
 
     global.Agent = Agent;
 

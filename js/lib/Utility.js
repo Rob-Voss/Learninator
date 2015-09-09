@@ -60,6 +60,7 @@ var Utility = Utility || {};
 
     /**
      * Find an object in the array via id attribute
+     *
      * @param {Array} ar
      * @param {String} id
      * @returns {undefined}
@@ -72,6 +73,7 @@ var Utility = Utility || {};
 
     /**
      * Get the object with the matching id property
+     *
      * @param element
      * @param index
      * @param array

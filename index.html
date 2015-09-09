@@ -32,147 +32,359 @@
         /*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
     </style>
 
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-
     <script src="js/lib/Array.js"></script>
     <script src="js/lib/Graph.js"></script>
     <script src="js/lib/Grid.js"></script>
+    <script src="js/lib/Maze.js"></script>
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
 
-    <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentOld.js"></script>
-    <!--<script src="js/entities/AgentDQN.js"></script>-->
-    <!--<script src="js/entities/AgentRLTD.js"></script>-->
-    <!--<script src="js/entities/AgentTD.js"></script>-->
-    <!--<script src="js/entities/AgentWorker.js"></script>-->
     <script src="js/entities/Brain.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
-    <script src="js/entities/Player.js"></script>
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentRLTD.js"></script>
+    <script src="js/entities/AgentRLDQN.js"></script>
+    <script src="js/entities/AgentSGDT.js"></script>
+    <script src="js/entities/SGDTBrain.js"></script>
     <script src="js/entities/Wall.js"></script>
 
-    <script src="js/environments/Map.js"></script>
-    <script src="js/environments/Maze.js"></script>
     <script src="js/environments/World.js"></script>
-    <script src="js/environments/WaterWorld.js"></script>
     <script src="js/environments/GridWorld.js"></script>
+    <script src="js/environments/MazeWorld.js"></script>
+    <script src="js/environments/WaterWorld.js"></script>
 
-    <script src="js/lib/external/convnet.min.js"></script>
+    <script src="js/lib/external/convnet.js"></script>
     <script src="js/lib/external/rl.js"></script>
+    <script src="js/lib/external/ga.js"></script>
 
     <script>
         /**
          * Global world object
          * @type {World}
          */
-        var world = world || {};
+        var world = world || {},
+        // flot stuff
+            nflot = 1000,
+            smoothRewardHistory = [],
+            smoothReward = [],
+            flott = [];
+
+        /**
+         *
+         */
+        function solve() {
+            world.redraw = true;
+            world.maze.solve();
+            world.maze.drawSolution();
+            world.pause = true;
+        }
+
+        /**
+         *
+         */
+        function initFlot() {
+            var container = $("#flotreward"),
+                series = [];
+            for (var a = 0, ac = world.agents.length; a < ac; a++) {
+                flott[a] = 0;
+                series[a] = {
+                    data: getFlotRewards(a),
+                    lines: {fill: true},
+                    color: a,
+                    label: 'Agent ' + a
+                };
+            }
+
+            var plot = $.plot(container, series, {
+                grid: {
+                    borderWidth: 1,
+                    minBorderMargin: 20,
+                    labelMargin: 10,
+                    backgroundColor: {
+                        colors: ["#FFF", "#e4f4f4"]
+                    },
+                    margin: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                    }
+                },
+                xaxis: {
+                    min: 0,
+                    max: nflot
+                },
+                yaxis: {
+                    min: -0.1,
+                    max: 10
+                }
+            });
+
+            setInterval(function () {
+                tick();
+                for (var an = 0, al = world.agents.length; an < al; an++) {
+                    series[an].data = getFlotRewards(an);
+                }
+                plot.setData(series);
+                plot.draw();
+            }, 100);
+        }
+
+        /**
+         *
+         * @param n
+         * @returns {Array}
+         */
+        function getFlotRewards(n) {
+            // zip rewards into flot data
+            var res = [];
+            if (smoothRewardHistory[n] == null) {
+                smoothRewardHistory[n] = [];
+            }
+            for (var i = 0, hl = smoothRewardHistory[n].length; i < hl; i++) {
+                res.push([i, smoothRewardHistory[n][i]]);
+            }
+            return res;
+        }
+
+        /**
+         *
+         */
+        function tick() {
+            for (var a = 0, ac = world.agents.length; a<ac;a++) {
+                var agent = world.agents[a],
+                    rew = world.agents[a].lastReward;
+
+                if (smoothReward[a] == null) {
+                    smoothReward[a] = rew;
+                }
+                smoothReward[a] = smoothReward[a] * 0.999 + rew * 0.001;
+                flott[a] += 1;
+                if (flott[a] === 50) {
+                    for (var i = 0, hl = smoothRewardHistory[a].length; i <= hl; i++) {
+                        // record smooth reward
+                        if (hl >= nflot) {
+                            smoothRewardHistory[a] = smoothRewardHistory[a].slice(1);
+                        }
+                        smoothRewardHistory[a].push(smoothReward[a]);
+                        flott[a] = 0;
+                    }
+
+                }
+            }
+        }
+
+        /**
+         *
+         */
+        function saveAgent(id) {
+            var brain = world.agents[id].brain;
+            $('#mysterybox' + id).fadeIn();
+            $('#mysterybox' + id).val(JSON.stringify(brain.toJSON()));
+        }
+
+        // Start a grid world
+        var gridWorld = function () {
+            var agentOpts = {
+                    brainType: 'RLDT',
+                    numEyes: 0,
+                    numTypes: 0,
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    collision: false,
+                    interactive: false,
+                    useSprite: false,
+                    movingEntities: false
+                },
+                entityOpts = {
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    collision: false,
+                    interactive: false,
+                    useSprite: false,
+                    movingEntities: false
+                },
+                worldOpts = {
+                    canvas: document.getElementById("world"),
+                    xCount: 10,
+                    yCount: 10,
+                    closed: false,
+                    numItems: 0,
+                    cheats: false
+                };
+            world = new GridWorld(worldOpts, entityOpts, agentOpts);
+        };
+
+        // Start a maze world
+        var mazeWorld = function () {
+            var agentOpts = {
+                    brainType: 'SGDT',
+                    numEyes: 9,
+                    numTypes: 3,
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    cheats: false,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    movingEntities: false
+                },
+                entityOpts = {
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    cheats: false,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    movingEntities: false
+                },
+                worldOpts = {
+                    canvas: document.getElementById("world"),
+                    xCount: 10,
+                    yCount: 10,
+                    closed: false,
+                    numItems: 40,
+                    cheats: false
+                };
+            world = new MazeWorld(worldOpts, entityOpts, agentOpts);
+        };
+
+        // Start a water world
+        var waterWorld = function () {
+            var agentOpts = {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    canvas: document.getElementById("rewardGraph"),
+                    collision: true,
+                    interactive: false,
+                    useSprite: true,
+                    cheats: false
+                },
+                entityOpts = {
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: true,
+                    movingEntities: true,
+                    cheats: false
+                },
+                worldOpts = {
+                    canvas: document.getElementById("world"),
+                    xCount: 10,
+                    yCount: 10,
+                    closed: false,
+                    numItems: 40,
+                    cheats: false
+                };
+            world = new WaterWorld(worldOpts, entityOpts, agentOpts);
+        };
 
         /**
          * Create existence!
          */
         function start() {
-            var wCanv = document.createElement('canvas'),
-                rCanv = document.createElement('canvas'),
-                reward = document.getElementById("rewardGraph");
-            var div = document.getElementById('wrap');
-            wCanv.id = "world";
-            rCanv.id = "reward";
-            wCanv.width = 600;
-            wCanv.height = 600;
-            rCanv.width = 300;
-            rCanv.height = 150;
-            wCanv.style.position = "absolute";
-            rCanv.style.position = "absolute";
-            div.appendChild(wCanv);
-            div.appendChild(rCanv);
+            waterWorld();
 
-  		    var worldCanvas = document.getElementById("world"),
-                maze = new Maze({
-                    canvas: worldCanvas,
-                    xCount: 4,
-                    yCount: 4,
-                    closed: true
-                });
-
-            var agents = [];
-            for (var k = 0; k < 2; k++) {
-//                var agent = new AgentDQN(new Vec(300, 300), maze.grid, {
-//                    brainType: 'DQN',
-//                    numEyes: 30,
-//                    numTypes: 5,
-//                    rewardGraph: reward, {canvas:reward})
-//                });
-                var agent = new AgentOld(new Vec(5, 5), maze.grid, {
-                    brainType: 'TD',
-                    numEyes: 9,
-                    numTypes: 3,
-                    rewardGraph: new Graph({canvas:reward})
-                });
-
-                agents.push(agent);
-            }
-
-            var world = new World({
-                canvas: worldCanvas,
-                grid: maze.grid,
-                walls: maze.walls,
-                numItems: 40,
-                cheats: false,
-                tinting: true,
-                collision: true,
-                interactive: false,
-                movingEntities: false,
-                raycast: false
-            });
-            world.agents = agents;
+            initFlot();
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
                 aFolder = wFolder.addFolder('Agents');
 
-            wFolder.add(world, 'numItems');
-            wFolder.add(world, 'pause');
-            wFolder.add(world, 'cheats');
-            wFolder.add(world, 'raycast');
-            wFolder.add(world, 'tinting');
-            wFolder.add(world, 'interactive');
-            wFolder.add(world, 'movingEntities');
+            wFolder.add(world, 'pause').name('Pause');
+            wFolder.add(world, 'cheats').name('Cheats');
+            wFolder.add(world, 'interactive').name('Interactive Entities');
+            wFolder.add(world, 'numItems').name('# Entities');
+            wFolder.add(world, 'movingEntities').name('Moving Entities');
 
-//            aFolder.add(world.agents[0], 'angle').step(0.1).listen();
-//            aFolder.add(world.agents[0], 'oldAngle').step(0.1).listen();
-//            aFolder.add(world.agents[0], 'rot1').step(0.1).listen();
-//            aFolder.add(world.agents[0], 'rot2').step(0.1).listen();
-//            aFolder.add(world.agents[0], 'direction').listen().name('Direction');
-//            aFolder.add(world.agents[0], 'collision').listen().name('Collision');
+            for (var a = 0; a < world.agents.length; a++) {
+                var agent = world.agents[a],
+                    folder = aFolder.addFolder('Agent ' + a);
 
-            aFolder.add(world.agents[0].position, 'x').listen().name('Pos X');
-            aFolder.add(world.agents[0].position, 'y').listen().name('Pos Y');
-            aFolder.add(world.agents[0].position, 'vx').listen().name('Vel X');
-            aFolder.add(world.agents[0].position, 'vy').listen().name('Vel Y');
-            aFolder.add(world.agents[0].position, 'ax').listen().name('Acc X');
-            aFolder.add(world.agents[0].position, 'ay').listen().name('Acc Y');
-            aFolder.add(world.agents[0].gridLocation, 'x').listen().name('Grid X');
-            aFolder.add(world.agents[0].gridLocation, 'y').listen().name('Grid Y');
+                folder.add(agent, 'direction').listen().name('Direction');
+                folder.add(agent, 'collision').listen().name('Collision');
+                folder.add(agent, 'cheats').listen().name('Cheats');
+                folder.add(agent.brain, 'epsilon').step(0.01).min(0).max(1).listen().name('Epsilon');
+
+                folder.add(agent.position, 'x').listen().name('Pos X');
+                folder.add(agent.position, 'y').listen().name('Pos Y');
+                folder.add(agent.position, 'vx').listen().name('Vel X');
+                folder.add(agent.position, 'vy').listen().name('Vel Y');
+                folder.add(agent.position, 'ax').listen().name('Acc X');
+                folder.add(agent.position, 'ay').listen().name('Acc Y');
+                folder.add(agent.gridLocation, 'x').listen().name('Grid X');
+                folder.add(agent.gridLocation, 'y').listen().name('Grid Y');
+            }
         }
 
     </script>
 </head>
 <body onload="start();">
+<div id="brain_info_div"></div>
 <div id="wrap">
-    
+    <!--<button class="btn btn-primary" onclick="saveAgent(0)">-->
+        <!--Save Agent 0-->
+    <!--</button>-->
+    <!--<button class="btn btn-primary" onclick="loadAgent(0)">-->
+        <!--Load Agent 0-->
+    <!--</button>-->
+    <!--<button class="btn btn-primary" onclick="saveAgent(1)">-->
+        <!--Save Agent 1-->
+    <!--</button>-->
+    <!--<button class="btn btn-primary" onclick="loadAgent(1)">-->
+        <!--Load Agent 1-->
+    <!--</button>-->
+    <button class="btn btn-primary" onclick="world.pause=false">
+        Start
+    </button>
+    <button class="btn btn-primary" onclick="world.pause=true;">
+        Stop
+    </button>
+    <button class="btn btn-primary" onclick="solve()">
+        Solve
+    </button>
+
+    <canvas id="world" width="600" height="600"></canvas>
+
+    <button class="btn btn-danger" onclick="gridWorld()">
+        Grid World
+    </button>
+    <button class="btn btn-danger" onclick="mazeWorld()">
+        Maze World
+    </button>
+    <button class="btn btn-danger" onclick="waterWorld()">
+        Water World
+    </button>
 </div>
-<p>
-    <canvas id="rewardGraph" width="300" height="150"></canvas>
-</p>
-<!--
-<p>
-    <canvas id="displayNormal" width="240" height="160"></canvas>
-    <canvas id="displayWorker" width="240" height="160"></canvas>
-</p>
--->
+<br>
+
+<div id="flotreward" style="width:400px; height: 200px;"></div>
+<br>
+
+
+<textarea id="mysterybox0" style="width:100%;display:none;">mystery text box</textarea>
+<textarea id="mysterybox1" style="width:100%;display:none;">mystery text box</textarea>
+
+
+<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+
 </body>
 </html>

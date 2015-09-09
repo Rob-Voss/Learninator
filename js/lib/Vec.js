@@ -3,17 +3,29 @@
 
     /**
      * A 2D vector utility
+     *
      * @param {Number} x
      * @param {Number} y
+     * @param {Number} z
+     * @param {Number} vx
+     * @param {Number} vy
+     * @param {Number} vz
+     * @param {Number} ax
+     * @param {Number} ay
+     * @param {Number} az
      * @returns {Vec}
+     * @constructor
      */
-    var Vec = function (x, y, vx, vy, ax, ay) {
+    var Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {
         this.x = x || 0;
         this.y = y || 0;
+        this.z = z || 0;
         this.vx = vx || 0;
         this.vy = vy || 0;
+        this.vz = vz || 0;
         this.ax = ax || 0;
         this.ay = ay || 0;
+        this.az = az || 0;
 
         return this;
     };
@@ -21,6 +33,7 @@
     Vec.prototype = {
         /**
          * Adds a vector to this one
+         *
          * @param {Vec} v The vector to add to this one
          * @return {Vec} Returns itself.
          */
@@ -33,6 +46,7 @@
 
         /**
          * Adds two vectors to each other and stores the result in this vector
+         *
          * @param {Vec} a
          * @param {Vec} b
          * @return {Vec} Returns itself.
@@ -47,6 +61,7 @@
 
         /**
          * Adds a scalar value to the x and y components of this vector
+         *
          * @param {Number} s The scalar value to add
          * @return {Vec} Returns itself.
          */
@@ -59,22 +74,26 @@
 
         /**
          * This will add the velocity x,y to the position x,y
+         *
          * @returns {Vec}
          */
         advance: function () {
             this.x += this.vx;
             this.y += this.vy;
+            this.z += this.vz;
 
             return this;
         },
 
         /**
          * Ceils the vector components
+         *
          * @return {Vec} Returns itself.
          */
         ceil: function () {
             this.x = Math.ceil(this.x);
             this.y = Math.ceil(this.y);
+            this.z = Math.ceil(this.z);
 
             return this;
         },
@@ -109,7 +128,7 @@
          * @return {Vec} Returns a new Vector with the same values
          */
         clone: function () {
-            return new Vec(this.x, this.y, this.vx, this.vy, this.ax, this.ay);
+            return new Vec(this.x, this.y, this.z, this.vx, this.vy, this.vz, this.ax, this.ay, this.az);
         },
 
         /**
@@ -132,7 +151,8 @@
          */
         distanceToSquared: function (v) {
             var dx = this.x - v.x,
-                dy = this.y - v.y;
+                dy = this.y - v.y,
+                dz = this.z - v.z;
 
             return dx * dx + dy * dy;
         },
@@ -155,9 +175,11 @@
             if (s !== 0) {
                 this.x /= s;
                 this.y /= s;
+                this.z /= s;
             } else {
                 this.x = 0;
                 this.y = 0;
+                this.z = 0;
             }
 
             return this;
@@ -188,6 +210,7 @@
         floor: function () {
             this.x = Math.floor(this.x);
             this.y = Math.floor(this.y);
+            this.z = Math.floor(this.z);
 
             return this;
         },
@@ -201,6 +224,7 @@
         lerp: function (v, alpha) {
             this.x += (v.x - this.x) * alpha;
             this.y += (v.y - this.y) * alpha;
+            this.z += (v.z - this.z) * alpha;
 
             return this;
         },
@@ -464,7 +488,7 @@
         toArray: function () {
             return [this.x, this.y, this.vx, this.vy, this.ax, this.ay];
         }
-    }
+    };
 
     global.Vec = Vec;
 

@@ -1,8 +1,3 @@
-var convnetjs = convnetjs || {};
-var Utility = Utility || {};
-var Window = Window || {};
-var Brain = Brain || {};
-
 (function (global) {
     "use strict";
 
@@ -32,37 +27,27 @@ var Brain = Brain || {};
      * @param {Object} options
      * @returns {Brain}
      */
-    Brain = function (options) {
-        var opt = options || {};
-        // experience replay
-        this.experience = [];
-
+    var SGDTBrain = function (num_states, num_actions, opt) {
+        var opt = opt || {};
         // in number of time steps, of temporal memory
-        // the ACTUAL input to the net will be (x,a) temporal_window times, and followed by
-        // current x so to have no information from previous time step going into value
-        // function, set to 0.
-        this.temporal_window = opt.temporal_window ? opt.temporal_window : 1;
-
+        // the ACTUAL input to the net will be (x,a) temporal_window times, and followed by current x
+        // so to have no information from previous time step going into value function, set to 0.
+        this.temporal_window = typeof opt.temporal_window !== 'undefined' ? opt.temporal_window : 1;
         // size of experience replay memory
-        this.experience_size = opt.experience_size ? opt.experience_size : 30000;
-
+        this.experience_size = typeof opt.experience_size !== 'undefined' ? opt.experience_size : 30000;
         // number of examples in experience replay memory before we begin learning
-        this.start_learn_threshold = opt.start_learn_threshold ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
-
+        this.start_learn_threshold = typeof opt.start_learn_threshold !== 'undefined' ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
         // gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
-        this.gamma = opt.gamma ? opt.gamma : 0.8;
+        this.gamma = typeof opt.gamma !== 'undefined' ? opt.gamma : 0.8;
 
         // number of steps we will learn for
-        this.learning_steps_total = opt.learning_steps_total ? opt.learning_steps_total : 100000;
-
+        this.learning_steps_total = typeof opt.learning_steps_total !== 'undefined' ? opt.learning_steps_total : 100000;
         // how many steps of the above to perform only random actions (in the beginning)?
-        this.learning_steps_burnin = opt.learning_steps_burnin ? opt.learning_steps_burnin : 3000;
-
+        this.learning_steps_burnin = typeof opt.learning_steps_burnin !== 'undefined' ? opt.learning_steps_burnin : 3000;
         // what epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
-        this.epsilon_min = opt.epsilon_min ? opt.epsilon_min : 0.05;
-
+        this.epsilon_min = typeof opt.epsilon_min !== 'undefined' ? opt.epsilon_min : 0.05;
         // what epsilon to use at test time? (i.e. when learning is disabled)
-        this.epsilon_test_time = opt.epsilon_test_time ? opt.epsilon_test_time : 0.01;
+        this.epsilon_test_time = typeof opt.epsilon_test_time !== 'undefined' ? opt.epsilon_test_time : 0.01;
 
         this.num_states = opt.num_states || 9 * 3;
         this.num_actions = opt.num_actions || 5;
@@ -92,6 +77,8 @@ var Brain = Brain || {};
         // this variable controls the size of that temporal window. Actions are
         // encoded as 1-of-k hot vectors
         this.net_inputs = this.num_states * this.temporal_window + this.num_actions * this.temporal_window + this.num_states;
+
+        // must be at least 2, but if we want more context even more
         this.window_size = Math.max(this.temporal_window, 2); // must be at least 2, but if we want more context even more
         this.state_window = new Array(this.window_size);
         this.action_window = new Array(this.window_size);
@@ -142,6 +129,9 @@ var Brain = Brain || {};
         }
         this.tdtrainer = new convnetjs.SGDTrainer(this.value_net, tdtrainer_options);
 
+        // experience replay
+        this.experience = [];
+
         // various housekeeping variables
         this.age = 0; // incremented every backward()
         this.forward_passes = 0; // incremented every forward()
@@ -151,20 +141,23 @@ var Brain = Brain || {};
         this.average_reward_window = new Window(1000, 10);
         this.average_loss_window = new Window(1000, 10);
         this.learning = true;
+    };
 
+    SGDTBrain.prototype = {
         /**
          * Returns a random action
          * In the future we can set some actions to be more or less likely
          * at "rest"/default state.
+         *
          * @returns {Number}
          */
-        this.random_action = function () {
+        random_action: function () {
             if (this.random_action_distribution.length === 0) {
                 return Utility.randi(0, this.num_actions);
             } else {
                 // okay, lets do some fancier sampling:
-                var p = Utility.randf(0, 1.0);
-                var cumprob = 0.0;
+                var p = Utility.randf(0, 1.0),
+                    cumprob = 0.0;
                 for (var k = 0; k < this.num_actions; k++) {
                     cumprob += this.random_action_distribution[k];
                     if (p < cumprob) {
@@ -172,15 +165,15 @@ var Brain = Brain || {};
                     }
                 }
             }
-        };
-
+        },
         /**
          * Compute the value of doing any action in this state and return the
          * argmax action and its value
-         * @param {type} s
-         * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
+         *
+         * @param {Array} s
+         * @returns {Object}
          */
-        this.policy = function (s) {
+        policy: function (s) {
             var svol = new convnetjs.Vol(1, 1, this.net_inputs);
             svol.w = s;
 
@@ -193,16 +186,20 @@ var Brain = Brain || {};
                     maxval = action_values.w[k];
                 }
             }
-            return {action: maxk, value: maxval};
-        };
 
+            return {
+                action: maxk,
+                value: maxval
+            };
+        },
         /**
          * Return s = (x,a,x,a,x,a,xt) state vector.
-         * It's a concatenation of last window_size (x,a) pairs and current state x
+         * It's a concatenation of last windowSize (x,a) pairs and current state x
+         *
          * @param {type} xt
          * @returns {Array|@exp;Array}
          */
-        this.getNetInput = function (xt) {
+        getNetInput: function (xt) {
             var w = [];
             w = w.concat(xt); // start with current state
             // and now go backwards and append states and actions from history temporal_window times
@@ -220,14 +217,14 @@ var Brain = Brain || {};
                 w = w.concat(action1ofk);
             }
             return w;
-        };
-
+        },
         /**
          * Compute forward (behavior) pass given the input neuron signals from body
-         * @param {Array} input_array
+         *
+         * @param {Array} inputArray
          * @returns {Number|maxact.action}
          */
-        this.forward = function (input_array) {
+        forward: function (input_array) {
             this.forward_passes += 1;
             this.last_input_array = input_array; // back this up
 
@@ -267,14 +264,13 @@ var Brain = Brain || {};
             this.action_window.push(action);
 
             return action;
-        };
-
+        },
         /**
          *
          * @param {Number} reward
          * @returns {undefined}
          */
-        this.backward = function (reward) {
+        backward: function (reward) {
             this.latest_reward = reward;
             this.average_reward_window.add(reward);
             this.reward_window.shift();
@@ -326,53 +322,57 @@ var Brain = Brain || {};
                 avcost = avcost / this.tdtrainer.batch_size;
                 this.average_loss_window.add(avcost);
             }
-        };
 
-        this.visSelf = function (element) {
-            element.innerHTML = ''; // erase element first
+            return this;
+        },
+        visSelf: function (elt) {
+            elt.innerHTML = ''; // erase elt first
 
-            // element is a DOM element that this function fills with brain-related information
-            var brainvis = document.createElement('div'),
+            // elt is a DOM element that this function fills with brain-related information
+            var brainvis = document.createElement('div');
+
             // basic information
-                desc = document.createElement('div'),
-                t = '<br>';
-            t += 'Age: ' + this.age + '<br>';
-            t += 'Avg Loss: ' + this.average_loss_window.getAverage() + '<br />';
-            t += 'Avg Reward: ' + this.average_reward_window.getAverage() + '<br />';
+            var desc = document.createElement('div');
+            var t = '';
+            t += 'experience replay size: ' + this.experience.length + '<br>';
+            t += 'exploration epsilon: ' + this.epsilon + '<br>';
+            t += 'age: ' + this.age + '<br>';
+            t += 'average Q-learning loss: ' + this.average_loss_window.get_average() + '<br />';
+            t += 'smooth-ish reward: ' + this.average_reward_window.get_average() + '<br />';
             desc.innerHTML = t;
             brainvis.appendChild(desc);
 
-            element.appendChild(brainvis);
-        };
-    };
+            elt.appendChild(brainvis);
+        }
+    }
 
-    var _Brain;
+    var _SGDTBrain;
 
     self.onmessage = function (e) {
         var data = e.data;
         switch (data.cmd) {
             case 'init':
-                importScripts('../convnet.js');
+                importScripts('../lib/external/convnet.min.js');
                 importScripts('../lib/Utility.js');
                 importScripts('../lib/Window.js');
-                _Brain = new Brain(data.option);
+                _SGDTBrain = new SGDTBrain(data.input);
                 self.postMessage({cmd: 'init', msg: 'complete'});
                 break;
             case 'load':
-                _Brain.value_net.fromJSON(data.input);
-                _Brain.learning = false;
+                _SGDTBrain.value_net.fromJSON(data.input);
+                _SGDTBrain.learning = false;
                 self.postMessage({cmd: 'load', msg: 'complete'});
                 break;
             case 'forward':
-                var actionIndex = _Brain.forward(data.input);
+                var actionIndex = _SGDTBrain.forward(data.input);
                 self.postMessage({cmd: 'forward', msg: 'complete', input: actionIndex});
                 break;
             case 'backward':
-                _Brain.backward(data.input);
+                _SGDTBrain.backward(data.input);
                 self.postMessage({cmd: 'backward', msg: 'complete'});
                 break;
             case 'getAverage':
-                var avg = _Brain.average_reward_window.getAverage().toFixed(1);
+                var avg = _SGDTBrain.average_reward_window.getAverage().toFixed(1);
                 self.postMessage({cmd: 'getAverage', msg: 'complete', input: avg});
                 break;
             case 'stop':
@@ -384,6 +384,7 @@ var Brain = Brain || {};
         }
     };
 
-    global.Brain = Brain;
+    global.SGDTBrain = SGDTBrain;
 
 })(this);
+
