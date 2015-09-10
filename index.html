@@ -41,13 +41,13 @@
     <script src="js/lib/Window.js"></script>
 
     <script src="js/entities/Brain.js"></script>
+    <script src="js/entities/TDBrain.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentRLTD.js"></script>
     <script src="js/entities/AgentRLDQN.js"></script>
-    <script src="js/entities/AgentSGDT.js"></script>
-    <script src="js/entities/SGDTBrain.js"></script>
+    <script src="js/entities/AgentRLTD.js"></script>
+    <script src="js/entities/AgentTD.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <script src="js/environments/World.js"></script>
@@ -187,12 +187,13 @@
         // Start a grid world
         var gridWorld = function () {
             var agentOpts = {
-                    brainType: 'RLDT',
+                    brainType: 'RLTD',
                     numEyes: 0,
                     numTypes: 0,
                     width: 20,
                     height: 20,
                     radius: 10,
+                    canvas: document.getElementById("rewardGraph"),
                     collision: false,
                     interactive: false,
                     useSprite: false,
@@ -221,12 +222,13 @@
         // Start a maze world
         var mazeWorld = function () {
             var agentOpts = {
-                    brainType: 'SGDT',
+                    brainType: 'TD',
                     numEyes: 9,
                     numTypes: 3,
                     width: 20,
                     height: 20,
                     radius: 10,
+                    canvas: document.getElementById("rewardGraph"),
                     cheats: false,
                     collision: true,
                     interactive: false,

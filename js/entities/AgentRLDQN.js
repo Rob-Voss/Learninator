@@ -3,7 +3,6 @@
 
     /**
      * Initialize the AgentRLDQN
-     *
      * @param {Vec} position
      * @param {Object} env
      * @param {Object} opts

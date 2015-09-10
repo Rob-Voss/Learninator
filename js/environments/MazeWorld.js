@@ -16,7 +16,7 @@
         worldOpts.grid = this.maze.grid;
 
         worldOpts.agents = [
-            new AgentSGDT(new Vec(50, 50), worldOpts.grid, agentOpts)
+            new AgentTD(new Vec(50, 50), worldOpts.grid, agentOpts)
         ];
 
         worldOpts.walls = this.maze.walls;

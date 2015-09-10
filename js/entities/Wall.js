@@ -15,15 +15,6 @@
         this.shape = new PIXI.Graphics();
         this.draw();
 
-        function Bitmap(src, width, height) {
-            this.image = new Image();
-            this.image.src = src;
-            this.width = width;
-            this.height = height;
-        }
-
-        this.wallTexture = new Bitmap('img/Wall.jpg', 1024, 1024);
-
         return this;
     };
 

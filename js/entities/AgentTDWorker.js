@@ -2,58 +2,17 @@
     "use strict";
 
     /**
-     * A single agent
-     * @param {Number} type
-     * @param {Vec} v
-     * @param {Number} r
-     * @returns {Agent_L3.Agent}
+     * Initialize the AgentSGDT
+     * @param {Vec} position
+     * @param {Object} env
+     * @param {Object} opts
+     * @returns {AgentSGDT}
      */
-    var AgentSGDTWorker = function (type, display) {
+    var AgentTDWorker = function (position, env, opts) {
         Agent.call(this, position, grid, opts);
 
-        this.id = Utility.guid();
-        this.type = 3; // type of agent
-        this.name = 'Worker Agent';
-        this.position = new Vec(5, 5);
-        this.gridLocation = new Cell(0, 0);
-        this.width = 20;
-        this.height = 20;
-        this.radius = 10;
-        this.angle = 0;
-        this.rot1 = 0.0;
-        this.rot2 = 0.0;
-        this.lastReward = 0;
-        this.rewardBonus = 0.0;
-        this.digestionSignal = 0.0;
-        this.pts = [];
-        this.digested = [];
-        this.previousActionIdx = -1;
-        this.direction = '';
-        this.interactive = interactive || false;
-
-        // Remember the Agent's old position
-        this.oldPos = this.position;
-
-        // Remember the Agent's old angle
-        this.oldAngle = this.angle;
-
-        // The number of item types the Agent's eys can see (wall, green, red thing proximity)
-        this.numTypes = 3;
-
-        // The number of Agent's eyes
-        this.numEyes = 9;
-
-        // The number of Agent's eyes, each one sees the number of knownTypes
-        this.numInputs = this.numEyes * this.numTypes;
-
-        // Amount of temporal memory. 0 = agent lives in-the-moment :)
-        this.temporalWindow = 1;
-
-        // The Agent's eyes
-        this.eyes = [];
-        for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye((k - this.numTypes - 1) * 0.25));
-        }
+        this.carrot = +5;
+        this.stick = -6;
 
         // The Agent's actions
         this.actions = [];
@@ -66,8 +25,14 @@
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
+        // The number of Agent's eyes, each one sees the number of knownTypes
+        this.numStates = this.numEyes * this.numTypes;
+
+        // Amount of temporal memory. 0 = agent lives in-the-moment :)
+        this.temporalWindow = 1;
+
         // Size of the network
-        this.networkSize = this.numInputs * this.temporalWindow + this.numActions * this.temporalWindow + this.numInputs;
+        this.networkSize = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
 
         /**
          * The value function network computes a value of taking any of the possible actions
@@ -77,28 +42,29 @@
          * opt.hidden_layer_sizes = [20,20] instead to just insert simple relu hidden layers.
          * @type {Array}
          */
-        this.layerDefsTD = [];
-        this.layerDefsTD.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
-        this.layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-        this.layerDefsTD.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-        this.layerDefsTD.push({type: 'regression', num_neurons: this.numActions});
+        this.layerDefs = [];
+        this.layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
+        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'regression', num_neurons: this.numActions});
 
         /**
          * The options for the Temporal Difference learner that trains the above net
          * by backpropping the temporal difference learning rule.
          * @type {Object}
          */
-        this.trainerOptsTD = {
+        this.trainerOpts = {
             learning_rate: 0.001,
             momentum: 0.0,
             batch_size: 64,
             l2_decay: 0.01
         };
+
         /**
          * Options for the Brain
          * @type {Object}
          */
-        this.brainOptsTD = {
+        this.brainOpts = {
             num_states: this.numStates,
             num_actions: this.numActions,
             temporal_window: this.temporalWindow,
@@ -109,64 +75,63 @@
             learning_steps_burnin: 3000,
             epsilon_min: 0.05,
             epsilon_test_time: 0.05,
-            layer_defs: this.layerDefsTD,
-            tdtrainer_options: this.trainerOptsTD
+            layer_defs: this.layerDefs,
+            tdtrainer_options: this.trainerOpts
         };
 
         var _this = this;
 
-        this.brain = new Worker('js/entities/SGDTBrain.js');
+        this.brain = new Worker('js/entities/TDBrain.js');
         this.brain.onmessage = function (e) {
             var data = e.data;
             switch (data.cmd) {
-                case 'init':
-                    if (data.msg === 'load') {
-                        _this.loadMemory();
-                    }
-                    if (data.msg === 'complete') {
+            case 'init':
+                if (data.msg === 'load') {
+                    _this.loadMemory();
+                }
+                if (data.msg === 'complete') {
 
-                    }
-                    break;
-                case 'forward':
-                    if (data.msg === 'complete') {
-                        _this.previousActionIdx = _this.actionIndex;
-                        _this.actionIndex = data.input;
+                }
+                break;
+            case 'forward':
+                if (data.msg === 'complete') {
+                    _this.previousActionIdx = _this.actionIndex;
+                    _this.actionIndex = data.input;
 
-                        // Demultiplex into behavior variables
-                        _this.rot1 = _this.actions[_this.actionIndex][0] * 1;
-                        _this.rot2 = _this.actions[_this.actionIndex][1] * 1;
-                    }
-                    break;
-                case 'backward':
-                    if (data.msg === 'complete') {
+                    // Demultiplex into behavior variables
+                    _this.rot1 = _this.actions[_this.actionIndex][0] * 1;
+                    _this.rot2 = _this.actions[_this.actionIndex][1] * 1;
+                }
+                break;
+            case 'backward':
+                if (data.msg === 'complete') {
 
-                    }
-                    break;
-                case 'getAverage':
-                    if (data.msg === 'complete') {
-                        _this.pts.push(data.input);
-                    }
-                    break;
-                default:
-                case 'error':
-                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-                    break;
+                }
+                break;
+            case 'getAverage':
+                if (data.msg === 'complete') {
+                    _this.pts.push(data.input);
+                }
+                break;
+            default:
+                console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                break;
             }
         };
 
-        this.brain.postMessage({cmd: 'init', input: this.brainOptsTD});
+        this.brain.postMessage({cmd: 'init', input: this.brainOpts});
 
         return this;
     };
 
-    AgentSGDTWorker.prototype = Object.create(Agent.prototype);
-    AgentSGDTWorker.prototype.constructor = Agent;
+    AgentTDWorker.prototype = Object.create(Agent.prototype);
+    AgentTDWorker.prototype.constructor = Agent;
 
     /**
      * The agent simply behaves in the environment
      * @returns {undefined}
      */
-    AgentSGDTWorker.prototype.act = function (walls, entities, width, height) {
+    AgentTDWorker.prototype.act = function (walls, entities, width, height) {
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
 
@@ -258,7 +223,7 @@
      * In backward pass agent learns.
      * @returns {undefined}
      */
-    AgentSGDTWorker.prototype.learn = function () {
+    AgentTDWorker.prototype.learn = function () {
         // Compute the reward
         var proximityReward = 0.0;
         for (var ei = 0; ei < this.numEyes; ei++) {
@@ -273,9 +238,9 @@
 
         // Agents like to go straight forward
         var forwardReward = 0.0;
-        if (this.actionIndex === 0 && proximityReward > 0.75)
+        if (this.actionIndex === 0 && proximityReward > 0.75) {
             forwardReward = 0.1 * proximityReward;
-
+        }
         // Agents like to eat good things
         var digestionReward = this.digestionSignal;
         this.digestionSignal = 0.0;
@@ -290,7 +255,7 @@
      * @param {Object} smallWorld
      * @returns {undefined}
      */
-    AgentSGDTWorker.prototype.tick = function (smallWorld) {
+    AgentTDWorker.prototype.tick = function (smallWorld) {
         this.oldPos = new Vec(this.position.x, this.position.y);
         this.oldAngle = this.angle;
 
@@ -323,7 +288,7 @@
         return this;
     };
 
-    global.AgentSGDTWorker = AgentSGDTWorker;
+    global.AgentTDWorker = AgentTDWorker;
 
 }(this));
 

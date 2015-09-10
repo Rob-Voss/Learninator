@@ -27,7 +27,7 @@
      * @param {Object} options
      * @returns {Brain}
      */
-    var SGDTBrain = function (num_states, num_actions, opt) {
+    var TDBrain = function (num_states, num_actions, opt) {
         var opt = opt || {};
         // in number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporal_window times, and followed by current x
@@ -143,12 +143,11 @@
         this.learning = true;
     };
 
-    SGDTBrain.prototype = {
+    TDBrain.prototype = {
         /**
          * Returns a random action
          * In the future we can set some actions to be more or less likely
          * at "rest"/default state.
-         *
          * @returns {Number}
          */
         random_action: function () {
@@ -169,9 +168,8 @@
         /**
          * Compute the value of doing any action in this state and return the
          * argmax action and its value
-         *
-         * @param {Array} s
-         * @returns {Object}
+         * @param {type} s
+         * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
          */
         policy: function (s) {
             var svol = new convnetjs.Vol(1, 1, this.net_inputs);
@@ -194,8 +192,7 @@
         },
         /**
          * Return s = (x,a,x,a,x,a,xt) state vector.
-         * It's a concatenation of last windowSize (x,a) pairs and current state x
-         *
+         * It's a concatenation of last window_size (x,a) pairs and current state x
          * @param {type} xt
          * @returns {Array|@exp;Array}
          */
@@ -220,8 +217,7 @@
         },
         /**
          * Compute forward (behavior) pass given the input neuron signals from body
-         *
-         * @param {Array} inputArray
+         * @param {Array} input_array
          * @returns {Number|maxact.action}
          */
         forward: function (input_array) {
@@ -346,7 +342,7 @@
         }
     }
 
-    var _SGDTBrain;
+    var _TDBrain;
 
     self.onmessage = function (e) {
         var data = e.data;
@@ -355,24 +351,24 @@
                 importScripts('../lib/external/convnet.min.js');
                 importScripts('../lib/Utility.js');
                 importScripts('../lib/Window.js');
-                _SGDTBrain = new SGDTBrain(data.input);
+                _TDBrain = new TDBrain(data.input);
                 self.postMessage({cmd: 'init', msg: 'complete'});
                 break;
             case 'load':
-                _SGDTBrain.value_net.fromJSON(data.input);
-                _SGDTBrain.learning = false;
+                _TDBrain.value_net.fromJSON(data.input);
+                _TDBrain.learning = false;
                 self.postMessage({cmd: 'load', msg: 'complete'});
                 break;
             case 'forward':
-                var actionIndex = _SGDTBrain.forward(data.input);
+                var actionIndex = _TDBrain.forward(data.input);
                 self.postMessage({cmd: 'forward', msg: 'complete', input: actionIndex});
                 break;
             case 'backward':
-                _SGDTBrain.backward(data.input);
+                _TDBrain.backward(data.input);
                 self.postMessage({cmd: 'backward', msg: 'complete'});
                 break;
             case 'getAverage':
-                var avg = _SGDTBrain.average_reward_window.getAverage().toFixed(1);
+                var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
                 self.postMessage({cmd: 'getAverage', msg: 'complete', input: avg});
                 break;
             case 'stop':
@@ -384,7 +380,7 @@
         }
     };
 
-    global.SGDTBrain = SGDTBrain;
+    global.TDBrain = TDBrain;
 
 })(this);
 

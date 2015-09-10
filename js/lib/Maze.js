@@ -174,7 +174,7 @@
     };
 
     /**
-     * Recurse through a Cell's neighboors
+     * Recurse through a Cell's neighbors
      * @param {Cell} cell
      * @returns {undefined}
      */
