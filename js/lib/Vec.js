@@ -38,10 +38,7 @@
          * @return {Vec} Returns itself.
          */
         add: function (v) {
-            for (var prop in v) {
-                this[prop] + v[prop];
-            }
-            return this;
+            return new Vec(this.x + v.x, this.y + v.y);
         },
 
         /**
@@ -52,9 +49,8 @@
          * @return {Vec} Returns itself.
          */
         addVectors: function (a, b) {
-            for (var prop in a) {
-                this[prop] = a[prop] + b[prop];
-            }
+            this.x = a.x + b.x;
+            this.y = a.y + b.y;
 
             return this;
         },
@@ -93,7 +89,6 @@
         ceil: function () {
             this.x = Math.ceil(this.x);
             this.y = Math.ceil(this.y);
-            this.z = Math.ceil(this.z);
 
             return this;
         },
@@ -137,9 +132,8 @@
          * @return {Vec} Returns itself.
          */
         copy: function (v) {
-            for (var prop in v) {
-                this[prop] = v[prop];
-            }
+            this.x = v.x;
+            this.y = v.y;
 
             return this;
         },
@@ -166,6 +160,16 @@
             return Math.sqrt(this.distanceToSquared(v));
         },
 
+        /**
+         * Distance from the referenced Vector
+         * @param {Vec} v
+         * @returns {Number}
+         */
+        distFrom: function (v) {
+            var dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+
+            return dist;
+        },
         /**
          * Divides the x and y components of this vector by a scalar value
          * @param {Number} s The value to divide by

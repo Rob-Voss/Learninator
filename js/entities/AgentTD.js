@@ -79,7 +79,7 @@
             tdtrainer_options: this.trainerOpts
         };
 
-        this.brain = new Brain(this.brainOpts);
+        this.brain = new TDBrain(this.brainOpts);
         return this;
     };
 
@@ -92,8 +92,8 @@
     AgentTD.prototype.act = function () {
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
-        for (var i = 0; i < this.numEyes; i++) {
-            var eye = this.eyes[i];
+        for (let i = 0; i < this.numEyes; i++) {
+            let eye = this.eyes[i];
             inputArray[i * this.numTypes] = 1.0;
             inputArray[i * this.numTypes + 1] = 1.0;
             inputArray[i * this.numTypes + 2] = 1.0;
@@ -105,9 +105,9 @@
         }
 
         // Get action from brain
+        this.previousActionIdx = this.actionIndex;
         this.actionIndex = this.brain.forward(inputArray);
         var action = this.actions[this.actionIndex];
-        this.previousActionIdx = this.actionIndex;
 
         // Demultiplex into behavior variables
         this.rot1 = action[0] * 1;
@@ -120,8 +120,8 @@
     AgentTD.prototype.learn = function () {
         // Compute the reward
         var proximityReward = 0.0;
-        for (var ei = 0; ei < this.numEyes; ei++) {
-            var eye = this.eyes[ei];
+        for (let ei = 0; ei < this.numEyes; ei++) {
+            let eye = this.eyes[ei];
             // Agents don't like to see walls, especially up close
             proximityReward += eye.sensedType === 0 ? eye.sensedProximity / eye.maxRange : 1.0;
         }
@@ -195,16 +195,14 @@
             this.position.x = 2;
         }
         if (this.position.x > smallWorld.width) {
-            this.position.x = smallWorld.width - 1;
+            this.position.x = smallWorld.width;
         }
         if (this.position.y < 2) {
             this.position.y = 2;
         }
         if (this.position.y > smallWorld.height) {
-            this.position.y = smallWorld.height - 1;
+            this.position.y = smallWorld.height;
         }
-
-        this.position.round();
 
         this.direction = Utility.getDirection(this.angle);
 

@@ -18,6 +18,8 @@
             new AgentRLDQN(new Vec(300, 300), worldOpts.grid, agentOpts)
         ];
 
+        worldOpts.agents[0].load('zoo/wateragent.json');
+
         worldOpts.walls = [
             new Wall(new Vec(0, 0), new Vec(0 + worldOpts.canvas.width, 0)),
             new Wall(new Vec(0 + worldOpts.canvas.width, 0), new Vec(0 + worldOpts.canvas.width, 0 + worldOpts.canvas.height)),

@@ -9,7 +9,7 @@
      * @returns {AgentSGDT}
      */
     var AgentTDWorker = function (position, env, opts) {
-        Agent.call(this, position, grid, opts);
+        Agent.call(this, position, env, opts);
 
         this.carrot = +5;
         this.stick = -6;
@@ -196,7 +196,7 @@
         for (var j = 0, n = this.gridLocation.population.length; j < n; j++) {
             var entity = entities.find(Utility.getId, this.gridLocation.population[j]);
             if (entity) {
-                var dist = this.position.distanceTo(entity.position);
+                var dist = this.position.distFrom(entity.position);
                 if (dist < entity.radius + this.radius) {
                     var result = Utility.collisionCheck(this.position, entity.position, walls);
                     if (!result) {
@@ -266,11 +266,6 @@
 
         // Let the agents behave in the world based on their input
         this.act(smallWorld.walls, smallWorld.entities, smallWorld.width, smallWorld.height);
-
-        // Loop through the eyes and draw them
-        for (var ei = 0; ei < this.numEyes; ei++) {
-            this.eyes[ei].draw(this);
-        }
 
         // Handle boundary conditions.. bounce agent
         Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);

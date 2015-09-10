@@ -6,10 +6,10 @@
      * @param {Number} angle
      * @returns {Eye}
      */
-    var Eye = function (angle) {
+    var Eye = function (angle, range, proximity) {
         this.angle = angle;
-        this.maxRange = 85;
-        this.sensedProximity = 85;
+        this.maxRange = range || 85;
+        this.sensedProximity = proximity || 85;
         this.sensedType = -1;
 
         // PIXI graphics
@@ -68,11 +68,9 @@
             result = Utility.collisionCheck(agentPos, new Vec(X, Y), walls, entities);
         if (result) {
             // eye collided with an entity
-            this.sensedProximity = result.vecI.distanceTo(agentPos);
+            this.sensedProximity = result.vecI.distFrom(agentPos);
             this.sensedType = result.type;
-            if (result.type !== 0) {
-                console.log();
-            }
+
             if ('vx' in result.vecI) {
                 this.vx = result.vecI.vx;
                 this.vy = result.vecI.vy;

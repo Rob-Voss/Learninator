@@ -27,7 +27,7 @@
         // The Agent's eyes
         this.eyes = [];
         for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * 0.21));
+            this.eyes.push(new Eye(k * 0.21, opts.range, opts.proximity));
         }
 
         this.lastReward = 0;
@@ -114,6 +114,19 @@
      * @param {Object} smallWorld
      */
     Agent.prototype.tick = function (smallWorld) {
+        // Check for food
+        // Gather up all the entities nearby based on cell population
+        this.digested = [];
+        var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y),
+            nearByEntities = [];
+        for (let j = 0; j < cell.population.length; j++) {
+            var entities = smallWorld.entities,
+                entity = entities.find(Utility.getId, cell.population[j]);
+            if (entity) {
+                nearByEntities.push(entity);
+            }
+        }
+
         // Loop through the eyes and check the walls and nearby entities
         for (var e = 0; e < this.numEyes; e++) {
             this.eyes[e].sense(this.position, this.angle, smallWorld.walls, nearByEntities);
@@ -122,36 +135,19 @@
         // Let the agents behave in the world based on their input
         this.act(smallWorld);
 
-        this.move(smallWorld);
-
-        // Check for food
-        // Gather up all the entities nearby based on cell population
-        this.digested = [];
-        if (smallWorld.grid === undefined) {
-
-        } else {
-            var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y),
-                nearByEntities = [];
-            for (let j = 0; j < cell.population.length; j++) {
-                var entities = smallWorld.entities,
-                    entity = entities.find(Utility.getId, cell.population[j]);
-                if (entity) {
-                    nearByEntities.push(entity);
-                }
-            }
-
-            for (let j = 0; j < nearByEntities.length; j++) {
-                var dist = this.position.distanceTo(nearByEntities[j].position);
-                if (dist < nearByEntities[j].radius + this.radius) {
-                    var result = Utility.collisionCheck(this.position, nearByEntities[j].position, smallWorld.walls);
-                    if (!result) {
-                        this.digestionSignal += (nearByEntities[j].type === 1) ? this.carrot : this.stick;
-                        this.digested.push(nearByEntities[j]);
-                        nearByEntities[j].cleanup = true;
-                    }
+        for (let j = 0; j < nearByEntities.length; j++) {
+            var dist = this.position.distFrom(nearByEntities[j].position);
+            if (dist < nearByEntities[j].radius + this.radius) {
+                var result = Utility.collisionCheck(this.position, nearByEntities[j].position, smallWorld.walls);
+                if (!result) {
+                    this.digestionSignal += (nearByEntities[j].type === 1) ? this.carrot : this.stick;
+                    this.digested.push(nearByEntities[j]);
+                    nearByEntities[j].cleanup = true;
                 }
             }
         }
+
+        this.move(smallWorld);
 
         // This is where the agents learns based on the feedback of their actions on the environment
         this.learn();
