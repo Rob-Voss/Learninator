@@ -11,6 +11,8 @@
     var AgentTDWorker = function (position, env, opts) {
         Agent.call(this, position, env, opts);
 
+        this.name = "Agent TD Worker";
+
         this.carrot = +5;
         this.stick = -6;
 
@@ -128,33 +130,66 @@
     AgentTDWorker.prototype.constructor = Agent;
 
     /**
-     * The agent simply behaves in the environment
-     * @returns {undefined}
+     * Agent's chance to act on the world
      */
-    AgentTDWorker.prototype.act = function (walls, entities, width, height) {
+    AgentTDWorker.prototype.act = function () {
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
-
-        for (var i = 0; i < this.numEyes; i++) {
-            var e = this.eyes[i];
-            for (var nt = 0; nt < this.numTypes; nt++) {
-                inputArray[i * this.numTypes + nt] = 1.0;
-                if (e.sensedType !== -1) {
-                    // sensedType is 0 for wall, 1 for food and 2 for poison
-                    // lets do a 1-of-k encoding into the input array
-                    // normalize to [0,1]
-                    inputArray[i * this.numTypes + e.sensedType] = e.sensedProximity / e.maxRange;
-                }
+        for (let i = 0; i < this.numEyes; i++) {
+            let eye = this.eyes[i];
+            inputArray[i * this.numTypes] = 1.0;
+            inputArray[i * this.numTypes + 1] = 1.0;
+            inputArray[i * this.numTypes + 2] = 1.0;
+            if (eye.sensedType !== -1) {
+                // sensedType is 0 for wall, 1 for food and 2 for poison lets do
+                // a 1-of-k encoding into the input array normalize to [0,1]
+                inputArray[i * this.numTypes + eye.sensedType] = eye.sensedProximity / eye.maxRange;
             }
         }
 
         // Get action from brain
-        this.previousActionIdx = this.actionIndex;
-        this.actionIndex = this.brain.forward(inputArray);
+        this.brain.postMessage({cmd: 'forward', input: inputArray});
+    };
 
-        // Demultiplex into behavior variables
-        this.rot1 = this.actions[this.actionIndex][0] * 1;
-        this.rot2 = this.actions[this.actionIndex][1] * 1;
+    /**
+     * The agent learns
+     */
+    AgentTDWorker.prototype.learn = function () {
+        // Compute the reward
+        var proximityReward = 0.0;
+        for (let ei = 0; ei < this.numEyes; ei++) {
+            let eye = this.eyes[ei];
+            // Agents don't like to see walls, especially up close
+            proximityReward += eye.sensedType === 0 ? eye.sensedProximity / eye.maxRange : 1.0;
+        }
+
+        // Calculate the proximity reward
+        proximityReward = proximityReward / this.numEyes;
+        proximityReward = Math.min(1.0, proximityReward * 2);
+
+        // Agents like to go straight forward
+        var forwardReward = 0.0;
+        if (this.actionIndex === 0 && proximityReward > 0.75) {
+            forwardReward = 0.1 * proximityReward;
+        }
+        // Agents like to eat good things
+        var digestionReward = this.digestionSignal;
+        this.digestionSignal = 0.0;
+
+        var reward = proximityReward + forwardReward + digestionReward;
+
+        // pass to brain for learning
+        this.brain.postMessage({cmd: 'backward', input: reward});
+    };
+
+    /**
+     * Agent's chance to move in the world
+     * @param smallWorld
+     */
+    AgentTDWorker.prototype.move = function (smallWorld) {
+        this.oldPos = this.position.clone();
+        var oldAngle = this.angle;
+        this.oldAngle = oldAngle;
 
         // Steer the agent according to outputs of wheel velocities
         var v = new Vec(0, this.radius / 2.0);
@@ -183,101 +218,34 @@
             this.angle -= 2 * Math.PI;
         }
 
-        // The agent is trying to move from pos to oPos so we need to check walls
-        var result = Utility.collisionCheck(this.oldPos, this.position, walls);
-        if (result) {
-            // The agent derped! Wall collision! Reset their position
-            this.position = this.oldPos;
-        }
-
-        // Check for food
-        // Gather up all the entities nearby based on cell population
-        this.digested = [];
-        for (var j = 0, n = this.gridLocation.population.length; j < n; j++) {
-            var entity = entities.find(Utility.getId, this.gridLocation.population[j]);
-            if (entity) {
-                var dist = this.position.distFrom(entity.position);
-                if (dist < entity.radius + this.radius) {
-                    var result = Utility.collisionCheck(this.position, entity.position, walls);
-                    if (!result) {
-                        // Nom Noms!
-                        switch (entity.type) {
-                            case 1:// The sweet meats
-                                this.digestionSignal += 5.0;
-                                break;
-                            case 2:// The gnar gnar meats
-                                this.digestionSignal += -6.0;
-                                break;
-                        }
-                        this.digested.push(entity);
-                    }
-                }
+        if (this.collision) {
+            // The agent is trying to move from pos to oPos so we need to check walls
+            var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
+            if (result) {
+                // The agent derped! Wall collision! Reset their position
+                this.position = this.oldPos;
             }
         }
 
-        // Get action from brain
-        this.brain.postMessage({cmd: 'forward', input: inputArray});
-    };
-
-    /**
-     * In backward pass agent learns.
-     * @returns {undefined}
-     */
-    AgentTDWorker.prototype.learn = function () {
-        // Compute the reward
-        var proximityReward = 0.0;
-        for (var ei = 0; ei < this.numEyes; ei++) {
-            var e = this.eyes[ei];
-            // Agents dont like to see walls, especially up close
-            proximityReward += e.sensedType === 0 ? e.sensedProximity / e.maxRange : 1.0;
-        }
-
-        // Calculate the proximity reward
-        proximityReward = proximityReward / this.numEyes;
-        proximityReward = Math.min(1.0, proximityReward * 2);
-
-        // Agents like to go straight forward
-        var forwardReward = 0.0;
-        if (this.actionIndex === 0 && proximityReward > 0.75) {
-            forwardReward = 0.1 * proximityReward;
-        }
-        // Agents like to eat good things
-        var digestionReward = this.digestionSignal;
-        this.digestionSignal = 0.0;
-
-        var reward = proximityReward + forwardReward + digestionReward;
-        // pass to brain for learning
-        this.brain.postMessage({cmd: 'backward', input: reward});
-    };
-
-    /**
-     * Tick the agent
-     * @param {Object} smallWorld
-     * @returns {undefined}
-     */
-    AgentTDWorker.prototype.tick = function (smallWorld) {
-        this.oldPos = new Vec(this.position.x, this.position.y);
-        this.oldAngle = this.angle;
-
-        // Loop through the eyes and check the walls and nearby entities
-        for (var ei = 0; ei < this.numEyes; ei++) {
-            this.eyes[ei].sense(this, smallWorld.walls, smallWorld.entities);
-        }
-
-        // Let the agents behave in the world based on their input
-        this.act(smallWorld.walls, smallWorld.entities, smallWorld.width, smallWorld.height);
-
         // Handle boundary conditions.. bounce agent
-        Utility.boundaryCheck(this, smallWorld.width, smallWorld.height);
+        if (this.position.x < 2) {
+            this.position.x = 2;
+        }
+        if (this.position.x > smallWorld.width) {
+            this.position.x = smallWorld.width;
+        }
+        if (this.position.y < 2) {
+            this.position.y = 2;
+        }
+        if (this.position.y > smallWorld.height) {
+            this.position.y = smallWorld.height;
+        }
 
-        this.sprite.rotation = -this.angle;
         this.direction = Utility.getDirection(this.angle);
 
-        // This is where the agents learns based on the feedback of their actions on the environment
-        this.learn();
-
-        if (this.digested.length > 0) {
-            this.brain.postMessage({cmd: 'getAverage'});
+        if (this.useSprite) {
+            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.rotation = -this.angle;
         }
 
         return this;

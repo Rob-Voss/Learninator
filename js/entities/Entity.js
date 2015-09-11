@@ -167,7 +167,7 @@
             this.move(smallWorld);
         }
 
-        if (smallWorld.cheats) {
+        if (this.cheats) {
             var text0, text1;
             if (this.useSprite === true) {
                 text0 = this.sprite.getChildAt(0);

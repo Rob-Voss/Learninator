@@ -4,13 +4,41 @@
     /**
      * World object contains many agents and walls and food and stuff
      *
-     * @param {Object} worldOpts
-     * @param {Object} entityOpts
-     * @param {Object} agentOpts
      * @returns {WaterWorld}
      * @constructor
      */
-    var WaterWorld = function (worldOpts, entityOpts, agentOpts) {
+    var WaterWorld = function () {
+        var agentOpts = {
+                brainType: 'RLDQN',
+                numEyes: 30,
+                numTypes: 5,
+                width: 20,
+                height: 20,
+                radius: 10,
+                canvas: document.getElementById("rewardGraph"),
+                collision: true,
+                interactive: false,
+                useSprite: false,
+                cheats: false
+            },
+            entityOpts = {
+                width: 20,
+                height: 20,
+                radius: 10,
+                collision: true,
+                interactive: false,
+                useSprite: false,
+                movingEntities: true,
+                cheats: false
+            },
+            worldOpts = {
+                canvas: document.getElementById("world"),
+                xCount: 1,
+                yCount: 1,
+                closed: false,
+                numItems: 40,
+                cheats: false
+            };
         worldOpts.grid = new Grid(worldOpts);
 
         worldOpts.agents = [

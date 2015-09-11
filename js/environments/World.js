@@ -189,7 +189,8 @@
         }
 
         // draw agents
-        for (let ai = 0, na = this.agents.length; ai < na; ai++) {
+        var  na = this.agents.length;
+        for (var ai = 0; ai < na; ai++) {
             // draw agents body
             this.agents[ai].draw();
 

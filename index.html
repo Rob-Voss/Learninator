@@ -40,7 +40,6 @@
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
 
-    <script src="js/entities/Brain.js"></script>
     <script src="js/entities/TDBrain.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
@@ -48,7 +47,7 @@
     <script src="js/entities/AgentRLDQN.js"></script>
     <script src="js/entities/AgentRLTD.js"></script>
     <script src="js/entities/AgentTD.js"></script>
-    <script src="js/entities/AgentTD.js"></script>
+    <script src="js/entities/AgentTDWorker.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <script src="js/environments/World.js"></script>
@@ -125,7 +124,9 @@
             setInterval(function () {
                 tick();
                 for (var an = 0, al = world.agents.length; an < al; an++) {
-                    series[an].data = getFlotRewards(an);
+                    if (typeof series[an] !== 'undefined') {
+                        series[an].data = getFlotRewards(an);
+                    }
                 }
                 plot.setData(series);
                 plot.draw();
@@ -187,117 +188,27 @@
 
         // Start a grid world
         var gridWorld = function () {
-            var agentOpts = {
-                    brainType: 'RLTD',
-                    numEyes: 0,
-                    numTypes: 0,
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    canvas: document.getElementById("rewardGraph"),
-                    collision: false,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false
-                },
-                entityOpts = {
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    collision: false,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false
-                },
-                worldOpts = {
-                    canvas: document.getElementById("world"),
-                    xCount: 10,
-                    yCount: 10,
-                    closed: false,
-                    numItems: 0,
-                    cheats: false
-                };
-            world = new GridWorld(worldOpts, entityOpts, agentOpts);
+            world = new GridWorld();
+            initFlot();
         };
 
         // Start a maze world
         var mazeWorld = function () {
-            var agentOpts = {
-                    brainType: 'TD',
-                    numEyes: 9,
-                    numTypes: 3,
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    canvas: document.getElementById("rewardGraph"),
-                    cheats: false,
-                    collision: true,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false
-                },
-                entityOpts = {
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    cheats: false,
-                    collision: true,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false
-                },
-                worldOpts = {
-                    canvas: document.getElementById("world"),
-                    xCount: 4,
-                    yCount: 4,
-                    closed: false,
-                    numItems: 40,
-                    cheats: false
-                };
-            world = new MazeWorld(worldOpts, entityOpts, agentOpts);
+            world = new MazeWorld();
+            initFlot();
         };
 
         // Start a water world
         var waterWorld = function () {
-            var agentOpts = {
-                    brainType: 'RLDQN',
-                    numEyes: 30,
-                    numTypes: 5,
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    canvas: document.getElementById("rewardGraph"),
-                    collision: true,
-                    interactive: false,
-                    useSprite: true,
-                    cheats: false
-                },
-                entityOpts = {
-                    width: 20,
-                    height: 20,
-                    radius: 10,
-                    collision: true,
-                    interactive: false,
-                    useSprite: true,
-                    movingEntities: true,
-                    cheats: false
-                },
-                worldOpts = {
-                    canvas: document.getElementById("world"),
-                    xCount: 1,
-                    yCount: 1,
-                    closed: false,
-                    numItems: 40,
-                    cheats: false
-                };
-            world = new WaterWorld(worldOpts, entityOpts, agentOpts);
+            world = new WaterWorld();
+            initFlot();
         };
 
         /**
          * Create existence!
          */
         function start() {
-            waterWorld();
+            mazeWorld();
 
             initFlot();
 

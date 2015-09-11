@@ -4,12 +4,18 @@
     /**
      * GridWorld Environment
      *
-     * @param {Object} worldOpts
-     * @param {Object} entityOpts
-     * @param {Object} agentOpts
      * @constructor
      */
-    var GridWorld = function (worldOpts, entityOpts, agentOpts) {
+    var GridWorld = function () {
+        var worldOpts = {
+            canvas: document.getElementById("world"),
+            xCount: 10,
+            yCount: 10,
+            numItems: 0,
+            closed: false,
+            cheats: false
+        };
+
         this.maze = new Maze(worldOpts);
 
         this.env = {
@@ -241,6 +247,29 @@
         this.env.startState = function () {
             return 0;
         };
+
+        var agentOpts = {
+                brainType: 'RLTD',
+                numEyes: 0,
+                numTypes: 0,
+                width: 20,
+                height: 20,
+                radius: 10,
+                canvas: document.getElementById("rewardGraph"),
+                collision: false,
+                interactive: false,
+                useSprite: false,
+                movingEntities: false
+            },
+            entityOpts = {
+                width: 20,
+                height: 20,
+                radius: 10,
+                collision: false,
+                interactive: false,
+                useSprite: false,
+                movingEntities: false
+            };
 
         worldOpts.grid = this.maze.grid;
         worldOpts.walls = this.maze.walls;

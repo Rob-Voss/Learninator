@@ -14,6 +14,8 @@
         this.carrot = +5;
         this.stick = -6;
 
+        this.name = "Agent TD";
+
         // The Agent's actions
         this.actions = [];
         this.actions.push([1, 1]);
@@ -80,6 +82,7 @@
         };
 
         this.brain = new TDBrain(this.brainOpts);
+
         return this;
     };
 

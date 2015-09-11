@@ -60,8 +60,8 @@
             if (this.random_action_distribution.length !== this.num_actions) {
                 console.log('TROUBLE. random_action_distribution should be same length as num_actions.');
             }
-            var a = this.random_action_distribution;
-            var s = 0.0;
+            var a = this.random_action_distribution,
+                s = 0.0;
             for (var k = 0; k < a.length; k++) {
                 s += a[k];
             }
@@ -128,14 +128,14 @@
             tdtrainer_options = opt.tdtrainer_options; // allow user to overwrite this
         }
         this.tdtrainer = new convnetjs.SGDTrainer(this.value_net, tdtrainer_options);
-
+        // controls exploration exploitation tradeoff. Should be annealed over time
+        this.epsilon = (typeof opt.epsilon !== 'undefined') ? opt.epsilon : 1.0;
         // experience replay
         this.experience = [];
 
         // various housekeeping variables
         this.age = 0; // incremented every backward()
         this.forward_passes = 0; // incremented every forward()
-        this.epsilon = 1.0; // controls exploration exploitation tradeoff. Should be annealed over time
         this.latest_reward = 0;
         this.last_input_array = [];
         this.average_reward_window = new Window(1000, 10);
@@ -340,7 +340,7 @@
 
             elt.appendChild(brainvis);
         }
-    }
+    };
 
     var _TDBrain;
 
