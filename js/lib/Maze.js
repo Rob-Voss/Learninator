@@ -8,9 +8,9 @@
      */
     var Maze = function (opts) {
         this.canvas = opts.canvas;
+        this.ctx = this.canvas.getContext("2d");
         this.xCount = opts.xCount;
         this.yCount = opts.yCount;
-        this.ctx = this.canvas.getContext("2d");
 
         this.width = this.canvas.width;
         this.height = this.canvas.height;

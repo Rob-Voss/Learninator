@@ -6,7 +6,7 @@
      * @param {Vec} position
      * @param {Object} env
      * @param {Object} opts
-     * @returns {AgentSGDT}
+     * @returns {AgentTDWorker}
      */
     var AgentTDWorker = function (position, env, opts) {
         Agent.call(this, position, env, opts);
@@ -75,6 +75,7 @@
             gamma: 0.7,
             learning_steps_total: 200000,
             learning_steps_burnin: 3000,
+            epsilon: 1,
             epsilon_min: 0.05,
             epsilon_test_time: 0.05,
             layer_defs: this.layerDefs,
@@ -132,7 +133,7 @@
     /**
      * Agent's chance to act on the world
      */
-    AgentTDWorker.prototype.act = function () {
+    AgentTDWorker.prototype.forward = function () {
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
         for (let i = 0; i < this.numEyes; i++) {
@@ -154,7 +155,7 @@
     /**
      * The agent learns
      */
-    AgentTDWorker.prototype.learn = function () {
+    AgentTDWorker.prototype.backward = function () {
         // Compute the reward
         var proximityReward = 0.0;
         for (let ei = 0; ei < this.numEyes; ei++) {

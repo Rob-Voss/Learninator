@@ -133,7 +133,7 @@
         }
 
         // Let the agents behave in the world based on their input
-        this.act(smallWorld);
+        this.forward(smallWorld);
 
         for (let j = 0; j < nearByEntities.length; j++) {
             var dist = this.position.distFrom(nearByEntities[j].position);
@@ -150,7 +150,7 @@
         this.move(smallWorld);
 
         // This is where the agents learns based on the feedback of their actions on the environment
-        this.learn();
+        this.backward();
 
         if (this.digested.length > 0) {
             switch (this.type) {

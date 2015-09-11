@@ -18,7 +18,7 @@
         this.entities = [];
         this.walls = worldOpts.walls || [];
 
-        this.grid = worldOpts.grid || new Grid(this.canvas);
+        this.grid = worldOpts.grid || new Grid(worldOpts);
         this.cellWidth = this.width / this.grid.xCount;
         this.cellHeight = this.height / this.grid.yCount;
         this.path = this.grid.path;
@@ -65,7 +65,7 @@
                     popText.position.set(coords.bottom.left.x + (this.cellWidth / 2), coords.bottom.left.y - (this.cellHeight / 2));
                     yCell.populationCounts = popText;
 
-                    grid.lineStyle(.05, 0x000000);
+                    grid.lineStyle(0.09, 0x000000);
                     grid.moveTo(coords.bottom.left.x, coords.bottom.left.y);
                     grid.lineTo(coords.bottom.right.x, coords.bottom.right.y);
                     grid.moveTo(coords.bottom.right.x, coords.bottom.right.y);

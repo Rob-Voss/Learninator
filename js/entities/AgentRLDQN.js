@@ -59,7 +59,7 @@
     /**
      * Agent's chance to act on the world
      */
-    AgentRLDQN.prototype.act = function () {
+    AgentRLDQN.prototype.forward = function () {
         // in forward pass the agent simply behaves in the environment
         var ne = this.numEyes * this.numTypes,
             inputArray = new Array(this.numStates);
@@ -89,7 +89,7 @@
     /**
      * Agent's chance to learn
      */
-    AgentRLDQN.prototype.learn = function () {
+    AgentRLDQN.prototype.backward = function () {
         this.lastReward = this.digestionSignal; // for vis
         this.brain.learn(this.digestionSignal);
 

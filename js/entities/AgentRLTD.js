@@ -32,9 +32,9 @@
         };
 
         this.brain = new RL.TDAgent(env, this.brainOpts);
-        this.state = env.startState();
+        this.state = this.brain.env.startState();
 
-        env.reset();
+        this.brain.env.reset();
     };
 
     AgentRLTD.prototype = Object.create(Agent.prototype);

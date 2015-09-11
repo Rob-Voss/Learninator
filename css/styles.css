@@ -39,3 +39,11 @@ canvas {
     font-family: sans-serif;
     background-repeat: no-repeat;
 }
+
+#draw {
+    margin-left: 100px;
+}
+
+svg {
+    border: 1px solid black;
+}

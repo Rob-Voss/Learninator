@@ -8,7 +8,7 @@
      * @constructor
      */
     var MazeWorld = function () {
-        var worldOpts = {
+        this.worldOpts = {
             canvas: document.getElementById("world"),
             xCount: 4,
             yCount: 4,
@@ -17,7 +17,7 @@
             numItems: 40
         };
 
-        this.maze = new Maze(worldOpts);
+        this.maze = new Maze(this.worldOpts);
 
         this.env = {
             grid: this.maze.grid,
@@ -249,50 +249,53 @@
             return 0;
         };
 
-        var agentRLTDOpts = {
-                brainType: 'RLTD',
-                numEyes: 0,
-                numTypes: 0,
-                width: 20,
-                height: 20,
-                radius: 10,
-                canvas: document.getElementById("rewardGraph"),
-                collision: false,
-                interactive: false,
-                useSprite: false,
-                movingEntities: false
-            },
-            agentTDOpts = {
-                brainType: 'TD',
-                numEyes: 9,
-                numTypes: 5,
-                width: 20,
-                height: 20,
-                radius: 10,
-                canvas: document.getElementById("rewardGraph"),
-                collision: false,
-                interactive: false,
-                useSprite: false,
-                movingEntities: false
-            },
-            entityOpts = {
-                width: 20,
-                height: 20,
-                radius: 10,
-                collision: false,
-                interactive: false,
-                useSprite: false,
-                movingEntities: false
-            };
+        this.agentRLTDOpts = {
+            brainType: 'RLTD',
+            numEyes: 0,
+            numTypes: 0,
+            width: 20,
+            height: 20,
+            radius: 10,
+            canvas: document.getElementById("rewardGraph"),
+            collision: false,
+            interactive: false,
+            useSprite: false,
+            movingEntities: false
+        };
 
-        worldOpts.grid = this.maze.grid;
-        worldOpts.walls = this.maze.walls;
-        worldOpts.agents = [
-            new AgentTDWorker(new Vec(1, 1), worldOpts.grid, agentTDOpts),
-            new AgentRLTD(new Vec(1, 1), this.env, agentRLTDOpts)
+        this.agentTDOpts = {
+            brainType: 'TD',
+            numEyes: 9,
+            numTypes: 5,
+            width: 20,
+            height: 20,
+            radius: 10,
+            canvas: document.getElementById("rewardGraph"),
+            collision: false,
+            interactive: false,
+            useSprite: false,
+            movingEntities: false
+        };
+
+        this.entityOpts = {
+            width: 20,
+            height: 20,
+            radius: 10,
+            collision: false,
+            interactive: false,
+            useSprite: false,
+            movingEntities: false
+        };
+
+        this.worldOpts.grid = this.maze.grid;
+        this.worldOpts.walls = this.maze.walls;
+
+        this.worldOpts.agents = [
+            //new AgentRLTD(new Vec(1, 1), this.env, agentRLTDOpts),
+            new AgentTDWorker(new Vec(1, 1), this.grid, this.agentTDOpts)
         ];
 
-        World.call(this, worldOpts, entityOpts);
+        World.call(this, this.worldOpts, this.entityOpts);
 
         return this;
     };

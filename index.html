@@ -53,6 +53,7 @@
     <script src="js/environments/World.js"></script>
     <script src="js/environments/GridWorld.js"></script>
     <script src="js/environments/MazeWorld.js"></script>
+    <script src="js/environments/PuckWorld.js"></script>
     <script src="js/environments/WaterWorld.js"></script>
 
     <script src="js/lib/external/convnet.js"></script>
@@ -204,13 +205,19 @@
             initFlot();
         };
 
+        // Start a puck world
+        var puckWorld = function () {
+            world = new PuckWorld();
+
+            world.initDraw();
+            initFlot();
+        };
+
         /**
          * Create existence!
          */
         function start() {
             mazeWorld();
-
-            initFlot();
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
@@ -269,8 +276,9 @@
         Solve
     </button>
 
-    <canvas id="world" width="600" height="600"></canvas>
-
+    <button class="btn btn-danger" onclick="puckWorld()">
+        Puck World
+    </button>
     <button class="btn btn-danger" onclick="gridWorld()">
         Grid World
     </button>
@@ -280,11 +288,17 @@
     <button class="btn btn-danger" onclick="waterWorld()">
         Water World
     </button>
-</div>
-<br>
 
-<div id="flotreward" style="width:400px; height: 200px;"></div>
-<br>
+    <div id="draw"></div>
+
+    <br/>
+    <canvas id="world" width="600" height="600"></canvas>
+    <br />
+    <canvas id="rewardGraph" width="350" height="150"></canvas>
+    <br />
+    <div id="flotreward" style="width:400px; height: 200px;"></div>
+
+</div>
 
 
 <textarea id="mysterybox0" style="width:100%;display:none;">mystery text box</textarea>

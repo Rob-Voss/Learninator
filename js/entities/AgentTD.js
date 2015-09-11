@@ -92,7 +92,7 @@
     /**
      * Agent's chance to act on the world
      */
-    AgentTD.prototype.act = function () {
+    AgentTD.prototype.forward = function () {
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
         for (let i = 0; i < this.numEyes; i++) {
@@ -120,7 +120,7 @@
     /**
      * The agent learns
      */
-    AgentTD.prototype.learn = function () {
+    AgentTD.prototype.backward = function () {
         // Compute the reward
         var proximityReward = 0.0;
         for (let ei = 0; ei < this.numEyes; ei++) {

@@ -101,7 +101,7 @@
      */
     var Grid = function (env) {
         this.canvas = env.canvas;
-        this.ctx = env.ctx;
+        this.ctx = this.canvas.getContext('2d');
         this.xCount = env.xCount || 1;
         this.yCount = env.yCount || 1;
         this.cellWidth = this.canvas.width / this.xCount;
