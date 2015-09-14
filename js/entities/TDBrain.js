@@ -27,7 +27,7 @@
      * @param {Object} options
      * @returns {Brain}
      */
-    var TDBrain = function (num_states, num_actions, opt) {
+    var TDBrain = function (opt) {
         var opt = opt || {};
         // in number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporal_window times, and followed by current x
@@ -366,6 +366,9 @@
             case 'backward':
                 _TDBrain.backward(data.input);
                 self.postMessage({cmd: 'backward', msg: 'complete'});
+                // return the Average reward
+                var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
+                self.postMessage({cmd: 'getAverage', msg: 'complete', input: avg});
                 break;
             case 'getAverage':
                 var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);

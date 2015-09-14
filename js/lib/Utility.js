@@ -36,7 +36,7 @@ var Utility = Utility || {};
      */
     Utility.randf = function (lo, hi) {
         return Math.random() * (hi - lo) + lo;
-    }
+    };
 
     /**
      * Return a random Integer within the range of a-b
@@ -46,7 +46,7 @@ var Utility = Utility || {};
      */
     Utility.randi = function (lo, hi) {
         return Math.floor(this.randf(lo, hi));
-    }
+    };
 
     /**
      * Return a random Number

@@ -28,6 +28,9 @@
         this.shape.moveTo(this.v1.x, this.v1.y);
         this.shape.lineTo(this.v2.x, this.v2.y);
         this.shape.endFill();
+        if (this.cheats === true) {
+
+        }
     };
 
     global.Wall = Wall;

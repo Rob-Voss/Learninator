@@ -8,24 +8,26 @@
      * @returns {World}
      */
     var World = function (worldOpts, entityOpts) {
-        this.canvas = worldOpts.canvas;
+        this.canvas = worldOpts.canvas || document.getElementById("world");
+        this.rewardGraph = worldOpts.rewardGraph || new Graph(worldOpts);
         this.ctx = this.canvas.getContext("2d");
         this.width = this.canvas.width;
         this.height = this.canvas.height;
 
         // Basics for the environment
         this.agents = worldOpts.agents || [];
-        this.entities = [];
+        this.entities = worldOpts.entities || [];
         this.walls = worldOpts.walls || [];
+        this.nodes = [];
 
         this.grid = worldOpts.grid || new Grid(worldOpts);
+        this.path = this.grid.path;
         this.cellWidth = this.width / this.grid.xCount;
         this.cellHeight = this.height / this.grid.yCount;
-        this.path = this.grid.path;
 
         // World options
-        this.cheats = worldOpts.cheats || false;
         this.entityOpts = entityOpts;
+        this.cheats = worldOpts.cheats || false;
         this.movingEntities = entityOpts.movingEntities || false;
         this.collision = entityOpts.collision || false;
         this.interactive = entityOpts.interactive || false;
@@ -41,11 +43,6 @@
         this.renderer.backgroundColor = 0xFFFFFF;
         document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
-
-        // Populating the world
-        for (let k = 0; k < this.numItems; k++) {
-            this.addEntity();
-        }
 
         this.addWalls();
         this.addAgents();
@@ -100,12 +97,18 @@
      */
     World.prototype.addAgents = function () {
         // Add the agents
+        var agentNames = [];
         for (let a = 0; a < this.agents.length; a++) {
             this.stage.addChild(this.agents[a].shape || this.agents[a].sprite);
             for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 this.stage.addChild(this.agents[a].eyes[ei].shape);
             }
             this.grid.getGridLocation(this.agents[a]);
+            agentNames.push({name:this.agents[a].name});
+        }
+
+        if (typeof this.rewardGraph !== 'undefined') {
+            this.rewardGraph.setLegend(agentNames);
         }
 
         return this;
@@ -116,10 +119,9 @@
      * @returns {World}
      */
     World.prototype.addEntities = function () {
-        // Add entities
-        for (let e = 0; e < this.entities.length; e++) {
-            this.stage.addChild(this.entities[e].shape || this.entities[e].sprite);
-            this.grid.getGridLocation(this.entities[e]);
+        // Populating the world
+        for (let k = 0; k < this.numItems; k++) {
+            this.addEntity();
         }
 
         return this;
@@ -142,6 +144,7 @@
         // Insert the population
         this.entities.push(entity);
         this.stage.addChild(entity.shape || entity.sprite);
+        this.grid.getGridLocation(entity);
     };
 
     /**
@@ -170,6 +173,7 @@
      */
     World.prototype.deleteEntity = function (entity) {
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
+        this.nodes.splice(this.nodes.findIndex(Utility.getId, entity.id), 1);
         this.stage.removeChild(entity.shape || entity.sprite);
     };
 
@@ -189,8 +193,7 @@
         }
 
         // draw agents
-        var  na = this.agents.length;
-        for (var ai = 0; ai < na; ai++) {
+        for (var ai = 0, na = this.agents.length; ai < na; ai++) {
             // draw agents body
             this.agents[ai].draw();
 
@@ -218,17 +221,6 @@
         this.lastTime = this.clock;
         this.clock++;
 
-        // Tick ALL OF teh items!
-        var smallWorld = {
-            grid: this.grid,
-            width: this.width,
-            height: this.height,
-            walls: this.walls,
-            entities: this.entities,
-            movingEntities: this.movingEntities,
-            cheats: this.cheats
-        };
-
         // Reset the cell's population's
         for (let x = 0; x < this.grid.cells.length; x++) {
             for (let y = 0; y < this.grid.cells[x].length; y++) {
@@ -238,7 +230,7 @@
 
         // Loop through the entities of the world and make them do work son!
         for (let e = 0; e < this.entities.length; e++) {
-            this.entities[e].tick(smallWorld);
+            this.entities[e].tick(this);
 
             this.grid.getGridLocation(this.entities[e]);
             this.entities[e].gridLocation.population.push(this.entities[e].id);
@@ -246,7 +238,7 @@
 
         // Loop through the agents of the world and make them do work!
         for (let a = 0; a < this.agents.length; a++) {
-            this.agents[a].tick(smallWorld);
+            this.agents[a].tick(this);
 
             this.grid.getGridLocation(this.agents[a]);
 
@@ -256,11 +248,13 @@
             }
 
             if (this.clock % 100 === 0 && this.agents[a].pts.length !== 0) {
-                // Throw some points on a Graph
-                this.agents[a].rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
-                this.agents[a].rewardGraph.drawPoints();
-                // Clear them up since we've drawn them
-                this.agents[a].pts = [];
+                if (typeof this.rewardGraph !== 'undefined') {
+                    // Throw some points on a Graph
+                    this.rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
+                    this.rewardGraph.drawPoints();
+                    // Clear them up since we've drawn them
+                    this.agents[a].pts = [];
+                }
             }
         }
 

@@ -89,12 +89,8 @@
             var data = e.data;
             switch (data.cmd) {
             case 'init':
-                if (data.msg === 'load') {
-                    _this.loadMemory();
-                }
-                if (data.msg === 'complete') {
-
-                }
+                if (data.msg === 'load') { _this.loadMemory();}
+                if (data.msg === 'complete') { _this.worker = true;}
                 break;
             case 'forward':
                 if (data.msg === 'complete') {
@@ -107,14 +103,10 @@
                 }
                 break;
             case 'backward':
-                if (data.msg === 'complete') {
-
-                }
+                if (data.msg === 'complete') { _this.pts.push(data.input);}
                 break;
             case 'getAverage':
-                if (data.msg === 'complete') {
-                    _this.pts.push(data.input);
-                }
+                if (data.msg === 'complete') { _this.pts.push(data.input);}
                 break;
             default:
                 console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);

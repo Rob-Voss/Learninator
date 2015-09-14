@@ -13,7 +13,6 @@
         Entity.call(this, 3, position, env, opts);
 
         this.brainType = opts.brainType;
-        this.rewardGraph = opts.rewardGraph;
 
         // The number of item types the Agent's eyes can see
         this.numTypes = typeof(opts.numTypes) === 'number' ? opts.numTypes : 3;
@@ -40,45 +39,6 @@
 
         var _this = this;
         this.brain = {};
-
-        this.brain.onmessage = function (e) {
-            var data = e.data;
-            switch (data.cmd) {
-                case 'init':
-                    if (data.msg === 'load') {
-                        _this.loadMemory();
-                    }
-                    if (data.msg === 'complete') {
-
-                    }
-                    break;
-                case 'forward':
-                    if (data.msg === 'complete') {
-                        // Get action from brain
-                        _this.actionIndex = data.input;
-
-                        //this.actionIndex = this.brain.forward(inputArray);
-                        var action = _this.actions[_this.actionIndex];
-
-                        // Demultiplex into behavior variables
-                        _this.rot1 = action[0] * 1;
-                        _this.rot2 = action[1] * 1;
-                    }
-                    break;
-                case 'backward':
-                    if (data.msg === 'complete') {
-
-                    }
-                    break;
-                case 'getAverage':
-                    if (data.msg === 'complete') {
-                        _this.pts.push(data.input);
-                    }
-                    break;
-                default:
-                //console.log('Unknown command: ' + data.msg);
-            }
-        };
 
         return this;
     };
@@ -120,7 +80,7 @@
         var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y),
             nearByEntities = [];
         for (let j = 0; j < cell.population.length; j++) {
-            var entities = smallWorld.entities,
+            let entities = smallWorld.entities,
                 entity = entities.find(Utility.getId, cell.population[j]);
             if (entity) {
                 nearByEntities.push(entity);
@@ -135,32 +95,34 @@
         // Let the agents behave in the world based on their input
         this.forward(smallWorld);
 
+        this.move(smallWorld);
+
         for (let j = 0; j < nearByEntities.length; j++) {
-            var dist = this.position.distFrom(nearByEntities[j].position);
-            if (dist < nearByEntities[j].radius + this.radius) {
-                var result = Utility.collisionCheck(this.position, nearByEntities[j].position, smallWorld.walls);
+            let entity = nearByEntities[j],
+                dist = this.position.distFrom(entity.position);
+            if (dist < entity.radius + this.radius) {
+                var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls);
                 if (!result) {
-                    this.digestionSignal += (nearByEntities[j].type === 1) ? this.carrot : this.stick;
-                    this.digested.push(nearByEntities[j]);
-                    nearByEntities[j].cleanup = true;
+                    this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
+                    this.digested.push(entity);
+                    entity.cleanup = true;
                 }
             }
         }
-
-        this.move(smallWorld);
 
         // This is where the agents learns based on the feedback of their actions on the environment
         this.backward();
 
         if (this.digested.length > 0) {
-            switch (this.type) {
+            switch (this.brainType) {
                 case 'TD':
-                    this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
-                    break;
-                case 'DQN':
-                    if (this.digested.length > 0) {
-                        this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
+                case 'RLTD':
+                    if (!this.worker) {
+                        this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
                     }
+                    break;
+                case 'RLDQN':
+                    this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
                     break;
             }
         }

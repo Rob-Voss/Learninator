@@ -19,7 +19,7 @@
 
         this.name = "Agent RLTD";
 
-        this.brainOpts = {
+        this.brainOpts = opts.spec || {
             update: 'qlearn', // 'qlearn' or 'sarsa'
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)

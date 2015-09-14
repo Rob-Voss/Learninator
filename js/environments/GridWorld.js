@@ -22,12 +22,31 @@
 
         this.agentOpts = {
             brainType: 'RLTD',
+            canvas: document.getElementById("rewardGraph"),
+            spec: {
+                update: 'qlearn', // 'qlearn' or 'sarsa'
+                // discount factor, [0, 1)
+                gamma: 0.9,
+                // initial epsilon for epsilon-greedy policy, [0, 1)
+                epsilon: 0.2,
+                // value function learning rate
+                alpha: 0.1,
+                // eligibility trace decay, [0,1). 0 = no eligibility traces
+                lambda: 0,
+                // use replacing or accumulating traces
+                replacing_traces: true,
+                // number of planning steps per iteration. 0 = no planning
+                planN: 50,
+                // non-standard, updates policy smoothly to follow max_a Q
+                smooth_policy_update: true,
+                // learning rate for smooth policy update
+                beta: 0.1
+            },
             numEyes: 0,
             numTypes: 0,
             width: 20,
             height: 20,
             radius: 10,
-            canvas: document.getElementById("rewardGraph"),
             collision: false,
             interactive: false,
             useSprite: false,
@@ -37,7 +56,8 @@
         this.maze = new Maze({
             canvas: document.getElementById("world"),
             xCount: 10,
-            yCount: 10});
+            yCount: 10
+        });
         this.grid = this.maze.grid;
         this.walls = this.maze.walls;
         this.gH = this.grid.yCount;

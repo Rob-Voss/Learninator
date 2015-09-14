@@ -15,7 +15,6 @@
                 width: 20,
                 height: 20,
                 radius: 10,
-                canvas: document.getElementById("rewardGraph"),
                 collision: true,
                 interactive: false,
                 useSprite: false,
@@ -33,17 +32,16 @@
             },
             worldOpts = {
                 canvas: document.getElementById("world"),
+                rewardGraph: false,
                 xCount: 1,
                 yCount: 1,
-                closed: false,
+                closed: true,
                 numItems: 40,
                 cheats: false
             };
-        worldOpts.grid = new Grid(worldOpts);
 
-        worldOpts.agents = [
-            new AgentRLDQN(new Vec(300, 300), worldOpts.grid, agentOpts),
-            new AgentRLDQN(new Vec(300, 300), worldOpts.grid, agentOpts)
+        worldOpts.agents = this.agents = [
+            new AgentRLDQN(new Vec(300, 300), this, agentOpts)
         ];
 
         worldOpts.agents[0].load('zoo/wateragent.json');

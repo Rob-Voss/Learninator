@@ -35,7 +35,7 @@
         // Size of the network
         this.networkSize = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
 
-        this.spec = {
+        this.brainOpts = opts.spec || {
             update: "qlearn", // qlearn | sarsa
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
@@ -46,8 +46,6 @@
             tderror_clamp: 1.0, // for robustness
             num_hidden_units: 100 // number of neurons in hidden layer
         };
-
-        this.brainOpts = opts.spec || this.spec;
         this.brain = new RL.DQNAgent(this, this.brainOpts);
 
         return this;

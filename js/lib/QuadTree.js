@@ -1,91 +1,275 @@
-var _quadtree = function(w,h,t,l,d){
-	this.width = w;
-	this.height = h;
-	this.top = t || 0;
-	this.left = l || 0;
-	this.spaces = [];
-	this.childs = [];
-	this.depth = d || 0;
-};
-_quadtree.prototype.maxChilds = 4;
-_quadtree.prototype.maxDepth = 4;
-_quadtree.prototype.root = null;
-_quadtree.prototype.getWidth = function(){return this.width;};
-_quadtree.prototype.getHeight = function(){return this.height;};
-_quadtree.prototype.getTop = function(){return this.top;};
-_quadtree.prototype.getLeft = function(){return this.left;};
-_quadtree.prototype.isPointInside = function(p){if(p.x > this.left-1 && p.x < (this.left+this.width+1) && p.y > this.top-1 && p.y < (this.top+this.height+1)){return true;}return false;};
-_quadtree.prototype.isSquareInside = function(x,y,w,h){if(x > this.left-1 && x+w < (this.left+this.width+1) && y > this.top-1 && y+h < (this.top+this.height+1)){return true;}return false;};
-_quadtree.prototype.getChilds = function(){
-	if(!this.spaces.length){return this.childs;}
-	var childs = [];
-	for(i in this.spaces){
-		var ch = this.spaces[i].getChilds();
-		childs = childs.concat(ch);
-	}
-	return childs;
-};
-_quadtree.prototype.insert = function(item){
-	if(this.spaces.length){
-		var x1 = {x:item.x,y:item.y};
-		var x2 = {x:item.x+item.w,y:item.y};
-		var x3 = {x:item.x,y:item.y+item.h};
-		var x4 = {x:item.x+item.w,y:item.y+item.h};
-		for(i in this.spaces){
-			if(this.spaces[i].isPointInside(x1) || this.spaces[i].isPointInside(x2) || this.spaces[i].isPointInside(x3)  || this.spaces[i].isPointInside(x4)){this.spaces[i].insert(item);}
-		}
-		return true;
-	}
+var QuadTree = {}; // global var for the quadtree
 
-	this.childs.push(item);
-	/* Split if necesary, always after insert the nodes */
-	if(this.childs.length > this.maxChilds){this.split();}
-};
-_quadtree.prototype.split = function(){
-	var d = this.depth+1;if(d > this.maxDepth){return false;}
-	var halfWidth = this.width/2;
-	var halfHeight = this.height/2;
-	this.spaces.push(new _quadtree(halfWidth,halfHeight,this.top,this.left,d));
-	this.spaces.push(new _quadtree(halfWidth,halfHeight,this.top,this.left+halfWidth,d));
-	this.spaces.push(new _quadtree(halfWidth,halfHeight,this.top+halfHeight,this.left,d));
-	this.spaces.push(new _quadtree(halfWidth,halfHeight,this.top+halfHeight,this.left+halfWidth,d));
+(function (global) {
+    "use strict";
 
-	do{
-		var item = this.childs.shift();
-		var x1 = {x:item.x,y:item.y};
-		var x2 = {x:item.x+item.w,y:item.y};
-		var x3 = {x:item.x,y:item.y+item.h};
-		var x4 = {x:item.x+item.w,y:item.y+item.h};
-		for(i in this.spaces){
-			if(this.spaces[i].isPointInside(x1) || this.spaces[i].isPointInside(x2) || this.spaces[i].isPointInside(x3)  || this.spaces[i].isPointInside(x4)){this.spaces[i].insert(item);}
-		}
-	}while(this.childs.length);
-};
-_quadtree.prototype.retrieve = function(item){
-	//FIXME: should identify or index childrens to avoid duplicates
-	if(this.spaces.length){
-		/* If the square we are checking match inside a child, we down a level */
-		for(i in this.spaces){if(this.spaces[i].isSquareInside(item.x,item.y,item.w,item.h)){return this.spaces[i].retrieve(item);}}
-		/* Now we need to check which childs are affected, it may not affect all of them */
-		var x1 = {x:item.x,y:item.y};
-		var x2 = {x:item.x+item.w,y:item.y};
-		var x3 = {x:item.x,y:item.y+item.h};
-		var x4 = {x:item.x+item.w,y:item.y+item.h};
-		var childs = [];
-		for(i in this.spaces){
-			if(this.spaces[i].isPointInside(x1) || this.spaces[i].isPointInside(x2) || this.spaces[i].isPointInside(x3)  || this.spaces[i].isPointInside(x4)){
-				childs = childs.concat(this.spaces[i].retrieve(item));
-			}
-		}
-		return childs;
-	}
-	return this.getChilds();
-};
-_quadtree.prototype.clear = function(){
-	this.childs = [];
-	for(var i=0;i<this.spaces.length;i++){
-		this.spaces[i].clear();
-		delete this.spaces[i];
-	}
-	this.spaces = [];
-};
+    /*
+     * QuadTree Implementation in JavaScript
+     * @author: silflow <https://github.com/silflow>
+     *
+     * Usage:
+     * To create a new empty Quadtree, do this:
+     * var tree = new QuadTree(args)
+     *
+     * args = {
+     *    // mandatory fields
+     *    x : x coordinate
+     *    y : y coordinate
+     *    w : width
+     *    h : height
+     *
+     *    // optional fields
+     *    maxChildren : max children per node
+     *    maxDepth : max depth of the tree
+     *}
+     *
+     * API:
+     * tree.insert() accepts arrays or single items
+     * every item must have a .x, .y, .w, and .h property. if they don't, the tree will break.
+     *
+     * tree.retrieve(selector, callback) calls the callback for all objects that are in
+     * the same region or overlapping.
+     *
+     * tree.clear() removes all items from the quadtree.
+     */
+    var QuadTree = function (args) {
+        var node,
+            TOP_LEFT = 0,
+            TOP_RIGHT = 1,
+            BOTTOM_LEFT = 2,
+            BOTTOM_RIGHT = 3,
+            PARENT = 4;
+
+        // Assign some default values
+        args.maxChildren = args.maxChildren || 2;
+        args.maxDepth = args.maxDepth || 4;
+
+        /**
+         * Node creator. You should never create a node manually. the algorithm takes
+         * care of that for you.
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         * @param {Number} depth
+         * @param {Number} maxChildren
+         * @param {Number} maxDepth
+         * @returns {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
+         */
+        node = function (x, y, width, height, depth, maxChildren, maxDepth) {
+            var items = [], // holds all items
+                nodes = []; // holds all child nodes
+
+            // returns a fresh node object
+            return {
+                x: x, // top left point
+                y: y, // top right point
+                width: width, // width
+                height: height, // height
+                depth: depth, // depth level of the node
+
+                /**
+                 * Iterates all items that match the selector and invokes the supplied callback on them.
+                 * @param item
+                 * @param callback
+                 * @param instance
+                 */
+                retrieve: function (item, callback, instance) {
+                    for (var i = 0, il = items.length; i < il; ++i) {
+                        (instance) ? callback.call(instance, items[i]) : callback(items[i]);
+                    }
+                    // check if node has subnodes
+                    if (nodes.length) {
+                        // call retrieve on all matching subnodes
+                        this.findOverlappingNodes(item, function(dir) {
+                            nodes[dir].retrieve(item, callback, instance);
+                        });
+                    }
+                },
+
+                /**
+                 * Adds a new Item to the node.
+                 *
+                 * If the node already has subnodes, the item gets pushed down one level.
+                 * If the item does not fit into the subnodes, it gets saved in the
+                 * "children"-array.
+                 *
+                 * If the maxChildren limit is exceeded after inserting the item,
+                 * the node gets divided and all items inside the "children"-array get
+                 * pushed down to the new subnodes.
+                 * @param item
+                 */
+                insert: function (item) {
+                    var i;
+
+                    if (nodes.length) {
+                        // get the node in which the item fits best
+                        i = this.findInsertNode(item);
+                        if (i === PARENT) {
+                            // if the item does not fit, push it into the
+                            // children array
+                            items.push(item);
+                        } else {
+                            nodes[i].insert(item);
+                        }
+                    } else {
+                        items.push(item);
+                        //divide the node if maxChildren is exceeded and maxDepth is not reached
+                        if (items.length > maxChildren && this.depth < maxDepth) {
+                            this.divide();
+                        }
+                    }
+                },
+
+                /**
+                 * Find a node the item should be inserted in.
+                 * @param item
+                 * @returns {number}
+                 */
+                findInsertNode: function (item) {
+                    // left
+                    if (item.position.x + item.width < this.x + (this.width / 2)) {
+                        if (item.position.y + item.height < this.y + (this.height / 2)) {
+                            return TOP_LEFT;
+                        }
+                        if (item.position.y >= this.y + (this.height / 2)) {
+                            return BOTTOM_LEFT;
+                        }
+                        return PARENT;
+                    }
+
+                    // right
+                    if (item.position.x >= this.x + (this.width / 2)) {
+                        if (item.position.y + item.height < this.y + (this.height / 2)) {
+                            return TOP_RIGHT;
+                        }
+                        if (item.position.y >= this.y + (this.height / 2)) {
+                            return BOTTOM_RIGHT;
+                        }
+                        return PARENT;
+                    }
+
+                    return PARENT;
+                },
+
+                /**
+                 * Finds the regions the item overlaps with. See constants defined
+                 * above. The callback is called for every region the item overlaps.
+                 * @param item
+                 * @param callback
+                 */
+                findOverlappingNodes: function (item, callback) {
+                    // left
+                    if (item.position.x < this.x + (this.width / 2)) {
+                        if (item.position.y < this.y + (this.height / 2)) {
+                            callback(TOP_LEFT);
+                        }
+                        if (item.position.y + item.height >= this.y + this.height / 2) {
+                            callback(BOTTOM_LEFT);
+                        }
+                    }
+                    // right
+                    if (item.position.x + item.width >= this.x + (this.width / 2)) {
+                        if (item.position.y < this.y + (this.height / 2)) {
+                            callback(TOP_RIGHT);
+                        }
+                        if (item.position.y + item.height >= this.y + this.height / 2) {
+                            callback(BOTTOM_RIGHT);
+                        }
+                    }
+                },
+
+                /**
+                 * Divides the current node into four subnodes and adds them
+                 * to the nodes array of the current node. Then reinserts all
+                 * children.
+                 */
+                divide: function () {
+                    var width, height, i, oldChildren,
+                        childrenDepth = this.depth + 1;
+                    // set dimensions of the new nodes
+                    width = (this.width / 2);
+                    height = (this.height / 2);
+                    // create top left node
+                    nodes.push(node(this.x, this.y, width, height, childrenDepth, maxChildren, maxDepth));
+                    // create top right node
+                    nodes.push(node(this.x + width, this.y, width, height, childrenDepth, maxChildren, maxDepth));
+                    // create bottom left node
+                    nodes.push(node(this.x, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
+                    // create bottom right node
+                    nodes.push(node(this.x + width, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
+
+                    oldChildren = items;
+                    items = [];
+                    for (i = 0; i < oldChildren.length; i++) {
+                        this.insert(oldChildren[i]);
+                    }
+                },
+
+                /**
+                 * Clears the node and all its subnodes.
+                 */
+                clear: function () {
+                    var i;
+                    for (i = 0; i < nodes.length; i++) {
+                        nodes[i].clear();
+                    }
+                    items.length = 0;
+                    nodes.length = 0;
+                },
+
+                /*
+                 * convenience method: is not used in the core algorithm.
+                 * ---------------------------------------------------------
+                 * returns this nodes subnodes. this is usful if we want to do stuff
+                 * with the nodes, i.e. accessing the bounds of the nodes to draw them
+                 * on a canvas for debugging etc...
+                 */
+                getNodes: function () {
+                    return nodes.length ? nodes : false;
+                }
+            };
+        };
+
+        return {
+            root: (function () {
+                return node(args.x, args.y, args.width, args.height, 0, args.maxChildren, args.maxDepth);
+            }()),
+            /**
+             * Insert an item into the node
+             * @param item
+             */
+            insert: function (item) {
+                var len, i;
+
+                if (item instanceof Array) {
+                    len = item.length;
+                    for (i = 0; i < len; i++) {
+                        this.root.insert(item[i]);
+                    }
+                } else {
+                    this.root.insert(item);
+                }
+            },
+            /**
+             * Retrieve an item from the QuadTree
+             * @param selector
+             * @param callback
+             * @param instance
+             * @returns {*}
+             */
+            retrieve: function (selector, callback, instance) {
+                return this.root.retrieve(selector, callback, instance);
+            },
+            /**
+             * Clear the QuadTree
+             */
+            clear: function () {
+                this.root.clear();
+            }
+        };
+    };
+
+    global.QuadTree = QuadTree;
+
+}(this));
