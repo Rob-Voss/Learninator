@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Learninator</title>
+
+    <link rel="stylesheet" type="text/css" href="css/styles.css">
+
+    <style>
+        /* following three (cascaded) are equivalent to above three meta viewport statements */
+        /* see http://www.quirksmode.org/blog/archives/2014/05/html5_dev_conf.html */
+        /* see http://dev.w3.org/csswg/css-device-adapt/ */
+        @-ms-viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
+
+        @viewport {
+            width: 100vw ;
+            zoom: 100% ;
+        }
+
+        @-ms-viewport {
+            user-zoom: fixed ;
+        }
+
+        @viewport {
+            user-zoom: fixed ;
+        }
+
+        /*@-ms-viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }   @viewport { user-zoom: zoom ; min-zoom: 100% ; max-zoom: 200% ; }*/
+    </style>
+
+    <script src="js/lib/Array.js"></script>
+    <script src="js/lib/Graph.js"></script>
+    <script src="js/lib/Utility.js"></script>
+    <script src="js/lib/Vec.js"></script>
+    <script src="js/lib/Window.js"></script>
+
+    <script src="js/entities/Entity.js"></script>
+    <script src="js/entities/Eye.js"></script>
+    <script src="js/entities/Agent.js"></script>
+    <script src="js/entities/AgentRLDQN.js"></script>
+    <script src="js/entities/Wall.js"></script>
+
+    <script src="js/environments/World.js"></script>
+    <script src="js/environments/PuckWorld.js"></script>
+
+    <script src="js/lib/external/convnet.js"></script>
+    <script src="js/lib/external/rl.js"></script>
+
+    <script>
+        /**
+         * Global world object
+         * @type {World}
+         */
+        var world = world || {};
+
+        /**
+         * Create existence!
+         */
+        function start() {
+            world = new PuckWorld();
+            world.initDraw();
+
+            var wGUI = new dat.GUI(),
+                wFolder = wGUI.addFolder('World'),
+                aFolder = wFolder.addFolder('Agents');
+
+            wFolder.add(world, 'pause').name('Pause');
+            wFolder.add(world, 'cheats').name('Cheats');
+            wFolder.add(world, 'interactive').name('Interactive Entities');
+            wFolder.add(world, 'numItems').name('# Entities');
+            wFolder.add(world, 'movingEntities').name('Moving Entities');
+
+            for (var a = 0; a < world.agents.length; a++) {
+                var agent = world.agents[a],
+                    folder = aFolder.addFolder('Agent ' + a);
+
+                folder.add(agent, 'direction').listen().name('Direction');
+                folder.add(agent, 'collision').listen().name('Collision');
+                folder.add(agent, 'cheats').listen().name('Cheats');
+                if (typeof agent.brain.epsilon !== 'undefined') {
+                    folder.add(agent.brain, 'epsilon').step(0.01).min(0).max(1).listen().name('Epsilon');
+                }
+                folder.add(agent.position, 'x').listen().name('Pos X');
+                folder.add(agent.position, 'y').listen().name('Pos Y');
+                folder.add(agent.position, 'vx').listen().name('Vel X');
+                folder.add(agent.position, 'vy').listen().name('Vel Y');
+                folder.add(agent.position, 'ax').listen().name('Acc X');
+                folder.add(agent.position, 'ay').listen().name('Acc Y');
+                folder.add(agent.gridLocation, 'x').listen().name('Grid X');
+                folder.add(agent.gridLocation, 'y').listen().name('Grid Y');
+            }
+        }
+
+    </script>
+</head>
+<body onload="start();">
+<div id="wrap">
+    <div id="draw"></div>
+</div>
+
+<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
+
+</body>
+</html>
