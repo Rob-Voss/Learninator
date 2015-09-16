@@ -14,7 +14,6 @@
             width: 20,
             height: 20,
             radius: 10,
-            canvas: document.getElementById("rewardGraph"),
             collision: false,
             interactive: false,
             useSprite: false,

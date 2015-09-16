@@ -365,14 +365,10 @@
                 break;
             case 'backward':
                 _TDBrain.backward(data.input);
-                self.postMessage({cmd: 'backward', msg: 'complete'});
+
                 // return the Average reward
                 var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
-                self.postMessage({cmd: 'getAverage', msg: 'complete', input: avg});
-                break;
-            case 'getAverage':
-                var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
-                self.postMessage({cmd: 'getAverage', msg: 'complete', input: avg});
+                self.postMessage({cmd: 'backward', msg: 'complete', input: avg});
                 break;
             case 'stop':
                 self.postMessage({cmd: 'stop', msg: 'complete'});

@@ -139,7 +139,7 @@ var Graph = Graph || {};
 
         // Draw the actual curve
         var t = function (x, y, s) {
-            var tx = x / s.step_horizon * (W - pad * 2) + pad;
+            var tx = x / s.stepHorizon * (W - pad * 2) + pad;
             var ty = H - ((y - s.miny) / (s.maxy - s.miny) * (H - pad * 2) + pad);
             return {tx: tx, ty: ty};
         };

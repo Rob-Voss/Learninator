@@ -62,7 +62,6 @@
      * @param entities
      */
     Eye.prototype.sense = function (agentPos, agentAngle, walls, entities) {
-        this.shape.clear();
         var X = agentPos.x + this.maxRange * Math.sin(agentAngle + this.angle),
             Y = agentPos.y + this.maxRange * Math.cos(agentAngle + this.angle),
             result = Utility.collisionCheck(agentPos, new Vec(X, Y), walls, entities);

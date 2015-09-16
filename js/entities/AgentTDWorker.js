@@ -89,24 +89,28 @@
             var data = e.data;
             switch (data.cmd) {
             case 'init':
-                if (data.msg === 'load') { _this.loadMemory();}
-                if (data.msg === 'complete') { _this.worker = true;}
+                if (data.msg === 'load') {
+                    _this.brain.load(data.input);
+                }
+                if (data.msg === 'complete') {
+                    _this.worker = true;
+                }
                 break;
             case 'forward':
                 if (data.msg === 'complete') {
                     _this.previousActionIdx = _this.actionIndex;
                     _this.actionIndex = data.input;
+                    var action = _this.actions[_this.actionIndex];
 
-                    // Demultiplex into behavior variables
-                    _this.rot1 = _this.actions[_this.actionIndex][0] * 1;
-                    _this.rot2 = _this.actions[_this.actionIndex][1] * 1;
+                    // Demultiplex into behavior variableslkdjga;ldfkerp
+                    _this.rot1 = action[0] * 1;
+                    _this.rot2 = action[1] * 1;
                 }
                 break;
             case 'backward':
-                if (data.msg === 'complete') { _this.pts.push(data.input);}
-                break;
-            case 'getAverage':
-                if (data.msg === 'complete') { _this.pts.push(data.input);}
+                if (data.msg === 'complete') {
+                    _this.pts.push(parseFloat(data.input));
+                }
                 break;
             default:
                 console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
@@ -173,75 +177,6 @@
 
         // pass to brain for learning
         this.brain.postMessage({cmd: 'backward', input: reward});
-    };
-
-    /**
-     * Agent's chance to move in the world
-     * @param smallWorld
-     */
-    AgentTDWorker.prototype.move = function (smallWorld) {
-        this.oldPos = this.position.clone();
-        var oldAngle = this.angle;
-        this.oldAngle = oldAngle;
-
-        // Steer the agent according to outputs of wheel velocities
-        var v = new Vec(0, this.radius / 2.0);
-        v = v.rotate(this.angle + Math.PI / 2);
-        var w1pos = this.position.add(v), // Positions of wheel 1
-            w2pos = this.position.sub(v); // Positions of wheel 2
-        var vv = this.position.sub(w2pos);
-        vv = vv.rotate(-this.rot1);
-        var vv2 = this.position.sub(w1pos);
-        vv2 = vv2.rotate(this.rot2);
-        var newPos = w2pos.add(vv),
-            newPos2 = w1pos.add(vv2);
-
-        newPos.scale(0.5);
-        newPos2.scale(0.5);
-
-        this.position = newPos.add(newPos2);
-
-        this.angle -= this.rot1;
-        if (this.angle < 0) {
-            this.angle += 2 * Math.PI;
-        }
-
-        this.angle += this.rot2;
-        if (this.angle > 2 * Math.PI) {
-            this.angle -= 2 * Math.PI;
-        }
-
-        if (this.collision) {
-            // The agent is trying to move from pos to oPos so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
-            if (result) {
-                // The agent derped! Wall collision! Reset their position
-                this.position = this.oldPos;
-            }
-        }
-
-        // Handle boundary conditions.. bounce agent
-        if (this.position.x < 2) {
-            this.position.x = 2;
-        }
-        if (this.position.x > smallWorld.width) {
-            this.position.x = smallWorld.width;
-        }
-        if (this.position.y < 2) {
-            this.position.y = 2;
-        }
-        if (this.position.y > smallWorld.height) {
-            this.position.y = smallWorld.height;
-        }
-
-        this.direction = Utility.getDirection(this.angle);
-
-        if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = -this.angle;
-        }
-
-        return this;
     };
 
     global.AgentTDWorker = AgentTDWorker;

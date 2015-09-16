@@ -77,31 +77,22 @@
         // Check for food
         // Gather up all the entities nearby based on cell population
         this.digested = [];
-        var cell = smallWorld.grid.getCellAt(this.gridLocation.x, this.gridLocation.y),
-            nearByEntities = [];
-        for (let j = 0; j < cell.population.length; j++) {
-            let entities = smallWorld.entities,
-                entity = entities.find(Utility.getId, cell.population[j]);
-            if (entity) {
-                nearByEntities.push(entity);
-            }
-        }
 
         // Loop through the eyes and check the walls and nearby entities
         for (var e = 0; e < this.numEyes; e++) {
-            this.eyes[e].sense(this.position, this.angle, smallWorld.walls, nearByEntities);
+            this.eyes[e].sense(this.position, this.angle, smallWorld.walls, smallWorld.entities);
         }
 
         // Let the agents behave in the world based on their input
-        this.forward(smallWorld);
+        this.forward();
 
         this.move(smallWorld);
 
-        for (let j = 0; j < nearByEntities.length; j++) {
-            let entity = nearByEntities[j],
+        for (let j = 0; j < smallWorld.entities.length; j++) {
+            let entity = smallWorld.entities[j],
                 dist = this.position.distFrom(entity.position);
             if (dist < entity.radius + this.radius) {
-                var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls);
+                var result = Utility.collisionCheck(this.position, entity.position, smallWorld.walls, smallWorld.entities);
                 if (!result) {
                     this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
                     this.digested.push(entity);
@@ -125,6 +116,75 @@
                     this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
                     break;
             }
+        }
+
+        return this;
+    };
+
+    /**
+     * Agent's chance to move in the world
+     * @param smallWorld
+     */
+    Agent.prototype.move = function (smallWorld) {
+        this.oldPos = this.position.clone();
+        var oldAngle = this.angle;
+        this.oldAngle = oldAngle;
+
+        // Steer the agent according to outputs of wheel velocities
+        var v = new Vec(0, this.radius / 2.0);
+        v = v.rotate(this.angle + Math.PI / 2);
+        var w1pos = this.position.add(v), // Positions of wheel 1
+            w2pos = this.position.sub(v); // Positions of wheel 2
+        var vv = this.position.sub(w2pos);
+        vv = vv.rotate(-this.rot1);
+        var vv2 = this.position.sub(w1pos);
+        vv2 = vv2.rotate(this.rot2);
+        var newPos = w2pos.add(vv),
+            newPos2 = w1pos.add(vv2);
+
+        newPos.scale(0.5);
+        newPos2.scale(0.5);
+
+        this.position = newPos.add(newPos2);
+
+        this.angle -= this.rot1;
+        if (this.angle < 0) {
+            this.angle += 2 * Math.PI;
+        }
+
+        this.angle += this.rot2;
+        if (this.angle > 2 * Math.PI) {
+            this.angle -= 2 * Math.PI;
+        }
+
+        if (this.collision) {
+            // The agent is trying to move from pos to oPos so we need to check walls
+            var result = Utility.collisionCheck(this.oldPos, this.position, smallWorld.walls);
+            if (result) {
+                // The agent derped! Wall collision! Reset their position
+                this.position = this.oldPos;
+            }
+        }
+
+        // Handle boundary conditions.. bounce agent
+        if (this.position.x < 2) {
+            this.position.x = 2;
+        }
+        if (this.position.x > smallWorld.width) {
+            this.position.x = smallWorld.width;
+        }
+        if (this.position.y < 2) {
+            this.position.y = 2;
+        }
+        if (this.position.y > smallWorld.height) {
+            this.position.y = smallWorld.height;
+        }
+
+        this.direction = Utility.getDirection(this.angle);
+
+        if (this.useSprite) {
+            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.rotation = -this.angle;
         }
 
         return this;

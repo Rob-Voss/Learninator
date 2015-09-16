@@ -33,7 +33,7 @@
         this.interactive = entityOpts.interactive || false;
         this.tinting = entityOpts.tinting || true;
         this.useSprite = entityOpts.useSprite || false;
-        this.numItems = typeof(worldOpts.numItems) === 'number' ? worldOpts.numItems : 20;
+        this.numItems = typeof worldOpts.numItems === 'number' ? worldOpts.numItems : 20;
 
         this.clock = 0;
         this.pause = false;
@@ -75,6 +75,18 @@
             }
             this.stage.addChild(this.populationCounts);
         }
+
+        // init the quadtree
+        var args = {
+            x: 0,
+            y: 0,
+            height: this.height,
+            width: this.width,
+            maxChildren: 5,
+            maxDepth: 5
+        };
+        this.tree = new QuadTree(args);
+        this.tree.insert(this.nodes);
 
         var _this = this;
 
@@ -270,6 +282,76 @@
             this.addEntity();
         }
     };
+
+    World.prototype.updatePopulation = function () {
+        this.tree.clear();
+        this.nodes = [];
+        // draw walls in environment
+        for (let i = 0, n = this.walls.length; i < n; i++) {
+            //this.walls[i].draw();
+        }
+
+        // draw items
+        for (let ii = 0, ni = this.entities.length; ii < ni; ii++) {
+            this.nodes.push(this.entities[ii]);
+        }
+
+        // draw agents
+        for (var ai = 0, na = this.agents.length; ai < na; ai++) {
+            this.nodes.push(this.agents[ai]);
+        }
+
+        this.tree.insert(this.nodes);
+    };
+
+    World.prototype.CD = (function () {
+        var nChecks;
+
+        return {
+            check: function (item, world) {
+                // reset check counter
+                nChecks = 0;
+                var n = world.nodes.length, m, region, i, k, entity;
+
+                // clear the quadtree
+                world.tree.clear();
+
+                // fill the quadtree
+                world.tree.insert(world.nodes);
+
+                // iterate all elements
+                for (i = 0; i < n; i++) {
+                    entity = world.nodes[i];
+                    // get all elements in the same region as orb
+                    region = world.tree.retrieve(entity, function(item) {
+                        world.CD.detectCollision(entity, item);
+                        nChecks++;
+                    });
+                }
+            },
+            detectCollision: function (entity1, entity2) {
+                if (entity1 === entity2) {
+                    return;
+                }
+                if (entity1.position.x + entity1.width < entity2.position.x) {
+                    return;
+                }
+                if (entity1.position.x > entity2.position.x + entity2.width) {
+                    return;
+                }
+                if (entity1.position.y + entity1.height < entity2.position.y) {
+                    return;
+                }
+                if (entity1.position.y > entity2.position.y + entity2.height) {
+                    return;
+                }
+                entity1.cleanup = true;
+            },
+            getNChecks: function () {
+                return nChecks;
+            }
+        };
+    }());
 
     global.World = World;
 

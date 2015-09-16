@@ -97,7 +97,7 @@
             this.sprite.rotation = -this.angle;
         } else {
             this.shape.clear();
-            this.shape.lineStyle(0xFFFFFF);
+            this.shape.lineStyle(0x000000);
 
             switch (this.type) {
             case 1:

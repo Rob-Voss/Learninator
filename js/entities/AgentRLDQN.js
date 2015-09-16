@@ -16,9 +16,6 @@
 
         this.name = "Agent RLDQN";
 
-        // Amount of temporal memory. 0 = agent lives in-the-moment :)
-        this.temporalWindow = 1;
-
         // The Agent's actions
         this.actions = [];
         this.actions.push(0);
@@ -31,9 +28,6 @@
 
         // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
         this.numStates = this.numEyes * this.numTypes + 2;
-
-        // Size of the network
-        this.networkSize = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
 
         this.brainOpts = opts.spec || {
             update: "qlearn", // qlearn | sarsa

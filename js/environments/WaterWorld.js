@@ -29,31 +29,30 @@
                 useSprite: false,
                 movingEntities: true,
                 cheats: false
-            },
-            worldOpts = {
-                canvas: document.getElementById("world"),
-                rewardGraph: false,
-                xCount: 1,
-                yCount: 1,
-                closed: true,
-                numItems: 40,
-                cheats: false
             };
 
-        worldOpts.agents = this.agents = [
+        this.canvas = document.getElementById("world");
+        this.rewardGraph = false;
+        this.xCount = 1;
+        this.yCount = 1;
+        this.closed = true;
+        this.numItems = 40;
+        this.cheats = false;
+
+        this.agents = [
             new AgentRLDQN(new Vec(300, 300), this, agentOpts)
         ];
 
-        worldOpts.agents[0].load('zoo/wateragent.json');
+        this.agents[0].load('zoo/wateragent.json');
 
-        worldOpts.walls = [
-            new Wall(new Vec(0, 0), new Vec(0 + worldOpts.canvas.width, 0)),
-            new Wall(new Vec(0 + worldOpts.canvas.width, 0), new Vec(0 + worldOpts.canvas.width, 0 + worldOpts.canvas.height)),
-            new Wall(new Vec(0 + worldOpts.canvas.width, 0 + worldOpts.canvas.height), new Vec(0, 0 + worldOpts.canvas.height)),
-            new Wall(new Vec(0, 0 + worldOpts.canvas.height), new Vec(0, 0))
+        this.walls = [
+            new Wall(new Vec(0, 0), new Vec(0 + this.canvas.width, 0)),
+            new Wall(new Vec(0 + this.canvas.width, 0), new Vec(0 + this.canvas.width, 0 + this.canvas.height)),
+            new Wall(new Vec(0 + this.canvas.width, 0 + this.canvas.height), new Vec(0, 0 + this.canvas.height)),
+            new Wall(new Vec(0, 0 + this.canvas.height), new Vec(0, 0))
         ];
 
-        World.call(this, worldOpts, entityOpts);
+        World.call(this, this, entityOpts);
 
         return this;
     };
