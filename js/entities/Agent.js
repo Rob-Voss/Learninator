@@ -10,6 +10,7 @@
      * @returns {Agent}
      */
     var Agent = function (position, env, opts) {
+        var _this = this;
         Entity.call(this, 3, position, env, opts);
 
         this.brainType = opts.brainType;
@@ -29,6 +30,7 @@
             this.eyes.push(new Eye(k * 0.21, opts.range, opts.proximity));
         }
 
+        this.action = null;
         this.lastReward = 0;
         this.digestionSignal = 0.0;
         this.rewardBonus = 0.0;
@@ -36,8 +38,6 @@
         this.pts = [];
         this.digested = [];
         this.direction = 'N';
-
-        var _this = this;
         this.brain = {};
 
         return this;
@@ -45,14 +45,6 @@
 
     Agent.prototype = Object.create(Entity.prototype);
     Agent.prototype.constructor = Entity;
-
-    Agent.prototype.getNumStates = function () {
-        return this.numStates;
-    };
-
-    Agent.prototype.getMaxNumActions = function () {
-        return this.numActions;
-    };
 
     /**
      * Load a pre-trained agent

@@ -8,6 +8,13 @@
      * @constructor
      */
     var WaterWorld = function () {
+        this.canvas = document.getElementById("world");
+        this.xCount = 1;
+        this.yCount = 1;
+        this.closed = true;
+        this.numItems = 40;
+        this.cheats = false;
+
         var agentOpts = {
                 brainType: 'RLDQN',
                 numEyes: 30,
@@ -20,6 +27,7 @@
                 useSprite: false,
                 cheats: false
             },
+            agentWOpts = agentOpts,
             entityOpts = {
                 width: 20,
                 height: 20,
@@ -31,19 +39,17 @@
                 cheats: false
             };
 
-        this.canvas = document.getElementById("world");
-        this.rewardGraph = false;
-        this.xCount = 1;
-        this.yCount = 1;
-        this.closed = true;
-        this.numItems = 40;
-        this.cheats = false;
+        var vec1 = new Vec(Utility.randi(10, this.canvas.width - 10), Utility.randi(10, this.canvas.height - 10)),
+            vec2 = new Vec(Utility.randi(10, this.canvas.width - 10), Utility.randi(10, this.canvas.height - 10));
 
+        agentWOpts.worker = true;
+        
         this.agents = [
-            new AgentRLDQN(new Vec(300, 300), this, agentOpts)
+            new AgentRLDQN(vec1, this, agentOpts),
+            new AgentRLDQN(vec2, this, agentWOpts)
         ];
 
-        this.agents[0].load('zoo/wateragent.json');
+        //this.agents[0].load('../../zoo/wateragent.json');
 
         this.walls = [
             new Wall(new Vec(0, 0), new Vec(0 + this.canvas.width, 0)),

@@ -119,7 +119,7 @@
             agentNames.push({name:this.agents[a].name});
         }
 
-        if (typeof this.rewardGraph !== 'undefined') {
+        if (typeof this.rewardGraph.setLegend !== 'undefined') {
             this.rewardGraph.setLegend(agentNames);
         }
 

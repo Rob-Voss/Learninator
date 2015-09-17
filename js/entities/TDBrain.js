@@ -348,9 +348,7 @@
         var data = e.data;
         switch (data.cmd) {
             case 'init':
-                importScripts('../lib/external/convnet.min.js');
-                importScripts('../lib/Utility.js');
-                importScripts('../lib/Window.js');
+                importScripts('../lib/external/convnet.min.js', '../lib/Utility.js', '../lib/Window.js');
                 _TDBrain = new TDBrain(data.input);
                 self.postMessage({cmd: 'init', msg: 'complete'});
                 break;

@@ -1,5 +1,3 @@
-var R = {}; // the Recurrent library
-
 (function (global) {
     "use strict";
 
@@ -515,8 +513,8 @@ var R = {}; // the Recurrent library
             var hidden_prevs = [];
             var cell_prevs = [];
             for (var d = 0; d < hidden_sizes.length; d++) {
-                hidden_prevs.push(new R.Mat(hidden_sizes[d], 1));
-                cell_prevs.push(new R.Mat(hidden_sizes[d], 1));
+                hidden_prevs.push(new Mat(hidden_sizes[d], 1));
+                cell_prevs.push(new Mat(hidden_sizes[d], 1));
             }
         } else {
             var hidden_prevs = prev.h;
@@ -605,39 +603,6 @@ var R = {}; // the Recurrent library
         return w.length - 1; // pretty sure we should never get here?
     };
 
-    // various utils
-    global.assert = assert;
-    global.zeros = zeros;
-    global.maxi = maxi;
-    global.samplei = samplei;
-    global.randi = randi;
-    global.randn = randn;
-    global.softmax = softmax;
-    // classes
-    global.Mat = Mat;
-    global.RandMat = RandMat;
-    global.forwardLSTM = forwardLSTM;
-    global.initLSTM = initLSTM;
-    // more utils
-    global.updateMat = updateMat;
-    global.updateNet = updateNet;
-    global.copyMat = copyMat;
-    global.copyNet = copyNet;
-    global.netToJSON = netToJSON;
-    global.netFromJSON = netFromJSON;
-    global.netZeroGrads = netZeroGrads;
-    global.netFlattenGrads = netFlattenGrads;
-    // optimization
-    global.Solver = Solver;
-    global.Graph = Graph;
-})(R);
-
-// END OF RECURRENTJS
-
-var RL = {};
-(function (global) {
-    "use strict";
-
 // syntactic sugar function for getting default parameter values
     var getopt = function (opt, field_name, default_value) {
         if (typeof opt === 'undefined') {
@@ -646,10 +611,10 @@ var RL = {};
         return (typeof opt[field_name] !== 'undefined') ? opt[field_name] : default_value;
     };
 
-    var zeros = R.zeros; // inherit these
-    var assert = R.assert;
-    var randi = R.randi;
-    var randf = R.randf;
+    var zeros = zeros; // inherit these
+    var assert = assert;
+    var randi = randi;
+    var randf = randf;
 
     var setConst = function (arr, c) {
         for (var i = 0, n = arr.length; i < n; i++) {
@@ -1066,21 +1031,23 @@ var RL = {};
 
         this.env = env;
         this.reset();
+
+        return this;
     };
     DQNAgent.prototype = {
         reset: function () {
             this.nh = this.num_hidden_units; // numer of hidden units
-            this.ns = this.env.getNumStates();
-            this.na = this.env.getMaxNumActions();
+            this.ns = this.env.numStates;
+            this.na = this.env.numActions;
 
             // nets are hardcoded for now as key (str) -> Mat
             // not proud of this. better solution is to have a whole Net object
             // on top of Mats, but for now sticking with this
             this.net = {};
-            this.net.W1 = new R.RandMat(this.nh, this.ns, 0, 0.01);
-            this.net.b1 = new R.Mat(this.nh, 1, 0, 0.01);
-            this.net.W2 = new R.RandMat(this.na, this.nh, 0, 0.01);
-            this.net.b2 = new R.Mat(this.na, 1, 0, 0.01);
+            this.net.W1 = new RandMat(this.nh, this.ns, 0, 0.01);
+            this.net.b1 = new Mat(this.nh, 1, 0, 0.01);
+            this.net.W2 = new RandMat(this.na, this.nh, 0, 0.01);
+            this.net.b2 = new Mat(this.na, 1, 0, 0.01);
 
             this.exp = []; // experience
             this.expi = 0; // where to insert
@@ -1101,7 +1068,7 @@ var RL = {};
             j.nh = this.nh;
             j.ns = this.ns;
             j.na = this.na;
-            j.net = R.netToJSON(this.net);
+            j.net = netToJSON(this.net);
             return j;
         },
         fromJSON: function (j) {
@@ -1109,10 +1076,10 @@ var RL = {};
             this.nh = j.nh;
             this.ns = j.ns;
             this.na = j.na;
-            this.net = R.netFromJSON(j.net);
+            this.net = netFromJSON(j.net);
         },
         forwardQ: function (net, s, needs_backprop) {
-            var G = new R.Graph(needs_backprop);
+            var G = new Graph(needs_backprop);
             var a1mat = G.add(G.mul(net.W1, s), net.b1);
             var h1mat = G.tanh(a1mat);
             var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
@@ -1121,7 +1088,7 @@ var RL = {};
         },
         act: function (slist) {
             // convert to a Mat column vector
-            var s = new R.Mat(this.ns, 1);
+            var s = new Mat(this.ns, 1);
             s.setFrom(slist);
 
             // epsilon greedy policy
@@ -1130,7 +1097,7 @@ var RL = {};
             } else {
                 // greedy wrt Q function
                 var amat = this.forwardQ(this.net, s, false);
-                var a = R.maxi(amat.w); // returns index of argmax action
+                var a = maxi(amat.w); // returns index of argmax action
             }
 
             // shift state memory
@@ -1173,7 +1140,7 @@ var RL = {};
 
             // compute the target Q value
             var tmat = this.forwardQ(this.net, s1, false);
-            var qmax = r0 + this.gamma * tmat.w[R.maxi(tmat.w)];
+            var qmax = r0 + this.gamma * tmat.w[maxi(tmat.w)];
 
             // now predict
             var pred = this.forwardQ(this.net, s0, true);
@@ -1190,7 +1157,7 @@ var RL = {};
             this.lastG.backward(); // compute gradients on net params
 
             // update net
-            R.updateNet(this.net, this.alpha);
+            updateNet(this.net, this.alpha);
             return tderror;
         }
     };
@@ -1212,10 +1179,10 @@ var RL = {};
             this.nhb = 100; // and also in the baseline lstm
 
             this.actorNet = {};
-            this.actorNet.W1 = new R.RandMat(this.nh, this.ns, 0, 0.01);
-            this.actorNet.b1 = new R.Mat(this.nh, 1, 0, 0.01);
-            this.actorNet.W2 = new R.RandMat(this.na, this.nh, 0, 0.1);
-            this.actorNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
+            this.actorNet.W1 = new RandMat(this.nh, this.ns, 0, 0.01);
+            this.actorNet.b1 = new Mat(this.nh, 1, 0, 0.01);
+            this.actorNet.W2 = new RandMat(this.na, this.nh, 0, 0.1);
+            this.actorNet.b2 = new Mat(this.na, 1, 0, 0.01);
             this.actorOutputs = [];
             this.actorGraphs = [];
             this.actorActions = []; // sampled ones
@@ -1223,10 +1190,10 @@ var RL = {};
             this.rewardHistory = [];
 
             this.baselineNet = {};
-            this.baselineNet.W1 = new R.RandMat(this.nhb, this.ns, 0, 0.01);
-            this.baselineNet.b1 = new R.Mat(this.nhb, 1, 0, 0.01);
-            this.baselineNet.W2 = new R.RandMat(this.na, this.nhb, 0, 0.01);
-            this.baselineNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
+            this.baselineNet.W1 = new RandMat(this.nhb, this.ns, 0, 0.01);
+            this.baselineNet.b1 = new Mat(this.nhb, 1, 0, 0.01);
+            this.baselineNet.W2 = new RandMat(this.na, this.nhb, 0, 0.01);
+            this.baselineNet.b2 = new Mat(this.na, 1, 0, 0.01);
             this.baselineOutputs = [];
             this.baselineGraphs = [];
 
@@ -1234,7 +1201,7 @@ var RL = {};
         },
         forwardActor: function (s, needs_backprop) {
             var net = this.actorNet;
-            var G = new R.Graph(needs_backprop);
+            var G = new Graph(needs_backprop);
             var a1mat = G.add(G.mul(net.W1, s), net.b1);
             var h1mat = G.tanh(a1mat);
             var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
@@ -1242,7 +1209,7 @@ var RL = {};
         },
         forwardValue: function (s, needs_backprop) {
             var net = this.baselineNet;
-            var G = new R.Graph(needs_backprop);
+            var G = new Graph(needs_backprop);
             var a1mat = G.add(G.mul(net.W1, s), net.b1);
             var h1mat = G.tanh(a1mat);
             var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
@@ -1250,7 +1217,7 @@ var RL = {};
         },
         act: function (slist) {
             // convert to a Mat column vector
-            var s = new R.Mat(this.ns, 1);
+            var s = new Mat(this.ns, 1);
             s.setFrom(slist);
 
             // forward the actor to get action output
@@ -1268,10 +1235,10 @@ var RL = {};
             this.baselineGraphs.push(vg);
 
             // sample action from the stochastic gaussian policy
-            var a = R.copyMat(amat);
+            var a = copyMat(amat);
             var gaussVar = 0.02;
-            a.w[0] = R.randn(0, gaussVar);
-            a.w[1] = R.randn(0, gaussVar);
+            a.w[0] = randn(0, gaussVar);
+            a.w[1] = randn(0, gaussVar);
 
             this.actorActions.push(a);
 
@@ -1335,8 +1302,8 @@ var RL = {};
                     this.actorGraphs[t].backward();
                     this.baselineGraphs[t].backward();
                 }
-                R.updateNet(this.actorNet, this.alpha); // update actor network
-                R.updateNet(this.baselineNet, this.beta); // update baseline network
+                updateNet(this.actorNet, this.alpha); // update actor network
+                updateNet(this.baselineNet, this.beta); // update baseline network
 
                 // flush
                 this.actorOutputs = [];
@@ -1369,15 +1336,15 @@ var RL = {};
             this.nh = 40; // number of hidden units
             this.nhb = 40; // and also in the baseline lstm
 
-            this.actorLSTM = R.initLSTM(this.ns, [this.nh], this.na);
-            this.actorG = new R.Graph();
+            this.actorLSTM = initLSTM(this.ns, [this.nh], this.na);
+            this.actorG = new Graph();
             this.actorPrev = null;
             this.actorOutputs = [];
             this.rewardHistory = [];
             this.actorActions = [];
 
-            this.baselineLSTM = R.initLSTM(this.ns, [this.nhb], 1);
-            this.baselineG = new R.Graph();
+            this.baselineLSTM = initLSTM(this.ns, [this.nhb], 1);
+            this.baselineG = new Graph();
             this.baselinePrev = null;
             this.baselineOutputs = [];
 
@@ -1391,26 +1358,26 @@ var RL = {};
         },
         act: function (slist) {
             // convert to a Mat column vector
-            var s = new R.Mat(this.ns, 1);
+            var s = new Mat(this.ns, 1);
             s.setFrom(slist);
 
             // forward the LSTM to get action distribution
-            var actorNext = R.forwardLSTM(this.actorG, this.actorLSTM, [this.nh], s, this.actorPrev);
+            var actorNext = forwardLSTM(this.actorG, this.actorLSTM, [this.nh], s, this.actorPrev);
             this.actorPrev = actorNext;
             var amat = actorNext.o;
             this.actorOutputs.push(amat);
 
             // forward the baseline LSTM
-            var baselineNext = R.forwardLSTM(this.baselineG, this.baselineLSTM, [this.nhb], s, this.baselinePrev);
+            var baselineNext = forwardLSTM(this.baselineG, this.baselineLSTM, [this.nhb], s, this.baselinePrev);
             this.baselinePrev = baselineNext;
             this.baselineOutputs.push(baselineNext.o);
 
             // sample action from actor policy
             var gaussVar = 0.05;
-            var a = R.copyMat(amat);
+            var a = copyMat(amat);
             for (var i = 0, n = a.w.length; i < n; i++) {
-                a.w[0] += R.randn(0, gaussVar);
-                a.w[1] += R.randn(0, gaussVar);
+                a.w[0] += randn(0, gaussVar);
+                a.w[1] += randn(0, gaussVar);
             }
             this.actorActions.push(a);
 
@@ -1453,17 +1420,17 @@ var RL = {};
                 baselineMSE /= nuse;
                 this.actorG.backward(); // update params! woohoo!
                 this.baselineG.backward();
-                R.updateNet(this.actorLSTM, this.alpha); // update actor network
-                R.updateNet(this.baselineLSTM, this.beta); // update baseline network
+                updateNet(this.actorLSTM, this.alpha); // update actor network
+                updateNet(this.baselineLSTM, this.beta); // update baseline network
 
                 // flush
-                this.actorG = new R.Graph();
+                this.actorG = new Graph();
                 this.actorPrev = null;
                 this.actorOutputs = [];
                 this.rewardHistory = [];
                 this.actorActions = [];
 
-                this.baselineG = new R.Graph();
+                this.baselineG = new Graph();
                 this.baselinePrev = null;
                 this.baselineOutputs = [];
 
@@ -1491,14 +1458,14 @@ var RL = {};
 
             // actor
             this.actorNet = {};
-            this.actorNet.W1 = new R.RandMat(this.nh, this.ns, 0, 0.01);
-            this.actorNet.b1 = new R.Mat(this.nh, 1, 0, 0.01);
-            this.actorNet.W2 = new R.RandMat(this.na, this.ns, 0, 0.1);
-            this.actorNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
+            this.actorNet.W1 = new RandMat(this.nh, this.ns, 0, 0.01);
+            this.actorNet.b1 = new Mat(this.nh, 1, 0, 0.01);
+            this.actorNet.W2 = new RandMat(this.na, this.ns, 0, 0.1);
+            this.actorNet.b2 = new Mat(this.na, 1, 0, 0.01);
             this.ntheta = this.na * this.ns + this.na; // number of params in actor
 
             // critic
-            this.criticw = new R.RandMat(1, this.ntheta, 0, 0.01); // row vector
+            this.criticw = new RandMat(1, this.ntheta, 0, 0.01); // row vector
 
             this.r0 = null;
             this.s0 = null;
@@ -1509,7 +1476,7 @@ var RL = {};
         },
         forwardActor: function (s, needs_backprop) {
             var net = this.actorNet;
-            var G = new R.Graph(needs_backprop);
+            var G = new Graph(needs_backprop);
             var a1mat = G.add(G.mul(net.W1, s), net.b1);
             var h1mat = G.tanh(a1mat);
             var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
@@ -1517,7 +1484,7 @@ var RL = {};
         },
         act: function (slist) {
             // convert to a Mat column vector
-            var s = new R.Mat(this.ns, 1);
+            var s = new Mat(this.ns, 1);
             s.setFrom(slist);
 
             // forward the actor to get action output
@@ -1526,11 +1493,11 @@ var RL = {};
             var ag = ans.G;
 
             // sample action from the stochastic gaussian policy
-            var a = R.copyMat(amat);
+            var a = copyMat(amat);
             if (Math.random() < this.epsilon) {
                 var gaussVar = 0.02;
-                a.w[0] = R.randn(0, gaussVar);
-                a.w[1] = R.randn(0, gaussVar);
+                a.w[0] = randn(0, gaussVar);
+                a.w[1] = randn(0, gaussVar);
             }
             var clamp = 0.25;
             if (a.w[0] > clamp)
@@ -1551,13 +1518,13 @@ var RL = {};
             return a;
         },
         utilJacobianAt: function (s) {
-            var ujacobian = new R.Mat(this.ntheta, this.na);
+            var ujacobian = new Mat(this.ntheta, this.na);
             for (var a = 0; a < this.na; a++) {
-                R.netZeroGrads(this.actorNet);
+                netZeroGrads(this.actorNet);
                 var ag = this.forwardActor(this.s0, true);
                 ag.a.dw[a] = 1.0;
                 ag.G.backward();
-                var gflat = R.netFlattenGrads(this.actorNet);
+                var gflat = netFlattenGrads(this.actorNet);
                 ujacobian.setColumn(gflat, a);
             }
             return ujacobian;
@@ -1566,7 +1533,7 @@ var RL = {};
             // perform an update on Q function
             //this.rewardHistory.push(r1);
             if (!(this.r0 === null)) {
-                var Gtmp = new R.Graph(false);
+                var Gtmp = new Graph(false);
                 // dpg update:
                 // first compute the features psi:
                 // the jacobian matrix of the actor for s
@@ -1609,13 +1576,70 @@ var RL = {};
         }
     };
 
+    var _DQNBrain;
+
+    self.onmessage = function (e) {
+        var data = e.data;
+
+        switch (data.cmd) {
+        case 'init':
+            var oEnv = JSON.parse(data.input.env),
+                oOpts = JSON.parse(data.input.opts);
+            _DQNBrain = new DQNAgent(oEnv, oOpts);
+
+            self.postMessage({cmd: 'init', msg: 'complete'});
+            break;
+        case 'act':
+            var actionIndex = _DQNBrain.act(data.input);
+
+            self.postMessage({cmd: 'act', msg: 'complete', input: actionIndex});
+            break;
+        case 'learn':
+            _DQNBrain.learn(data.input);
+
+            self.postMessage({cmd: 'learn', msg: 'complete', input: 1});
+            break;
+        case 'stop':
+            self.postMessage({cmd: 'stop', msg: 'complete'});
+            close(); // Terminates the worker.
+            break;
+        default:
+            self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
+        }
+    };
+
 // exports
+    // various utils
+    global.assert = assert;
+    global.zeros = zeros;
+    global.maxi = maxi;
+    global.samplei = samplei;
+    global.randi = randi;
+    global.randn = randn;
+    global.softmax = softmax;
+    // classes
+    global.Mat = Mat;
+    global.RandMat = RandMat;
+    global.forwardLSTM = forwardLSTM;
+    global.initLSTM = initLSTM;
+    // more utils
+    global.updateMat = updateMat;
+    global.updateNet = updateNet;
+    global.copyMat = copyMat;
+    global.copyNet = copyNet;
+    global.netToJSON = netToJSON;
+    global.netFromJSON = netFromJSON;
+    global.netZeroGrads = netZeroGrads;
+    global.netFlattenGrads = netFlattenGrads;
+    // optimization
+    global.Solver = Solver;
+    global.Graph = Graph;
     global.DPAgent = DPAgent;
     global.TDAgent = TDAgent;
     global.DQNAgent = DQNAgent;
-//global.SimpleReinforceAgent = SimpleReinforceAgent;
-//global.RecurrentReinforceAgent = RecurrentReinforceAgent;
-//global.DeterministPG = DeterministPG;
-})(RL);
+//  global.SimpleReinforceAgent = SimpleReinforceAgent;
+//  global.RecurrentReinforceAgent = RecurrentReinforceAgent;
+//  global.DeterministPG = DeterministPG;
+})(this);
 
 
