@@ -26,7 +26,7 @@
 
         this.width = 600;
         this.height = 600;
-        this.rad = 0.05;
+        this.radius = 0.05;
         this.sid = -1;
         this.action = null;
         this.state = null;
@@ -48,7 +48,7 @@
                 for (var k = 0; k < _this.steps_per_tick; k++) {
                     _this.state = _this.getState();
                     _this.action = _this.agents[0].brain.act(_this.state);
-                    obs = _this.sampleNextState(_this.action);
+                    obs = _this.sampleNextState();
                     _this.agents[0].brain.learn(obs.r);
                 }
 
@@ -59,19 +59,19 @@
             _this.sid = -1;
         }
     };
+
     /**
      * Set up the puck world and the actions avail
      */
     PuckWorld.prototype.reset = function () {
-        this.ppx = Math.random(); // puck x,y
-        this.ppy = Math.random();
-        this.pvx = Math.random() * 0.05 - 0.025; // velocity
-        this.pvy = Math.random() * 0.05 - 0.025;
-        this.tx = Math.random(); // target
-        this.ty = Math.random();
-        this.tx2 = Math.random(); // target
-        this.ty2 = Math.random(); // target
-        this.rad = 0.05;
+        // Puck x,y,z,vx,vy,vz
+        this.puck = {};
+        this.target = {};
+        this.enemy = {};
+        this.puck.position = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
+        this.target.position = new Vec(Math.random(), Math.random()); // target
+        this.enemy.position = new Vec(Math.random(), Math.random()); // enemy
+        this.radius = 0.05;
         this.t = 0;
 
         this.BADRAD = 0.25;
@@ -97,95 +97,102 @@
     };
 
     PuckWorld.prototype.getState = function () {
-        var s = [this.ppx - 0.5, this.ppy - 0.5, this.pvx * 10, this.pvy * 10, this.tx - this.ppx, this.ty - this.ppy, this.tx2 - this.ppx, this.ty2 - this.ppy];
+        var s = [
+            this.puck.position.x - 0.5,
+            this.puck.position.y - 0.5,
+            this.puck.position.vx * 10,
+            this.puck.position.vy * 10,
+            this.target.position.x - this.puck.position.x,
+            this.target.position.y - this.puck.position.y,
+            this.enemy.position.x - this.puck.position.x,
+            this.enemy.position.y - this.puck.position.y
+        ];
         return s;
     };
 
     /**
-     * Observe the raw reward of being in s, taking a, and ending up in ns
-     *
-     * @param {Number} s
-     * @param {Number} a
-     * @returns {{ns: (*|Number), r: (*|Number)}}
      */
-    PuckWorld.prototype.sampleNextState = function (a) {
+    PuckWorld.prototype.sampleNextState = function () {
         // world dynamics
-        this.ppx += this.pvx; // newton
-        this.ppy += this.pvy;
-        this.pvx *= 0.95; // damping
-        this.pvy *= 0.95;
+        this.puck.position.x += this.puck.position.vx; // newton
+        this.puck.position.y += this.puck.position.vy;
+        this.puck.position.vx *= 0.95; // damping
+        this.puck.position.vy *= 0.95;
 
         // agent action influences puck velocity
         var accel = 0.002;
-        if (a === 0) {
-            this.pvx -= accel;
-        }
-        if (a === 1) {
-            this.pvx += accel;
-        }
-        if (a === 2) {
-            this.pvy -= accel;
-        }
-        if (a === 3) {
-            this.pvy += accel;
+        switch (this.action) {
+            case 0:
+                this.puck.position.vx -= accel;
+                break;
+            case 1:
+                this.puck.position.vx += accel;
+                break;
+            case 2:
+                this.puck.position.vy -= accel;
+                break;
+            case 3:
+                this.puck.position.vy += accel;
+                break;
         }
 
         // handle boundary conditions and bounce
-        if (this.ppx < this.rad) {
-            this.pvx *= -0.5; // bounce!
-            this.ppx = this.rad;
+        if (this.puck.position.x < this.radius) {
+            this.puck.position.vx *= -0.5; // bounce!
+            this.puck.position.x = this.radius;
         }
-        if (this.ppx > 1 - this.rad) {
-            this.pvx *= -0.5;
-            this.ppx = 1 - this.rad;
+        if (this.puck.position.x > 1 - this.radius) {
+            this.puck.position.vx *= -0.5;
+            this.puck.position.x = 1 - this.radius;
         }
-        if (this.ppy < this.rad) {
-            this.pvy *= -0.5; // bounce!
-            this.ppy = this.rad;
+        if (this.puck.position.y < this.radius) {
+            this.puck.position.vy *= -0.5; // bounce!
+            this.puck.position.y = this.radius;
         }
-        if (this.ppy > 1 - this.rad) {
-            this.pvy *= -0.5;
-            this.ppy = 1 - this.rad;
+        if (this.puck.position.y > 1 - this.radius) {
+            this.puck.position.vy *= -0.5;
+            this.puck.position.y = 1 - this.radius;
         }
 
         this.t += 1;
-        if (this.t % 100 === 0) {
-            this.tx = Math.random(); // reset the target location
-            this.ty = Math.random();
+        if (this.t % 73 === 0) {
+            this.enemy.position.x = Math.random(); // reset the target location
+            this.enemy.position.y = Math.random();
         }
 
-         if(this.t % 73 === 0) {
-           this.tx2 = Math.random(); // reset the target location
-           this.ty2 = Math.random();
-         }
-
         // compute distances
-        var dx1 = this.ppx - this.tx,
-            dy1 = this.ppy - this.ty,
+        var dx1 = this.puck.position.x - this.target.position.x, // Distance from gewdness
+            dy1 = this.puck.position.y - this.target.position.y, // Distance from gewdness
             d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-            dx2 = this.ppx - this.tx2,
-            dy2 = this.ppy - this.ty2,
+            dx2 = this.puck.position.x - this.enemy.position.x, // Distance from badness
+            dy2 = this.puck.position.y - this.enemy.position.y, // Distance from badness
             d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
             dxnorm = dx2 / d2,
             dynorm = dy2 / d2,
             speed = 0.001;
-        this.tx2 += speed * dxnorm;
-        this.ty2 += speed * dynorm;
+        this.enemy.position.x += speed * dxnorm;
+        this.enemy.position.y += speed * dynorm;
 
         // compute reward
-        var r = -d1; // want to go close to green
+        // want to go close to green
+        var r = -d1;
         if (d2 < this.BADRAD) {
             // but if we're too close to red that's bad
             r += 2 * (d2 - this.BADRAD) / this.BADRAD;
         }
 
-        if(a === 4) {
+        // give bonus for gliding with no force
+        if (this.action === 4) {
             r += 0.05;
-        } // give bonus for gliding with no force
+        }
 
         // evolve state in time
         var ns = this.getState(),
-            out = {'ns': ns, 'r': r};
+            out = {
+                ns: ns,
+                r: r
+            };
+
         return out;
     };
 
@@ -218,7 +225,7 @@
         d3agent = svg.append('circle')
             .attr('cx', 100)
             .attr('cy', 100)
-            .attr('r', this.rad * this.width)
+            .attr('r', this.radius * this.width)
             .attr('fill', '#FF0')
             .attr('stroke', '#000')
             .attr('id', 'puck');
@@ -261,13 +268,13 @@
 
     PuckWorld.prototype.updateDraw = function (a, s, r) {
         // reflect puck world state on screen
-        var ppx = this.ppx,
-            ppy = this.ppy,
-            tx = this.tx,
-            ty = this.ty,
-            tx2 = this.tx2,
-            ty2 = this.ty2,
-            g,b;
+        var ppx = this.puck.position.x,
+            ppy = this.puck.position.y,
+            tx = this.target.position.x,
+            ty = this.target.position.y,
+            tx2 = this.enemy.position.x,
+            ty2 = this.enemy.position.y,
+            g, b;
 
         d3agent.attr('cx', ppx * this.width).attr('cy', ppy * this.height);
         d3target.attr('cx', tx * this.width).attr('cy', ty * this.height);
@@ -276,17 +283,19 @@
         d3line.attr('x1', ppx * this.width).attr('y1', ppy * this.height).attr('x2', ppx * this.width).attr('y2', ppy * this.height);
         var af = 20;
         d3line.attr('visibility', a === 4 ? 'hidden' : 'visible');
-        if (a === 0) {
+        switch (this.action) {
+        case 0:
             d3line.attr('x2', ppx * this.width - af);
-        }
-        if (a === 1) {
+            break;
+        case 1:
             d3line.attr('x2', ppx * this.width + af);
-        }
-        if (a === 2) {
+            break;
+        case 2:
             d3line.attr('y2', ppy * this.height - af);
-        }
-        if (a === 3) {
+            break;
+        case 3:
             d3line.attr('y2', ppy * this.height + af);
+            break;
         }
 
         // color agent by reward

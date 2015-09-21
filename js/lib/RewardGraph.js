@@ -1,14 +1,14 @@
-var Graph = Graph || {};
+var RewardGraph = RewardGraph || {};
 
 (function (global) {
     "use strict";
 
     /**
-     * Graph
+     * RewardGraph
      * @param {Object} opts
      * @returns {Graph_L3.Graph}
      */
-    var Graph = function (opts) {
+    var RewardGraph = function (opts) {
         this.canvas = opts.canvas;
         this.ctx = this.canvas.getContext("2d");
 
@@ -34,7 +34,7 @@ var Graph = Graph || {};
         return _this;
     };
 
-    Graph.prototype.setLegend = function (legend) {
+    RewardGraph.prototype.setLegend = function (legend) {
         this.legend = legend;
         this.numLines = this.legend.length;
         this.pts = new Array(this.numLines);
@@ -49,7 +49,7 @@ var Graph = Graph || {};
      * @param {Number} yl
      * @returns {undefined}
      */
-    Graph.prototype.addPoint = function (step, idx, yl) {
+    RewardGraph.prototype.addPoint = function (step, idx, yl) {
         // in ms
         var time = new Date().getTime(),
             n = yl.length,
@@ -91,7 +91,7 @@ var Graph = Graph || {};
      * Draw it
      * @returns {undefined}
      */
-    Graph.prototype.drawPoints = function () {
+    RewardGraph.prototype.drawPoints = function () {
         var pad = 25;
         var H = this.height;
         var W = this.width;
@@ -161,6 +161,6 @@ var Graph = Graph || {};
         }
     };
 
-    global.Graph = Graph;
+    global.RewardGraph = RewardGraph;
 
 }(this));

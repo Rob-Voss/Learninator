@@ -15,7 +15,7 @@
         var entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
         this.id = Utility.guid();
-        this.name = entityTypes[typeId];
+        this.name = (this.name == '') ? entityTypes[typeId] : this.name;
         this.type = typeId || 1;
         this.position = position || new Vec(5, 5);
         this.width = entityOpts.width || 20;
@@ -71,15 +71,20 @@
             // If cheats are on then show the entities grid location and x,y coords
             let fontOpts = {font: "10px Arial", fill: "#006400", align: "center"},
                 locText = new PIXI.Text(this.gridLocation.x + ':' + this.gridLocation.y, fontOpts),
-                posText = new PIXI.Text(this.position.x + ':' + this.position.y, fontOpts);
+                posText = new PIXI.Text(this.position.x + ':' + this.position.y, fontOpts),
+                name = new PIXI.Text(this.name, fontOpts);
             posText.position.set(-20, 10);
             locText.position.set(0, 10);
+            name.position.set(this.radius, this.radius);
+
             if (this.useSprite === true) {
                 this.sprite.addChild(posText);
                 this.sprite.addChild(locText);
+                this.sprite.addChild(name);
             } else {
                 this.shape.addChild(posText);
                 this.shape.addChild(locText);
+                this.shape.addChild(name);
             }
         }
 
@@ -97,7 +102,7 @@
             this.sprite.rotation = -this.angle;
         } else {
             this.shape.clear();
-            this.shape.lineStyle(0x000000);
+            this.shape.lineStyle(1, 0x000000);
 
             switch (this.type) {
             case 1:
@@ -168,17 +173,20 @@
         }
 
         if (this.cheats) {
-            var text0, text1;
+            var textItems = [];
             if (this.useSprite === true) {
-                text0 = this.sprite.getChildAt(0);
-                text1 = this.sprite.getChildAt(1);
+                textItems.push(this.sprite.getChildAt(0));
+                textItems.push(this.sprite.getChildAt(1));
+                textItems.push(this.sprite.getChildAt(2));
             } else {
-                text0 = this.shape.getChildAt(0);
-                text1 = this.shape.getChildAt(1);
+                textItems.push(this.shape.getChildAt(0));
+                textItems.push(this.shape.getChildAt(1));
+                textItems.push(this.shape.getChildAt(2));
             }
             // Update the item's gridLocation label
-            text0.text = this.gridLocation.x + ':' + this.gridLocation.y;
-            text1.text = this.position.x + ':' + this.position.y;
+            textItems[0].text = this.gridLocation.x + ':' + this.gridLocation.y;
+            textItems[1].text = this.position.x + ':' + this.position.y;
+            textItems[2].position.set(this.position.x + this.radius, this.position.y + this.radius);
         }
 
         return this;

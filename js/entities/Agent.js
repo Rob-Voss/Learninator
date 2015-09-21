@@ -10,17 +10,14 @@
      * @returns {Agent}
      */
     var Agent = function (position, env, opts) {
-        var _this = this;
         Entity.call(this, 3, position, env, opts);
 
         this.brainType = opts.brainType;
 
         // The number of item types the Agent's eyes can see
         this.numTypes = typeof(opts.numTypes) === 'number' ? opts.numTypes : 3;
-
         // The number of Agent's eyes
         this.numEyes = typeof(opts.numEyes) === 'number' ? opts.numEyes :  9;
-
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numInputs = this.numEyes * this.numTypes;
 
@@ -40,6 +37,7 @@
         this.direction = 'N';
         this.brain = {};
 
+        var _this = this;
         return this;
     };
 
@@ -88,7 +86,7 @@
                 if (!result) {
                     this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
                     this.digested.push(entity);
-                    entity.cleanup = true;
+                    smallWorld.deleteEntity(entity);
                 }
             }
         }
@@ -96,18 +94,18 @@
         // This is where the agents learns based on the feedback of their actions on the environment
         this.backward();
 
-        if (this.digested.length > 0) {
-            switch (this.brainType) {
-                case 'TD':
-                case 'RLTD':
-                    if (!this.worker) {
-                        this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
-                    }
-                    break;
-                case 'RLDQN':
-                    this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
-                    break;
+        switch (this.brainType) {
+        case 'TD':
+        case 'RLTD':
+            if (!this.worker) {
+                this.pts.push(this.brain.average_reward_window.getAverage().toFixed(1));
             }
+            break;
+        case 'RLDQN':
+            if (!this.worker) {
+                this.pts.push(this.lastReward * 0.999 + this.lastReward * 0.001);
+            }
+            break;
         }
 
         return this;

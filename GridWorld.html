@@ -33,7 +33,7 @@
     </style>
 
     <script src="js/lib/Array.js"></script>
-    <script src="js/lib/Graph.js"></script>
+    <script src="js/lib/RewardGraph.js"></script>
     <script src="js/lib/Grid.js"></script>
     <script src="js/lib/Maze.js"></script>
     <script src="js/lib/Utility.js"></script>
@@ -179,17 +179,12 @@
             $('#mysterybox' + id).val(JSON.stringify(brain.toJSON()));
         }
 
-        // Start a grid world
-        var gridWorld = function () {
-            world = new GridWorld();
-            initFlot();
-        };
-
         /**
          * Create existence!
          */
         function start() {
-            gridWorld();
+            world = new GridWorld();
+            initFlot();
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
@@ -226,16 +221,13 @@
 </head>
 <body onload="start();">
 <div id="wrap">
-    <div id="flotreward"></div>
     <div id="draw"></div>
-    <canvas id="rewardGraph" width="350" height="150"></canvas>
     <canvas id="world" width="600" height="600"></canvas>
 </div>
-
+<div id="flotreward" style="width:600px; height: 300px;"></div>
 
 <textarea id="mysterybox0" style="width:100%;display:none;">mystery text box</textarea>
 <textarea id="mysterybox1" style="width:100%;display:none;">mystery text box</textarea>
-
 
 <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

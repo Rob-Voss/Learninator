@@ -64,21 +64,25 @@
             num_hidden_units: 100 // number of neurons in hidden layer
         };
 
-        this.brain = new RL.DQNAgent(this, this.brainOpts);
+        // Set up the environment variable for RL
+        this.env = {
+            numActions: this.numActions,
+            numStates: this.numStates
+        };
+        this.env.getMaxNumActions = function () {
+            return this.numActions;
+        };
+        this.env.getNumStates = function () {
+            return this.numStates;
+        };
+
+        this.brain = new DQNAgent(this.env, this.brainOpts);
 
         return this;
     };
 
     EntityRLDQN.prototype = Object.create(Entity.prototype);
     EntityRLDQN.prototype.constructor = Entity;
-
-    EntityRLDQN.prototype.getNumStates = function () {
-        return this.numStates;
-    };
-
-    EntityRLDQN.prototype.getMaxNumActions = function () {
-        return this.numActions;
-    };
 
     /**
      * Agent's chance to act on the world

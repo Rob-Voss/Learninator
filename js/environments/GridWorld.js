@@ -22,7 +22,6 @@
 
         this.agentOpts = {
             brainType: 'RLTD',
-            canvas: document.getElementById("rewardGraph"),
             spec: {
                 update: 'qlearn', // 'qlearn' or 'sarsa'
                 // discount factor, [0, 1)
@@ -58,6 +57,7 @@
             xCount: 10,
             yCount: 10
         });
+
         this.grid = this.maze.grid;
         this.walls = this.maze.walls;
         this.gH = this.grid.yCount;
@@ -129,7 +129,7 @@
      */
     GridWorld.prototype.reset = function () {
         // specify some rewards
-        var Rarr = R.zeros(this.gS),
+        var Rarr = Utility.zeros(this.gS),
             Aarr = new Array(this.gS);
 
         for (let y = 0; y < this.grid.yCount; y++) {

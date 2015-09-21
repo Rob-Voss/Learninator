@@ -7,6 +7,21 @@ var Utility = Utility || {};
     var retV = false,
         vVal = 0.0;
 
+    Utility.stringify = function (obj) {
+        return JSON.stringify(obj, function (key, value) {
+            return (typeof value === 'function') ? value.toString() : value;
+        });
+    };
+
+    Utility.parse = function (str) {
+        return JSON.parse(str, function (key, value) {
+            if (typeof value !== 'string') {
+                return value;
+            }
+            return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
+        });
+    };
+
     var gaussRandom = function () {
         if (retV) {
             retV = false;
@@ -36,6 +51,28 @@ var Utility = Utility || {};
      */
     Utility.randf = function (lo, hi) {
         return Math.random() * (hi - lo) + lo;
+    };
+
+    /**
+     * helper function returns array of zeros of length n
+     * and uses typed arrays if available
+     * @param n
+     * @returns {*}
+     */
+    Utility.zeros = function (n) {
+        if (typeof n === 'undefined' || isNaN(n)) {
+            return [];
+        }
+        if (typeof ArrayBuffer === 'undefined') {
+            // lacking browser support
+            var arr = new Array(n);
+            for (let i = 0; i < n; i++) {
+                arr[i] = 0;
+            }
+            return arr;
+        } else {
+            return new Float64Array(n);
+        }
     };
 
     /**
@@ -224,7 +261,7 @@ var Utility = Utility || {};
      * @param {Number} rad
      * @returns {Object|Boolean}
      */
-    Utility.linePointIntersect = function(v1, v2, v0, rad) {
+    Utility.linePointIntersect = function (v1, v2, v0, rad) {
         // Create a perpendicular vector
         var x = v2.y - v1.y,
             y = v2.x - v1.x,
@@ -263,7 +300,7 @@ var Utility = Utility || {};
      * @param {Vec} v4
      * @returns {Object|Boolean}
      */
-    Utility.lineIntersect = function(v1, v2, v3, v4) {
+    Utility.lineIntersect = function (v1, v2, v3, v4) {
         // Line 1: 1st Point
         var x1 = v1.x,
             y1 = v1.y,

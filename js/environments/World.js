@@ -9,7 +9,7 @@
      */
     var World = function (worldOpts, entityOpts) {
         this.canvas = worldOpts.canvas || document.getElementById("world");
-        this.rewardGraph = worldOpts.rewardGraph || new Graph(worldOpts);
+        this.rewardGraph = worldOpts.rewardGraph || new RewardGraph(worldOpts);
         this.ctx = this.canvas.getContext("2d");
         this.width = this.canvas.width;
         this.height = this.canvas.height;
@@ -94,6 +94,9 @@
         function animate() {
             if (!_this.pause) {
                 _this.tick();
+                if (typeof _this.plot !== 'undefined') {
+                    _this.graphRewards();
+                }
                 _this.draw();
             }
             _this.renderer.render(_this.stage);
@@ -254,11 +257,6 @@
 
             this.grid.getGridLocation(this.agents[a]);
 
-            // Destroy the eaten entities
-            for (let j = 0, dl = this.agents[a].digested.length; j < dl; j++) {
-                this.deleteEntity(this.agents[a].digested[j]);
-            }
-
             if (this.clock % 100 === 0 && this.agents[a].pts.length !== 0) {
                 if (typeof this.rewardGraph !== 'undefined') {
                     // Throw some points on a Graph
@@ -268,11 +266,12 @@
                     this.agents[a].pts = [];
                 }
             }
+
         }
 
         // Loop through and destroy old items
         for (let e = 0; e < this.entities.length; e++) {
-            if (this.entities[e].age > 10000 || this.entities[e].cleanUp === true) {
+            if (this.entities[e].age > 1000 || this.entities[e].cleanUp === true) {
                 this.deleteEntity(this.entities[e]);
             }
         }

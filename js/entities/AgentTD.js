@@ -11,10 +11,16 @@
     var AgentTD = function (position, env, opts) {
         Agent.call(this, position, env, opts);
 
+        // Is it a worker
+        this.worker = (typeof opts.worker !== 'boolean') ? false : opts.worker;
+
         this.carrot = +5;
         this.stick = -6;
 
         this.name = "Agent TD";
+        if (this.worker) {
+            this.name += ' Worker';
+        }
 
         // The Agent's actions
         this.actions = [];
@@ -81,8 +87,47 @@
             tdtrainer_options: this.trainerOpts
         };
 
-        this.brain = new TDBrain(this.brainOpts);
+        var _this = this;
 
+        if (!this.worker) {
+            this.brain = new TDBrain(this.brainOpts);
+        } else {
+            this.brain = new Worker('js/entities/TDBrain.js');
+            this.brain.onmessage = function (e) {
+                var data = e.data;
+                switch (data.cmd) {
+                case 'init':
+                    if (data.msg === 'load') {
+                        _this.brain.load(data.input);
+                    }
+                    if (data.msg === 'complete') {
+                        _this.worker = true;
+                    }
+                    break;
+                case 'forward':
+                    if (data.msg === 'complete') {
+                        _this.previousActionIdx = _this.actionIndex;
+                        _this.actionIndex = data.input;
+                        var action = _this.actions[_this.actionIndex];
+
+                        // Demultiplex into behavior variables
+                        _this.rot1 = action[0] * 1;
+                        _this.rot2 = action[1] * 1;
+                    }
+                    break;
+                case 'backward':
+                    if (data.msg === 'complete') {
+                        _this.pts.push(parseFloat(data.input));
+                    }
+                    break;
+                default:
+                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                    break;
+                }
+            };
+
+            this.brain.postMessage({cmd: 'init', input: this.brainOpts});
+        }
         return this;
     };
 
@@ -107,14 +152,20 @@
             }
         }
 
-        // Get action from brain
-        this.previousActionIdx = this.actionIndex;
-        this.actionIndex = this.brain.forward(inputArray);
-        var action = this.actions[this.actionIndex];
+        if (!this.worker) {
+            // Get action from brain
+            this.previousActionIdx = this.actionIndex;
+            this.actionIndex = this.brain.forward(inputArray);
+            var action = this.actions[this.actionIndex];
 
-        // Demultiplex into behavior variables
-        this.rot1 = action[0] * 1;
-        this.rot2 = action[1] * 1;
+            // Demultiplex into behavior variables
+            this.rot1 = action[0] * 1;
+            this.rot2 = action[1] * 1;
+
+            return this;
+        } else {
+            this.brain.postMessage({cmd: 'forward', input: inputArray});
+        }
     };
 
     /**
@@ -145,7 +196,13 @@
         var reward = proximityReward + forwardReward + digestionReward;
 
         // pass to brain for learning
-        this.brain.backward(reward);
+        if (!this.worker) {
+            this.brain.backward(reward);
+        } else {
+            this.brain.postMessage({cmd: 'backward', input: reward});
+        }
+
+        return this;
     };
 
     global.AgentTD = AgentTD;

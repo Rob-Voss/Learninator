@@ -320,25 +320,6 @@
             }
 
             return this;
-        },
-        visSelf: function (elt) {
-            elt.innerHTML = ''; // erase elt first
-
-            // elt is a DOM element that this function fills with brain-related information
-            var brainvis = document.createElement('div');
-
-            // basic information
-            var desc = document.createElement('div');
-            var t = '';
-            t += 'experience replay size: ' + this.experience.length + '<br>';
-            t += 'exploration epsilon: ' + this.epsilon + '<br>';
-            t += 'age: ' + this.age + '<br>';
-            t += 'average Q-learning loss: ' + this.average_loss_window.get_average() + '<br />';
-            t += 'smooth-ish reward: ' + this.average_reward_window.get_average() + '<br />';
-            desc.innerHTML = t;
-            brainvis.appendChild(desc);
-
-            elt.appendChild(brainvis);
         }
     };
 

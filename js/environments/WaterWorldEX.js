@@ -4,10 +4,10 @@
     /**
      * World object contains many agents and walls and food and stuff
      *
-     * @returns {WaterWorld}
+     * @returns {WaterWorldEX}
      * @constructor
      */
-    var WaterWorld = function () {
+    var WaterWorldEX = function () {
         this.canvas = document.getElementById("world");
         this.xCount = 1;
         this.yCount = 1;
@@ -17,6 +17,12 @@
         this.cheats = false;
         this.entities = [];
         this.nodes = [];
+
+        // flot stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
 
         this.agentOpts = {
             brainType: 'RLDQN',
@@ -52,38 +58,125 @@
             new Wall(new Vec(0, 0 + this.canvas.height), new Vec(0, 0))
         ];
 
-        World.call(this, this, this.entityOpts);
+        this.initFlot = function () {
+            for (let a = 0; a < this.agents.length; a++) {
+                this.smoothReward[a] = null;
+                this.smoothRewardHistory[a] = null;
+            }
+            this.container = document.getElementById('flotreward');
+            this.series = [];
+            for (let a = 0, ac = this.agents.length; a < ac; a++) {
+                this.flott[a] = 0;
+                this.smoothRewardHistory[a] = [];
+                this.series[a] = {
+                    data: this.getFlotRewards(a),
+                    lines: {fill: true},
+                    color: a,
+                    label: this.agents[a].name
+                };
+            }
 
-        // init the quadtree
-        var args = {
-            x: 0,
-            y: 0,
-            height: this.canvas.height,
-            width: this.canvas.width,
-            maxChildren: 5,
-            maxDepth: 5
+            this.plot = $.plot(this.container, this.series, {
+                grid: {
+                    borderWidth: 1,
+                    minBorderMargin: 20,
+                    labelMargin: 10,
+                    backgroundColor: {
+                        colors: ["#FFF", "#e4f4f4"]
+                    },
+                    margin: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                    }
+                },
+                xaxis: {
+                    min: 0,
+                    max: this.nflot
+                },
+                yaxis: {
+                    min: -0.10,
+                    max: 0.10
+                }
+            });
         };
-        this.tree = new QuadTree(args);
+
+        /**
+         *
+         * @param {Number} an
+         * @returns {Array}
+         */
+        this.getFlotRewards = function (an) {
+            // zip rewards into flot data
+            var res = [];
+            if (this.smoothRewardHistory[an] === null) {
+                this.smoothRewardHistory[an] = [];
+            }
+
+            for (var i = 0, hl = this.smoothRewardHistory[an].length; i < hl; i++) {
+                res.push([i, this.smoothRewardHistory[an][i]]);
+            }
+
+            return res;
+        };
+
+        this.graphRewards = function () {
+            for (var a = 0, ac = this.agents.length; a < ac; a++) {
+                var agent = this.agents[a],
+                    rew = agent.lastReward;
+
+                if (this.smoothReward[a] === null) {
+                    this.smoothReward[a] = rew;
+                }
+                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
+                this.flott[a] += 1;
+                if (this.flott[a] === 50) {
+                    for (var i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
+                        // record smooth reward
+                        if (hl >= this.nflot) {
+                            this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
+                        }
+                        this.smoothRewardHistory[a].push(this.smoothReward[a]);
+                        this.flott[a] = 0;
+                    }
+                }
+            }
+
+            for (var an = 0, al = this.agents.length; an < al; an++) {
+                if (typeof this.series[an] !== 'undefined') {
+                    this.series[an].data = this.getFlotRewards(an);
+                }
+            }
+
+            this.plot.setData(this.series);
+            this.plot.draw();
+        };
+
+        World.call(this, this, this.entityOpts);
 
         this.addAgents();
         this.addEntities();
         this.updatePopulation();
 
+        this.initFlot();
+
         return this;
     };
 
-    WaterWorld.prototype = Object.create(World.prototype);
-    WaterWorld.prototype.constructor = World;
+    WaterWorldEX.prototype = Object.create(World.prototype);
+    WaterWorldEX.prototype.constructor = World;
 
     /**
      * Add the Agents
      * @returns {World}
      */
-    WaterWorld.prototype.addAgents = function () {
+    WaterWorldEX.prototype.addAgents = function () {
+        var vec1 = new Vec(Utility.randi(2, this.canvas.width - 2), Utility.randi(2, this.canvas.height - 2));
+
         this.agents = [
-            new AgentRLDQN(new Vec(300, 300), this, this.agentOpts)
+            new AgentRLDQN(vec1, this, this.agentOpts)
         ];
-        this.agents[0].load('zoo/wateragent.json');
+        //this.agents[0].load('zoo/wateragent.json');
 
         // Add the agents
         for (let a = 0; a < this.agents.length; a++) {
@@ -91,7 +184,6 @@
             for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 this.stage.addChild(this.agents[a].eyes[ei].shape);
             }
-            this.agents.push(this.agents[a]);
         }
 
         return this;
@@ -101,7 +193,7 @@
      * Add some noms
      * @returns {World}
      */
-    WaterWorld.prototype.addEntities = function () {
+    WaterWorldEX.prototype.addEntities = function () {
         for (let k = 0; k < this.numEntities; k++) {
             let type = Utility.randi(1, 3),
                 x = Utility.randi(5, this.canvas.width - 10),
@@ -115,7 +207,7 @@
             if (type === 1) {
                 entity = new Entity(type, position, this, this.entityOpts);
                 this.stage.addChild(entity.shape || entity.sprite);
-            } else {
+            } else if(type === 2 && Utility.randf(0, 1) < 0.25) {
                 entity = new EntityRLDQN(position, this, this.entityOpts);
 
                 // Insert the population
@@ -123,6 +215,9 @@
                 for (let ei = 0; ei < entity.eyes.length; ei++) {
                     this.stage.addChild(entity.eyes[ei].shape);
                 }
+            } else {
+                entity = new Entity(type, position, this, this.entityOpts);
+                this.stage.addChild(entity.shape || entity.sprite);
             }
 
             this.entities.push(entity);
@@ -133,7 +228,7 @@
      * Remove the entity from the world
      * @param {Object} entity
      */
-    World.prototype.deleteEntity = function (entity) {
+    WaterWorldEX.prototype.deleteEntity = function (entity) {
         this.nodes.splice(this.nodes.findIndex(Utility.getId, entity.id), 1);
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
         this.stage.removeChild(entity.shape || entity.sprite);
@@ -142,7 +237,7 @@
     /**
      * Update the QuadTree
      */
-    WaterWorld.prototype.updatePopulation = function () {
+    WaterWorldEX.prototype.updatePopulation = function () {
         this.tree.clear();
         this.nodes = [];
 
@@ -160,7 +255,7 @@
     /**
      * Draw it all
      */
-    WaterWorld.prototype.draw = function () {
+    WaterWorldEX.prototype.draw = function () {
         // draw walls in environment
         for (let i = 0, n = this.walls.length; i < n; i++) {
             this.walls[i].draw();
@@ -178,10 +273,11 @@
 
         for (let i = 0, n = this.entities.length; i < n; i++) {
             this.entities[i].draw();
-
-            // draw agents sight
-            for (let ei = 0, ne = this.entities[i].eyes.length; ei < ne; ei++) {
-                this.entities[i].eyes[ei].draw(this.entities[i].position, this.entities[i].angle);
+            if (typeof this.entities[i].eyes !== 'undefined') {
+                // draw agents sight
+                for (let ei = 0, ne = this.entities[i].eyes.length; ei < ne; ei++) {
+                    this.entities[i].eyes[ei].draw(this.entities[i].position, this.entities[i].angle);
+                }
             }
         }
 
@@ -190,7 +286,7 @@
     /**
      * Tick the environment
      */
-    WaterWorld.prototype.tick = function () {
+    WaterWorldEX.prototype.tick = function () {
         // Reset the cell's population's
         this.updatePopulation();
 
@@ -206,6 +302,6 @@
         }
     };
 
-    global.WaterWorld = WaterWorld;
+    global.WaterWorldEX = WaterWorldEX;
 
 }(this));

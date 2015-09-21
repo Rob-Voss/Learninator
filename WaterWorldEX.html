@@ -44,10 +44,11 @@
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
     <script src="js/entities/AgentRLDQN.js"></script>
+    <script src="js/entities/EntityRLDQN.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <script src="js/environments/World.js"></script>
-    <script src="js/environments/WaterWorld.js"></script>
+    <script src="js/environments/WaterWorldEX.js"></script>
 
     <script src="js/lib/external/convnet.js"></script>
     <script src="js/lib/external/rl.js"></script>
@@ -72,7 +73,7 @@
          * Create existence!
          */
         function start() {
-            world = new WaterWorld();
+            world = new WaterWorldEX();
 
             var wGUI = new dat.GUI(),
                 wFolder = wGUI.addFolder('World'),
