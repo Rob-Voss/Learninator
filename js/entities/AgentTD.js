@@ -9,18 +9,17 @@
      * @returns {AgentTD}
      */
     var AgentTD = function (position, env, opts) {
-        Agent.call(this, position, env, opts);
-
         // Is it a worker
         this.worker = (typeof opts.worker !== 'boolean') ? false : opts.worker;
-
-        this.carrot = +5;
-        this.stick = -6;
-
         this.name = "Agent TD";
         if (this.worker) {
             this.name += ' Worker';
         }
+
+        Agent.call(this, position, env, opts);
+
+        this.carrot = +5;
+        this.stick = -6;
 
         // The Agent's actions
         this.actions = [];
@@ -92,19 +91,20 @@
         if (!this.worker) {
             this.brain = new TDBrain(this.brainOpts);
         } else {
+            this.post = function (cmd, input) {
+                this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
+            };
+
             this.brain = new Worker('js/entities/TDBrain.js');
             this.brain.onmessage = function (e) {
                 var data = e.data;
                 switch (data.cmd) {
                 case 'init':
-                    if (data.msg === 'load') {
-                        _this.brain.load(data.input);
-                    }
                     if (data.msg === 'complete') {
-                        _this.worker = true;
+
                     }
                     break;
-                case 'forward':
+                case 'act':
                     if (data.msg === 'complete') {
                         _this.previousActionIdx = _this.actionIndex;
                         _this.actionIndex = data.input;
@@ -113,11 +113,20 @@
                         // Demultiplex into behavior variables
                         _this.rot1 = action[0] * 1;
                         _this.rot2 = action[1] * 1;
+
+                        _this.move();
+                        _this.eat();
+                        _this.learn();
                     }
                     break;
-                case 'backward':
+                case 'learn':
                     if (data.msg === 'complete') {
                         _this.pts.push(parseFloat(data.input));
+                    }
+                    break;
+                case 'load':
+                    if (data.msg === 'complete') {
+                        _this.epsilon = data.input;
                     }
                     break;
                 default:
@@ -126,7 +135,7 @@
                 }
             };
 
-            this.brain.postMessage({cmd: 'init', input: this.brainOpts});
+            this.post('init', this.brainOpts);
         }
         return this;
     };
@@ -137,7 +146,12 @@
     /**
      * Agent's chance to act on the world
      */
-    AgentTD.prototype.forward = function () {
+    AgentTD.prototype.act = function () {
+        // Loop through the eyes and check the walls and nearby entities
+        for (var e = 0; e < this.numEyes; e++) {
+            this.eyes[e].sense(this.position, this.angle, this.world.walls, this.world.entities);
+        }
+
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
         for (let i = 0; i < this.numEyes; i++) {
@@ -164,14 +178,15 @@
 
             return this;
         } else {
-            this.brain.postMessage({cmd: 'forward', input: inputArray});
+            this.post('act', inputArray);
         }
     };
 
     /**
      * The agent learns
      */
-    AgentTD.prototype.backward = function () {
+    AgentTD.prototype.learn = function () {
+        this.lastReward = this.digestionSignal;
         // Compute the reward
         var proximityReward = 0.0;
         for (let ei = 0; ei < this.numEyes; ei++) {
@@ -198,8 +213,9 @@
         // pass to brain for learning
         if (!this.worker) {
             this.brain.backward(reward);
+            this.pts.push(reward);
         } else {
-            this.brain.postMessage({cmd: 'backward', input: reward});
+            this.post('learn', reward);
         }
 
         return this;

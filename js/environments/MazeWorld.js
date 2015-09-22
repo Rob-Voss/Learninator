@@ -9,13 +9,23 @@
      */
     var MazeWorld = function () {
         this.canvas = document.getElementById("world");
-        this.rewardGraph = new RewardGraph({canvas:document.getElementById("rewardGraph")});
+        this.rewardGraph = new RewardGraph({
+            canvas: document.getElementById("rewardGraph"),
+            stepHorizon: 100
+        });
         this.xCount = 4;
         this.yCount = 4;
         this.numItems = 40;
-        this.closed = false;
-        this.cheats = false;
         this.maze = new Maze(this);
+        this.useFlot = false;
+        this.useGraph = true;
+        this.useGrid = false;
+        this.useQuad = true;
+        this.closed = true;
+        this.cheats = {
+            population: true,
+            walls: false
+        };
         this.Rarr = null;
         this.Aarr = null;
 
@@ -29,7 +39,12 @@
             collision: false,
             interactive: false,
             useSprite: false,
-            movingEntities: false
+            movingEntities: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: true
+            }
         };
 
         this.TDOptsWorker = {
@@ -43,7 +58,12 @@
             collision: false,
             interactive: false,
             useSprite: false,
-            movingEntities: false
+            movingEntities: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: true
+            }
         };
 
         this.entityOpts = {
@@ -53,16 +73,16 @@
             collision: false,
             interactive: false,
             useSprite: false,
-            movingEntities: false
+            movingEntities: true
         };
 
-        this.grid = this.maze.grid;
         this.walls = this.maze.walls;
 
         this.agents = [
             new AgentTD(new Vec(1, 1), this.grid, this.TDOptsWorker),
             new AgentTD(new Vec(1, 1), this.grid, this.TDOpts)
         ];
+        this.agents[0].load('zoo/mazeagent.json');
 
         World.call(this, this, this.entityOpts);
 

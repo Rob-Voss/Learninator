@@ -14,15 +14,14 @@
         this.numEntities = 10;
         this.numEntityAgents = 10;
         this.closed = true;
-        this.cheats = false;
-        this.entities = [];
-        this.nodes = [];
-
-        // flot stuff
-        this.nflot = 1000;
-        this.smoothRewardHistory = [];
-        this.smoothReward = [];
-        this.flott = [];
+        this.useFlot = true;
+        this.useGraph = false;
+        this.useGrid = false;
+        this.useQuad = true;
+        this.cheats = {
+            population: true,
+            walls: false
+        };
 
         this.agentOpts = {
             brainType: 'RLDQN',
@@ -34,7 +33,11 @@
             collision: true,
             interactive: false,
             useSprite: false,
-            cheats: false
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: true
+            }
         };
 
         this.entityOpts = {
@@ -48,7 +51,11 @@
             interactive: false,
             useSprite: false,
             movingEntities: true,
-            cheats: false
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: false
+            }
         };
 
         this.walls = [
@@ -58,113 +65,154 @@
             new Wall(new Vec(0, 0 + this.canvas.height), new Vec(0, 0))
         ];
 
-        this.initFlot = function () {
-            for (let a = 0; a < this.agents.length; a++) {
-                this.smoothReward[a] = null;
-                this.smoothRewardHistory[a] = null;
-            }
-            this.container = document.getElementById('flotreward');
-            this.series = [];
-            for (let a = 0, ac = this.agents.length; a < ac; a++) {
-                this.flott[a] = 0;
-                this.smoothRewardHistory[a] = [];
-                this.series[a] = {
-                    data: this.getFlotRewards(a),
-                    lines: {fill: true},
-                    color: a,
-                    label: this.agents[a].name
-                };
-            }
-
-            this.plot = $.plot(this.container, this.series, {
-                grid: {
-                    borderWidth: 1,
-                    minBorderMargin: 20,
-                    labelMargin: 10,
-                    backgroundColor: {
-                        colors: ["#FFF", "#e4f4f4"]
-                    },
-                    margin: {
-                        top: 10,
-                        bottom: 10,
-                        left: 10,
-                    }
-                },
-                xaxis: {
-                    min: 0,
-                    max: this.nflot
-                },
-                yaxis: {
-                    min: -0.10,
-                    max: 0.10
-                }
-            });
-        };
-
-        /**
-         *
-         * @param {Number} an
-         * @returns {Array}
-         */
-        this.getFlotRewards = function (an) {
-            // zip rewards into flot data
-            var res = [];
-            if (this.smoothRewardHistory[an] === null) {
-                this.smoothRewardHistory[an] = [];
-            }
-
-            for (var i = 0, hl = this.smoothRewardHistory[an].length; i < hl; i++) {
-                res.push([i, this.smoothRewardHistory[an][i]]);
-            }
-
-            return res;
-        };
-
-        this.graphRewards = function () {
-            for (var a = 0, ac = this.agents.length; a < ac; a++) {
-                var agent = this.agents[a],
-                    rew = agent.lastReward;
-
-                if (this.smoothReward[a] === null) {
-                    this.smoothReward[a] = rew;
-                }
-                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
-                this.flott[a] += 1;
-                if (this.flott[a] === 50) {
-                    for (var i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
-                        // record smooth reward
-                        if (hl >= this.nflot) {
-                            this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
-                        }
-                        this.smoothRewardHistory[a].push(this.smoothReward[a]);
-                        this.flott[a] = 0;
-                    }
-                }
-            }
-
-            for (var an = 0, al = this.agents.length; an < al; an++) {
-                if (typeof this.series[an] !== 'undefined') {
-                    this.series[an].data = this.getFlotRewards(an);
-                }
-            }
-
-            this.plot.setData(this.series);
-            this.plot.draw();
-        };
-
         World.call(this, this, this.entityOpts);
 
         this.addAgents();
         this.addEntities();
-        this.updatePopulation();
-
-        this.initFlot();
 
         return this;
     };
 
     WaterWorldEX.prototype = Object.create(World.prototype);
     WaterWorldEX.prototype.constructor = World;
+
+    WaterWorldEX.prototype.env = function () {
+        /**
+         * Set up the puck world and the actions avail
+         */
+        this.reset = function () {
+            // Puck x,y,z,vx,vy,vz
+            this.puck = {};
+            this.target = {};
+            this.enemy = {};
+            this.puck.position = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
+            this.target.position = new Vec(Math.random(), Math.random()); // target
+            this.enemy.position = new Vec(Math.random(), Math.random()); // enemy
+            this.radius = 0.05;
+            this.t = 0;
+
+            this.BADRAD = 0.25;
+            this.tick();
+        };
+
+        /**
+         * Return the number of states
+         *
+         * @returns {Number}
+         */
+        this.getNumStates = function () {
+            return 8; // x,y,vx,vy, puck dx,dy
+        };
+
+        /**
+         * Return the number of actions
+         *
+         * @returns {Number}
+         */
+        this.getMaxNumActions = function () {
+            return 5; // left, right, up, down, nothing
+        };
+
+        this.getState = function () {
+            var s = [
+                this.puck.position.x - 0.5,
+                this.puck.position.y - 0.5,
+                this.puck.position.vx * 10,
+                this.puck.position.vy * 10,
+                this.target.position.x - this.puck.position.x,
+                this.target.position.y - this.puck.position.y,
+                this.enemy.position.x - this.puck.position.x,
+                this.enemy.position.y - this.puck.position.y
+            ];
+            return s;
+        };
+
+        /**
+         */
+        this.sampleNextState = function () {
+            // world dynamics
+            this.puck.position.x += this.puck.position.vx; // newton
+            this.puck.position.y += this.puck.position.vy;
+            this.puck.position.vx *= 0.95; // damping
+            this.puck.position.vy *= 0.95;
+
+            // agent action influences puck velocity
+            var accel = 0.002;
+            switch (this.action) {
+                case 0:
+                    this.puck.position.vx -= accel;
+                    break;
+                case 1:
+                    this.puck.position.vx += accel;
+                    break;
+                case 2:
+                    this.puck.position.vy -= accel;
+                    break;
+                case 3:
+                    this.puck.position.vy += accel;
+                    break;
+            }
+
+            // handle boundary conditions and bounce
+            if (this.puck.position.x < this.radius) {
+                this.puck.position.vx *= -0.5; // bounce!
+                this.puck.position.x = this.radius;
+            }
+            if (this.puck.position.x > 1 - this.radius) {
+                this.puck.position.vx *= -0.5;
+                this.puck.position.x = 1 - this.radius;
+            }
+            if (this.puck.position.y < this.radius) {
+                this.puck.position.vy *= -0.5; // bounce!
+                this.puck.position.y = this.radius;
+            }
+            if (this.puck.position.y > 1 - this.radius) {
+                this.puck.position.vy *= -0.5;
+                this.puck.position.y = 1 - this.radius;
+            }
+
+            this.t += 1;
+            if (this.t % 73 === 0) {
+                this.enemy.position.x = Math.random(); // reset the target location
+                this.enemy.position.y = Math.random();
+            }
+
+            // compute distances
+            var dx1 = this.puck.position.x - this.target.position.x, // Distance from gewdness
+                dy1 = this.puck.position.y - this.target.position.y, // Distance from gewdness
+                d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
+                dx2 = this.puck.position.x - this.enemy.position.x, // Distance from badness
+                dy2 = this.puck.position.y - this.enemy.position.y, // Distance from badness
+                d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
+                dxnorm = dx2 / d2,
+                dynorm = dy2 / d2,
+                speed = 0.001;
+            this.enemy.position.x += speed * dxnorm;
+            this.enemy.position.y += speed * dynorm;
+
+            // compute reward
+            // want to go close to green
+            var r = -d1;
+            if (d2 < this.BADRAD) {
+                // but if we're too close to red that's bad
+                r += 2 * (d2 - this.BADRAD) / this.BADRAD;
+            }
+
+            // give bonus for gliding with no force
+            if (this.action === 4) {
+                r += 0.05;
+            }
+
+            // evolve state in time
+            var ns = this.getState(),
+                out = {
+                    ns: ns,
+                    r: r
+                };
+
+            return out;
+        };
+    };
 
     /**
      * Add the Agents
@@ -225,34 +273,6 @@
     };
 
     /**
-     * Remove the entity from the world
-     * @param {Object} entity
-     */
-    WaterWorldEX.prototype.deleteEntity = function (entity) {
-        this.nodes.splice(this.nodes.findIndex(Utility.getId, entity.id), 1);
-        this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
-        this.stage.removeChild(entity.shape || entity.sprite);
-    };
-
-    /**
-     * Update the QuadTree
-     */
-    WaterWorldEX.prototype.updatePopulation = function () {
-        this.tree.clear();
-        this.nodes = [];
-
-        for (let i = 0, ni = this.entities.length; i < ni; i++) {
-            this.nodes.push(this.entities[i]);
-        }
-
-        for (let i = 0, na = this.agents.length; i < na; i++) {
-            this.nodes.push(this.agents[i]);
-        }
-
-        this.tree.insert(this.nodes);
-    };
-
-    /**
      * Draw it all
      */
     WaterWorldEX.prototype.draw = function () {
@@ -270,11 +290,12 @@
                 this.agents[i].eyes[ei].draw(this.agents[i].position, this.agents[i].angle);
             }
         }
-
+        // draw smart entities
         for (let i = 0, n = this.entities.length; i < n; i++) {
             this.entities[i].draw();
+
+            // draw agents sight
             if (typeof this.entities[i].eyes !== 'undefined') {
-                // draw agents sight
                 for (let ei = 0, ne = this.entities[i].eyes.length; ei < ne; ei++) {
                     this.entities[i].eyes[ei].draw(this.entities[i].position, this.entities[i].angle);
                 }

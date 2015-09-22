@@ -17,7 +17,7 @@
         this.sid = -1;
         this.action = null;
         this.state = 0;
-        this.steps_per_tick = 1;
+        this.stepsPerTick = 1;
         this.pause = false;
 
         this.agentOpts = {
@@ -33,11 +33,11 @@
                 // eligibility trace decay, [0,1). 0 = no eligibility traces
                 lambda: 0,
                 // use replacing or accumulating traces
-                replacing_traces: true,
+                replacingTraces: true,
                 // number of planning steps per iteration. 0 = no planning
                 planN: 50,
                 // non-standard, updates policy smoothly to follow max_a Q
-                smooth_policy_update: true,
+                smoothPolicyUpdate: true,
                 // learning rate for smooth policy update
                 beta: 0.1
             },
@@ -82,7 +82,7 @@
             obs;
         if (_this.sid === -1) {
             _this.sid = setInterval(function () {
-                for (var k = 0; k < _this.steps_per_tick; k++) {
+                for (var k = 0; k < _this.stepsPerTick; k++) {
                     //_this.agents[0].tick();
                     // ask agent for an action
                     var a = _this.agents[0].brain.act(_this.state),
@@ -100,16 +100,16 @@
                         y = _this.agents[0].gridLocation.coords.bottom.right.y - (_this.grid.cellHeight / 2);
                     _this.agents[0].position.set(x, y);
 
-                    _this.agents[0].nsteps_counter += 1;
-                    if (typeof obs.reset_episode !== 'undefined') {
+                    _this.agents[0].nStepsCounter += 1;
+                    if (typeof obs.resetEpisode !== 'undefined') {
                         _this.agents[0].score += 1;
                         _this.agents[0].brain.resetEpisode();
                         // record the reward achieved
-                        if (_this.agents[0].nsteps_history.length >= _this.agents[0].nflot) {
-                            _this.agents[0].nsteps_history = _this.agents[0].nsteps_history.slice(1);
+                        if (_this.agents[0].nStepsHistory.length >= _this.agents[0].nflot) {
+                            _this.agents[0].nStepsHistory = _this.agents[0].nStepsHistory.slice(1);
                         }
-                        _this.agents[0].nsteps_history.push(_this.agents[0].nsteps_counter);
-                        _this.agents[0].nsteps_counter = 0;
+                        _this.agents[0].nStepsHistory.push(_this.agents[0].nStepsCounter);
+                        _this.agents[0].nStepsCounter = 0;
 
                         _this.agents[0].gridLocation = _this.grid.getCellAt(0, 0);
                         _this.agents[0].position.set(_this.grid.cellWidth / 2, _this.grid.cellHeight / 2);
@@ -243,7 +243,7 @@
         };
         if (s === (this.gS - 1)) {
             // episode is over
-            out.reset_episode = true;
+            out.resetEpisode = true;
         }
 
         return out;

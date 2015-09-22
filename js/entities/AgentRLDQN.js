@@ -16,30 +16,13 @@
             this.name += ' Worker';
         }
 
-        Entity.call(this, 3, position, env, opts);
+        Agent.call(this, position, env, opts);
 
-        // The number of item types the Agent's eyes can see
-        this.numTypes = typeof opts.numTypes === 'number' ? opts.numTypes : 3;
-        // The number of Agent's eyes
-        this.numEyes = typeof opts.numEyes === 'number' ? opts.numEyes : 9;
         // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
         this.numStates = this.numEyes * this.numTypes + 2;
-
+        // Reward or punishment
         this.carrot = +1;
         this.stick = -1;
-        this.action = null;
-        this.lastReward = 0;
-        this.digestionSignal = 0.0;
-        this.epsilon = 0.000;
-        this.pts = [];
-        this.direction = 'N';
-        this.world = {};
-
-        // The Agent's eyes
-        this.eyes = [];
-        for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * 0.21, opts.range, opts.proximity));
-        }
 
         // The Agent's actions
         this.actions = [];
@@ -51,16 +34,17 @@
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
+        // Set the brain options
         this.brainOpts = opts.spec || {
             update: "qlearn", // qlearn | sarsa
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
             alpha: 0.005, // value function learning rate
-            experience_add_every: 5, // number of time steps before we add another experience to replay memory
-            experience_size: 10000, // size of experience
-            learning_steps_per_iteration: 5,
-            tderror_clamp: 1.0, // for robustness
-            num_hidden_units: 100 // number of neurons in hidden layer
+            experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
+            experienceSize: 10000, // size of experience
+            learningStepsPerIteration: 5,
+            tdErrorClamp: 1.0, // for robustness
+            numHiddenUnits: 100 // number of neurons in hidden layer
         };
 
         // Set up the environment variable for RL
@@ -68,15 +52,18 @@
             numActions: this.numActions,
             numStates: this.numStates
         };
+
         this.env.getMaxNumActions = function () {
             return this.numActions;
         };
+
         this.env.getNumStates = function () {
             return this.numStates;
         };
 
         var _this = this;
 
+        // If it's a worker then we have to load it a bit different
         if (!this.worker) {
             this.brain = new DQNAgent(_this.env, this.brainOpts);
 
@@ -85,39 +72,40 @@
             this.post = function (cmd, input) {
                 this.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
             };
+
             var jEnv = Utility.stringify(_this.env),
-                jOpts = JSON.stringify(_this.brainOpts);
+                jOpts = Utility.stringify(_this.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
             this.brain.onmessage = function (e) {
                 var data = e.data;
                 switch (data.cmd) {
-                    case 'init':
-                        if (data.msg === 'complete') {
+                case 'init':
+                    if (data.msg === 'complete') {
 
-                        }
-                        break;
-                    case 'act':
-                        if (data.msg === 'complete') {
-                            _this.action = data.input;
-                            _this.move();
-                            _this.eat();
-                            _this.learn();
-                        }
-                        break;
-                    case 'learn':
-                        if (data.msg === 'complete') {
-                            _this.epsilon = data.input;
-                        }
-                        break;
-                    case 'load':
-                        if (data.msg === 'complete') {
-                            _this.epsilon = data.input;
-                        }
-                        break;
-                    default:
-                        console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-                        break;
+                    }
+                    break;
+                case 'act':
+                    if (data.msg === 'complete') {
+                        _this.action = data.input;
+                        _this.move();
+                        _this.eat();
+                        _this.learn();
+                    }
+                    break;
+                case 'learn':
+                    if (data.msg === 'complete') {
+                        _this.epsilon = data.input;
+                    }
+                    break;
+                case 'load':
+                    if (data.msg === 'complete') {
+                        _this.epsilon = data.input;
+                    }
+                    break;
+                default:
+                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                    break;
                 }
             };
 
@@ -125,62 +113,8 @@
         }
     };
 
-    /**
-     * Find nearby entities to nom on
-     * @returns {AgentRLDQN}
-     */
-    AgentRLDQN.prototype.eat = function () {
-        this.digestionSignal = 0;
-        for (let j = 0; j < this.world.entities.length; j++) {
-            let entity = this.world.entities[j],
-                dist = this.position.distFrom(entity.position);
-            if (dist < entity.radius + this.radius) {
-                var result = Utility.collisionCheck(this.position, entity.position, this.world.walls, this.world.entities);
-                if (!result) {
-                    this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
-                    this.world.deleteEntity(entity);
-                }
-            }
-        }
-
-        return this;
-    }
-
-    /**
-     * Tick the agent
-     * @returns {AgentRLDQN}
-     */
-    AgentRLDQN.prototype.tick = function (world) {
-        this.world = world;
-        this.start = new Date().getTime();
-
-        // Let the agents behave in the world based on their input
-        this.act();
-
-        // If it's not a worker we need to run the rest of the steps
-        if (!this.worker) {
-            // Move eet!
-            this.move();
-            // Find nearby entities to nom
-            this.eat();
-            // This is where the agents learns based on the feedback of their actions on the environment
-            this.learn();
-        }
-
-        if (this.cheats) {
-            if (this.useSprite === true) {
-                this.sprite.getChildAt(0).position.set(this.position.x + this.radius, this.position.y);
-                this.sprite.getChildAt(1).position.set(this.position.x + this.radius, this.position.y + (this.radius /2) + 5);
-                this.sprite.getChildAt(2).position.set(this.position.x + this.radius, this.position.y + this.radius);
-            } else {
-                this.shape.getChildAt(0).position.set(this.position.x + this.radius, this.position.y);
-                this.shape.getChildAt(1).position.set(this.position.x + this.radius, this.position.y + (this.radius /2) + 5);
-                this.shape.getChildAt(2).position.set(this.position.x + this.radius, this.position.y + this.radius);
-            }
-        }
-
-        return this;
-    };
+    AgentRLDQN.prototype = Object.create(Agent.prototype);
+    AgentRLDQN.prototype.constructor = Agent;
 
     /**
      * Agent's chance to act on the world
@@ -228,61 +162,12 @@
      */
     AgentRLDQN.prototype.learn = function () {
         this.lastReward = this.digestionSignal;
-        //this.pts.push(this.lastReward);
 
         if (!this.worker) {
             this.brain.learn(this.digestionSignal);
             this.epsilon = this.brain.epsilon;
         } else {
             this.post('learn', this.digestionSignal);
-        }
-
-        return this;
-    };
-
-    /**
-     * Load a pre-trained agent
-     * @param file
-     */
-    AgentRLDQN.prototype.load = function (file) {
-        var _this = this;
-        $.getJSON(file, function(data) {
-            if (!_this.worker) {
-                _this.brain.fromJSON(data);
-                _this.brain.epsilon = 0.05;
-                _this.brain.alpha = 0;
-            } else {
-                _this.post('load', JSON.stringify(data));
-            }
-        });
-        return this;
-    };
-
-    /**
-     * Draws it
-     * @returns {AgentRLDQN}
-     */
-    AgentRLDQN.prototype.draw = function () {
-        if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = -this.angle;
-        } else {
-            this.shape.clear();
-            this.shape.lineStyle(1, 0x000000);
-
-            switch (this.type) {
-                case 1:
-                    this.shape.beginFill(0xFF0000);
-                    break;
-                case 2:
-                    this.shape.beginFill(0x00FF00);
-                    break;
-                case 3:
-                    this.shape.beginFill(0x0000FF);
-                    break;
-            }
-            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
-            this.shape.endFill();
         }
 
         return this;
@@ -357,23 +242,8 @@
         }
 
         var end = new Date().getTime(),
-            dist = this.position.distFrom(this.oldPos),
-            accel = dist / Math.pow(this.start - end, 2);
+            dist = this.position.distFrom(this.oldPos);
 
-        switch (this.action) {
-            case 0:
-                this.position.ax = -accel;
-                break;
-            case 1:
-                this.position.ax = accel;
-                break;
-            case 2:
-                this.position.ay = -accel;
-                break;
-            case 3:
-                this.position.ay = accel;
-                break;
-        }
         return this;
     };
 

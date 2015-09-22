@@ -57,11 +57,11 @@
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
             alpha: 0.005, // value function learning rate
-            experience_add_every: 5, // number of time steps before we add another experience to replay memory
-            experience_size: 10000, // size of experience
-            learning_steps_per_iteration: 5,
-            tderror_clamp: 1.0, // for robustness
-            num_hidden_units: 100 // number of neurons in hidden layer
+            experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
+            experienceSize: 10000, // size of experience
+            learningStepsPerIteration: 5,
+            tdErrorClamp: 1.0, // for robustness
+            numHiddenUnits: 100 // number of neurons in hidden layer
         };
 
         // Set up the environment variable for RL
@@ -89,26 +89,60 @@
      *
      * @param {Object} smallWorld
      */
-    EntityRLDQN.prototype.tick = function (smallWorld) {
-        this.digested = [];
-        // Loop through the eyes and check the walls and nearby entities
-        for (var e = 0; e < this.numEyes; e++) {
-            this.eyes[e].sense(this.position, this.angle, smallWorld.walls, smallWorld.nodes);
-        }
+    EntityRLDQN.prototype.tick = function (world) {
+        this.world = world;
 
         // Let the agents behave in the world based on their input
-        this.forward();
+        this.act();
 
-        var out = this.move(smallWorld);
+        // If it's not a worker we need to run the rest of the steps
+        if (!this.worker) {
+            // Move eet!
+            this.move();
+            // Find nearby entities to nom
+            //this.eat();
+            // This is where the agents learns based on the feedback of their actions on the environment
+            this.learn();
+        }
 
-        // This is where the agents learns based on the feedback of their actions on the environment
-        this.backward(out);
+        if (this.cheats) {
+            var child;
+            // If cheats are on then show the entities grid location and x,y coords
+            if (this.cheats.gridLocation === true) {
+                if (this.useSprite === true) {
+                    child = this.sprite.getChildAt(0);
+                } else {
+                    child = this.shape.getChildAt(0);
+                }
+                child.text = this.gridLocation.x + ':' + this.gridLocation.y;
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+            }
+
+            if (this.cheats.position === true) {
+                if (this.useSprite === true) {
+                    child = this.sprite.getChildAt(1);
+                } else {
+                    child = this.shape.getChildAt(1);
+                }
+                child.text = this.position.x + ':' + this.position.y;
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+            }
+
+            if (this.cheats.name === true) {
+                if (this.useSprite === true) {
+                    child = this.sprite.getChildAt(2);
+                } else {
+                    child = this.shape.getChildAt(2);
+                }
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            }
+        }
     };
 
     /**
      * Agent's chance to learn
      */
-    EntityRLDQN.prototype.backward = function () {
+    EntityRLDQN.prototype.learn = function () {
         this.lastReward = this.digestionSignal; // for vis
         this.brain.learn(this.digestionSignal);
 
@@ -118,7 +152,7 @@
     /**
      * Agent's chance to act on the world
      */
-    EntityRLDQN.prototype.forward = function () {
+    EntityRLDQN.prototype.act = function () {
         // in forward pass the agent simply behaves in the environment
         var ne = this.numEyes * this.numTypes,
             inputArray = new Array(this.numStates);
@@ -149,8 +183,8 @@
      * Move around
      * @param {Object} smallWorld
      */
-    EntityRLDQN.prototype.move = function (smallWorld) {
-        var speed = 0.02;
+    EntityRLDQN.prototype.move = function () {
+        var speed = 0.22;
 
         // Forward the agent by velocity
         this.position.x += this.position.vx;
@@ -182,8 +216,8 @@
             this.position.vx = 0;
             this.position.vy = 0;
         }
-        if (this.position.x > smallWorld.width - 2) {
-            this.position.x = smallWorld.width - 2;
+        if (this.position.x > this.world.width - 2) {
+            this.position.x = this.world.width - 2;
             this.position.vx = 0;
             this.position.vy = 0;
         }
@@ -192,8 +226,8 @@
             this.position.vx = 0;
             this.position.vy = 0;
         }
-        if (this.position.y > smallWorld.height - 2) {
-            this.position.y = smallWorld.height - 2;
+        if (this.position.y > this.world.height - 2) {
+            this.position.y = this.world.height - 2;
             this.position.vx = 0;
             this.position.vy = 0;
         }
@@ -218,10 +252,10 @@
                 // but if we're too close to red that's bad
                 r += 2 * (d2 - this.BADRAD) / this.BADRAD;
             }
-
+            // give bonus for gliding with no force
             if (this.action === 4) {
                 r += 0.05;
-            } // give bonus for gliding with no force
+            }
             var ns = 0;
         } else {
             var r = 0,

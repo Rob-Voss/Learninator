@@ -15,7 +15,7 @@
         this.grid = env.grid;
         this.gS = this.grid.yCount * this.grid.xCount;
         this.nsteps_history = [];
-        this.nsteps_counter = 0;
+        this.nStepsCounter = 0;
         this.nflot = 1000;
         this.score = 0;
 
@@ -27,9 +27,9 @@
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
             alpha: 0.1, // value function learning rate
             lambda: 0.9, // eligibility trace decay, [0,1). 0 = no eligibility traces
-            replacing_traces: true, // use replacing or accumulating traces
+            replacingTraces: true, // use replacing or accumulating traces
             planN: 50, // number of planning steps per iteration. 0 = no planning
-            smooth_policy_update: true, // non-standard, updates policy smoothly to follow max_a Q
+            smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
             beta: 0.1 // learning rate for smooth policy update
         };
 
@@ -43,8 +43,8 @@
 
             return this;
         } else {
-            var jEnv = JSON.stringify(_this),
-                jOpts = JSON.stringify(_this.brainOpts);
+            var jEnv = Utility.stringify(_this),
+                jOpts = Utility.stringify(_this.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
             this.brain.onmessage = function (e) {
@@ -78,16 +78,16 @@
                             y = _this.gridLocation.coords.bottom.right.y - (_this.smallWorld.grid.cellHeight / 2);
                         _this.position.set(x, y);
 
-                        _this.nsteps_counter += 1;
-                        if (typeof obs.reset_episode !== 'undefined') {
+                        _this.nStepsCounter += 1;
+                        if (typeof obs.resetEpisode !== 'undefined') {
                             _this.score += 1;
                             _this.brain.postMessage({cmd: 'resetEpisode'});
                             // record the reward achieved
                             if (_this.nsteps_history.length >= _this.nflot) {
                                 _this.nsteps_history = _this.nsteps_history.slice(1);
                             }
-                            _this.nsteps_history.push(_this.nsteps_counter);
-                            _this.nsteps_counter = 0;
+                            _this.nsteps_history.push(_this.nStepsCounter);
+                            _this.nStepsCounter = 0;
 
                             _this.gridLocation = _this.smallWorld.grid.getCellAt(0, 0);
                             _this.position.set(_this.smallWorld.grid.cellWidth / 2, _this.smallWorld.grid.cellHeight / 2);
@@ -132,16 +132,16 @@
                 y = this.gridLocation.coords.bottom.right.y - (smallWorld.grid.cellHeight / 2);
             this.position.set(x, y);
 
-            this.nsteps_counter += 1;
-            if (typeof obs.reset_episode !== 'undefined') {
+            this.nStepsCounter += 1;
+            if (typeof obs.resetEpisode !== 'undefined') {
                 this.score += 1;
                 this.brain.resetEpisode();
                 // record the reward achieved
                 if (this.nsteps_history.length >= this.nflot) {
                     this.nsteps_history = this.nsteps_history.slice(1);
                 }
-                this.nsteps_history.push(this.nsteps_counter);
-                this.nsteps_counter = 0;
+                this.nsteps_history.push(this.nStepsCounter);
+                this.nStepsCounter = 0;
 
                 this.gridLocation = smallWorld.grid.getCellAt(0, 0);
                 this.position.set(smallWorld.grid.cellWidth / 2, smallWorld.grid.cellHeight / 2);

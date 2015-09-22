@@ -101,10 +101,10 @@
 
                 folder.add(agent, 'direction').listen().name('Direction');
                 folder.add(agent, 'collision').listen().name('Collision');
-                folder.add(agent, 'cheats').listen().name('Cheats');
-                if (typeof agent.brain.epsilon !== 'undefined') {
-                    folder.add(agent.brain, 'epsilon').step(0.01).min(0).max(1).listen().name('Epsilon');
-                }
+                folder.add(agent.cheats, 'gridLocation').listen().name('GridLocation');
+                folder.add(agent.cheats, 'position').listen().name('Position');
+                folder.add(agent.cheats, 'name').listen().name('Name');
+                folder.add(agent, 'epsilon').step(0.001).min(0.000).max(1.000).listen().name('Epsilon');
                 folder.add(agent.position, 'x').listen().name('Pos X');
                 folder.add(agent.position, 'y').listen().name('Pos Y');
                 folder.add(agent.gridLocation, 'x').listen().name('Grid X');

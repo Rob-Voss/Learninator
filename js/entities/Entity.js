@@ -15,7 +15,7 @@
         var entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
         this.id = Utility.guid();
-        this.name = (this.name == '') ? entityTypes[typeId] : this.name;
+        this.name = (this.name === undefined) ? entityTypes[typeId] : this.name;
         this.type = typeId || 1;
         this.position = position || new Vec(5, 5);
         this.width = entityOpts.width || 20;
@@ -67,24 +67,47 @@
             this.shape = new PIXI.Graphics();
         }
 
+        // If cheats are on then show the entities grid location and x,y coords
         if (this.cheats) {
-            // If cheats are on then show the entities grid location and x,y coords
-            let fontOpts = {font: "10px Arial", fill: "#006400", align: "center"},
-                locText = new PIXI.Text(this.gridLocation.x + ':' + this.gridLocation.y, fontOpts),
-                posText = new PIXI.Text(this.position.x + ':' + this.position.y, fontOpts),
-                name = new PIXI.Text(this.name, fontOpts);
-            posText.position.set(-20, 10);
-            locText.position.set(0, 10);
-            name.position.set(this.radius, this.radius);
-
+            var fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
             if (this.useSprite === true) {
-                this.sprite.addChild(posText);
-                this.sprite.addChild(locText);
-                this.sprite.addChild(name);
+                this.sprite.addChild(new PIXI.Text());
+                this.sprite.addChild(new PIXI.Text());
+                this.sprite.addChild(new PIXI.Text());
             } else {
-                this.shape.addChild(posText);
-                this.shape.addChild(locText);
-                this.shape.addChild(name);
+                this.shape.addChild(new PIXI.Text('', fontOpts));
+                this.shape.addChild(new PIXI.Text('', fontOpts));
+                this.shape.addChild(new PIXI.Text('', fontOpts));
+            }
+
+            if (this.cheats.gridLocation === true) {
+                var gridText = new PIXI.Text(this.gridLocation.x + ':' + this.gridLocation.y, fontOpts);
+                gridText.position.set(this.position.x + this.radius, this.position.y);
+                if (this.useSprite === true) {
+                    this.sprite.addChildAt(gridText, 0);
+                } else {
+                    this.shape.addChildAt(gridText, 0);
+                }
+            }
+
+            if (this.cheats.position === true) {
+                var posText = new PIXI.Text(this.position.x + ':' + this.position.y, fontOpts);
+                posText.position.set(this.position.x + this.radius, this.position.y + this.radius);
+                if (this.useSprite === true) {
+                    this.sprite.addChildAt(posText, 1);
+                } else {
+                    this.shape.addChildAt(posText, 1);
+                }
+            }
+
+            if (this.cheats.name === true) {
+                var name = new PIXI.Text(this.name, fontOpts);
+                name.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                if (this.useSprite === true) {
+                    this.sprite.addChildAt(name, 2);
+                } else {
+                    this.shape.addChildAt(name, 2);
+                }
             }
         }
 
@@ -124,27 +147,25 @@
 
     /**
      * Move around
-     *
-     * @param {Object} smallWorld
      * @returns {Entity}
      */
-    Entity.prototype.move = function (smallWorld) {
+    Entity.prototype.move = function () {
         this.oldPos = this.position.clone();
 
         if (this.position.x < 1) {
             this.position.x = 1;
             this.position.vx *= -1;
         }
-        if (this.position.x > smallWorld.width - 1) {
-            this.position.x = smallWorld.width - 1;
+        if (this.position.x > this.world.width - 1) {
+            this.position.x = this.world.width - 1;
             this.position.vx *= -1;
         }
         if (this.position.y < 1) {
             this.position.y = 1;
             this.position.vy *= -1;
         }
-        if (this.position.y > smallWorld.height - 1) {
-            this.position.y = smallWorld.height - 1;
+        if (this.position.y > this.world.height - 1) {
+            this.position.y = this.world.height - 1;
             this.position.vy *= -1;
         }
 
@@ -162,31 +183,46 @@
     /**
      * Do work son
      *
-     * @param {Object} smallWorld
+     * @param {Object} world
      * @returns {Entity}
      */
-    Entity.prototype.tick = function (smallWorld) {
+    Entity.prototype.tick = function (world) {
+        this.world = world;
         this.age += 1;
 
-        if (smallWorld.movingEntities) {
-            this.move(smallWorld);
+        if (this.world.movingEntities) {
+            this.move();
         }
 
         if (this.cheats) {
-            var textItems = [];
-            if (this.useSprite === true) {
-                textItems.push(this.sprite.getChildAt(0));
-                textItems.push(this.sprite.getChildAt(1));
-                textItems.push(this.sprite.getChildAt(2));
-            } else {
-                textItems.push(this.shape.getChildAt(0));
-                textItems.push(this.shape.getChildAt(1));
-                textItems.push(this.shape.getChildAt(2));
+            var child;
+            // If cheats are on then show the entities grid location and x,y coords
+            if (this.cheats.gridLocation === true) {
+                if (this.useSprite) {
+                    child = this.sprite.getChildAt(0);
+                } else {
+                    child = this.shape.getChildAt(0);
+                }
+                child.text = this.gridLocation.x + ':' + this.gridLocation.y;
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius));
             }
-            // Update the item's gridLocation label
-            textItems[0].text = this.gridLocation.x + ':' + this.gridLocation.y;
-            textItems[1].text = this.position.x + ':' + this.position.y;
-            textItems[2].position.set(this.position.x + this.radius, this.position.y + this.radius);
+            if (this.cheats.position === true) {
+                if (this.useSprite) {
+                    child = this.sprite.getChildAt(1);
+                } else {
+                    child = this.shape.getChildAt(1);
+                }
+                child.text = this.position.x + ':' + this.position.y;
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+            }
+            if (this.cheats.name === true) {
+                if (this.useSprite) {
+                    child = this.sprite.getChildAt(2);
+                } else {
+                    child = this.shape.getChildAt(2);
+                }
+                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            }
         }
 
         return this;

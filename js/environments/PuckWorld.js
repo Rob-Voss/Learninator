@@ -7,6 +7,23 @@
      * @constructor
      */
     var PuckWorld = function () {
+        this.width = 600;
+        this.height = 600;
+        this.radius = 0.05;
+        this.sid = -1;
+        this.action = null;
+        this.state = null;
+        this.stepsPerTick = 1;
+        this.pause = false;
+        this.useFlot = true;
+        this.useGraph = false;
+        this.useGrid = true;
+        this.useQuad = false;
+        this.cheats = {
+            population: true,
+            walls: false
+        };
+
         this.agentOpts = {
             brainType: 'RLDQN',
             numEyes: 0,
@@ -24,15 +41,6 @@
             new AgentRLDQN(new Vec(300, 300), this, this.agentOpts)
         ];
 
-        this.width = 600;
-        this.height = 600;
-        this.radius = 0.05;
-        this.sid = -1;
-        this.action = null;
-        this.state = null;
-        this.steps_per_tick = 1;
-        this.pause = false;
-
         //World.call(this, this.worldOpts, this.entityOpts);
 
         this.reset();
@@ -45,7 +53,7 @@
             obs;
         if (_this.sid === -1) {
             _this.sid = setInterval(function () {
-                for (var k = 0; k < _this.steps_per_tick; k++) {
+                for (var k = 0; k < _this.stepsPerTick; k++) {
                     _this.state = _this.getState();
                     _this.action = _this.agents[0].brain.act(_this.state);
                     obs = _this.sampleNextState();

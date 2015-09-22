@@ -369,7 +369,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // required
-    this.out_depth = opt.filters;
+    this.outDepth = opt.filters;
     this.sx = opt.sx; // filter size. Should be odd if possible, it's cleaner.
     this.in_depth = opt.in_depth;
     this.in_sx = opt.in_sx;
@@ -386,34 +386,34 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     // note we are doing floor, so if the strided convolution of the filter doesnt fit into the input
     // volume exactly, the output volume will be trimmed and not contain the (incomplete) computed
     // final application.
-    this.out_sx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
-    this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
+    this.outSx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
+    this.outSy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
     this.layer_type = 'conv';
 
     // initializations
     var bias = typeof opt.bias_pref !== 'undefined' ? opt.bias_pref : 0.0;
     this.filters = [];
-    for(var i=0;i<this.out_depth;i++) { this.filters.push(new Vol(this.sx, this.sy, this.in_depth)); }
-    this.biases = new Vol(1, 1, this.out_depth, bias);
+    for(var i=0;i<this.outDepth;i++) { this.filters.push(new Vol(this.sx, this.sy, this.in_depth)); }
+    this.biases = new Vol(1, 1, this.outDepth, bias);
   }
   ConvLayer.prototype = {
     forward: function(V, is_training) {
       // optimized code by @mdda that achieves 2x speedup over previous version
 
       this.in_act = V;
-      var A = new Vol(this.out_sx |0, this.out_sy |0, this.out_depth |0, 0.0);
+      var A = new Vol(this.outSx |0, this.outSy |0, this.outDepth |0, 0.0);
 
       var V_sx = V.sx |0;
       var V_sy = V.sy |0;
       var xy_stride = this.stride |0;
 
-      for(var d=0;d<this.out_depth;d++) {
+      for(var d=0;d<this.outDepth;d++) {
         var f = this.filters[d];
         var x = -this.pad |0;
         var y = -this.pad |0;
-        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+        for(var ay=0; ay<this.outSy; y+=xy_stride,ay++) {  // xy_stride
           x = -this.pad |0;
-          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+          for(var ax=0; ax<this.outSx; x+=xy_stride,ax++) {  // xy_stride
 
             // convolve centered at this particular location
             var a = 0.0;
@@ -446,13 +446,13 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var V_sy = V.sy |0;
       var xy_stride = this.stride |0;
 
-      for(var d=0;d<this.out_depth;d++) {
+      for(var d=0;d<this.outDepth;d++) {
         var f = this.filters[d];
         var x = -this.pad |0;
         var y = -this.pad |0;
-        for(var ay=0; ay<this.out_sy; y+=xy_stride,ay++) {  // xy_stride
+        for(var ay=0; ay<this.outSy; y+=xy_stride,ay++) {  // xy_stride
           x = -this.pad |0;
-          for(var ax=0; ax<this.out_sx; x+=xy_stride,ax++) {  // xy_stride
+          for(var ax=0; ax<this.outSx; x+=xy_stride,ax++) {  // xy_stride
 
             // convolve centered at this particular location
             var chain_grad = this.out_act.get_grad(ax,ay,d); // gradient from above, from chain rule
@@ -478,7 +478,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     getParamsAndGrads: function() {
       var response = [];
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         response.push({params: this.filters[i].w, grads: this.filters[i].dw, l2_decay_mul: this.l2_decay_mul, l1_decay_mul: this.l1_decay_mul});
       }
       response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
@@ -490,9 +490,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       json.sy = this.sy;
       json.stride = this.stride;
       json.in_depth = this.in_depth;
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.l1_decay_mul = this.l1_decay_mul;
       json.l2_decay_mul = this.l2_decay_mul;
@@ -505,9 +505,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.sx = json.sx; // filter size in x, y dims
       this.sy = json.sy;
@@ -532,7 +532,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
     // required
     // ok fine we will allow 'filters' as the word as well
-    this.out_depth = typeof opt.num_neurons !== 'undefined' ? opt.num_neurons : opt.filters;
+    this.outDepth = typeof opt.numNeurons !== 'undefined' ? opt.numNeurons : opt.filters;
 
     // optional
     this.l1_decay_mul = typeof opt.l1_decay_mul !== 'undefined' ? opt.l1_decay_mul : 0.0;
@@ -540,23 +540,23 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
     // computed
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-    this.out_sx = 1;
-    this.out_sy = 1;
+    this.outSx = 1;
+    this.outSy = 1;
     this.layer_type = 'fc';
 
     // initializations
     var bias = typeof opt.bias_pref !== 'undefined' ? opt.bias_pref : 0.0;
     this.filters = [];
-    for(var i=0;i<this.out_depth ;i++) { this.filters.push(new Vol(1, 1, this.num_inputs)); }
-    this.biases = new Vol(1, 1, this.out_depth, bias);
+    for(var i=0;i<this.outDepth ;i++) { this.filters.push(new Vol(1, 1, this.num_inputs)); }
+    this.biases = new Vol(1, 1, this.outDepth, bias);
   }
 
   FullyConnLayer.prototype = {
     forward: function(V, is_training) {
       this.in_act = V;
-      var A = new Vol(1, 1, this.out_depth, 0.0);
+      var A = new Vol(1, 1, this.outDepth, 0.0);
       var Vw = V.w;
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         var a = 0.0;
         var wi = this.filters[i].w;
         for(var d=0;d<this.num_inputs;d++) {
@@ -573,7 +573,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
 
       // compute gradient wrt weights and data
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         var tfi = this.filters[i];
         var chain_grad = this.out_act.dw[i];
         for(var d=0;d<this.num_inputs;d++) {
@@ -585,7 +585,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     getParamsAndGrads: function() {
       var response = [];
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         response.push({params: this.filters[i].w, grads: this.filters[i].dw, l1_decay_mul: this.l1_decay_mul, l2_decay_mul: this.l2_decay_mul});
       }
       response.push({params: this.biases.w, grads: this.biases.dw, l1_decay_mul: 0.0, l2_decay_mul: 0.0});
@@ -593,9 +593,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.num_inputs = this.num_inputs;
       json.l1_decay_mul = this.l1_decay_mul;
@@ -608,9 +608,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.num_inputs = json.num_inputs;
       this.l1_decay_mul = typeof json.l1_decay_mul !== 'undefined' ? json.l1_decay_mul : 1.0;
@@ -650,28 +650,28 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     this.pad = typeof opt.pad !== 'undefined' ? opt.pad : 0; // amount of 0 padding to add around borders of input volume
 
     // computed
-    this.out_depth = this.in_depth;
-    this.out_sx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
-    this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
+    this.outDepth = this.in_depth;
+    this.outSx = Math.floor((this.in_sx + this.pad * 2 - this.sx) / this.stride + 1);
+    this.outSy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
     this.layer_type = 'pool';
     // store switches for x,y coordinates for where the max comes from, for each output neuron
-    this.switchx = global.zeros(this.out_sx*this.out_sy*this.out_depth);
-    this.switchy = global.zeros(this.out_sx*this.out_sy*this.out_depth);
+    this.switchx = global.zeros(this.outSx*this.outSy*this.outDepth);
+    this.switchy = global.zeros(this.outSx*this.outSy*this.outDepth);
   }
 
   PoolLayer.prototype = {
     forward: function(V, is_training) {
       this.in_act = V;
 
-      var A = new Vol(this.out_sx, this.out_sy, this.out_depth, 0.0);
+      var A = new Vol(this.outSx, this.outSy, this.outDepth, 0.0);
 
       var n=0; // a counter for switches
-      for(var d=0;d<this.out_depth;d++) {
+      for(var d=0;d<this.outDepth;d++) {
         var x = -this.pad;
         var y = -this.pad;
-        for(var ax=0; ax<this.out_sx; x+=this.stride,ax++) {
+        for(var ax=0; ax<this.outSx; x+=this.stride,ax++) {
           y = -this.pad;
-          for(var ay=0; ay<this.out_sy; y+=this.stride,ay++) {
+          for(var ay=0; ay<this.outSy; y+=this.stride,ay++) {
 
             // convolve centered at this particular location
             var a = -99999; // hopefully small enough ;\
@@ -707,12 +707,12 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var A = this.out_act; // computed in forward pass
 
       var n = 0;
-      for(var d=0;d<this.out_depth;d++) {
+      for(var d=0;d<this.outDepth;d++) {
         var x = -this.pad;
         var y = -this.pad;
-        for(var ax=0; ax<this.out_sx; x+=this.stride,ax++) {
+        for(var ax=0; ax<this.outSx; x+=this.stride,ax++) {
           y = -this.pad;
-          for(var ay=0; ay<this.out_sy; y+=this.stride,ay++) {
+          for(var ay=0; ay<this.outSy; y+=this.stride,ay++) {
 
             var chain_grad = this.out_act.get_grad(ax,ay,d);
             V.add_grad(this.switchx[n], this.switchy[n], d, chain_grad);
@@ -731,25 +731,25 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       json.sy = this.sy;
       json.stride = this.stride;
       json.in_depth = this.in_depth;
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.pad = this.pad;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.sx = json.sx;
       this.sy = json.sy;
       this.stride = json.stride;
       this.in_depth = json.in_depth;
       this.pad = typeof json.pad !== 'undefined' ? json.pad : 0; // backwards compatibility
-      this.switchx = global.zeros(this.out_sx*this.out_sy*this.out_depth); // need to re-init these appropriately
-      this.switchy = global.zeros(this.out_sx*this.out_sy*this.out_depth);
+      this.switchx = global.zeros(this.outSx*this.outSy*this.outDepth); // need to re-init these appropriately
+      this.switchy = global.zeros(this.outSx*this.outSy*this.outDepth);
     }
   }
 
@@ -766,11 +766,11 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // required: depth
-    this.out_depth = getopt(opt, ['out_depth', 'depth'], 0);
+    this.outDepth = getopt(opt, ['outDepth', 'depth'], 0);
 
     // optional: default these dimensions to 1
-    this.out_sx = getopt(opt, ['out_sx', 'sx', 'width'], 1);
-    this.out_sy = getopt(opt, ['out_sy', 'sy', 'height'], 1);
+    this.outSx = getopt(opt, ['outSx', 'sx', 'width'], 1);
+    this.outSy = getopt(opt, ['outSy', 'sy', 'height'], 1);
 
     // computed
     this.layer_type = 'input';
@@ -787,16 +787,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
     }
   }
@@ -821,9 +821,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
     // computed
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-    this.out_depth = this.num_inputs;
-    this.out_sx = 1;
-    this.out_sy = 1;
+    this.outDepth = this.num_inputs;
+    this.outSx = 1;
+    this.outSy = 1;
     this.layer_type = 'softmax';
   }
 
@@ -831,26 +831,26 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     forward: function(V, is_training) {
       this.in_act = V;
 
-      var A = new Vol(1, 1, this.out_depth, 0.0);
+      var A = new Vol(1, 1, this.outDepth, 0.0);
 
       // compute max activation
       var as = V.w;
       var amax = V.w[0];
-      for(var i=1;i<this.out_depth;i++) {
+      for(var i=1;i<this.outDepth;i++) {
         if(as[i] > amax) amax = as[i];
       }
 
       // compute exponentials (carefully to not blow up)
-      var es = global.zeros(this.out_depth);
+      var es = global.zeros(this.outDepth);
       var esum = 0.0;
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         var e = Math.exp(as[i] - amax);
         esum += e;
         es[i] = e;
       }
 
       // normalize and output to sum to one
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         es[i] /= esum;
         A.w[i] = es[i];
       }
@@ -865,7 +865,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var x = this.in_act;
       x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
 
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         var indicator = i === y ? 1.0 : 0.0;
         var mul = -(indicator - this.es[i]);
         x.dw[i] = mul;
@@ -879,17 +879,17 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.num_inputs = this.num_inputs;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.num_inputs = json.num_inputs;
     }
@@ -903,9 +903,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
     // computed
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-    this.out_depth = this.num_inputs;
-    this.out_sx = 1;
-    this.out_sy = 1;
+    this.outDepth = this.num_inputs;
+    this.outSx = 1;
+    this.outSy = 1;
     this.layer_type = 'regression';
   }
 
@@ -926,7 +926,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
       var loss = 0.0;
       if(y instanceof Array || y instanceof Float64Array) {
-        for(var i=0;i<this.out_depth;i++) {
+        for(var i=0;i<this.outDepth;i++) {
           var dy = x.w[i] - y[i];
           x.dw[i] = dy;
           loss += 0.5*dy*dy;
@@ -952,17 +952,17 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.num_inputs = this.num_inputs;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.num_inputs = json.num_inputs;
     }
@@ -973,9 +973,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
 
     // computed
     this.num_inputs = opt.in_sx * opt.in_sy * opt.in_depth;
-    this.out_depth = this.num_inputs;
-    this.out_sx = 1;
-    this.out_sy = 1;
+    this.outDepth = this.num_inputs;
+    this.outSx = 1;
+    this.outSy = 1;
     this.layer_type = 'svm';
   }
 
@@ -997,7 +997,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var yscore = x.w[y]; // score of ground truth
       var margin = 1.0;
       var loss = 0.0;
-      for(var i=0;i<this.out_depth;i++) {
+      for(var i=0;i<this.outDepth;i++) {
         if(y === i) { continue; }
         var ydiff = -yscore + x.w[i] + margin;
         if(ydiff > 0) {
@@ -1015,17 +1015,17 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.num_inputs = this.num_inputs;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.num_inputs = json.num_inputs;
     }
@@ -1048,9 +1048,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = opt.in_depth;
     this.layer_type = 'relu';
   }
   ReluLayer.prototype = {
@@ -1080,16 +1080,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
     }
   }
@@ -1101,9 +1101,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = opt.in_depth;
     this.layer_type = 'sigmoid';
   }
   SigmoidLayer.prototype = {
@@ -1134,16 +1134,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
     }
   }
@@ -1159,23 +1159,23 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     this.group_size = typeof opt.group_size !== 'undefined' ? opt.group_size : 2;
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = Math.floor(opt.in_depth / this.group_size);
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = Math.floor(opt.in_depth / this.group_size);
     this.layer_type = 'maxout';
 
-    this.switches = global.zeros(this.out_sx*this.out_sy*this.out_depth); // useful for backprop
+    this.switches = global.zeros(this.outSx*this.outSy*this.outDepth); // useful for backprop
   }
   MaxoutLayer.prototype = {
     forward: function(V, is_training) {
       this.in_act = V;
-      var N = this.out_depth;
-      var V2 = new Vol(this.out_sx, this.out_sy, this.out_depth, 0.0);
+      var N = this.outDepth;
+      var V2 = new Vol(this.outSx, this.outSy, this.outDepth, 0.0);
 
       // optimization branch. If we're operating on 1D arrays we dont have
       // to worry about keeping track of x,y,d coordinates inside
       // input volumes. In convnets we do :(
-      if(this.out_sx === 1 && this.out_sy === 1) {
+      if(this.outSx === 1 && this.outSy === 1) {
         for(var i=0;i<N;i++) {
           var ix = i * this.group_size; // base index offset
           var a = V.w[ix];
@@ -1219,11 +1219,11 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     backward: function() {
       var V = this.in_act; // we need to set dw of this
       var V2 = this.out_act;
-      var N = this.out_depth;
+      var N = this.outDepth;
       V.dw = global.zeros(V.w.length); // zero out gradient wrt data
 
       // pass the gradient through the appropriate switch
-      if(this.out_sx === 1 && this.out_sy === 1) {
+      if(this.outSx === 1 && this.outSy === 1) {
         for(var i=0;i<N;i++) {
           var chain_grad = V2.dw[i];
           V.dw[this.switches[i]] = chain_grad;
@@ -1247,17 +1247,17 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.group_size = this.group_size;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.group_size = json.group_size;
       this.switches = global.zeros(this.group_size);
@@ -1276,9 +1276,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = opt.in_depth;
     this.layer_type = 'tanh';
   }
   TanhLayer.prototype = {
@@ -1307,16 +1307,16 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
     }
   }
@@ -1342,12 +1342,12 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     var opt = opt || {};
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = opt.in_depth;
     this.layer_type = 'dropout';
     this.drop_prob = typeof opt.drop_prob !== 'undefined' ? opt.drop_prob : 0.5;
-    this.dropped = global.zeros(this.out_sx*this.out_sy*this.out_depth);
+    this.dropped = global.zeros(this.outSx*this.outSy*this.outDepth);
   }
   DropoutLayer.prototype = {
     forward: function(V, is_training) {
@@ -1384,17 +1384,17 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     },
     toJSON: function() {
       var json = {};
-      json.out_depth = this.out_depth;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
+      json.outDepth = this.outDepth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
       json.layer_type = this.layer_type;
       json.drop_prob = this.drop_prob;
       return json;
     },
     fromJSON: function(json) {
-      this.out_depth = json.out_depth;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
+      this.outDepth = json.outDepth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
       this.layer_type = json.layer_type;
       this.drop_prob = json.drop_prob;
     }
@@ -1420,9 +1420,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     this.beta = opt.beta;
 
     // computed
-    this.out_sx = opt.in_sx;
-    this.out_sy = opt.in_sy;
-    this.out_depth = opt.in_depth;
+    this.outSx = opt.in_sx;
+    this.outSy = opt.in_sy;
+    this.outDepth = opt.in_depth;
     this.layer_type = 'lrn';
 
     // checks
@@ -1496,9 +1496,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       json.n = this.n;
       json.alpha = this.alpha; // normalize by size
       json.beta = this.beta;
-      json.out_sx = this.out_sx;
-      json.out_sy = this.out_sy;
-      json.out_depth = this.out_depth;
+      json.outSx = this.outSx;
+      json.outSy = this.outSy;
+      json.outDepth = this.outDepth;
       json.layer_type = this.layer_type;
       return json;
     },
@@ -1507,9 +1507,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       this.n = json.n;
       this.alpha = json.alpha; // normalize by size
       this.beta = json.beta;
-      this.out_sx = json.out_sx;
-      this.out_sy = json.out_sy;
-      this.out_depth = json.out_depth;
+      this.outSx = json.outSx;
+      this.outSy = json.outSy;
+      this.outDepth = json.outDepth;
       this.layer_type = json.layer_type;
     }
   }
@@ -1552,7 +1552,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
           if(def.type==='regression') {
             // add an fc layer here, there is no reason the user should
             // have to worry about this and we almost always want to
-            new_defs.push({type:'fc', num_neurons: def.num_neurons});
+            new_defs.push({type:'fc', num_neurons: def.numNeurons});
           }
 
           if((def.type==='fc' || def.type==='conv')
@@ -1593,9 +1593,9 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
         var def = defs[i];
         if(i>0) {
           var prev = this.layers[i-1];
-          def.in_sx = prev.out_sx;
-          def.in_sy = prev.out_sy;
-          def.in_depth = prev.out_depth;
+          def.in_sx = prev.outSx;
+          def.in_sy = prev.outSy;
+          def.in_depth = prev.outDepth;
         }
 
         switch(def.type) {

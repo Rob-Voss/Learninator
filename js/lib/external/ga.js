@@ -399,16 +399,16 @@
      *  inputs should be order of ~ -10 to +10, and expect output to be similar magnitude.
      *  user can grab outputs of the the N sub networks and use them to accomplish some task for training
      * @param {type} Nsp Number of sub populations (ie, 4)
-     * @param {type} Ninput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + Nsp
+     * @param {type} Ninput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + nSp
      * @param {type} Nhidden Number of hidden neurons in each sub population (ie, 16)
-     * @param {type} genes (optional) array of Nsp genes (floatArrays) to initialise the network (pretrained)
+     * @param {type} genes (optional) array of nSp genes (floatArrays) to initialise the network (pretrained)
      * @returns {ga_L3.ESPNet}
      */
     var ESPNet = function (Nsp, Ninput, Nhidden, genes) {
         this.net = []; // an array of convnet.js feed forward nn's
-        this.Ninput = Ninput;
-        this.Nsp = Nsp;
-        this.Nhidden = Nhidden;
+        this.nInput = Ninput;
+        this.nSp = Nsp;
+        this.nHidden = Nhidden;
         this.input = new convnetjs.Vol(1, 1, Nsp + Ninput); // hold most up to date input vector
         this.output = zeros(Nsp);
 
@@ -416,18 +416,18 @@
         var layer_defs = [];
         layer_defs.push({
             type: 'input',
-            out_sx: 1,
-            out_sy: 1,
-            out_depth: (Ninput + Nsp)
+            outSx: 1,
+            outSy: 1,
+            outDepth: (Ninput + Nsp)
         });
         layer_defs.push({
             type: 'fc',
-            num_neurons: Nhidden,
+            numNeurons: Nhidden,
             activation: 'sigmoid'
         });
         layer_defs.push({
             type: 'regression',
-            num_neurons: 1 // one output for each sub nn, gets fed back into inputs.
+            numNeurons: 1 // one output for each sub nn, gets fed back into inputs.
         });
 
         var network;
@@ -450,35 +450,35 @@
          */
         feedback: function () {
             var i;
-            var Ninput = this.Ninput;
-            var Nsp = this.Nsp;
+            var Ninput = this.nInput;
+            var Nsp = this.nSp;
             for (i = 0; i < Nsp; i++) {
                 this.input.w[i + Ninput] = this.output[i];
             }
         },
         /**
-         * input is a vector of length this.Ninput of real numbers this function also
+         * input is a vector of length this.nInput of real numbers this function also
          * grabs the previous most recent output and put it into the internal input vector
          * @param {type} input
          * @returns {undefined}
          */
         setInput: function (input) {
             var i;
-            var Ninput = this.Ninput;
-            var Nsp = this.Nsp;
+            var Ninput = this.nInput;
+            var Nsp = this.nSp;
             for (i = 0; i < Ninput; i++) {
                 this.input.w[i] = input[i];
             }
             this.feedback();
         },
         /**
-         * returns array of output of each Nsp neurons after a forward pass.
+         * returns array of output of each nSp neurons after a forward pass.
          * @returns {Number.w|d.w|e.w|a.w|Array.w|b@call;bind.w}
          */
         forward: function () {
             var i, j;
-            var Ninput = this.Ninput;
-            var Nsp = this.Nsp;
+            var Ninput = this.nInput;
+            var Nsp = this.nSp;
             var y = zeros(Nsp);
             var a; // temp variable to old output of forward pass
             for (i = Nsp - 1; i >= 0; i--) {
@@ -500,12 +500,12 @@
             return getNetworkSize(this.net[0]); // each network has identical architecture.
         },
         /**
-         * return an array of Nsp genes (floatArrays of length getNetworkSize())
+         * return an array of nSp genes (floatArrays of length getNetworkSize())
          * @returns {Array|@exp;Array}
          */
         getGenes: function () {
             var i;
-            var Nsp = this.Nsp;
+            var Nsp = this.nSp;
             var result = [];
             for (i = 0; i < Nsp; i++) {
                 result.push(getGeneFromNetwork(this.net[i]));
@@ -513,13 +513,13 @@
             return result;
         },
         /**
-         * genes is an array of Nsp genes (floatArrays)
+         * genes is an array of nSp genes (floatArrays)
          * @param {type} genes
          * @returns {undefined}
          */
         pushGenes: function (genes) {
             var i;
-            var Nsp = this.Nsp;
+            var Nsp = this.nSp;
             for (i = 0; i < Nsp; i++) {
                 pushGeneToNetwork(this.net[i], genes[i]);
             }
@@ -535,17 +535,17 @@
     // mutation_size : positive floating point.  stdev of gausian noise added for mutations
     // target_fitness : after fitness achieved is greater than this float value, learning stops
     // num_passes : number of times each neuron within a sub population is tested
-    //          on average, each neuron will be tested num_passes * esp.Nsp times.
+    //          on average, each neuron will be tested num_passes * esp.nSp times.
     // burst_generations : positive integer.  if best fitness doesn't improve after this number of generations
     //                    then start killing neurons that don't contribute to the bottom line! (reinit them with randoms)
     // best_mode : if true, this will assign each neuron to the best fitness trial it has experienced.
     //             if false, this will use the average of all trials experienced.
-    // initGenes:  init Nsp array of floatarray to initialize the chromosomes.  can be result obtained from pretrained sessions.
+    // initGenes:  init nSp array of floatarray to initialize the chromosomes.  can be result obtained from pretrained sessions.
     var ESPTrainer = function (espnet, options_, initGenes) {
 
         this.espnet = espnet;
-        this.Nsp = espnet.Nsp;
-        var Nsp = this.Nsp;
+        this.nSp = espnet.nSp;
+        var Nsp = this.nSp;
 
         var options = options_ || {};
         this.population_size = typeof options.population_size !== 'undefined' ? options.population_size : 50;
@@ -566,9 +566,9 @@
         initialize: function (initGenes) {
             var i, j;
             var y;
-            var Nsp = this.Nsp;
+            var Nsp = this.nSp;
             this.sp = []; // sub populations
-            this.bestGenes = []; // array of Nsp number of genes, records the best combination of genes for the bestFitness achieved so far.
+            this.bestGenes = []; // array of nSp number of genes, records the best combination of genes for the bestFitness achieved so far.
             var chromosomes, chromosome;
             for (i = 0; i < Nsp; i++) {
                 chromosomes = []; // empty list of chromosomes
@@ -604,9 +604,9 @@
 
             var i, j, k, m, N, Nsp;
             var fitness;
-            var c = this.sp; // array of arrays that holds every single chromosomes (Nsp x N);
+            var c = this.sp; // array of arrays that holds every single chromosomes (nSp x N);
             N = this.population_size; // number of chromosomes in each sub population
-            Nsp = this.Nsp; // number of sub populations
+            Nsp = this.nSp; // number of sub populations
 
             var bestFitness = -10000000000000000;
             var bestSet, bestGenes;
@@ -627,7 +627,7 @@
             };
 
             // helper function to create a new array filled with genes from an array of chromosomes
-            // returns an array of Nsp floatArrays
+            // returns an array of nSp floatArrays
             function getGenesFromChromosomes(s) {
                 var g = [];
                 for (var i = 0; i < s.length; i++) {

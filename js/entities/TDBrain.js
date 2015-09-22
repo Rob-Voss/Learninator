@@ -34,9 +34,9 @@
         // so to have no information from previous time step going into value function, set to 0.
         this.temporal_window = typeof opt.temporal_window !== 'undefined' ? opt.temporal_window : 1;
         // size of experience replay memory
-        this.experience_size = typeof opt.experience_size !== 'undefined' ? opt.experience_size : 30000;
+        this.experienceSize = typeof opt.experienceSize !== 'undefined' ? opt.experienceSize : 30000;
         // number of examples in experience replay memory before we begin learning
-        this.start_learn_threshold = typeof opt.start_learn_threshold !== 'undefined' ? opt.start_learn_threshold : Math.floor(Math.min(this.experience_size * 0.1, 1000));
+        this.start_learn_threshold = typeof opt.start_learn_threshold !== 'undefined' ? opt.start_learn_threshold : Math.floor(Math.min(this.experienceSize * 0.1, 1000));
         // gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
         this.gamma = typeof opt.gamma !== 'undefined' ? opt.gamma : 0.8;
 
@@ -101,10 +101,10 @@
             if (layer_defs[layer_defs.length - 1].type !== 'regression') {
                 console.log('TROUBLE! last layer must be input regression!');
             }
-            if (layer_defs[0].out_depth * layer_defs[0].out_sx * layer_defs[0].out_sy !== this.net_inputs) {
+            if (layer_defs[0].outDepth * layer_defs[0].outSx * layer_defs[0].outSy !== this.net_inputs) {
                 console.log('TROUBLE! Number of inputs must be num_states * temporal_window + num_actions * temporal_window + num_states!');
             }
-            if (layer_defs[layer_defs.length - 1].num_neurons !== this.num_actions) {
+            if (layer_defs[layer_defs.length - 1].numNeurons !== this.num_actions) {
                 console.log('TROUBLE! Number of regression neurons should be num_actions!');
             }
         } else {
@@ -288,11 +288,11 @@
                 e.action0 = this.action_window[n - 2];
                 e.reward0 = this.reward_window[n - 2];
                 e.state1 = this.net_window[n - 1];
-                if (this.experience.length < this.experience_size) {
+                if (this.experience.length < this.experienceSize) {
                     this.experience.push(e);
                 } else {
                     // replace. finite memory!
-                    var ri = Utility.randi(0, this.experience_size);
+                    var ri = Utility.randi(0, this.experienceSize);
                     this.experience[ri] = e;
                 }
             }
@@ -327,38 +327,43 @@
 
     self.onmessage = function (e) {
         var data = e.data;
-        switch (data.cmd) {
-            case 'init':
-                importScripts('../lib/external/convnet.min.js', '../lib/Utility.js', '../lib/Window.js');
-                _TDBrain = new TDBrain(data.input);
-                self.postMessage({cmd: 'init', msg: 'complete'});
-                break;
-            case 'load':
-                _TDBrain.value_net.fromJSON(data.input);
-                _TDBrain.learning = false;
-                self.postMessage({cmd: 'load', msg: 'complete'});
-                break;
-            case 'forward':
-                var actionIndex = _TDBrain.forward(data.input);
-                self.postMessage({cmd: 'forward', msg: 'complete', input: actionIndex});
-                break;
-            case 'backward':
-                _TDBrain.backward(data.input);
+        switch (data.target) {
+            case 'TD':
+                switch (data.cmd) {
+                    case 'init':
+                        importScripts('../lib/external/convnet.js', '../lib/Utility.js', '../lib/Window.js');
+                        _TDBrain = new TDBrain(data.input);
+                        self.postMessage({cmd: 'init', msg: 'complete'});
+                        break;
+                    case 'load':
+                        _TDBrain.value_net.fromJSON(JSON.parse(data.input));
+                        _TDBrain.learning = false;
+                        self.postMessage({cmd: 'load', msg: 'complete'});
+                        break;
+                    case 'act':
+                        var actionIndex = _TDBrain.forward(data.input);
+                        self.postMessage({cmd: 'act', msg: 'complete', input: actionIndex});
+                        break;
+                    case 'learn':
+                        _TDBrain.backward(data.input);
 
-                // return the Average reward
-                var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
-                self.postMessage({cmd: 'backward', msg: 'complete', input: avg});
+                        // return the Average reward
+                        var avg = _TDBrain.average_reward_window.getAverage().toFixed(1);
+                        self.postMessage({cmd: 'learn', msg: 'complete', input: avg});
+                        break;
+                    case 'stop':
+                        self.postMessage({cmd: 'stop', msg: 'complete'});
+                        close(); // Terminates the worker.
+                        break;
+                    default:
+                        self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
+                }
                 break;
-            case 'stop':
-                self.postMessage({cmd: 'stop', msg: 'complete'});
-                close(); // Terminates the worker.
-                break;
-            default:
-                self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
         }
     };
 
     global.TDBrain = TDBrain;
 
-})(this);
+})
+(this);
 
