@@ -357,8 +357,8 @@
          * @return {Vec} Returns itself.
          */
         reflect: function (axis) {
-            var x = this.x;
-            var y = this.y;
+            var x = this.x,
+                y = this.y;
             this.project(axis).multiplyScalar(2);
             this.x -= x;
             this.y -= y;
@@ -372,8 +372,8 @@
          * @return {Vec} Returns itself.
          */
         reflectN: function (axis) {
-            var x = this.x;
-            var y = this.y;
+            var x = this.x,
+                y = this.y;
             this.projectN(axis).multiplyScalar(2);
             this.x -= x;
             this.y -= y;
@@ -419,7 +419,7 @@
         },
 
         /**
-         * In place vector operations
+         * Scale the Vector
          * @param {Number} scale
          * @returns {undefined}
          */

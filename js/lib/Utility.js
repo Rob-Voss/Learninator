@@ -7,12 +7,34 @@ var Utility = Utility || {};
     var retV = false,
         vVal = 0.0;
 
+    /**
+     *
+     * @param obj
+     */
     Utility.stringify = function (obj) {
         return JSON.stringify(obj, function (key, value) {
             return (typeof value === 'function') ? value.toString() : value;
         });
     };
 
+    /**
+     * Syntactic sugar function for getting default parameter values
+     * @param opt
+     * @param fieldName
+     * @param defaultValue
+     * @returns {*}
+     */
+    Utility.getOpt = function (opt, fieldName, defaultValue) {
+        if (typeof opt === 'undefined') {
+            return defaultValue;
+        }
+        return (typeof opt[fieldName] !== 'undefined') ? opt[fieldName] : defaultValue;
+    };
+
+    /**
+     *
+     * @param str
+     */
     Utility.parse = function (str) {
         return JSON.parse(str, function (key, value) {
             if (typeof value !== 'string') {
@@ -22,7 +44,7 @@ var Utility = Utility || {};
         });
     };
 
-    var gaussRandom = function () {
+    Utility.gaussRandom = function () {
         if (retV) {
             retV = false;
 
@@ -152,47 +174,17 @@ var Utility = Utility || {};
     };
 
     /**
-     * Check the edges of the world
-     * @param entity
-     * @param width
-     * @param height
-     */
-    Utility.boundaryCheck = function (entity, width, height) {
-        // handle boundary conditions.. bounce agent
-        if (entity.position.x < 1) {
-            entity.position.x = 1;
-            entity.position.vx = 0;
-            entity.position.vy = 0;
-        }
-        if (entity.position.x > width) {
-            entity.position.x = width;
-            entity.position.vx = 0;
-            entity.position.vy = 0;
-        }
-        if (entity.position.y < 1) {
-            entity.position.y = 1;
-            entity.position.vx = 0;
-            entity.position.vy = 0;
-        }
-        if (entity.position.y > height) {
-            entity.position.y = height;
-            entity.position.vx = 0;
-            entity.position.vy = 0;
-        }
-
-        entity.sprite.position.set(entity.position.x, entity.position.y);
-    };
-
-    /**
      * A helper function to get check for colliding walls/items
      * @param {Vec} v1
      * @param {Vec} v2
      * @param {Array} walls
      * @param {Array} entities
+     * @param {Number} radius
      * @returns {Boolean}
      */
-    Utility.collisionCheck = function (v1, v2, walls, entities) {
-        var minRes = false;
+    Utility.collisionCheck = function (v1, v2, walls, entities, radius) {
+        var minRes = false,
+            rad = radius ? radius : 0;
 
         // Collide with walls
         if (walls) {
@@ -201,6 +193,9 @@ var Utility = Utility || {};
                     wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
                 if (wResult) {
                     wResult.type = 0; // 0 is wall
+                    wResult.width = wall.width;
+                    wResult.height = wall.height;
+
                     if (!minRes) {
                         minRes = wResult;
                     } else {
@@ -218,7 +213,7 @@ var Utility = Utility || {};
         if (entities) {
             for (var e = 0, el = entities.length; e < el; e++) {
                 var entity = entities[e],
-                    iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius);
+                    iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius + rad);
                 if (iResult) {
                     iResult.type = entity.type;
                     iResult.id = entity.id;
@@ -242,8 +237,8 @@ var Utility = Utility || {};
 
     /**
      * Returns string representation of float but truncated to length of d digits
-     * @param {Number} x
-     * @param {Number} d
+     * @param {Number} x Float
+     * @param {Number} d Decimals
      * @returns {String}
      */
     Utility.flt2str = function (x, d) {
@@ -255,10 +250,10 @@ var Utility = Utility || {};
 
     /**
      * Find the position of intersect between a line and a point
-     * @param {Vec} v1
-     * @param {Vec} v2
-     * @param {Vec} v0
-     * @param {Number} rad
+     * @param {Vec} v1 From position
+     * @param {Vec} v2 To position
+     * @param {Vec} v0 Target position
+     * @param {Number} rad Target radius
      * @returns {Object|Boolean}
      */
     Utility.linePointIntersect = function (v1, v2, v0, rad) {
@@ -294,26 +289,14 @@ var Utility = Utility || {};
 
     /**
      * Line intersection helper function: line segment (v1,v2) intersect segment (v3,v4)
-     * @param {Vec} v1
-     * @param {Vec} v2
-     * @param {Vec} v3
-     * @param {Vec} v4
+     * @param {Vec} v1 From position
+     * @param {Vec} v2 To position
+     * @param {Vec} v3 Wall or Line start
+     * @param {Vec} v4 Wall or Line end
      * @returns {Object|Boolean}
      */
     Utility.lineIntersect = function (v1, v2, v3, v4) {
-        // Line 1: 1st Point
-        var x1 = v1.x,
-            y1 = v1.y,
-        // Line 1: 2nd Point
-            x2 = v2.x,
-            y2 = v2.y,
-        // Line 2: 1st Point
-            x3 = v3.x,
-            y3 = v3.y,
-        // Line 2: 2nd Point
-            x4 = v4.x,
-            y4 = v4.y,
-            denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1),
+        var denom = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y),
             result = {};
 
         if (denom === 0.0) {
@@ -321,12 +304,12 @@ var Utility = Utility || {};
             return false;
         }
 
-        var pX = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom,
-            pY = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+        var pX = ((v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x)) / denom,
+            pY = ((v2.x - v1.x) * (v1.y - v3.y) - (v2.y - v1.y) * (v1.x - v3.x)) / denom;
 
         if (pX > 0.0 && pX < 1.0 && pY > 0.0 && pY < 1.0) {
             // Intersection point
-            var vecI = new Vec(x1 + pX * (x2 - x1), y1 + pX * (y2 - y1));
+            var vecI = new Vec(v1.x + pX * (v2.x - v1.x), v1.y + pX * (v2.y - v1.y));
 
             result.vecX = pX;
             result.vecY = pY;
@@ -334,6 +317,7 @@ var Utility = Utility || {};
 
             return result;
         }
+
         return false;
     };
 
@@ -353,7 +337,7 @@ var Utility = Utility || {};
      * @returns {Number}
      */
     Utility.S4 = function () {
-        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        return (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1);
     };
 
     /**

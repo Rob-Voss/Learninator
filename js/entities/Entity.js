@@ -4,28 +4,28 @@
     /**
      * Initialize the Entity
      *
-     * @param {Number} typeId
-     * @param {Vec} position
-     * @param {Array} env
-     * @param {Object} entityOpts
+     * @param {Number} typeId A type id (wall,nom,gnar,agent)
+     * @param {Vec} position A vector of the position
+     * @param {Object} opts Entity Options
      * @constructor
      * @returns {Entity}
      */
-    var Entity = function (typeId, position, env, entityOpts) {
+    var Entity = function (typeId, position, opts) {
         var entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
 
         this.id = Utility.guid();
         this.name = (this.name === undefined) ? entityTypes[typeId] : this.name;
         this.type = typeId || 1;
         this.position = position || new Vec(5, 5);
-        this.width = entityOpts.width || 20;
-        this.height = entityOpts.height || 20;
-        this.radius = entityOpts.radius || 10;
+        this.radius = Utility.getOpt(opts, 'radius', 10);
+        this.width = Utility.getOpt(opts, 'width', this.radius * 2);
+        this.height = Utility.getOpt(opts, 'height', this.radius * 2);
 
-        this.cheats = entityOpts.cheats || false;
-        this.interactive = entityOpts.interactive || false;
-        this.collision = entityOpts.collision || true;
-        this.useSprite = entityOpts.useSprite || false;
+        this.cheats = Utility.getOpt(opts, 'cheats', false);
+        this.interactive = Utility.getOpt(opts, 'interactive', false);
+        this.collision = Utility.getOpt(opts, 'collision', true);
+        this.movingEntities = Utility.getOpt(opts, 'movingEntities', false);
+        this.useSprite = Utility.getOpt(opts, 'useSprite', false);
         this.gridLocation = new Vec(0, 0);
         this.cleanUp = false;
 
@@ -33,6 +33,7 @@
         this.angle = 0;
         this.rot1 = 0.0;
         this.rot2 = 0.0;
+        this.collisions = [];
 
         // Remember the old position and angle
         this.oldPos = this.position.clone();
@@ -69,54 +70,99 @@
 
         // If cheats are on then show the entities grid location and x,y coords
         if (this.cheats) {
-            var fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
-            if (this.useSprite === true) {
-                this.sprite.addChild(new PIXI.Text());
-                this.sprite.addChild(new PIXI.Text());
-                this.sprite.addChild(new PIXI.Text());
-            } else {
-                this.shape.addChild(new PIXI.Text('', fontOpts));
-                this.shape.addChild(new PIXI.Text('', fontOpts));
-                this.shape.addChild(new PIXI.Text('', fontOpts));
-            }
-
-            if (this.cheats.gridLocation === true) {
-                var gridText = new PIXI.Text(this.gridLocation.x + ':' + this.gridLocation.y, fontOpts);
-                gridText.position.set(this.position.x + this.radius, this.position.y);
-                if (this.useSprite === true) {
-                    this.sprite.addChildAt(gridText, 0);
-                } else {
-                    this.shape.addChildAt(gridText, 0);
-                }
-            }
-
-            if (this.cheats.position === true) {
-                var posText = new PIXI.Text(this.position.x + ':' + this.position.y, fontOpts);
-                posText.position.set(this.position.x + this.radius, this.position.y + this.radius);
-                if (this.useSprite === true) {
-                    this.sprite.addChildAt(posText, 1);
-                } else {
-                    this.shape.addChildAt(posText, 1);
-                }
-            }
-
-            if (this.cheats.name === true) {
-                var name = new PIXI.Text(this.name, fontOpts);
-                name.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
-                if (this.useSprite === true) {
-                    this.sprite.addChildAt(name, 2);
-                } else {
-                    this.shape.addChildAt(name, 2);
-                }
-            }
+            this.addCheats();
         }
 
         return this;
     };
 
     /**
-     * Draws it
+     * Set up the cheat displays
+     */
+    Entity.prototype.addCheats = function () {
+        var fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
+        this.cheatsContainer = new PIXI.Container();
+
+        // If cheats are on then show the entities grid location and x,y coords
+        if (this.cheats.gridLocation === true) {
+            var textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
+
+            this.gridText = new PIXI.Text(textG, fontOpts);
+            this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
+            this.cheatsContainer.addChild(this.gridText);
+        }
+
+        // If cheats are on then show the entities position and velocity
+        if (this.cheats.position === true) {
+            var textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+
+            this.posText = new PIXI.Text(textP + textV, fontOpts);
+            this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
+            this.cheatsContainer.addChild(this.posText);
+        }
+
+        // If cheats are on then show the entities name
+        if (this.cheats.name === true) {
+            this.nameText = new PIXI.Text(this.name, fontOpts);
+            this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
+            this.cheatsContainer.addChild(this.nameText);
+        }
+
+        // If cheats are on then show the entities id
+        if (this.cheats.id === true) {
+            this.idText = new PIXI.Text(this.id, fontOpts);
+            this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            this.cheatsContainer.addChild(this.idText);
+        }
+
+        if (this.useSprite === true) {
+            this.sprite.addChild(this.cheatsContainer);
+        } else {
+            this.shape.addChild(this.cheatsContainer);
+        }
+    };
+
+    /**
      *
+     */
+    Entity.prototype.updateCheats = function () {
+        var posText, gridText, nameText, idText;
+        // If cheats are on then show the entities grid location and x,y coords
+        if (this.cheats.gridLocation === true) {
+            gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
+
+            gridText.text = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
+            gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+        }
+
+        // If cheats are on then show the entities position and velocity
+        if (this.cheats.position === true) {
+            var textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+            posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
+
+            posText.text = textP + textV;
+            posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+        }
+
+        // If cheats are on then show the entities name
+        if (this.cheats.name === true) {
+            nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
+
+            nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+        }
+
+        // If cheats are on then show the entities id
+        if (this.cheats.id === true) {
+            idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
+
+            idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+        }
+    };
+
+    /**
+     * Draws it
      * @returns {Entity}
      */
     Entity.prototype.draw = function () {
@@ -150,39 +196,43 @@
      * @returns {Entity}
      */
     Entity.prototype.move = function () {
+        var oldAngle = this.angle,
+            speed = 0.05;
         this.oldPos = this.position.clone();
 
-        if (this.position.x < 1) {
-            this.position.x = 1;
-            this.position.vx *= -1;
-        }
-        if (this.position.x > this.world.width - 1) {
-            this.position.x = this.world.width - 1;
-            this.position.vx *= -1;
-        }
-        if (this.position.y < 1) {
-            this.position.y = 1;
-            this.position.vy *= -1;
-        }
-        if (this.position.y > this.world.height - 1) {
-            this.position.y = this.world.height - 1;
-            this.position.vy *= -1;
-        }
+        this.position.x += this.position.vx;
+        this.position.y += this.position.vy;
 
-        // Move the items
-        this.position.advance();
-        this.position.round();
+        // Handle boundary conditions.. bounce Agent
+        if (this.position.x < 2) {
+            this.position.x = 2;
+            this.position.vx *= -1;
+        }
+        if (this.position.x > this.world.width - 2) {
+            this.position.x = this.world.width - 2;
+            this.position.vx *= -1;
+        }
+        if (this.position.y < 2) {
+            this.position.y = 2;
+            this.position.vy *= -1;
+        }
+        if (this.position.y > this.world.height - 2) {
+            this.position.y = this.world.height - 2;
+            this.position.vy *= -1;
+        }
 
         if (this.useSprite) {
             this.sprite.position.set(this.position.x, this.position.y);
         }
+
+        var end = new Date().getTime(),
+            dist = this.position.distFrom(this.oldPos);
 
         return this;
     };
 
     /**
      * Do work son
-     *
      * @param {Object} world
      * @returns {Entity}
      */
@@ -190,39 +240,12 @@
         this.world = world;
         this.age += 1;
 
-        if (this.world.movingEntities) {
+        if (this.movingEntities) {
             this.move();
         }
 
         if (this.cheats) {
-            var child;
-            // If cheats are on then show the entities grid location and x,y coords
-            if (this.cheats.gridLocation === true) {
-                if (this.useSprite) {
-                    child = this.sprite.getChildAt(0);
-                } else {
-                    child = this.shape.getChildAt(0);
-                }
-                child.text = this.gridLocation.x + ':' + this.gridLocation.y;
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius));
-            }
-            if (this.cheats.position === true) {
-                if (this.useSprite) {
-                    child = this.sprite.getChildAt(1);
-                } else {
-                    child = this.shape.getChildAt(1);
-                }
-                child.text = this.position.x + ':' + this.position.y;
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
-            }
-            if (this.cheats.name === true) {
-                if (this.useSprite) {
-                    child = this.sprite.getChildAt(2);
-                } else {
-                    child = this.shape.getChildAt(2);
-                }
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
-            }
+            this.updateCheats();
         }
 
         return this;

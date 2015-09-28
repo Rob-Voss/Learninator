@@ -4,22 +4,22 @@
     /**
      * Initialize the AgentRLDQN
      * @param {Vec} position
-     * @param {Object} env
      * @param {Object} opts
      * @returns {AgentRLDQN}
      */
-    var AgentRLDQN = function (position, env, opts) {
+    var AgentRLDQN = function (position, opts) {
         // Is it a worker
-        this.worker = typeof opts.worker !== 'boolean' ? false : opts.worker;
+        this.worker = Utility.getOpt(opts, 'worker', false);
         this.name = 'Agent RLDQN';
         if (this.worker) {
             this.name += ' Worker';
         }
 
-        Agent.call(this, position, env, opts);
+        Agent.call(this, position, opts);
 
         // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
         this.numStates = this.numEyes * this.numTypes + 2;
+
         // Reward or punishment
         this.carrot = +1;
         this.stick = -1;
@@ -35,7 +35,7 @@
         this.numActions = this.actions.length;
 
         // Set the brain options
-        this.brainOpts = opts.spec || {
+        this.brainOpts = Utility.getOpt(opts, 'spec', {
             update: "qlearn", // qlearn | sarsa
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
@@ -45,21 +45,7 @@
             learningStepsPerIteration: 5,
             tdErrorClamp: 1.0, // for robustness
             numHiddenUnits: 100 // number of neurons in hidden layer
-        };
-
-        // Set up the environment variable for RL
-        this.env = {
-            numActions: this.numActions,
-            numStates: this.numStates
-        };
-
-        this.env.getMaxNumActions = function () {
-            return this.numActions;
-        };
-
-        this.env.getNumStates = function () {
-            return this.numStates;
-        };
+        });
 
         var _this = this;
 
@@ -82,7 +68,7 @@
                 switch (data.cmd) {
                 case 'init':
                     if (data.msg === 'complete') {
-
+                        //
                     }
                     break;
                 case 'act':
@@ -95,12 +81,7 @@
                     break;
                 case 'learn':
                     if (data.msg === 'complete') {
-                        _this.epsilon = data.input;
-                    }
-                    break;
-                case 'load':
-                    if (data.msg === 'complete') {
-                        _this.epsilon = data.input;
+                        _this.epsilon = parseFloat(data.input);
                     }
                     break;
                 default:
@@ -180,7 +161,6 @@
     AgentRLDQN.prototype.move = function () {
         var oldAngle = this.angle,
             speed = 1;
-        // Apply outputs of agents on environment
         this.oldPos = this.position.clone();
 
         // Execute agent's desired action
@@ -202,13 +182,18 @@
         // Forward the agent by velocity
         this.position.vx *= 0.95;
         this.position.vy *= 0.95;
+        this.position.x += this.position.vx;
+        this.position.y += this.position.vy;
 
         if (this.collision) {
-            // The agent is trying to move from pos to oPos so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, []);
+            // The agent is trying to move from oldPos to position so we need to check walls
+            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls);
             if (result) {
                 // The agent derped! Wall collision! Reset their position
-                this.position = this.oldPos;
+                //this.position.set(result.vecI.x + this.radius, result.vecI.y + this.radius);
+                this.position = this.oldPos.clone();
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
         }
 
@@ -218,24 +203,24 @@
             this.position.vx = 0;
             this.position.vy = 0;
         }
+
         if (this.position.x > this.world.width - 2) {
             this.position.x = this.world.width - 2;
             this.position.vx = 0;
             this.position.vy = 0;
         }
+
         if (this.position.y < 2) {
             this.position.y = 2;
             this.position.vx = 0;
             this.position.vy = 0;
         }
+
         if (this.position.y > this.world.height - 2) {
             this.position.y = this.world.height - 2;
             this.position.vx = 0;
             this.position.vy = 0;
         }
-
-        this.position.advance();
-        this.position.round();
 
         if (this.useSprite) {
             this.sprite.position.set(this.position.x, this.position.y);

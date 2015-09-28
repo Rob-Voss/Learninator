@@ -2635,103 +2635,154 @@
         _DPAgent;
 
     self.onmessage = function (e) {
-        var data = e.data;
+        var data = e.data,
+            actionIndex;
+        if (data.cmd === 'init') {
+            var oEnv = JSON.parse(data.input.env, function (key, value) {
+                if (typeof value !== 'string') {
+                    return value;
+                }
+                return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
+            });
+            var oOpts = JSON.parse(data.input.opts);
+        }
 
         switch (data.target) {
             // DQN
             case 'DQN':
                 switch (data.cmd) {
                     case 'init':
-                        var oEnv = JSON.parse(data.input.env, function (key, value) {
-                            if (typeof value !== 'string') {
-                                return value;
-                            }
-                            return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
-                        });
-                        var oOpts = JSON.parse(data.input.opts);
                         _DQNAgent = new DQNAgent(oEnv, oOpts);
 
-                        self.postMessage({cmd: 'init', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'init',
+                            msg: 'complete'
+                        });
                         break;
                     case 'act':
-                        var actionIndex = _DQNAgent.act(data.input);
+                        actionIndex = _DQNAgent.act(data.input);
 
-                        self.postMessage({cmd: 'act', msg: 'complete', input: actionIndex});
+                        self.postMessage({
+                            cmd: 'act',
+                            msg: 'complete',
+                            input: actionIndex
+                        });
                         break;
                     case 'load':
                         _DQNAgent.fromJSON(JSON.parse(data.input));
                         _DQNAgent.epsilon = 0.05;
                         _DQNAgent.alpha = 0;
 
-                        self.postMessage({cmd: 'load', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'load',
+                            msg: 'complete'
+                        });
                         break;
                     case 'learn':
                         _DQNAgent.learn(data.input);
 
-                        self.postMessage({cmd: 'learn', msg: 'complete', input: _DQNAgent.epsilon});
+                        self.postMessage({
+                            cmd: 'learn',
+                            msg: 'complete',
+                            input: _DQNAgent.epsilon
+                        });
                         break;
                     case 'stop':
-                        self.postMessage({cmd: 'stop', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'stop',
+                            msg: 'complete'
+                        });
                         close(); // Terminates the worker.
                         break;
                     default:
-                        self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
+                        self.postMessage({
+                            cmd: 'error',
+                            msg: 'Unknown command: ' + data.cmd
+                        });
                 }
                 break;
             // TDTrainer
             case 'TD':
                 switch (data.cmd) {
                     case 'init':
-                        var oEnv = JSON.parse(data.input.env),
-                            oOpts = JSON.parse(data.input.opts);
-                        _TDAgent = new DQNAgent(oEnv, oOpts);
+                        _TDAgent = new TDAgent(oEnv, oOpts);
 
-                        self.postMessage({cmd: 'init', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'init',
+                            msg: 'complete'
+                        });
                         break;
                     case 'act':
-                        var actionIndex = _TDAgent.act(data.input);
+                        actionIndex = _TDAgent.act(data.input);
 
-                        self.postMessage({cmd: 'act', msg: 'complete', input: actionIndex});
+                        self.postMessage({
+                            cmd: 'act',
+                            msg: 'complete',
+                            input: actionIndex
+                        });
                         break;
                     case 'learn':
                         _TDAgent.learn(data.input);
 
-                        self.postMessage({cmd: 'learn', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'learn',
+                            msg: 'complete'
+                        });
                         break;
                     case 'stop':
-                        self.postMessage({cmd: 'stop', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'stop',
+                            msg: 'complete'
+                        });
                         close(); // Terminates the worker.
                         break;
                     default:
-                        self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
+                        self.postMessage({
+                            cmd: 'error',
+                            msg: 'Unknown command: ' + data.cmd
+                        });
                 }
                 break;
             // DP
             case 'DP':
                 switch (data.cmd) {
                     case 'init':
-                        var oEnv = JSON.parse(data.input.env),
-                            oOpts = JSON.parse(data.input.opts);
-                        _DPAgent = new DQNAgent(oEnv, oOpts);
+                        _DPAgent = new DPAgent(oEnv, oOpts);
 
-                        self.postMessage({cmd: 'init', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'init',
+                            msg: 'complete'
+                        });
                         break;
                     case 'act':
-                        var actionIndex = _DPAgent.act(data.input);
+                        actionIndex = _DPAgent.act(data.input);
 
-                        self.postMessage({cmd: 'act', msg: 'complete', input: actionIndex});
+                        self.postMessage({
+                            cmd: 'act',
+                            msg: 'complete',
+                            input: actionIndex
+                        });
                         break;
                     case 'learn':
                         _DPAgent.learn(data.input);
 
-                        self.postMessage({cmd: 'learn', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'learn',
+                            msg: 'complete'
+                        });
                         break;
                     case 'stop':
-                        self.postMessage({cmd: 'stop', msg: 'complete'});
+                        self.postMessage({
+                            cmd: 'stop',
+                            msg: 'complete'
+                        });
                         close(); // Terminates the worker.
                         break;
                     default:
-                        self.postMessage({cmd: 'error', msg: 'Unknown command: ' + data.cmd});
+                        self.postMessage({
+                            cmd: 'error',
+                            msg: 'Unknown command: ' + data.cmd
+                        });
                 }
                 break;
         }

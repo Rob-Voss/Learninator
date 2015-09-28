@@ -57,118 +57,7 @@
          * Global world object
          * @type {World}
          */
-        var world = world || {},
-        // flot stuff
-            nflot = 1000,
-            smoothRewardHistory = [],
-            smoothReward = [],
-            flott = [];
-
-        /**
-         *
-         */
-        function solve() {
-            world.redraw = true;
-            world.maze.solve();
-            world.maze.drawSolution();
-            world.pause = true;
-        }
-
-        /**
-         *
-         */
-        function initFlot() {
-            var container = $("#flotreward"),
-                series = [];
-            for (var a = 0, ac = world.agents.length; a < ac; a++) {
-                flott[a] = 0;
-                series[a] = {
-                    data: getFlotRewards(a),
-                    lines: {fill: true},
-                    color: a,
-                    label: 'Agent ' + a
-                };
-            }
-
-            var plot = $.plot(container, series, {
-                grid: {
-                    borderWidth: 1,
-                    minBorderMargin: 20,
-                    labelMargin: 10,
-                    backgroundColor: {
-                        colors: ["#FFF", "#e4f4f4"]
-                    },
-                    margin: {
-                        top: 10,
-                        bottom: 10,
-                        left: 10,
-                    }
-                },
-                xaxis: {
-                    min: 0,
-                    max: nflot
-                },
-                yaxis: {
-                    min: -0.1,
-                    max: 8
-                }
-            });
-
-            setInterval(function () {
-                tick();
-                for (var an = 0, al = world.agents.length; an < al; an++) {
-                    if (typeof series[an] !== 'undefined') {
-                        series[an].data = getFlotRewards(an);
-                    }
-                }
-                plot.setData(series);
-                plot.draw();
-            }, 100);
-        }
-
-        /**
-         *
-         * @param n
-         * @returns {Array}
-         */
-        function getFlotRewards(n) {
-            // zip rewards into flot data
-            var res = [];
-            if (smoothRewardHistory[n] == null) {
-                smoothRewardHistory[n] = [];
-            }
-            for (var i = 0, hl = smoothRewardHistory[n].length; i < hl; i++) {
-                res.push([i, smoothRewardHistory[n][i]]);
-            }
-            return res;
-        }
-
-        /**
-         *
-         */
-        function tick() {
-            for (var a = 0, ac = world.agents.length; a<ac;a++) {
-                var agent = world.agents[a],
-                    rew = world.agents[a].lastReward;
-
-                if (smoothReward[a] == null) {
-                    smoothReward[a] = rew;
-                }
-                smoothReward[a] = smoothReward[a] * 0.999 + rew * 0.001;
-                flott[a] += 1;
-                if (flott[a] === 50) {
-                    for (var i = 0, hl = smoothRewardHistory[a].length; i <= hl; i++) {
-                        // record smooth reward
-                        if (hl >= nflot) {
-                            smoothRewardHistory[a] = smoothRewardHistory[a].slice(1);
-                        }
-                        smoothRewardHistory[a].push(smoothReward[a]);
-                        flott[a] = 0;
-                    }
-
-                }
-            }
-        }
+        var world = world || {};
 
         /**
          *
@@ -184,45 +73,46 @@
          */
         function start() {
             world = new GridWorld();
-            initFlot();
 
             var wGUI = new dat.GUI(),
-                wFolder = wGUI.addFolder('World'),
-                aFolder = wFolder.addFolder('Agents');
+                    wFolder = wGUI.addFolder('World'),
+                    aFolder = wFolder.addFolder('Agents'),
+                    cFolder = wFolder.addFolder('Cheats');
 
             wFolder.add(world, 'pause').name('Pause');
-            wFolder.add(world, 'cheats').name('Cheats');
             wFolder.add(world, 'interactive').name('Interactive Entities');
-            wFolder.add(world, 'numItems').name('# Entities');
             wFolder.add(world, 'movingEntities').name('Moving Entities');
+            wFolder.add(world, 'numItems').name('# Entities');
+
+            cFolder.add(world.cheats, 'population').name('Population #s');
+            cFolder.add(world.cheats, 'walls').name('Walls #s');
+            cFolder.add(world.cheats, 'grid').name('Grid');
 
             for (var a = 0; a < world.agents.length; a++) {
                 var agent = world.agents[a],
-                    folder = aFolder.addFolder('Agent ' + a);
+                        folder = aFolder.addFolder('Agent ' + a),
+                        acFolder = folder.addFolder('Cheats'),
+                        pFolder = folder.addFolder('Position');
 
-                folder.add(agent, 'direction').listen().name('Direction');
                 folder.add(agent, 'collision').listen().name('Collision');
-                folder.add(agent, 'cheats').listen().name('Cheats');
-                if (typeof agent.brain.epsilon !== 'undefined') {
-                    folder.add(agent.brain, 'epsilon').step(0.01).min(0).max(1).listen().name('Epsilon');
-                }
-                folder.add(agent.position, 'x').listen().name('Pos X');
-                folder.add(agent.position, 'y').listen().name('Pos Y');
-                folder.add(agent.position, 'vx').listen().name('Vel X');
-                folder.add(agent.position, 'vy').listen().name('Vel Y');
-                folder.add(agent.position, 'ax').listen().name('Acc X');
-                folder.add(agent.position, 'ay').listen().name('Acc Y');
-                folder.add(agent.gridLocation, 'x').listen().name('Grid X');
-                folder.add(agent.gridLocation, 'y').listen().name('Grid Y');
+                folder.add(agent, 'epsilon').step(0.001).min(0.000).max(1.000).listen().name('Epsilon');
+                acFolder.add(agent.cheats, 'gridLocation').listen().name('GridLocation');
+                acFolder.add(agent.cheats, 'position').listen().name('Position');
+                acFolder.add(agent.cheats, 'name').listen().name('Name');
+                pFolder.add(agent, 'direction').listen().name('Direction');
+                pFolder.add(agent.position, 'x').listen().name('Pos X');
+                pFolder.add(agent.position, 'y').listen().name('Pos Y');
+                pFolder.add(agent.position, 'vx').listen().name('Vel X');
+                pFolder.add(agent.position, 'vy').listen().name('Vel Y');
+                pFolder.add(agent.gridLocation, 'x').listen().name('Grid X');
+                pFolder.add(agent.gridLocation, 'y').listen().name('Grid Y');
             }
         }
-
     </script>
 </head>
 <body onload="start();">
 <div id="wrap">
     <div id="draw"></div>
-    <canvas id="world" width="600" height="600"></canvas>
 </div>
 <div id="flotreward" style="width:600px; height: 300px;"></div>
 

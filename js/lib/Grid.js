@@ -100,12 +100,10 @@
      * @returns {Grid}
      */
     var Grid = function (env) {
-        this.canvas = env.canvas;
-        this.ctx = this.canvas.getContext('2d');
         this.xCount = env.xCount || 1;
         this.yCount = env.yCount || 1;
-        this.cellWidth = this.canvas.width / this.xCount;
-        this.cellHeight = this.canvas.height / this.yCount;
+        this.cellWidth = env.width / this.xCount;
+        this.cellHeight = env.height / this.yCount;
 
         this.removedEdges = [];
         this.cells = [];

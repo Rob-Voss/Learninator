@@ -15,31 +15,40 @@
         });
         this.xCount = 4;
         this.yCount = 4;
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
         this.numItems = 40;
         this.maze = new Maze(this);
         this.useFlot = false;
         this.useGraph = true;
-        this.useGrid = false;
-        this.useQuad = true;
+
+        // Collision type
+        this.CD = {
+            type: 'quad',
+            maxChildren: 2,
+            maxDepth: 10
+        };
         this.closed = true;
         this.cheats = {
+            quad: true,
+            grid: false,
             population: true,
             walls: false
         };
+
         this.Rarr = null;
         this.Aarr = null;
 
-        this.TDOpts = {
+        this.tdOpts = {
             brainType: 'TD',
             numEyes: 9,
             numTypes: 3,
             width: 20,
             height: 20,
             radius: 10,
-            collision: false,
+            collision: true,
             interactive: false,
             useSprite: false,
-            movingEntities: false,
             cheats: {
                 gridLocation: false,
                 position: false,
@@ -47,7 +56,7 @@
             }
         };
 
-        this.TDOptsWorker = {
+        this.tdOptsWorker = {
             brainType: 'TD',
             numEyes: 9,
             numTypes: 3,
@@ -55,10 +64,9 @@
             height: 20,
             radius: 10,
             worker: true,
-            collision: false,
+            collision: true,
             interactive: false,
             useSprite: false,
-            movingEntities: false,
             cheats: {
                 gridLocation: false,
                 position: false,
@@ -73,14 +81,15 @@
             collision: false,
             interactive: false,
             useSprite: false,
-            movingEntities: true
+            movingEntities: false
         };
 
+        this.grid = this.maze.grid;
         this.walls = this.maze.walls;
 
         this.agents = [
-            new AgentTD(new Vec(1, 1), this.grid, this.TDOptsWorker),
-            new AgentTD(new Vec(1, 1), this.grid, this.TDOpts)
+            new AgentTD(new Vec(1, 1), this.tdOptsWorker),
+            new AgentTD(new Vec(1, 1), this.tdOpts)
         ];
         this.agents[0].load('zoo/mazeagent.json');
 

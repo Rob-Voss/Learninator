@@ -5,26 +5,25 @@
      * Initialize the Agent
      *
      * @param {Vec} position
-     * @param {Object} env
      * @param {Object} opts
      * @returns {Agent}
      */
-    var Agent = function (position, env, opts) {
-        Entity.call(this, 3, position, env, opts);
+    var Agent = function (position, opts) {
+        Entity.call(this, 3, position, opts);
 
-        this.brainType = opts.brainType;
+        this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
 
         // The number of item types the Agent's eyes can see
-        this.numTypes = typeof opts.numTypes === 'number' ? opts.numTypes : 3;
+        this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
         // The number of Agent's eyes
-        this.numEyes = typeof opts.numEyes === 'number' ? opts.numEyes :  9;
+        this.numEyes = Utility.getOpt(opts, 'numEyes',  9);
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
 
         // The Agent's eyes
         this.eyes = [];
         for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * 0.21, opts.range, opts.proximity));
+            this.eyes.push(new Eye(k * 0.21, Utility.getOpt(opts, 'range',  85), Utility.getOpt(opts, 'proximity',  85)));
         }
 
         this.action = null;
@@ -67,17 +66,15 @@
      */
     Agent.prototype.eat = function () {
         this.digestionSignal = 0;
-        for (let j = 0; j < this.world.entities.length; j++) {
-            let entity = this.world.entities[j],
-                dist = this.position.distFrom(entity.position);
-            if (dist < entity.radius + this.radius) {
-                var result = Utility.collisionCheck(this.position, entity.position, this.world.walls, this.world.entities);
-                if (!result) {
-                    this.digestionSignal += (entity.type === 1) ? this.carrot : this.stick;
-                    this.world.deleteEntity(entity);
-                }
-            }
+
+        // Check the world for collisions
+        this.world.CD.check(this);
+
+        // Go through and process what we ate
+        for (var i=0; i < this.collisions.length; i++) {
+            this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
         }
+        this.collisions = [];
 
         return this;
     };
@@ -123,105 +120,7 @@
         }
 
         if (this.cheats) {
-            var child;
-            // If cheats are on then show the entities grid location and x,y coords
-            if (this.cheats.gridLocation === true) {
-                if (this.useSprite === true) {
-                    child = this.sprite.getChildAt(0);
-                } else {
-                    child = this.shape.getChildAt(0);
-                }
-                child.text = this.gridLocation.x + ':' + this.gridLocation.y;
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius));
-            }
-
-            if (this.cheats.position === true) {
-                if (this.useSprite === true) {
-                    child = this.sprite.getChildAt(1);
-                } else {
-                    child = this.shape.getChildAt(1);
-                }
-                child.text = this.position.x + ':' + this.position.y;
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
-            }
-
-            if (this.cheats.name === true) {
-                if (this.useSprite === true) {
-                    child = this.sprite.getChildAt(2);
-                } else {
-                    child = this.shape.getChildAt(2);
-                }
-                child.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
-            }
-        }
-
-        return this;
-    };
-
-    /**
-     * Agent's chance to move in the world
-     * @param smallWorld
-     */
-    Agent.prototype.move = function () {
-        this.oldPos = this.position.clone();
-        var oldAngle = this.angle;
-        this.oldAngle = oldAngle;
-
-        // Steer the agent according to outputs of wheel velocities
-        var v = new Vec(0, this.radius / 2.0);
-        v = v.rotate(this.angle + Math.PI / 2);
-        var w1pos = this.position.add(v), // Positions of wheel 1
-            w2pos = this.position.sub(v); // Positions of wheel 2
-        var vv = this.position.sub(w2pos);
-        vv = vv.rotate(-this.rot1);
-        var vv2 = this.position.sub(w1pos);
-        vv2 = vv2.rotate(this.rot2);
-        var newPos = w2pos.add(vv),
-            newPos2 = w1pos.add(vv2);
-
-        newPos.scale(0.5);
-        newPos2.scale(0.5);
-
-        this.position = newPos.add(newPos2);
-
-        this.angle -= this.rot1;
-        if (this.angle < 0) {
-            this.angle += 2 * Math.PI;
-        }
-
-        this.angle += this.rot2;
-        if (this.angle > 2 * Math.PI) {
-            this.angle -= 2 * Math.PI;
-        }
-
-        if (this.collision) {
-            // The agent is trying to move from pos to oPos so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, []);
-            if (result) {
-                // The agent derped! Wall collision! Reset their position
-                this.position = this.oldPos;
-            }
-        }
-
-        // Handle boundary conditions.. bounce agent
-        if (this.position.x < 2) {
-            this.position.x = 2;
-        }
-        if (this.position.x > this.world.width) {
-            this.position.x = this.world.width;
-        }
-        if (this.position.y < 2) {
-            this.position.y = 2;
-        }
-        if (this.position.y > this.world.height) {
-            this.position.y = this.world.height;
-        }
-
-        this.direction = Utility.getDirection(this.angle);
-
-        if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = -this.angle;
+            this.updateCheats();
         }
 
         return this;

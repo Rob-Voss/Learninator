@@ -15,8 +15,8 @@ var QuadTree = {}; // global var for the quadtree
      *    // mandatory fields
      *    x : x coordinate
      *    y : y coordinate
-     *    w : width
-     *    h : height
+     *    width : width
+     *    height : height
      *
      *    // optional fields
      *    maxChildren : max children per node
@@ -24,8 +24,9 @@ var QuadTree = {}; // global var for the quadtree
      *}
      *
      * API:
-     * tree.insert() accepts arrays or single items
-     * every item must have a .x, .y, .w, and .h property. if they don't, the tree will break.
+     * tree.insert() accepts arrays or single items every item must have a
+     * .position.x, .position.y, .width, and .height property.
+     * if they don't, the tree will break.
      *
      * tree.retrieve(selector, callback) calls the callback for all objects that are in
      * the same region or overlapping.
@@ -42,11 +43,11 @@ var QuadTree = {}; // global var for the quadtree
 
         // Assign some default values
         args.maxChildren = args.maxChildren || 2;
-        args.maxDepth = args.maxDepth || 4;
+        args.maxDepth = args.maxDepth || 8;
 
         /**
-         * Node creator. You should never create a node manually. the algorithm takes
-         * care of that for you.
+         * Node creator.
+         * You should never create a node manually since the algorithm takes care of that for you.
          * @param {Number} x
          * @param {Number} y
          * @param {Number} width
@@ -70,9 +71,9 @@ var QuadTree = {}; // global var for the quadtree
 
                 /**
                  * Iterates all items that match the selector and invokes the supplied callback on them.
-                 * @param item
-                 * @param callback
-                 * @param instance
+                 * @param {Array|Object} item
+                 * @param {Function} callback
+                 * @param {Node} instance
                  */
                 retrieve: function (item, callback, instance) {
                     for (var i = 0, il = items.length; i < il; ++i) {
@@ -90,31 +91,30 @@ var QuadTree = {}; // global var for the quadtree
                 /**
                  * Adds a new Item to the node.
                  *
-                 * If the node already has subnodes, the item gets pushed down one level.
-                 * If the item does not fit into the subnodes, it gets saved in the
+                 * If the node already has sub nodes, the item gets pushed down one level.
+                 * If the item does not fit into the sub nodes, it gets saved in the
                  * "children"-array.
                  *
                  * If the maxChildren limit is exceeded after inserting the item,
                  * the node gets divided and all items inside the "children"-array get
-                 * pushed down to the new subnodes.
-                 * @param item
+                 * pushed down to the new sub nodes.
+                 * @param {Array|Object} item
                  */
                 insert: function (item) {
                     var i;
 
                     if (nodes.length) {
-                        // get the node in which the item fits best
+                        // Get the node in which the item fits best
                         i = this.findInsertNode(item);
                         if (i === PARENT) {
-                            // if the item does not fit, push it into the
-                            // children array
+                            // If the item does not fit, push it into the children array
                             items.push(item);
                         } else {
                             nodes[i].insert(item);
                         }
                     } else {
                         items.push(item);
-                        //divide the node if maxChildren is exceeded and maxDepth is not reached
+                        // Divide the node if maxChildren is exceeded and maxDepth is not reached
                         if (items.length > maxChildren && this.depth < maxDepth) {
                             this.divide();
                         }
@@ -123,8 +123,8 @@ var QuadTree = {}; // global var for the quadtree
 
                 /**
                  * Find a node the item should be inserted in.
-                 * @param item
-                 * @returns {number}
+                 * @param {Array|Object} item
+                 * @returns {Number}
                  */
                 findInsertNode: function (item) {
                     // left
@@ -153,13 +153,13 @@ var QuadTree = {}; // global var for the quadtree
                 },
 
                 /**
-                 * Finds the regions the item overlaps with. See constants defined
+                 * Finds the regions that the item overlaps with, see constants defined
                  * above. The callback is called for every region the item overlaps.
-                 * @param item
-                 * @param callback
+                 * @param {Array|Object} item
+                 * @param {Function} callback
                  */
                 findOverlappingNodes: function (item, callback) {
-                    // left
+                    // Left
                     if (item.position.x < this.x + (this.width / 2)) {
                         if (item.position.y < this.y + (this.height / 2)) {
                             callback(TOP_LEFT);
@@ -168,7 +168,7 @@ var QuadTree = {}; // global var for the quadtree
                             callback(BOTTOM_LEFT);
                         }
                     }
-                    // right
+                    // Right
                     if (item.position.x + item.width >= this.x + (this.width / 2)) {
                         if (item.position.y < this.y + (this.height / 2)) {
                             callback(TOP_RIGHT);
@@ -180,23 +180,23 @@ var QuadTree = {}; // global var for the quadtree
                 },
 
                 /**
-                 * Divides the current node into four subnodes and adds them
+                 * Divides the current node into four sub nodes and adds them
                  * to the nodes array of the current node. Then reinserts all
                  * children.
                  */
                 divide: function () {
                     var width, height, i, oldChildren,
                         childrenDepth = this.depth + 1;
-                    // set dimensions of the new nodes
+                    // Set the dimensions of the new nodes
                     width = (this.width / 2);
                     height = (this.height / 2);
-                    // create top left node
+                    // Create top left node
                     nodes.push(node(this.x, this.y, width, height, childrenDepth, maxChildren, maxDepth));
-                    // create top right node
+                    // Create top right node
                     nodes.push(node(this.x + width, this.y, width, height, childrenDepth, maxChildren, maxDepth));
-                    // create bottom left node
+                    // Create bottom left node
                     nodes.push(node(this.x, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
-                    // create bottom right node
+                    // Create bottom right node
                     nodes.push(node(this.x + width, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
 
                     oldChildren = items;
@@ -207,7 +207,7 @@ var QuadTree = {}; // global var for the quadtree
                 },
 
                 /**
-                 * Clears the node and all its subnodes.
+                 * Clears the node and all its sub nodes.
                  */
                 clear: function () {
                     var i;
@@ -219,9 +219,9 @@ var QuadTree = {}; // global var for the quadtree
                 },
 
                 /*
-                 * convenience method: is not used in the core algorithm.
+                 * Convenience method that is not used in the core algorithm.
                  * ---------------------------------------------------------
-                 * returns this nodes subnodes. this is usful if we want to do stuff
+                 * This returns this nodes sub nodes. this is useful if we want to do stuff
                  * with the nodes, i.e. accessing the bounds of the nodes to draw them
                  * on a canvas for debugging etc...
                  */
@@ -237,7 +237,7 @@ var QuadTree = {}; // global var for the quadtree
             }()),
             /**
              * Insert an item into the node
-             * @param item
+             * @param {Array|Object} item
              */
             insert: function (item) {
                 var len, i;
@@ -253,10 +253,10 @@ var QuadTree = {}; // global var for the quadtree
             },
             /**
              * Retrieve an item from the QuadTree
-             * @param selector
-             * @param callback
-             * @param instance
-             * @returns {*}
+             * @param {Array|Object} selector
+             * @param {Function} callback
+             * @param {Node} instance
+             * @returns {Node}
              */
             retrieve: function (selector, callback, instance) {
                 return this.root.retrieve(selector, callback, instance);

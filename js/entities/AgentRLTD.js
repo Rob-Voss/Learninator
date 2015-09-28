@@ -5,23 +5,26 @@
      * Initialize the AgentRLTD
      *
      * @param {Vec} position
-     * @param {Object} env
      * @param {Object} opts
      * @returns {AgentRLTD}
      */
-    var AgentRLTD = function (position, env, opts) {
-        Agent.call(this, position, env, opts);
+    var AgentRLTD = function (position, opts) {
+        // Is it a worker
+        this.worker = Utility.getOpt(opts, 'worker', false);
+        this.name = "Agent RLTD";
+        if (this.worker) {
+            this.name += ' Worker';
+        }
 
-        this.grid = env.grid;
-        this.gS = this.grid.yCount * this.grid.xCount;
-        this.nsteps_history = [];
+        Agent.call(this, position, opts);
+
+        this.nStepsHistory = [];
         this.nStepsCounter = 0;
         this.nflot = 1000;
         this.score = 0;
+        this.env = Utility.getOpt(opts, 'env', {});
 
-        this.name = "Agent RLTD";
-
-        this.brainOpts = opts.spec || {
+        this.brainOpts = Utility.getOpt(opts, 'spec', {
             update: 'qlearn', // 'qlearn' or 'sarsa'
             gamma: 0.9, // discount factor, [0, 1)
             epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
@@ -31,19 +34,23 @@
             planN: 50, // number of planning steps per iteration. 0 = no planning
             smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
             beta: 0.1 // learning rate for smooth policy update
-        };
+        });
 
         var _this = this;
 
         if (!this.worker) {
-            this.brain = new TDAgent(env, this.brainOpts);
-            this.state = env.startState();
+            this.brain = new TDAgent(this.env, this.brainOpts);
+            this.state = this.env.startState();
 
-            env.reset();
+            this.env.reset();
 
             return this;
         } else {
-            var jEnv = Utility.stringify(_this),
+            this.post = function (cmd, input) {
+                this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
+            };
+
+            var jEnv = Utility.stringify(_this.env),
                 jOpts = Utility.stringify(_this.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
@@ -72,10 +79,10 @@
 
                         // evolve environment to next state
                         _this.state = obs.ns;
-                        _this.gridLocation = _this.smallWorld.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
+                        _this.gridLocation = _this.world.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
 
-                        let x = _this.gridLocation.coords.bottom.right.x - (_this.smallWorld.grid.cellWidth / 2),
-                            y = _this.gridLocation.coords.bottom.right.y - (_this.smallWorld.grid.cellHeight / 2);
+                        let x = _this.gridLocation.coords.bottom.right.x - (_this.world.grid.cellWidth / 2),
+                            y = _this.gridLocation.coords.bottom.right.y - (_this.world.grid.cellHeight / 2);
                         _this.position.set(x, y);
 
                         _this.nStepsCounter += 1;
@@ -83,14 +90,14 @@
                             _this.score += 1;
                             _this.brain.postMessage({cmd: 'resetEpisode'});
                             // record the reward achieved
-                            if (_this.nsteps_history.length >= _this.nflot) {
-                                _this.nsteps_history = _this.nsteps_history.slice(1);
+                            if (_this.nStepsHistory.length >= _this.nflot) {
+                                _this.nStepsHistory = _this.nStepsHistory.slice(1);
                             }
-                            _this.nsteps_history.push(_this.nStepsCounter);
+                            _this.nStepsHistory.push(_this.nStepsCounter);
                             _this.nStepsCounter = 0;
 
-                            _this.gridLocation = _this.smallWorld.grid.getCellAt(0, 0);
-                            _this.position.set(_this.smallWorld.grid.cellWidth / 2, _this.smallWorld.grid.cellHeight / 2);
+                            _this.gridLocation = _this.world.grid.getCellAt(0, 0);
+                            _this.position.set(_this.world.grid.cellWidth / 2, _this.world.grid.cellHeight / 2);
                         }
                     }
                     break;
@@ -100,7 +107,7 @@
                 }
             };
 
-            this.brain.postMessage({cmd: 'init', input: {env: jEnv, opts: jOpts}});
+            this.brain.post('init', {env: jEnv, opts: jOpts});
         }
     };
 
@@ -110,10 +117,10 @@
     /**
      * Agent's chance to act on the world
      *
-     * @param {Object} smallWorld
+     * @param {Object} world
      */
-    AgentRLTD.prototype.tick = function (smallWorld) {
-        this.smallWorld = smallWorld;
+    AgentRLTD.prototype.tick = function (world) {
+        this.world = world;
         if (!this.worker) {
             // ask agent for an action
             var a = this.brain.act(this.state),
@@ -126,10 +133,10 @@
 
             // evolve environment to next state
             this.state = obs.ns;
-            this.gridLocation = smallWorld.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+            this.gridLocation = world.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
 
-            let x = this.gridLocation.coords.bottom.right.x - (smallWorld.grid.cellWidth / 2),
-                y = this.gridLocation.coords.bottom.right.y - (smallWorld.grid.cellHeight / 2);
+            let x = this.gridLocation.coords.bottom.right.x - (world.grid.cellWidth / 2),
+                y = this.gridLocation.coords.bottom.right.y - (world.grid.cellHeight / 2);
             this.position.set(x, y);
 
             this.nStepsCounter += 1;
@@ -137,17 +144,17 @@
                 this.score += 1;
                 this.brain.resetEpisode();
                 // record the reward achieved
-                if (this.nsteps_history.length >= this.nflot) {
-                    this.nsteps_history = this.nsteps_history.slice(1);
+                if (this.nStepsHistory.length >= this.nflot) {
+                    this.nStepsHistory = this.nStepsHistory.slice(1);
                 }
-                this.nsteps_history.push(this.nStepsCounter);
+                this.nStepsHistory.push(this.nStepsCounter);
                 this.nStepsCounter = 0;
 
-                this.gridLocation = smallWorld.grid.getCellAt(0, 0);
-                this.position.set(smallWorld.grid.cellWidth / 2, smallWorld.grid.cellHeight / 2);
+                this.gridLocation = world.grid.getCellAt(0, 0);
+                this.position.set(world.grid.cellWidth / 2, world.grid.cellHeight / 2);
             }
         } else {
-            this.brain.postMessage({cmd: 'act', input: this.state});
+            this.post('act', this.state);
         }
     };
 

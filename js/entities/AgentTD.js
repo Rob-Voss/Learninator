@@ -8,15 +8,15 @@
      * @param {Object} opts
      * @returns {AgentTD}
      */
-    var AgentTD = function (position, env, opts) {
+    var AgentTD = function (position, opts) {
         // Is it a worker
-        this.worker = (typeof opts.worker !== 'boolean') ? false : opts.worker;
+        this.worker = Utility.getOpt(opts, 'worker', false);
         this.name = "Agent TD";
         if (this.worker) {
             this.name += ' Worker';
         }
 
-        Agent.call(this, position, env, opts);
+        Agent.call(this, position, opts);
 
         this.carrot = +5;
         this.stick = -6;
@@ -50,21 +50,21 @@
          * @type {Array}
          */
         this.layerDefs = [];
-        this.layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
-        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
-        this.layerDefs.push({type: 'regression', num_neurons: this.numActions});
+        this.layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.networkSize});
+        this.layerDefs.push({type: 'fc', numNeurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'fc', numNeurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'regression', numNeurons: this.numActions});
 
         /**
          * The options for the Temporal Difference learner that trains the above net
          * by backpropping the temporal difference learning rule.
          * @type {Object}
          */
-        this.trainerOpts = {
-            learning_rate: 0.001,
+        this.tdTrainerOptions = {
+            learningRate: 0.001,
             momentum: 0.0,
-            batch_size: 64,
-            l2_decay: 0.01
+            batchSize: 64,
+            l2Decay: 0.01
         };
 
         /**
@@ -72,18 +72,18 @@
          * @type {Object}
          */
         this.brainOpts = {
-            num_states: this.numStates,
-            num_actions: this.numActions,
-            temporal_window: this.temporalWindow,
-            experience_size: 30000,
-            start_learn_threshold: 1000,
+            numStates: this.numStates,
+            numActions: this.numActions,
+            temporalWindow: this.temporalWindow,
+            experienceSize: 30000,
+            startLearnThreshold: 1000,
             gamma: 0.7,
-            learning_steps_total: 200000,
-            learning_steps_burnin: 3000,
-            epsilon_min: 0.05,
-            epsilon_test_time: 0.05,
-            layer_defs: this.layerDefs,
-            tdtrainer_options: this.trainerOpts
+            learningStepsTotal: 200000,
+            learningStepsBurnin: 3000,
+            epsilonMin: 0.05,
+            epsilonTestTime: 0.05,
+            layerDefs: this.layerDefs,
+            tdTrainerOptions: this.tdTrainerOptions
         };
 
         var _this = this;
@@ -126,7 +126,7 @@
                     break;
                 case 'load':
                     if (data.msg === 'complete') {
-                        _this.epsilon = data.input;
+                        _this.epsilon = parseFloat(data.input);
                     }
                     break;
                 default:
@@ -187,6 +187,7 @@
      */
     AgentTD.prototype.learn = function () {
         this.lastReward = this.digestionSignal;
+
         // Compute the reward
         var proximityReward = 0.0;
         for (let ei = 0; ei < this.numEyes; ei++) {
@@ -204,6 +205,7 @@
         if (this.actionIndex === 0 && proximityReward > 0.75) {
             forwardReward = 0.1 * proximityReward;
         }
+
         // Agents like to eat good things
         var digestionReward = this.digestionSignal;
         this.digestionSignal = 0.0;
@@ -216,6 +218,77 @@
             this.pts.push(reward);
         } else {
             this.post('learn', reward);
+        }
+
+        return this;
+    };
+
+    /**
+     * Agent's chance to move in the world
+     * @param smallWorld
+     */
+    AgentTD.prototype.move = function () {
+        this.oldPos = this.position.clone();
+        var oldAngle = this.angle;
+        this.oldAngle = oldAngle;
+
+        // Steer the agent according to outputs of wheel velocities
+        var v = new Vec(0, this.radius / 2.0);
+        v = v.rotate(this.angle + Math.PI / 2);
+        var w1pos = this.position.add(v), // Positions of wheel 1
+            w2pos = this.position.sub(v); // Positions of wheel 2
+        var vv = this.position.sub(w2pos);
+        vv = vv.rotate(-this.rot1);
+        var vv2 = this.position.sub(w1pos);
+        vv2 = vv2.rotate(this.rot2);
+        var newPos = w2pos.add(vv),
+            newPos2 = w1pos.add(vv2);
+
+        newPos.scale(0.5);
+        newPos2.scale(0.5);
+
+        this.position = newPos.add(newPos2);
+
+        this.angle -= this.rot1;
+        if (this.angle < 0) {
+            this.angle += 2 * Math.PI;
+        }
+
+        this.angle += this.rot2;
+        if (this.angle > 2 * Math.PI) {
+            this.angle -= 2 * Math.PI;
+        }
+
+        if (this.collision) {
+            // The agent is trying to move from pos to oPos so we need to check walls
+            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, [], this.radius);
+            if (result) {
+                // The agent derped! Wall collision! Reset their position
+                this.position = this.oldPos.clone();
+                this.position.vx = 0;
+                this.position.vy = 0;
+            }
+        }
+
+        // Handle boundary conditions.. bounce agent
+        if (this.position.x < 2) {
+            this.position.x = 2;
+        }
+        if (this.position.x > this.world.width) {
+            this.position.x = this.world.width;
+        }
+        if (this.position.y < 2) {
+            this.position.y = 2;
+        }
+        if (this.position.y > this.world.height) {
+            this.position.y = this.world.height;
+        }
+
+        this.direction = Utility.getDirection(this.angle);
+
+        if (this.useSprite) {
+            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.rotation = -this.angle;
         }
 
         return this;

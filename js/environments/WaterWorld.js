@@ -3,31 +3,42 @@
 
     /**
      * World object contains many agents and walls and food and stuff
-     *
      * @returns {WaterWorld}
      * @constructor
      */
     var WaterWorld = function () {
         this.canvas = document.getElementById("world");
-        this.xCount = 10;
-        this.yCount = 10;
-        this.numItems = 40;
+        this.xCount = 4;
+        this.yCount = 4;
+        this.numItems = 360;
+        this.closed = true;
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        this.maze = new Maze(this);
+        this.grid = this.maze.grid;
+        this.walls = this.maze.walls;
+
+        // Reward graphing type
         this.useFlot = true;
         this.useGraph = false;
-        this.useGrid = true;
-        this.useQuad = false;
+
+        // Collision type
+        this.CD = {
+            type: 'quad',
+            maxChildren: 2,
+            maxDepth: 10
+        };
         this.cheats = {
-            population: true,
+            quad: true,
+            grid: false,
+            population: false,
             walls: false
         };
-        this.closed = true;
 
         var agentOpts = {
             brainType: 'RLDQN',
             numEyes: 30,
             numTypes: 5,
-            width: 20,
-            height: 20,
             radius: 10,
             collision: true,
             interactive: false,
@@ -35,6 +46,7 @@
             cheats: {
                 gridLocation: false,
                 position: false,
+                id: false,
                 name: true
             }
         };
@@ -43,8 +55,6 @@
             brainType: 'RLDQN',
             numEyes: 30,
             numTypes: 5,
-            width: 20,
-            height: 20,
             radius: 10,
             collision: true,
             interactive: false,
@@ -52,15 +62,14 @@
             cheats: {
                 gridLocation: false,
                 position: false,
+                id: false,
                 name: true
             },
             worker: true
         };
 
         var entityOpts = {
-            width: 20,
-            height: 20,
-            radius: 10,
+            radius: Utility.randi(5, 10),
             collision: true,
             interactive: false,
             useSprite: false,
@@ -68,27 +77,21 @@
             cheats: {
                 gridLocation: false,
                 position: false,
+                id: false,
                 name: false
             }
         };
 
-        var vec1 = new Vec(Utility.randi(2, this.canvas.width - 2), Utility.randi(2, this.canvas.height - 2)),
-            vec2 = new Vec(Utility.randi(2, this.canvas.width - 2), Utility.randi(2, this.canvas.height - 2));
+        var vec1 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            vec2 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2));
 
         this.agents = [
-            new AgentRLDQN(vec1, this, agentOpts),
-            new AgentRLDQN(vec2, this, agentWOpts)
+            new AgentRLDQN(vec1, agentOpts),
+            new AgentRLDQN(vec2, agentWOpts)
         ];
 
         this.agents[0].load('zoo/wateragent.json');
-        //this.agents[1].load('zoo/wateragent.json');
-
-        this.walls = [
-            new Wall(new Vec(0, 0), new Vec(0 + this.canvas.width, 0)),
-            new Wall(new Vec(0 + this.canvas.width, 0), new Vec(0 + this.canvas.width, 0 + this.canvas.height)),
-            new Wall(new Vec(0 + this.canvas.width, 0 + this.canvas.height), new Vec(0, 0 + this.canvas.height)),
-            new Wall(new Vec(0, 0 + this.canvas.height), new Vec(0, 0))
-        ];
+        this.agents[1].load('zoo/wateragent.json');
 
         World.call(this, this, entityOpts);
 

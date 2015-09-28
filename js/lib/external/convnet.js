@@ -1537,7 +1537,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       assert(defs.length >= 2, 'Error! At least one input layer and one loss layer are required.');
       assert(defs[0].type === 'input', 'Error! First layer must be the input layer, to declare size of inputs');
 
-      // desugar layer_defs for adding activation, dropout layers etc
+      // desugar layerDefs for adding activation, dropout layers etc
       var desugar = function() {
         var new_defs = [];
         for(var i=0;i<defs.length;i++) {
@@ -1714,10 +1714,10 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
     this.net = net;
 
     var options = options || {};
-    this.learning_rate = typeof options.learning_rate !== 'undefined' ? options.learning_rate : 0.01;
+    this.learning_rate = typeof options.learningRate !== 'undefined' ? options.learningRate : 0.01;
     this.l1_decay = typeof options.l1_decay !== 'undefined' ? options.l1_decay : 0.0;
-    this.l2_decay = typeof options.l2_decay !== 'undefined' ? options.l2_decay : 0.0;
-    this.batch_size = typeof options.batch_size !== 'undefined' ? options.batch_size : 1;
+    this.l2_decay = typeof options.l2Decay !== 'undefined' ? options.l2Decay : 0.0;
+    this.batch_size = typeof options.batchSize !== 'undefined' ? options.batchSize : 1;
     this.method = typeof options.method !== 'undefined' ? options.method : 'sgd'; // sgd/adagrad/adadelta/windowgrad/netsterov
 
     this.momentum = typeof options.momentum !== 'undefined' ? options.momentum : 0.9;
@@ -1971,7 +1971,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
       var cand = {};
       cand.acc = [];
       cand.accv = 0; // this will maintained as sum(acc) for convenience
-      cand.layer_defs = layer_defs;
+      cand.layerDefs = layer_defs;
       cand.trainer_def = trainer_def;
       cand.net = net;
       cand.trainer = trainer;
@@ -2047,7 +2047,7 @@ var convnetjs = convnetjs || { REVISION: 'ALPHA' };
           for(var k=0;k<this.candidates.length;k++) {
             var c = this.candidates[k];
             var net = new Net();
-            net.makeLayers(c.layer_defs);
+            net.makeLayers(c.layerDefs);
             var trainer = new Trainer(net, c.trainer_def);
             c.net = net;
             c.trainer = trainer;

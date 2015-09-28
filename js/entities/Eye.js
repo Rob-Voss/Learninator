@@ -69,7 +69,6 @@
             // eye collided with an entity
             this.sensedProximity = result.vecI.distFrom(agentPos);
             this.sensedType = result.type;
-
             if ('vx' in result.vecI) {
                 this.vx = result.vecI.vx;
                 this.vy = result.vecI.vy;

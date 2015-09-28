@@ -19,9 +19,15 @@
         this.state = 0;
         this.stepsPerTick = 1;
         this.pause = false;
+        // flot stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
 
         this.agentOpts = {
             brainType: 'RLTD',
+            env: this,
             spec: {
                 update: 'qlearn', // 'qlearn' or 'sarsa'
                 // discount factor, [0, 1)
@@ -48,14 +54,14 @@
             radius: 10,
             collision: false,
             interactive: false,
-            useSprite: false,
-            movingEntities: false
+            useSprite: false
         };
 
         this.maze = new Maze({
-            canvas: document.getElementById("world"),
             xCount: 10,
-            yCount: 10
+            yCount: 10,
+            width: 600,
+            height: 600
         });
 
         this.grid = this.maze.grid;
@@ -65,11 +71,13 @@
         this.gS = this.grid.yCount * this.grid.xCount;
         this.cs = this.grid.cellWidth;  // cell size
         this.agents = [
-            new AgentRLTD(new Vec(50, 50), this, this.agentOpts)
+            new AgentRLTD(new Vec(50, 50), this.agentOpts)
         ];
 
         this.initGrid();
         this.drawGrid();
+        this.initFlot();
+        this.tick();
 
         return this;
     };
@@ -77,13 +85,114 @@
     GridWorld.prototype = Object.create(World.prototype);
     GridWorld.prototype.constructor = World;
 
+    /**
+     * Graph the agent rewards
+     */
+    GridWorld.prototype.graphRewards = function () {
+        // If we are using flot based rewards
+        for (var a = 0, ac = this.agents.length; a < ac; a++) {
+            var agent = this.agents[a],
+                rew = agent.lastReward;
+
+            if (this.smoothReward[a] === null) {
+                this.smoothReward[a] = rew;
+            }
+            this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
+            this.flott[a] += 1;
+            if (this.flott[a] === 50) {
+                for (var i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
+                    // record smooth reward
+                    if (hl >= this.nflot) {
+                        this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
+                    }
+                    this.smoothRewardHistory[a].push(this.smoothReward[a]);
+                    this.flott[a] = 0;
+                }
+            }
+            if (typeof this.series[a] !== 'undefined') {
+                this.series[a].data = this.getFlotRewards(a);
+            }
+        }
+
+        this.plot.setData(this.series);
+        this.plot.draw();
+    };
+
+    /**
+     * Initialize the Flot class
+     */
+    GridWorld.prototype.initFlot = function () {
+        for (var a = 0; a < this.agents.length; a++) {
+            this.smoothReward[a] = null;
+            this.smoothRewardHistory[a] = null;
+        }
+        this.container = document.getElementById('flotreward');
+        this.series = [];
+        for (var a = 0, ac = this.agents.length; a < ac; a++) {
+            this.flott[a] = 0;
+            this.smoothRewardHistory[a] = [];
+            this.series[a] = {
+                data: this.getFlotRewards(a),
+                lines: {
+                    fill: true
+                },
+                color: a,
+                label: this.agents[a].name
+            };
+        }
+
+        this.plot = $.plot(this.container, this.series, {
+            grid: {
+                borderWidth: 1,
+                minBorderMargin: 20,
+                labelMargin: 10,
+                backgroundColor: {
+                    colors: ["#FFF", "#e4f4f4"]
+                },
+                margin: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            },
+            xaxis: {
+                min: 0,
+                max: this.nflot
+            },
+            yaxis: {
+                min: -0.05,
+                max: 0.05
+            }
+        });
+    };
+
+    /**
+     * zip rewards into flot data
+     * @param {Number} an
+     * @returns {Array}
+     */
+    GridWorld.prototype.getFlotRewards = function (an) {
+        var res = [];
+        if (this.smoothRewardHistory[an] === null) {
+            this.smoothRewardHistory[an] = [];
+        }
+
+        for (var i = 0, hl = this.smoothRewardHistory[an].length; i < hl; i++) {
+            res.push([i, this.smoothRewardHistory[an][i]]);
+        }
+
+        return res;
+    };
+
+    /**
+     *
+     */
     GridWorld.prototype.tick = function () {
         var _this = this,
             obs;
         if (_this.sid === -1) {
             _this.sid = setInterval(function () {
                 for (var k = 0; k < _this.stepsPerTick; k++) {
-                    //_this.agents[0].tick();
                     // ask agent for an action
                     var a = _this.agents[0].brain.act(_this.state),
                     // run it through environment dynamics
@@ -91,32 +200,34 @@
 
                     // allow opportunity for the agent to learn
                     _this.agents[0].brain.learn(obs.r);
-                    _this.Rarr[_this.state] = obs.r;
                     // evolve environment to next state
                     _this.state = obs.ns;
-                    _this.agents[0].gridLocation = _this.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
-
-                    let x = _this.agents[0].gridLocation.coords.bottom.right.x - (_this.grid.cellWidth / 2),
-                        y = _this.agents[0].gridLocation.coords.bottom.right.y - (_this.grid.cellHeight / 2);
-                    _this.agents[0].position.set(x, y);
 
                     _this.agents[0].nStepsCounter += 1;
                     if (typeof obs.resetEpisode !== 'undefined') {
                         _this.agents[0].score += 1;
                         _this.agents[0].brain.resetEpisode();
+
+                        _this.agents[0].gridLocation = _this.grid.getCellAt(0, 0);
+                        _this.agents[0].position.set(_this.grid.cellWidth / 2, _this.grid.cellHeight / 2);
+                        _this.state = _this.startState();
+
                         // record the reward achieved
                         if (_this.agents[0].nStepsHistory.length >= _this.agents[0].nflot) {
                             _this.agents[0].nStepsHistory = _this.agents[0].nStepsHistory.slice(1);
                         }
                         _this.agents[0].nStepsHistory.push(_this.agents[0].nStepsCounter);
                         _this.agents[0].nStepsCounter = 0;
-
-                        _this.agents[0].gridLocation = _this.grid.getCellAt(0, 0);
-                        _this.agents[0].position.set(_this.grid.cellWidth / 2, _this.grid.cellHeight / 2);
+                    } else {
+                        _this.agents[0].gridLocation = _this.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
+                        let x = _this.agents[0].gridLocation.coords.bottom.right.x - (_this.grid.cellWidth / 2),
+                            y = _this.agents[0].gridLocation.coords.bottom.right.y - (_this.grid.cellHeight / 2);
+                        _this.agents[0].position.set(x, y);
                     }
                 }
 
                 _this.drawGrid();
+                _this.graphRewards();
             }, 20);
         } else {
             clearInterval(_this.sid);
@@ -130,15 +241,16 @@
     GridWorld.prototype.reset = function () {
         // specify some rewards
         var Rarr = Utility.zeros(this.gS),
-            Aarr = new Array(this.gS);
+            Aarr = new Array(this.gS),
+            lastState = 0;
 
-        for (let y = 0; y < this.grid.yCount; y++) {
-            for (let x = 0; x < this.grid.xCount; x++) {
+        for (var y = 0; y < this.gH; y++) {
+            for (var x = 0; x < this.gW; x++) {
                 var state = this.xyToS(x, y),
                     actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y)),
                     actionsAvail = {0: null, 1: null, 2: null, 3: null};
-                for (let a = 0; a < actions.length; a++) {
-                    let action = actions[a],
+                for (var a = 0; a < actions.length; a++) {
+                    var action = actions[a],
                         actionState = this.xyToS(action.x, action.y);
                     if (action.x === x - 1 && action.y === y) {
                         actionsAvail[0] = actionState;
@@ -149,9 +261,19 @@
                     } else if (action.x === x + 1 && action.y === y) {
                         actionsAvail[3] = actionState;
                     }
-                    Aarr[state] = actionsAvail;
-                    Rarr[state] = (actions.length >= 2) ? 1 : 0;
                 }
+                Aarr[state] = actionsAvail;
+                Rarr[state] = (state === this.gS - 1) ? 1 : 0;
+                var nulled = 0
+                for (var key in actionsAvail) {
+                    if (actionsAvail[key] === null) {
+                        nulled++;
+                    }
+                }
+                if (nulled === 3 && lastState !== 0 && state !== this.gS - 1) {
+                    Rarr[state] = -1;
+                }
+                lastState = state;
             }
         }
 
@@ -183,46 +305,47 @@
             sx = this.sToX(s),
             sy = this.sToY(s);
 
-        switch (a) {
-            case 0:
-                // Left
-                nx = sx - 1;
-                ny = sy;
-                break;
-            case 1:
-                // Down
-                nx = sx;
-                ny = sy + 1;
-                break;
-            case 2:
-                // Up
-                nx = sx;
-                ny = sy - 1;
-                break;
-            case 3:
-                // Right
-                nx = sx + 1;
-                ny = sy;
-                break;
-        }
-
-        if (nx < 0) {
-            nx = 0;
-        }
-
-        if (ny < 0) {
-            ny = 0;
-        }
-
-        // gridworld is deterministic, so return only a single next state
-        ns = this.xyToS(nx, ny);
-        let actions = this.Aarr[s];
-        if (actions[a] !== ns) {
-            // Not a valid option so go back to s
-            return s;
+        if (s === this.gS - 1) {
+            ns = this.startState();
+            while(this.Aarr[ns][a] === null) {
+                ns = this.randomState();
+            }
         } else {
-            return ns;
+            switch (a) {
+                case 0: // Left
+                    nx = sx - 1;
+                    ny = sy;
+                    break;
+                case 1: // Down
+                    nx = sx;
+                    ny = sy + 1;
+                    break;
+                case 2: // Up
+                    nx = sx;
+                    ny = sy - 1;
+                    break;
+                case 3: // Right
+                    nx = sx + 1;
+                    ny = sy;
+                    break;
+            }
+
+            if (nx < 0) {
+                nx = 0;
+            }
+
+            if (ny < 0) {
+                ny = 0;
+            }
+
+            ns = this.xyToS(nx, ny);
+            if (this.Aarr[s][a] !== ns) {
+                // Not a valid option so go back to s
+                ns = s;
+            }
         }
+
+        return ns;
     };
 
     /**
@@ -238,8 +361,8 @@
         // every step takes a bit of negative reward
         r -= 0.01;
         var out = {
-            'ns': ns,
-            'r': r
+            ns: ns,
+            r: r
         };
         if (s === (this.gS - 1)) {
             // episode is over
@@ -273,18 +396,17 @@
         var x = this.sToX(s),
             y = this.sToY(s),
             as = [],
-            c = this.grid.getCellAt(x, y);
-        var actions = this.grid.disconnectedNeighbors(c);
+            c = this.grid.getCellAt(x, y),
+            actions = this.grid.disconnectedNeighbors(c);
 
-        for (let a = 0; a < actions.length; a++) {
-            let action = actions[a];
-            if (action.x === x - 1 && action.y === y) {
+        for (var a = 0; a < actions.length; a++) {
+            if (actions[a].x === x - 1 && actions[a].y === y) { // Left
                 as.push(0);
-            } else if (action.x === x && action.y === y + 1) {
+            } else if (actions[a].x === x && actions[a].y === y + 1) { // Down
                 as.push(1);
-            } else if (action.x === x && action.y === y - 1) {
+            } else if (actions[a].x === x && actions[a].y === y - 1) { // Up
                 as.push(2);
-            } else if (action.x === x + 1 && action.y === y) {
+            } else if (actions[a].x === x + 1 && actions[a].y === y) { // Right
                 as.push(3);
             }
         }
@@ -298,7 +420,7 @@
      * @returns {Number}
      */
     GridWorld.prototype.sToX = function (s) {
-        return Math.floor(s / this.grid.xCount);
+        return Math.floor(s / this.gW);
     };
 
     /**
@@ -307,7 +429,7 @@
      * @returns {Number}
      */
     GridWorld.prototype.sToY = function (s) {
-        return s % this.grid.yCount;
+        return s % this.gH;
     };
 
     /**
@@ -317,7 +439,7 @@
      * @returns {Number}
      */
     GridWorld.prototype.xyToS = function (x, y) {
-        return x * this.grid.xCount + y;
+        return x * this.gW + y;
     };
 
     /**
@@ -348,6 +470,9 @@
         this.drawGrid(); // redraw
     };
 
+    /**
+     *
+     */
     GridWorld.prototype.drawGrid = function () {
         var sx = this.sToX(this.state),
             sy = this.sToY(this.state);
@@ -381,33 +506,28 @@
                     }
                 }
 
+                var ms = 100;
                 if (vv > 0) {
                     g = 255;
-                    r = 255 - vv * 100;
-                    b = 255 - vv * 100;
+                    r = 255 - vv * ms;
+                    b = 255 - vv * ms;
                 }
                 if (vv < 0) {
-                    g = 255 + vv * 100;
+                    g = 255 + vv * ms;
                     r = 255;
-                    b = 255 + vv * 100;
+                    b = 255 + vv * ms;
                 }
 
-                var vcol = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
-                    rcol = "";
-                let actions = this.Aarr[s],
-                    avail = actions[a];
-                if (avail === 1) {
-                    vcol = "#AAA";
-                    rcol = "#AAA";
-                }
+                var vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
+                    rcolor = "",
+                    // update colors of rectangles based on value
+                    r = this.rs[s];
 
-                // update colors of rectangles based on value
-                var r = this.rs[s];
                 if (s === this.selected) {
                     // highlight selected cell
                     r.attr('fill', '#FF0');
                 } else {
-                    r.attr('fill', vcol);
+                    r.attr('fill', vcolor);
                 }
 
                 // write reward texts
@@ -429,39 +549,49 @@
                 for (var a = 0; a < 4; a++) {
                     var pa = paa[a],
                         prob = this.agents[0].brain.P[a * this.gS + s],
-                        nx = 0, ny = 0;
-                    if (prob < 0.01) {
+                        nx = 0,
+                        ny = 0,
+                        actions = this.Aarr[s],
+                        avail = actions[a];
+                    if (avail === null || prob < 0.01) {
                         pa.attr('visibility', 'hidden');
-                    }
-                    else {
+                    } else {
                         pa.attr('visibility', 'visible');
                     }
+
                     var ss = this.cs / 2 * prob * 0.9;
-                    if (a === 0) {
-                        nx = -ss;
-                        ny = 0;
+
+                    switch (a) {
+                        case 0: // Left
+                            nx = -ss;
+                            ny = 0;
+                            break;
+                        case 1: // Down
+                            nx = 0;
+                            ny = ss;
+                            break;
+                        case 2: // Up
+                            nx = 0;
+                            ny = -ss;
+                            break;
+                        case 3: // Right
+                            nx = ss;
+                            ny = 0;
+                            break;
                     }
-                    if (a === 1) {
-                        nx = 0;
-                        ny = -ss;
-                    }
-                    if (a === 2) {
-                        nx = 0;
-                        ny = ss;
-                    }
-                    if (a === 3) {
-                        nx = ss;
-                        ny = 0;
-                    }
-                    pa.attr('x1', xcoord + this.cs / 2)
-                        .attr('y1', ycoord + this.cs / 2)
-                        .attr('x2', xcoord + this.cs / 2 + nx)
-                        .attr('y2', ycoord + this.cs / 2 + ny);
+
+                    pa.attr('x1', xcoord + (this.cs / 2))
+                        .attr('y1', ycoord + (this.cs / 2))
+                        .attr('x2', xcoord + (this.cs / 2) + nx)
+                        .attr('y2', ycoord + (this.cs / 2) + ny);
                 }
             }
         }
     };
 
+    /**
+     *
+     */
     GridWorld.prototype.initGrid = function () {
         var d3elt = d3.select('#draw');
         this.rs = {};
@@ -471,7 +601,7 @@
 
         var gh = this.gH, // height in cells
             gw = this.gW, // width in cells
-            gs = this.gS, // total number of cells
+            gs = this.gW * this.gH, // total number of cells
             w = 600,
             h = 600;
 
@@ -514,11 +644,11 @@
                 var r = g.append('rect')
                     .attr('x', xcoord)
                     .attr('y', ycoord)
-                    .attr('height', this.cs)
-                    .attr('width', this.cs)
+                    .attr('height', this.cs - 2)
+                    .attr('width', this.cs - 2)
                     .attr('fill', '#FFF')
                     .attr('stroke', 'black')
-                    .attr('stroke-width', 2);
+                    .attr('stroke-width', '1');
                 this.rs[s] = r;
 
                 // reward text
@@ -528,12 +658,6 @@
                     .attr('font-size', 10)
                     .text('');
                 this.trs[s] = tr;
-
-                let actions = this.Aarr[s],
-                    avail = actions[a];
-                if (avail === 1) {
-                    continue;
-                }
 
                 // value text
                 var tv = g.append('text')
@@ -545,15 +669,80 @@
                 // policy arrows
                 this.pas[s] = [];
                 for (var a = 0; a < 4; a++) {
+                    this.pas[s][a] = {};
+                    var x1, x2, y1, y2, lx1, lx2, ly1, ly2,
+                        action = this.Aarr[s][a],
+                        buffer = this.cs / 2;
+                    switch (a) {
+                        case 0: // Left
+                            x1 = xcoord + buffer;
+                            x2 = xcoord + buffer - (action !== null ? 10 : 0);
+                            y1 = ycoord + buffer;
+                            y2 = ycoord + buffer;
+                            if (action === null) {
+                                lx1 = xcoord;
+                                lx2 = xcoord;
+                                ly1 = ycoord;
+                                ly2 = ycoord + this.cs;
+                            }
+                            break;
+                        case 1: // Down
+                            x1 = xcoord + buffer;
+                            x2 = xcoord + buffer;
+                            y1 = ycoord + buffer;
+                            y2 = ycoord + buffer + (action !== null ? 10 : 0);
+                            if (action === null) {
+                                lx1 = xcoord;
+                                lx2 = xcoord + this.cs;
+                                ly1 = ycoord + this.cs;
+                                ly2 = ycoord + this.cs;
+                            }
+                            break;
+                        case 2: // Up
+                            x1 = xcoord + buffer;
+                            x2 = xcoord + buffer;
+                            y1 = ycoord + buffer;
+                            y2 = ycoord + buffer - (action !== null ? 10 : 0);
+                            if (action === null) {
+                                lx1 = xcoord;
+                                lx2 = xcoord + this.cs;
+                                ly1 = ycoord;
+                                ly2 = ycoord;
+                            }
+                            break;
+                        case 3: // Right
+                            x1 = xcoord + buffer;
+                            x2 = xcoord + buffer + (action !== null ? 10 : 0);
+                            y1 = ycoord + buffer;
+                            y2 = ycoord + buffer;
+                            if (action === null) {
+                                lx1 = xcoord + this.cs;
+                                lx2 = xcoord + this.cs;
+                                ly1 = ycoord;
+                                ly2 = ycoord + this.cs;
+                            }
+                            break;
+                    }
+
                     var pa = g.append('line')
-                        .attr('x1', xcoord)
-                        .attr('y1', ycoord)
-                        .attr('x2', xcoord)
-                        .attr('y2', ycoord)
+                        .attr('x1', x1)
+                        .attr('y1', y1)
+                        .attr('x2', x2)
+                        .attr('y2', y2)
                         .attr('stroke', 'black')
-                        .attr('stroke-width', '2')
-                        .attr("marker-end", "url(#arrowhead)");
-                    this.pas[s].push(pa);
+                        .attr('stroke-width', '1');
+                        if (action !== null) {
+                            pa.attr("marker-end", "url(#arrowhead)");
+                        }
+                    this.pas[s][a] = pa;
+
+                    g.append('line')
+                        .attr('x1', lx1 - 1)
+                        .attr('y1', ly1 - 1)
+                        .attr('x2', lx2 - 1)
+                        .attr('y2', ly2 - 1)
+                        .attr('stroke', 'red')
+                        .attr('stroke-width', '2');
                 }
             }
         }

@@ -7,13 +7,11 @@
      * @returns {undefined}
      */
     var Maze = function (opts) {
-        this.canvas = opts.canvas;
-        this.ctx = this.canvas.getContext("2d");
         this.xCount = opts.xCount;
         this.yCount = opts.yCount;
+        this.width = opts.width;
+        this.height = opts.height;
 
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
         this.cellWidth = this.width / this.xCount;
         this.cellHeight = this.height / this.yCount;
         this.walls = [];
@@ -70,21 +68,23 @@
      * @returns {undefined}
      */
     Maze.prototype.drawBorders = function (closed) {
-        this.addWall(new Vec(closed ? 1 : this.cellWidth, 1), new Vec(this.width - 1, 1));
-        this.addWall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1));
-        this.addWall(new Vec(this.width - (closed ? 1 : this.cellWidth), this.height - 1), new Vec(1, this.height - 1));
-        this.addWall(new Vec(1, this.height - 1), new Vec(1, 1));
+        this.addWall(new Vec(closed ? 2 : this.cellWidth, 2), new Vec(this.width - 2, 2));
+        this.addWall(new Vec(this.width - 2, 2), new Vec(this.width - 2, this.height - 2));
+        this.addWall(new Vec(this.width - (closed ? 2 : this.cellWidth), this.height - 2), new Vec(2, this.height - 2));
+        this.addWall(new Vec(2, this.height - 2), new Vec(2, 2));
     };
 
     /**
      * Draw the solution
      * @returns {undefined}
      */
-    Maze.prototype.drawSolution = function () {
-        var _this = this;
-        var path = this.path;
-        this.ctx.fillStyle = "rgba(0,165,0,.1)";
-        this.ctx.strokeStyle = "rgb(0,0,0)";
+    Maze.prototype.drawSolution = function (canvas) {
+        var ctx = canvas.getContext("2d"),
+            _ctx = ctx,
+            _this = this,
+            path = this.path;
+        ctx.fillStyle = "rgba(0,165,0,.1)";
+        ctx.strokeStyle = "rgb(0,0,0)";
         for (var i = 0; i < this.path.length; i++) {
             var V = path[i];
             var vW = this.cellWidth,
@@ -96,7 +96,7 @@
             // Get the cell Y coords and multiply by the cell height
                 y = _this.grid.cells[vX][vY].y * vH;
             (function () {
-                _this.ctx.fillRect(x, y, vW, vH);
+                _ctx.fillRect(x, y, vW, vH);
             })();
         }
     };
