@@ -116,7 +116,7 @@
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
 
-        this.world.CD.check(this);
+        this.world.collisionCheck(this);
 
         // Go through and process what we ate
         for (var i=0; i < this.collisions.length; i++) {

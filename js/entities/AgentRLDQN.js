@@ -10,13 +10,7 @@
     var AgentRLDQN = function (position, opts) {
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = 'Agent RLDQN';
-        if (this.worker) {
-            this.name += ' Worker';
-        }
-
-        Agent.call(this, position, opts);
-
+        this.name = 'Agent RLDQN' + (this.worker ? ' Worker' : '');
         // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
         this.numStates = this.numEyes * this.numTypes + 2;
 
@@ -33,6 +27,8 @@
 
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
+
+        Agent.call(this, position, opts);
 
         // Set the brain options
         this.brainOpts = Utility.getOpt(opts, 'spec', {
@@ -74,8 +70,8 @@
                 case 'act':
                     if (data.msg === 'complete') {
                         _this.action = data.input;
-                        _this.move();
                         _this.eat();
+                        _this.move();
                         _this.learn();
                     }
                     break;
@@ -103,7 +99,7 @@
      */
     AgentRLDQN.prototype.act = function () {
         // Loop through the eyes and check the walls and nearby entities
-        for (var e = 0; e < this.numEyes; e++) {
+        for (let e = 0; e < this.numEyes; e++) {
             this.eyes[e].sense(this.position, this.angle, this.world.walls, this.world.entities);
         }
 
@@ -159,8 +155,8 @@
      * @returns {AgentRLDQN}
      */
     AgentRLDQN.prototype.move = function () {
-        var oldAngle = this.angle,
-            speed = 1;
+        var speed = 1;
+        this.oldAngle = this.angle;
         this.oldPos = this.position.clone();
 
         // Execute agent's desired action
@@ -187,10 +183,9 @@
 
         if (this.collision) {
             // The agent is trying to move from oldPos to position so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls);
+            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, this.world.entities, this.radius);
             if (result) {
                 // The agent derped! Wall collision! Reset their position
-                //this.position.set(result.vecI.x + this.radius, result.vecI.y + this.radius);
                 this.position = this.oldPos.clone();
                 this.position.vx = 0;
                 this.position.vy = 0;
@@ -226,8 +221,8 @@
             this.sprite.position.set(this.position.x, this.position.y);
         }
 
-        var end = new Date().getTime(),
-            dist = this.position.distFrom(this.oldPos);
+        //var end = new Date().getTime(),
+        //    dist = this.position.distFrom(this.oldPos);
 
         return this;
     };

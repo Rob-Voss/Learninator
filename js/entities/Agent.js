@@ -68,13 +68,18 @@
         this.digestionSignal = 0;
 
         // Check the world for collisions
-        this.world.CD.check(this);
+        this.world.collisionCheck(this, false);
 
         // Go through and process what we ate
-        for (var i=0; i < this.collisions.length; i++) {
-            this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
+        if (this.collisions.length > 0) {
+            for (var i = 0; i < this.collisions.length; i++) {
+                let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
+                    stickBySize = this.stick - (this.collisions[i].radius / 100);
+                this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
+                //this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
+                this.collisions[i].cleanUp = true;
+            }
         }
-        this.collisions = [];
 
         return this;
     };
@@ -106,17 +111,19 @@
         this.world = world;
         this.start = new Date().getTime();
 
-        // Let the agents behave in the world based on their input
-        this.act();
-
         // If it's not a worker we need to run the rest of the steps
         if (!this.worker) {
-            // Move eet!
-            this.move();
+            // Let the agents behave in the world based on their input
+            this.act();
             // Find nearby entities to nom
             this.eat();
+            // Move eet!
+            this.move();
             // This is where the agents learns based on the feedback of their actions on the environment
             this.learn();
+        } else {
+            // Let the agents behave in the world based on their input
+            this.act();
         }
 
         if (this.cheats) {

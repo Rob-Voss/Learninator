@@ -17,10 +17,19 @@
         this.pause = false;
         this.useFlot = true;
         this.useGraph = false;
-        this.useGrid = true;
-        this.useQuad = false;
+        this.numItems = 0;
+
+        // Collision type
+        this.CD = {
+            type: 'quad',
+            maxChildren: 2,
+            maxDepth: 10
+        };
+
         this.cheats = {
-            population: true,
+            quad: true,
+            grid: false,
+            population: false,
             walls: false
         };
 

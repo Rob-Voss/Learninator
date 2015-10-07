@@ -11,26 +11,24 @@
     var AgentTD = function (position, opts) {
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = "Agent TD";
-        if (this.worker) {
-            this.name += ' Worker';
-        }
+        this.name = 'Agent TD' + (this.worker ? ' Worker' : '');
 
-        Agent.call(this, position, opts);
-
+        // Reward and Punishment
         this.carrot = +5;
         this.stick = -6;
 
         // The Agent's actions
         this.actions = [];
-        this.actions.push([1, 1]);
-        this.actions.push([0.8, 1]);
-        this.actions.push([1, 0.8]);
+        this.actions.push([1, 1]); // Forward?
+        this.actions.push([0.8, 1]); // Right?
+        this.actions.push([1, 0.8]); // Left?
         this.actions.push([0.5, 0]);
         this.actions.push([0, 0.5]);
 
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
+
+        Agent.call(this, position, opts);
 
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
@@ -50,10 +48,10 @@
          * @type {Array}
          */
         this.layerDefs = [];
-        this.layerDefs.push({type: 'input', outSx: 1, outSy: 1, outDepth: this.networkSize});
-        this.layerDefs.push({type: 'fc', numNeurons: 50, activation: 'relu'});
-        this.layerDefs.push({type: 'fc', numNeurons: 50, activation: 'relu'});
-        this.layerDefs.push({type: 'regression', numNeurons: this.numActions});
+        this.layerDefs.push({type: 'input', out_sx: 1, out_sy: 1, out_depth: this.networkSize});
+        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'fc', num_neurons: 50, activation: 'relu'});
+        this.layerDefs.push({type: 'regression', num_neurons: this.numActions});
 
         /**
          * The options for the Temporal Difference learner that trains the above net
@@ -61,10 +59,10 @@
          * @type {Object}
          */
         this.tdTrainerOptions = {
-            learningRate: 0.001,
+            learning_rate: 0.001,
             momentum: 0.0,
-            batchSize: 64,
-            l2Decay: 0.01
+            batch_size: 64,
+            l2_decay: 0.01
         };
 
         /**
@@ -114,8 +112,8 @@
                         _this.rot1 = action[0] * 1;
                         _this.rot2 = action[1] * 1;
 
-                        _this.move();
                         _this.eat();
+                        _this.move();
                         _this.learn();
                     }
                     break;
@@ -148,21 +146,20 @@
      */
     AgentTD.prototype.act = function () {
         // Loop through the eyes and check the walls and nearby entities
-        for (var e = 0; e < this.numEyes; e++) {
+        for (let e = 0; e < this.numEyes; e++) {
             this.eyes[e].sense(this.position, this.angle, this.world.walls, this.world.entities);
         }
 
         // Create input to brain
         var inputArray = new Array(this.numEyes * this.numTypes);
         for (let i = 0; i < this.numEyes; i++) {
-            let eye = this.eyes[i];
             inputArray[i * this.numTypes] = 1.0;
             inputArray[i * this.numTypes + 1] = 1.0;
             inputArray[i * this.numTypes + 2] = 1.0;
-            if (eye.sensedType !== -1) {
+            if (this.eyes[i].sensedType !== -1) {
                 // sensedType is 0 for wall, 1 for food and 2 for poison lets do
                 // a 1-of-k encoding into the input array normalize to [0,1]
-                inputArray[i * this.numTypes + eye.sensedType] = eye.sensedProximity / eye.maxRange;
+                inputArray[i * this.numTypes + this.eyes[i].sensedType] = this.eyes[i].sensedProximity / this.eyes[i].maxRange;
             }
         }
 
@@ -186,33 +183,34 @@
      * The agent learns
      */
     AgentTD.prototype.learn = function () {
+        let proximityReward = 0.0,
+            forwardReward = 0.0,
+            digestionReward = this.digestionSignal,
+            reward;
         this.lastReward = this.digestionSignal;
 
         // Compute the reward
-        var proximityReward = 0.0;
         for (let ei = 0; ei < this.numEyes; ei++) {
-            let eye = this.eyes[ei];
             // Agents don't like to see walls, especially up close
-            proximityReward += eye.sensedType === 0 ? eye.sensedProximity / eye.maxRange : 1.0;
+            let wallReward = this.eyes[ei].sensedProximity / this.eyes[ei].maxRange;
+            proximityReward += this.eyes[ei].sensedType === 0 ? wallReward : 1.0;
         }
 
         // Calculate the proximity reward
-        proximityReward = proximityReward / this.numEyes;
-        proximityReward = Math.min(1.0, proximityReward * 2);
+        proximityReward = Math.min(1.0, (proximityReward / this.numEyes) * 2);
+        //proximityReward = proximityReward / this.numEyes;
+        //proximityReward = Math.min(1.0, proximityReward * 2);
 
         // Agents like to go straight forward
-        var forwardReward = 0.0;
         if (this.actionIndex === 0 && proximityReward > 0.75) {
             forwardReward = 0.1 * proximityReward;
         }
 
         // Agents like to eat good things
-        var digestionReward = this.digestionSignal;
+        reward = proximityReward + forwardReward + digestionReward;
         this.digestionSignal = 0.0;
 
-        var reward = proximityReward + forwardReward + digestionReward;
-
-        // pass to brain for learning
+        // Pass to brain for learning
         if (!this.worker) {
             this.brain.backward(reward);
             this.pts.push(reward);
@@ -229,25 +227,30 @@
      */
     AgentTD.prototype.move = function () {
         this.oldPos = this.position.clone();
-        var oldAngle = this.angle;
-        this.oldAngle = oldAngle;
+        this.oldAngle = this.angle;
 
-        // Steer the agent according to outputs of wheel velocities
+        //Steer the agent according to outputs of wheel velocities
         var v = new Vec(0, this.radius / 2.0);
-        v = v.rotate(this.angle + Math.PI / 2);
-        var w1pos = this.position.add(v), // Positions of wheel 1
-            w2pos = this.position.sub(v); // Positions of wheel 2
+        v = v.rotate(this.oldAngle + Math.PI / 2);
+            // Positions of wheel 1
+        var w1pos = this.position.add(v),
+            // Positions of wheel 2
+            w2pos = this.position.sub(v);
+
         var vv = this.position.sub(w2pos);
         vv = vv.rotate(-this.rot1);
+
         var vv2 = this.position.sub(w1pos);
         vv2 = vv2.rotate(this.rot2);
+
         var newPos = w2pos.add(vv),
             newPos2 = w1pos.add(vv2);
 
         newPos.scale(0.5);
         newPos2.scale(0.5);
+        var position = newPos.add(newPos2);
 
-        this.position = newPos.add(newPos2);
+        this.position = position;
 
         this.angle -= this.rot1;
         if (this.angle < 0) {
@@ -260,8 +263,8 @@
         }
 
         if (this.collision) {
-            // The agent is trying to move from pos to oPos so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, [], this.radius);
+            // The agent is trying to move from oldPos to position so we need to check walls
+            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, this.world.entities, this.radius);
             if (result) {
                 // The agent derped! Wall collision! Reset their position
                 this.position = this.oldPos.clone();

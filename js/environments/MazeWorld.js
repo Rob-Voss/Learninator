@@ -11,13 +11,14 @@
         this.canvas = document.getElementById("world");
         this.rewardGraph = new RewardGraph({
             canvas: document.getElementById("rewardGraph"),
-            stepHorizon: 100
+            stepHorizon: 1000
         });
-        this.xCount = 4;
-        this.yCount = 4;
+        this.xCount = 2;
+        this.yCount = 2;
+        this.closed = true;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
-        this.numItems = 40;
+        this.numItems = 20;
         this.maze = new Maze(this);
         this.useFlot = false;
         this.useGraph = true;
@@ -89,9 +90,8 @@
 
         this.agents = [
             new AgentTD(new Vec(1, 1), this.tdOptsWorker),
-            new AgentTD(new Vec(1, 1), this.tdOpts)
+            new AgentTD(new Vec(1, 1), this.tdOptsWorker)
         ];
-        this.agents[0].load('zoo/mazeagent.json');
 
         World.call(this, this, this.entityOpts);
 
