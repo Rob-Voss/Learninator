@@ -113,7 +113,7 @@
         this.score = 0;
         this.state = { // complete game state for this agent.  used by neural network.
             x: this.position.x,
-            y: this.position.x,
+            y: this.position.y,
             vx: this.position.vx,
             vy: this.position.vy,
             ball: {
