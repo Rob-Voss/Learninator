@@ -397,7 +397,7 @@
 
         /**
          * Rotate the Vec clockwise
-         * @param {Number} angle
+         * @param {Number} angle The angle in radians to rotate by
          * @returns {Vec}
          */
         rotate: function (angle) {

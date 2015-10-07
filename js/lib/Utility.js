@@ -8,8 +8,24 @@ var Utility = Utility || {};
         vVal = 0.0;
 
     /**
-     *
-     * @param obj
+     * Utility fun
+     * @param condition
+     * @param message
+     */
+    Utility.assert = function (condition, message) {
+        // from http://stackoverflow.com/questions/15313418/javascript-assert
+        if (!condition) {
+            message = message || "Assertion failed";
+            if (Error !== undefined) {
+                throw new Error(message);
+            }
+            throw message; // Fallback
+        }
+    };
+
+    /**
+     * Stringify an object including it's functions if it has any
+     * @param {Object} obj
      */
     Utility.stringify = function (obj) {
         return JSON.stringify(obj, function (key, value) {
@@ -18,22 +34,8 @@ var Utility = Utility || {};
     };
 
     /**
-     * Syntactic sugar function for getting default parameter values
-     * @param opt
-     * @param fieldName
-     * @param defaultValue
-     * @returns {*}
-     */
-    Utility.getOpt = function (opt, fieldName, defaultValue) {
-        if (typeof opt === 'undefined') {
-            return defaultValue;
-        }
-        return (typeof opt[fieldName] !== 'undefined') ? opt[fieldName] : defaultValue;
-    };
-
-    /**
-     *
-     * @param str
+     * Parse an object that has been stringified, and rebuild it's functions
+     * @param {String} str
      */
     Utility.parse = function (str) {
         return JSON.parse(str, function (key, value) {
@@ -44,6 +46,24 @@ var Utility = Utility || {};
         });
     };
 
+    /**
+     * Syntactic sugar function for getting default parameter values
+     * @param {Object} opt
+     * @param {String} fieldName
+     * @param {Mixed} defaultValue
+     * @returns {*}
+     */
+    Utility.getOpt = function (opt, fieldName, defaultValue) {
+        if (typeof opt === 'undefined') {
+            return defaultValue;
+        }
+        return (typeof opt[fieldName] !== 'undefined') ? opt[fieldName] : defaultValue;
+    };
+
+    /**
+     * Gaussian random number
+     * @returns {Number}
+     */
     Utility.gaussRandom = function () {
         if (retV) {
             retV = false;
@@ -56,7 +76,7 @@ var Utility = Utility || {};
             r = u * u + v * v,
             c = Math.sqrt(-2 * Math.log(r) / r);
         if (r === 0 || r > 1) {
-            return gaussRandom();
+            return Utility.gaussRandom();
         }
 
         vVal = v * c; // cache this
@@ -76,10 +96,30 @@ var Utility = Utility || {};
     };
 
     /**
-     * helper function returns array of zeros of length n
+     * Return a random Integer within the range of a-b
+     * @param {Number} lo
+     * @param {Number} hi
+     * @returns {Number}
+     */
+    Utility.randi = function (lo, hi) {
+        return Math.floor(this.randf(lo, hi));
+    };
+
+    /**
+     * Return a random Number
+     * @param {Float} mu
+     * @param {Float} std
+     * @returns {Number}
+     */
+    Utility.randn = function (mu, std) {
+        return mu + Utility.gaussRandom() * std;
+    };
+
+    /**
+     * A helper function returns array of zeros of length n
      * and uses typed arrays if available
-     * @param n
-     * @returns {*}
+     * @param {Number} n
+     * @returns {Float64Array}
      */
     Utility.zeros = function (n) {
         if (typeof n === 'undefined' || isNaN(n)) {
@@ -95,26 +135,6 @@ var Utility = Utility || {};
         } else {
             return new Float64Array(n);
         }
-    };
-
-    /**
-     * Return a random Integer within the range of a-b
-     * @param {Float} lo
-     * @param {Float} hi
-     * @returns {Number}
-     */
-    Utility.randi = function (lo, hi) {
-        return Math.floor(this.randf(lo, hi));
-    };
-
-    /**
-     * Return a random Number
-     * @param {Float} mu
-     * @param {Float} std
-     * @returns {Number}
-     */
-    Utility.randn = function (mu, std) {
-        return mu + gaussRandom() * std;
     };
 
     /**
@@ -171,6 +191,78 @@ var Utility = Utility || {};
         var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
             octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
         return directions[octant];
+    };
+
+    /**
+     * Check for collision of circular entities, and calculate collsion point
+     * as well as velocity changes that should occur to them
+     * @param {Entity} entity
+     * @param {Entity} target
+     * @param {Boolean} updatePos
+     */
+    Utility.circleCollision = function (entity, target, updatePos) {
+        var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
+            collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
+            xDist = target.position.x - entity.position.x,
+            yDist = target.position.y - entity.position.y,
+            distFrom = target.position.distFrom(entity.position),
+            radiusDist = target.radius + entity.radius,
+            distSquared = xDist * xDist + yDist * yDist,
+            radiusSquared = (target.radius + entity.radius) * (target.radius + entity.radius);
+
+        // Check the squared distances instead of the the distances,
+        // same result, but avoids a square root.
+        if (distSquared <= radiusSquared) {
+            if (entity === target) {
+                return;
+            }
+            if (target.type === 3 && (entity.type === 2 || entity.type === 1)) {
+                // Agent to Entity
+                entity.cleanUp = true;
+                target.collisions.push(entity);
+                //world.deleteEntity(entity);
+            } else if ((target.type === 2 || target.type === 1) && (entity.type === 2 || entity.type === 1)) {
+                // Entity to Entity
+                var xVelocity = entity.position.vx - target.position.vx,
+                    yVelocity = entity.position.vy - target.position.vy,
+                    dotProduct = xDist * xVelocity + yDist * yVelocity;
+                //Neat vector maths, used for checking if the objects moves towards one another.
+                if (dotProduct > 0) {
+                    var collisionScale = dotProduct / distSquared,
+                        xCollision = xDist * collisionScale,
+                        yCollision = yDist * collisionScale,
+                    // The Collision vector is the speed difference projected on the Dist vector,
+                    // thus it is the component of the speed difference needed for the collision.
+                        combinedMass = target.radius + entity.radius,
+                        collisionWeightA = 2 * entity.radius / combinedMass,
+                        collisionWeightB = 2 * target.radius / combinedMass;
+                    if (updatePos) {
+                        target.position.vx += collisionWeightA * xCollision;
+                        target.position.vy += collisionWeightA * yCollision;
+                        entity.position.vx -= collisionWeightB * xCollision;
+                        entity.position.vy -= collisionWeightB * yCollision;
+                        target.collisions.push(entity);
+                    } else {
+                        var collItem = {
+                            collPtX: collPtX,
+                            collPtY: collPtY,
+                            distSquared: distSquared,
+                            target: {
+                                vx: target.position.vx + collisionWeightA * xCollision,
+                                vy: target.position.vy + collisionWeightA * yCollision
+                            },
+                            entity: {
+                                vx: entity.position.vx - collisionWeightB * xCollision,
+                                vy: entity.position.vy - collisionWeightB * yCollision
+                            }
+                        };
+                        target.collisions.push(entity);
+                    }
+                }
+            }
+        } else {
+            return;
+        }
     };
 
     /**

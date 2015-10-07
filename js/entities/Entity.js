@@ -18,8 +18,8 @@
         this.type = typeId || 1;
         this.position = position || new Vec(5, 5);
         this.radius = Utility.getOpt(opts, 'radius', 10);
-        this.width = Utility.getOpt(opts, 'width', this.radius * 2);
-        this.height = Utility.getOpt(opts, 'height', this.radius * 2);
+        this.width = Utility.getOpt(opts, 'width', undefined);
+        this.height = Utility.getOpt(opts, 'height', undefined);
 
         this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.interactive = Utility.getOpt(opts, 'interactive', false);
@@ -111,7 +111,7 @@
 
         // If cheats are on then show the entities id
         if (this.cheats.id === true) {
-            this.idText = new PIXI.Text(this.id, fontOpts);
+            this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
             this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
             this.cheatsContainer.addChild(this.idText);
         }
@@ -196,12 +196,14 @@
      * @returns {Entity}
      */
     Entity.prototype.move = function () {
-        var oldAngle = this.angle,
-            speed = 0.05;
+        //var oldAngle = this.angle,
+        //    speed = 0.05;
         this.oldPos = this.position.clone();
 
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
+
+        //this.world.collisionCheck(this, true);
 
         // Handle boundary conditions.. bounce Agent
         if (this.position.x < 2) {
@@ -225,8 +227,8 @@
             this.sprite.position.set(this.position.x, this.position.y);
         }
 
-        var end = new Date().getTime(),
-            dist = this.position.distFrom(this.oldPos);
+        //var end = new Date().getTime(),
+        //    dist = this.position.distFrom(this.oldPos);
 
         return this;
     };

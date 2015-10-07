@@ -36,6 +36,7 @@
     <script src="js/lib/RewardGraph.js"></script>
     <script src="js/lib/Grid.js"></script>
     <script src="js/lib/QuadTree.js"></script>
+    <script src="js/lib/Maze.js"></script>
     <script src="js/lib/Utility.js"></script>
     <script src="js/lib/Vec.js"></script>
     <script src="js/lib/Window.js"></script>
@@ -43,12 +44,11 @@
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/Eye.js"></script>
     <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentRLDQN.js"></script>
-    <script src="js/entities/EntityRLDQN.js"></script>
+    <script src="js/entities/AgentGA.js"></script>
     <script src="js/entities/Wall.js"></script>
 
     <script src="js/environments/World.js"></script>
-    <script src="js/environments/WaterWorldEX.js"></script>
+    <script src="js/environments/WaterWorldGA.js"></script>
 
     <script src="js/lib/external/convnet.js"></script>
     <script src="js/lib/external/rl.js"></script>
@@ -73,7 +73,7 @@
          * Create existence!
          */
         function start() {
-            world = new WaterWorldEX();
+            world = new WaterWorldGA();
 
             var wGUI = new dat.GUI(),
                     wFolder = wGUI.addFolder('World'),
@@ -122,7 +122,7 @@
 <div id="wrap">
     <canvas id="world" width="600" height="600"></canvas>
 </div>
-<div id="flotreward" style="width:600px; height: 300px;"></div>
+<div id="flotreward" style="width:500px; height: 250px;"></div>
 
 <textarea id="mysterybox0" style="width:100%;display:none;">mystery text box</textarea>
 <textarea id="mysterybox1" style="width:100%;display:none;">mystery text box</textarea>

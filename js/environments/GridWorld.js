@@ -19,6 +19,25 @@
         this.state = 0;
         this.stepsPerTick = 1;
         this.pause = false;
+        this.numItems = 0;
+
+        // Reward graphing type
+        this.useFlot = true;
+        this.useGraph = false;
+
+        // Collision type
+        this.CD = {
+            type: 'quad',
+            maxChildren: 2,
+            maxDepth: 10
+        };
+        this.cheats = {
+            quad: true,
+            grid: false,
+            population: false,
+            walls: false
+        };
+
         // flot stuff
         this.nflot = 1000;
         this.smoothRewardHistory = [];
@@ -54,7 +73,13 @@
             radius: 10,
             collision: false,
             interactive: false,
-            useSprite: false
+            useSprite: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                id: false,
+                name: true
+            }
         };
 
         this.maze = new Maze({

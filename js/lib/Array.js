@@ -46,6 +46,11 @@ var Array = Array || {};
         };
     };
 
+    /**
+     *
+     * @param predicate
+     * @returns {*}
+     */
     Array.prototype.find = function (predicate) {
         if (this == null) {
             throw new TypeError('Array.prototype.find called on null or undefined');
@@ -67,6 +72,11 @@ var Array = Array || {};
         return undefined;
     };
 
+    /**
+     *
+     * @param predicate
+     * @returns {number}
+     */
     Array.prototype.findIndex = function (predicate) {
         if (this == null) {
             throw new TypeError('Array.prototype.findIndex called on null or undefined');
