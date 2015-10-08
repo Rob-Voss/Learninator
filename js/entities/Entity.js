@@ -138,7 +138,7 @@
 
         // If cheats are on then show the entities position and velocity
         if (this.cheats.position === true) {
-            var textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
                 textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
             posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
 
@@ -196,14 +196,12 @@
      * @returns {Entity}
      */
     Entity.prototype.move = function () {
-        //var oldAngle = this.angle,
-        //    speed = 0.05;
         this.oldPos = this.position.clone();
 
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
 
-        //this.world.collisionCheck(this, true);
+        this.world.collisionCheck(this, true);
 
         // Handle boundary conditions.. bounce Agent
         if (this.position.x < 2) {
@@ -227,9 +225,6 @@
             this.sprite.position.set(this.position.x, this.position.y);
         }
 
-        //var end = new Date().getTime(),
-        //    dist = this.position.distFrom(this.oldPos);
-
         return this;
     };
 
@@ -244,10 +239,6 @@
 
         if (this.movingEntities) {
             this.move();
-        }
-
-        if (this.cheats) {
-            this.updateCheats();
         }
 
         return this;

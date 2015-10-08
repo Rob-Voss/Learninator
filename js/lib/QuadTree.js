@@ -76,7 +76,7 @@ var QuadTree = {}; // global var for the quadtree
                  * @param {Node} instance
                  */
                 retrieve: function (item, callback, instance) {
-                    for (var i = 0, il = items.length; i < il; ++i) {
+                    for (let i = 0, il = items.length; i < il; ++i) {
                         (instance) ? callback.call(instance, items[i]) : callback(items[i]);
                     }
                     // check if node has subnodes
@@ -101,11 +101,9 @@ var QuadTree = {}; // global var for the quadtree
                  * @param {Array|Object} item
                  */
                 insert: function (item) {
-                    var i;
-
                     if (nodes.length) {
                         // Get the node in which the item fits best
-                        i = this.findInsertNode(item);
+                        let i = this.findInsertNode(item);
                         if (i === PARENT) {
                             // If the item does not fit, push it into the children array
                             items.push(item);
@@ -127,31 +125,54 @@ var QuadTree = {}; // global var for the quadtree
                  * @returns {Number}
                  */
                 findInsertNode: function (item) {
-                    // left
-                    if (item.position.x + item.width < this.x + (this.width / 2)) {
-                        if (item.position.y + item.height < this.y + (this.height / 2)) {
-                            return TOP_LEFT;
+                    let wD = this.width / 2,
+                        hD = this.height / 2;
+                    if (item.radius !== undefined) {
+                        // Left
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                return TOP_LEFT;
+                            }
+                            if (item.position.y + item.radius >= this.y + hD) {
+                                return BOTTOM_LEFT;
+                            }
+                            return PARENT;
                         }
-                        if (item.position.y >= this.y + (this.height / 2)) {
-                            return BOTTOM_LEFT;
+                        // Right
+                        if (item.position.x + item.radius >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                return TOP_RIGHT;
+                            }
+                            if (item.position.y + item.radius >= this.y + hD) {
+                                return BOTTOM_RIGHT;
+                            }
+                            return PARENT;
                         }
-                        return PARENT;
-                    }
-
-                    // right
-                    if (item.position.x >= this.x + (this.width / 2)) {
-                        if (item.position.y + item.height < this.y + (this.height / 2)) {
-                            return TOP_RIGHT;
+                    } else {
+                        // Left
+                        if (item.position.x + item.width < this.x + wD) {
+                            if (item.position.y + item.height < this.y + hD) {
+                                return TOP_LEFT;
+                            }
+                            if (item.position.y >= this.y + hD) {
+                                return BOTTOM_LEFT;
+                            }
+                            return PARENT;
                         }
-                        if (item.position.y >= this.y + (this.height / 2)) {
-                            return BOTTOM_RIGHT;
+                        // Right
+                        if (item.position.x >= this.x + wD) {
+                            if (item.position.y + item.height < this.y + hD) {
+                                return TOP_RIGHT;
+                            }
+                            if (item.position.y >= this.y + hD) {
+                                return BOTTOM_RIGHT;
+                            }
+                            return PARENT;
                         }
-                        return PARENT;
                     }
 
                     return PARENT;
                 },
-
                 /**
                  * Finds the regions that the item overlaps with, see constants defined
                  * above. The callback is called for every region the item overlaps.
@@ -159,22 +180,45 @@ var QuadTree = {}; // global var for the quadtree
                  * @param {Function} callback
                  */
                 findOverlappingNodes: function (item, callback) {
-                    // Left
-                    if (item.position.x < this.x + (this.width / 2)) {
-                        if (item.position.y < this.y + (this.height / 2)) {
-                            callback(TOP_LEFT);
+                    let wD = this.width / 2,
+                        hD = this.height / 2;
+                    if (item.radius !== undefined) {
+                        // Left
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                callback(TOP_LEFT);
+                            }
+                            if (item.position.y + item.radius >= this.y + hD) {
+                                callback(BOTTOM_LEFT);
+                            }
                         }
-                        if (item.position.y + item.height >= this.y + this.height / 2) {
-                            callback(BOTTOM_LEFT);
+                        // Right
+                        if (item.position.x + item.radius >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                callback(TOP_RIGHT);
+                            }
+                            if (item.position.y + item.radius >= this.y + hD) {
+                                callback(BOTTOM_RIGHT);
+                            }
                         }
-                    }
-                    // Right
-                    if (item.position.x + item.width >= this.x + (this.width / 2)) {
-                        if (item.position.y < this.y + (this.height / 2)) {
-                            callback(TOP_RIGHT);
+                    } else {
+                        // Left
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                callback(TOP_LEFT);
+                            }
+                            if (item.position.y + item.height >= this.y + hD) {
+                                callback(BOTTOM_LEFT);
+                            }
                         }
-                        if (item.position.y + item.height >= this.y + this.height / 2) {
-                            callback(BOTTOM_RIGHT);
+                        // Right
+                        if (item.position.x + item.width >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
+                                callback(TOP_RIGHT);
+                            }
+                            if (item.position.y + item.height >= this.y + hD) {
+                                callback(BOTTOM_RIGHT);
+                            }
                         }
                     }
                 },
@@ -185,7 +229,7 @@ var QuadTree = {}; // global var for the quadtree
                  * children.
                  */
                 divide: function () {
-                    var width, height, i, oldChildren,
+                    let width, height, oldChildren,
                         childrenDepth = this.depth + 1;
                     // Set the dimensions of the new nodes
                     width = (this.width / 2);
@@ -201,7 +245,7 @@ var QuadTree = {}; // global var for the quadtree
 
                     oldChildren = items;
                     items = [];
-                    for (i = 0; i < oldChildren.length; i++) {
+                    for (let i = 0; i < oldChildren.length; i++) {
                         this.insert(oldChildren[i]);
                     }
                 },
@@ -240,11 +284,8 @@ var QuadTree = {}; // global var for the quadtree
              * @param {Array|Object} item
              */
             insert: function (item) {
-                var len, i;
-
                 if (item instanceof Array) {
-                    len = item.length;
-                    for (i = 0; i < len; i++) {
+                    for (let i = 0, len = item.length; i < len; i++) {
                         this.root.insert(item[i]);
                     }
                 } else {

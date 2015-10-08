@@ -25,61 +25,86 @@
          * @param updatePos
          */
         this.collisionCheck = function (target, updatePos) {
-            let n = this.nodes.length, region, entity;
+            var region;
             target.collisions = [];
 
-            // clear the quadtree
-            this.tree.clear();
-
-            // fill the quadtree
-            this.tree.insert(this.nodes);
-
-            // iterate all elements
-            for (let i = 0; i < n; i++) {
-                entity = this.nodes[i];
-                // get all elements in the same region as orb
-                region = this.tree.retrieve(entity, function (target) {
-                    if (entity.radius !== undefined && target.radius !== undefined) {
-                        Utility.circleCollision(entity, target, updatePos);
+            /**
+             * Collision check
+             * @param entity
+             */
+            function check(entity) {
+                if (entity === target) {
+                    return;
+                }
+                let edibleEntity = (entity.type === 2 || entity.type === 1),
+                    edibleTarget = (target.type === 2 || target.type === 1);
+                // If both entities have a radius
+                if (entity.radius !== undefined && target.radius !== undefined) {
+                    // Use the circle collision check
+                    let collisionObj = Utility.circleCollision(entity, target);
+                    // If there was a collision between an agent and an edible entity
+                    if (collisionObj && target.type === 3 && edibleEntity) {
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        // If the entity doesn't already exist then add it
+                        if (idx === -1 && !updatePos) {
+                            target.collisions.push(entity);
+                        }
+                    } else if (collisionObj && edibleTarget && edibleEntity) {
+                    // If there was a collision between edible entities
+                        if (updatePos) {
+                            target.position.vx = collisionObj.target.vx;
+                            target.position.vy = collisionObj.target.vy;
+                            entity.position.vx = collisionObj.entity.vx;
+                            entity.position.vy = collisionObj.entity.vy;
+                        } else {
+                            return;
+                        }
                     } else {
-                        if (entity.position.x + entity.width < target.position.x) {
-                            return;
-                        }
-                        if (entity.position.x > target.position.x + target.width) {
-                            return;
-                        }
-                        if (entity.position.y + entity.height < target.position.y) {
-                            return;
-                        }
-                        if (entity.position.y > target.position.y + target.height) {
-                            return;
-                        }
-                        target.collisions.push(entity);
+                    // Nada so return
+                        return;
                     }
-                });
+                } else {
+                // We will check based on width and height
+                    if (entity.position.x + entity.width < target.position.x) {
+                        return;
+                    }
+                    if (entity.position.x > target.position.x + target.width) {
+                        return;
+                    }
+                    if (entity.position.y + entity.height < target.position.y) {
+                        return;
+                    }
+                    if (entity.position.y > target.position.y + target.height) {
+                        return;
+                    }
+                    target.collisions.push(entity);
+                }
             }
+
+            // clear the quadtree
+            this.updatePopulation();
+
+            region = this.tree.retrieve(target, check);
         };
 
         /**
-         *
+         * Draw the regions from a node
          */
         this.drawRegions = function (aNode) {
-            if (this.cheats.quad) {
-                let nodes = aNode.getNodes(),
-                    rect = new PIXI.Graphics();
-                if (nodes) {
-                    for (let i = 0; i < nodes.length; i++) {
-                        draw(nodes[i]);
-                    }
+            let nodes = aNode.getNodes(),
+                rect = new PIXI.Graphics();
+            if (nodes) {
+                for (let i = 0; i < nodes.length; i++) {
+                    this.drawRegions(nodes[i]);
                 }
-
-                rect.clear();
-                rect.lineStyle(0.2, 0x000000);
-                rect.drawRect(aNode.x, aNode.y, aNode.width, aNode.height);
-                rect.endFill();
-
-                this.quadContainer.addChild(rect);
             }
+
+            rect.clear();
+            rect.lineStyle(0.2, 0x000000);
+            rect.drawRect(aNode.x, aNode.y, aNode.width, aNode.height);
+            rect.endFill();
+
+            this.quadContainer.addChild(rect);
         };
 
         /**
@@ -103,11 +128,12 @@
 
             this.tree.insert(this.nodes);
 
-            this.stage.removeChild(this.quadContainer);
-            this.quadContainer = new PIXI.Container();
-            this.stage.addChild(this.quadContainer);
-
-            this.drawRegions(this.tree.root);
+            if (this.cheats.quad) {
+                this.stage.removeChild(this.quadContainer);
+                this.quadContainer = new PIXI.Container();
+                this.drawRegions(this.tree.root);
+                this.stage.addChild(this.quadContainer);
+            }
         };
     };
 
@@ -165,14 +191,14 @@
                 }
 
                 this.stage.addChild(this.populationCounts);
-                for (let px = 0; px < this.grid.cells.length; px++) {
-                    for (let py = 0; py < this.grid.cells[px].length; py++) {
-                        this.grid.cells[px][py].populationCounts.text = this.grid.cells[px][py].population.length;
-                    }
-                }
             }
+
             // Draw the grid
             if (this.cheats.grid) {
+                this.stage.removeChild(this.gridOverlay);
+                this.gridOverlay = new PIXI.Container();
+
+                // If we are using grid based collision set up an overlay
                 for (let x = 0; x < this.grid.cells.length; x++) {
                     let xCell = this.grid.cells[x];
                     for (let y = 0; y < this.grid.cells[x].length; y++) {
@@ -191,6 +217,7 @@
                         this.gridOverlay.addChild(grid);
                     }
                 }
+                this.stage.addChild(this.gridOverlay);
             }
         };
 
@@ -198,9 +225,6 @@
          * Update populations counts and grids
          */
         this.updatePopulation = function () {
-            this.stage.removeChild(this.gridOverlay);
-            this.gridOverlay = new PIXI.Container();
-
             // Reset the cell's population's
             for (let x = 0; x < this.grid.cells.length; x++) {
                 for (let y = 0; y < this.grid.cells[x].length; y++) {
@@ -220,9 +244,7 @@
                 this.agents[a].gridLocation.population.push(this.agents[a].id);
             }
 
-            this.stage.addChild(this.gridOverlay);
-
-            this.draw();
+            this.drawRegions(this.tree.root);
         };
     };
 

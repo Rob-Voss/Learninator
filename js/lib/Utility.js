@@ -198,9 +198,9 @@ var Utility = Utility || {};
      * as well as velocity changes that should occur to them
      * @param {Entity} entity
      * @param {Entity} target
-     * @param {Boolean} updatePos
+     * @returns {{collPtX: number, collPtY: number, distSquared: number, distFrom: (*|Number), target: {vx: *, vy: *}, entity: {vx: number, vy: number}}}
      */
-    Utility.circleCollision = function (entity, target, updatePos) {
+    Utility.circleCollision = function (entity, target) {
         var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
             collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
             xDist = target.position.x - entity.position.x,
@@ -212,53 +212,39 @@ var Utility = Utility || {};
 
         // Check the squared distances instead of the the distances,
         // same result, but avoids a square root.
-        if (distSquared <= radiusSquared) {
-            if (entity === target) {
-                return;
-            }
-            if (target.type === 3 && (entity.type === 2 || entity.type === 1)) {
-                // Agent to Entity
-                entity.cleanUp = true;
-                target.collisions.push(entity);
-                //world.deleteEntity(entity);
-            } else if ((target.type === 2 || target.type === 1) && (entity.type === 2 || entity.type === 1)) {
-                // Entity to Entity
-                var xVelocity = entity.position.vx - target.position.vx,
-                    yVelocity = entity.position.vy - target.position.vy,
-                    dotProduct = xDist * xVelocity + yDist * yVelocity;
-                //Neat vector maths, used for checking if the objects moves towards one another.
-                if (dotProduct > 0) {
-                    var collisionScale = dotProduct / distSquared,
-                        xCollision = xDist * collisionScale,
-                        yCollision = yDist * collisionScale,
-                    // The Collision vector is the speed difference projected on the Dist vector,
-                    // thus it is the component of the speed difference needed for the collision.
-                        combinedMass = target.radius + entity.radius,
-                        collisionWeightA = 2 * entity.radius / combinedMass,
-                        collisionWeightB = 2 * target.radius / combinedMass;
-                    if (updatePos) {
-                        target.position.vx += collisionWeightA * xCollision;
-                        target.position.vy += collisionWeightA * yCollision;
-                        entity.position.vx -= collisionWeightB * xCollision;
-                        entity.position.vy -= collisionWeightB * yCollision;
-                        target.collisions.push(entity);
-                    } else {
-                        var collItem = {
-                            collPtX: collPtX,
-                            collPtY: collPtY,
-                            distSquared: distSquared,
-                            target: {
-                                vx: target.position.vx + collisionWeightA * xCollision,
-                                vy: target.position.vy + collisionWeightA * yCollision
-                            },
-                            entity: {
-                                vx: entity.position.vx - collisionWeightB * xCollision,
-                                vy: entity.position.vy - collisionWeightB * yCollision
-                            }
-                        };
-                        target.collisions.push(entity);
+        if (distFrom <= radiusDist) {
+            var xVelocity = entity.position.vx - target.position.vx,
+                yVelocity = entity.position.vy - target.position.vy,
+                dotProduct = xDist * xVelocity + yDist * yVelocity;
+            //Neat vector maths, used for checking if the objects moves towards one another.
+            if (dotProduct > 0) {
+                var collisionScale = dotProduct / distSquared,
+                    xCollision = xDist * collisionScale,
+                    yCollision = yDist * collisionScale,
+                // The Collision vector is the speed difference projected on the Dist vector,
+                // thus it is the component of the speed difference needed for the collision.
+                    combinedMass = target.radius + entity.radius,
+                    collisionWeightA = 2 * entity.radius / combinedMass,
+                    collisionWeightB = 2 * target.radius / combinedMass;
+
+                return {
+                    collPtX: collPtX,
+                    collPtY: collPtY,
+                    distance: {
+                        distanceSquared: distSquared,
+                        radiusSquared: radiusSquared,
+                        distanceFrom: distFrom,
+                        radiusFrom: radiusDist,
+                    },
+                    target: {
+                        vx: target.position.vx + collisionWeightA * xCollision,
+                        vy: target.position.vy + collisionWeightA * yCollision
+                    },
+                    entity: {
+                        vx: entity.position.vx - collisionWeightB * xCollision,
+                        vy: entity.position.vy - collisionWeightB * yCollision
                     }
-                }
+                };
             }
         } else {
             return;

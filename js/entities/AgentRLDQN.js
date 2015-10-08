@@ -139,6 +139,7 @@
      */
     AgentRLDQN.prototype.learn = function () {
         this.lastReward = this.digestionSignal;
+        this.pts.push(this.digestionSignal);
 
         if (!this.worker) {
             this.brain.learn(this.digestionSignal);
@@ -220,9 +221,6 @@
         if (this.useSprite) {
             this.sprite.position.set(this.position.x, this.position.y);
         }
-
-        //var end = new Date().getTime(),
-        //    dist = this.position.distFrom(this.oldPos);
 
         return this;
     };

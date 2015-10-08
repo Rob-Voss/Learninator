@@ -61,9 +61,7 @@
 
         function animate() {
             if (!_this.pause) {
-                _this.updatePopulation();
                 _this.tick();
-                _this.draw();
             }
             _this.renderer.render(_this.stage);
             requestAnimationFrame(animate);
@@ -80,18 +78,18 @@
      */
     World.prototype.addAgents = function () {
         // Add the agents
-        for (var a = 0; a < this.agents.length; a++) {
-            var agentContainer = new PIXI.Container();
-            for (var ei = 0; ei < this.agents[a].eyes.length; ei++) {
+        for (let a = 0; a < this.agents.length; a++) {
+            let agentContainer = new PIXI.Container();
+            for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 agentContainer.addChild(this.agents[a].eyes[ei].shape);
             }
             agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
             this.stage.addChild(agentContainer);
         }
 
-        if (this.useGraph === true) {
-            var agentNames = [];
-            for (var an = 0; an < this.agents.length; an++) {
+        if (this.useGraph === true && this.rewardGraph !== undefined) {
+            let agentNames = [];
+            for (let an = 0; an < this.agents.length; an++) {
                 agentNames.push({name: this.agents[an].name});
             }
             this.rewardGraph.setLegend(agentNames);
@@ -118,18 +116,20 @@
      */
     World.prototype.addEntity = function () {
         // Random radius
-        this.entityOpts.radius = Utility.randi(5, 10);
+        this.entityOpts.radius = 10;//Utility.randi(5, 10);
         let type = Utility.randi(1, 3),
             x = Utility.randi(2, this.width - 2),
             y = Utility.randi(2, this.height - 2),
-            vx = Utility.randf(-3, 3),
-            vy = Utility.randf(-3, 3),
+            vx = Utility.randf(-2, 2),
+            vy = Utility.randf(-2, 2),
             position = new Vec(x, y, 0, vx, vy, 0),
             entity = new Entity(type, position, this.entityOpts);
 
         // Insert the population
         this.entities.push(entity);
         this.stage.addChild(entity.shape || entity.sprite);
+
+        return this;
     };
 
     /**
@@ -159,6 +159,8 @@
     World.prototype.deleteEntity = function (entity) {
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
         this.stage.removeChild(entity.shape || entity.sprite);
+
+        return this;
     };
 
     /**
@@ -174,35 +176,43 @@
         // draw items
         for (let e = 0, ni = this.entities.length; e < ni; e++) {
             this.entities[e].draw();
+            if (this.entities[e].cheats) {
+                this.entities[e].updateCheats();
+            }
         }
 
         // draw agents
         for (let a = 0, na = this.agents.length; a < na; a++) {
             // draw agents body
             this.agents[a].draw();
+            if (this.agents[a].cheats) {
+                this.agents[a].updateCheats();
+            }
             // draw agents sight
             for (let ae = 0, ne = this.agents[a].eyes.length; ae < ne; ae++) {
                 this.agents[a].eyes[ae].draw(this.agents[a].position, this.agents[a].angle);
             }
         }
+
+        this.graphRewards();
     };
 
     /**
      * Tick the environment
      */
     World.prototype.tick = function () {
-        var seconds = (this.clock - this.lastTime) / 1000;
         this.lastTime = this.clock;
         this.clock++;
-
-        // Loop through the entities of the world and make them do work son!
-        for (let i = 0; i < this.entities.length; i++) {
-            this.entities[i].tick(this);
-        }
+        this.updatePopulation();
 
         // Loop through the agents of the world and make them do work!
         for (let a = 0; a < this.agents.length; a++) {
             this.agents[a].tick(this);
+        }
+
+        // Loop through the entities of the world and make them do work son!
+        for (let e = 0; e < this.entities.length; e++) {
+            this.entities[e].tick(this);
         }
 
         // Loop through and destroy old items
@@ -219,7 +229,8 @@
             }
         }
 
-        this.graphRewards();
+        this.updatePopulation();
+        this.draw();
     };
 
     /**
@@ -310,8 +321,8 @@
                 max: this.nflot
             },
             yaxis: {
-                min: -0.05,
-                max: 0.05
+                min: -2.0,
+                max: 2.0
             }
         });
     };

@@ -8,6 +8,10 @@
      */
     var WaterWorld = function () {
         this.canvas = document.getElementById("world");
+        this.rewardGraph = new RewardGraph({
+            canvas: document.getElementById("rewardGraph"),
+            stepHorizon: 1000
+        });
         this.xCount = 2;
         this.yCount = 2;
         this.numItems = 20;
@@ -19,8 +23,8 @@
         this.walls = this.maze.walls;
 
         // Reward graphing type
-        this.useFlot = true;
-        this.useGraph = false;
+        this.useFlot = false;
+        this.useGraph = true;
 
         // Collision type
         this.cdType = 'quad';
@@ -28,7 +32,7 @@
         this.maxDepth = 10;
 
         this.cheats = {
-            quad: false,
+            quad: true,
             grid: false,
             population: false,
             walls: false
@@ -75,7 +79,7 @@
             cheats: {
                 gridLocation: false,
                 position: false,
-                id: true,
+                id: false,
                 name: false
             }
         };
@@ -84,7 +88,7 @@
             vec2 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2));
 
         this.agents = [
-            new AgentRLDQN(vec1, agentWOpts),
+            //new AgentRLDQN(vec1, agentWOpts),
             new AgentRLDQN(vec2, agentOpts)
         ];
 

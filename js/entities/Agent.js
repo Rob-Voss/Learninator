@@ -72,12 +72,11 @@
 
         // Go through and process what we ate
         if (this.collisions.length > 0) {
-            for (var i = 0; i < this.collisions.length; i++) {
+            for (let i = 0; i < this.collisions.length; i++) {
                 let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
                     stickBySize = this.stick - (this.collisions[i].radius / 100);
-                this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
-                //this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
-                this.collisions[i].cleanUp = true;
+                this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;//rewardBySize : stickBySize;
+                this.world.deleteEntity(this.collisions[i]);
             }
         }
 
@@ -109,7 +108,8 @@
      */
     Agent.prototype.tick = function (world) {
         this.world = world;
-        this.start = new Date().getTime();
+        // Let the agents behave in the world based on their input
+        this.act();
 
         // If it's not a worker we need to run the rest of the steps
         if (!this.worker) {
@@ -121,13 +121,6 @@
             this.move();
             // This is where the agents learns based on the feedback of their actions on the environment
             this.learn();
-        } else {
-            // Let the agents behave in the world based on their input
-            this.act();
-        }
-
-        if (this.cheats) {
-            this.updateCheats();
         }
 
         return this;
