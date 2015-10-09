@@ -9,8 +9,10 @@
      * @returns {Agent}
      */
     var Agent = function (position, opts) {
-        Entity.call(this, 3, position, opts);
+        let type = (this.worker) ? 'Agent Worker' : 'Agent';
+        Entity.call(this, type, position, opts);
 
+        // Just a text value for the brain type, also useful for worker ops
         this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
 
         // The number of item types the Agent's eyes can see
@@ -73,8 +75,9 @@
         // Go through and process what we ate
         if (this.collisions.length > 0) {
             for (let i = 0; i < this.collisions.length; i++) {
-                let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
-                    stickBySize = this.stick - (this.collisions[i].radius / 100);
+                //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
+                //    stickBySize = this.stick - (this.collisions[i].radius / 100);
+                //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
                 this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;//rewardBySize : stickBySize;
                 this.world.deleteEntity(this.collisions[i]);
             }
@@ -113,8 +116,6 @@
 
         // If it's not a worker we need to run the rest of the steps
         if (!this.worker) {
-            // Let the agents behave in the world based on their input
-            this.act();
             // Find nearby entities to nom
             this.eat();
             // Move eet!

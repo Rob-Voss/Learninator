@@ -43,8 +43,8 @@
             BruteCD.apply(this);
         }
 
-        this.addWalls();
         this.addAgents();
+        this.addWalls();
         this.addEntities();
 
         if (this.useFlot === true) {
@@ -78,6 +78,8 @@
      */
     World.prototype.addAgents = function () {
         // Add the agents
+        let agents = [],
+            lastColor;
         for (let a = 0; a < this.agents.length; a++) {
             let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
@@ -85,14 +87,21 @@
             }
             agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
             this.stage.addChild(agentContainer);
+
+            if (this.agents[a].color === lastColor) {
+                this.agents[a].color = lastColor + 128;
+            }
+            if (this.useGraph === true && this.rewardGraph !== undefined) {
+                agents.push({
+                    name: this.agents[a].name,
+                    color: this.agents[a].color
+                });
+            }
+            lastColor = this.agents[a].color;
         }
 
         if (this.useGraph === true && this.rewardGraph !== undefined) {
-            let agentNames = [];
-            for (let an = 0; an < this.agents.length; an++) {
-                agentNames.push({name: this.agents[an].name});
-            }
-            this.rewardGraph.setLegend(agentNames);
+            this.rewardGraph.setLegend(agents);
         }
 
         return this;
@@ -141,7 +150,7 @@
         // Add the walls to the world
         for (let w = 0; w < this.walls.length; w++) {
             this.wallContainer.addChild(this.walls[w].shape);
-            if (this.cheats.walls === true) {
+            if (this.cheats.walls) {
                 let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
                 wallText.position.set(this.walls[w].v1.x + 10, this.walls[w].v1.y);
                 this.wallContainer.addChild(wallText);

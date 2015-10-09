@@ -9,12 +9,12 @@ var RewardGraph = RewardGraph || {};
      * @returns {Graph_L3.Graph}
      */
     var RewardGraph = function (opts) {
-        this.canvas = opts.canvas;
+        this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById("rewardGraph"));
         this.ctx = this.canvas.getContext("2d");
 
-        this.stepHorizon = opts.stepHorizon || 1000;
-        this.width = opts.width || this.canvas.width;
-        this.height = opts.height || this.canvas.height;
+        this.stepHorizon = Utility.getOpt(opts, 'stepHorizon', 1000);
+        this.width = Utility.getOpt(opts, 'width', this.canvas.width);
+        this.height = Utility.getOpt(opts, 'height', this.canvas.height);
 
         if (typeof opts.maxy !== 'undefined') {
             this.maxyForced = opts.maxy;
@@ -26,19 +26,23 @@ var RewardGraph = RewardGraph || {};
         this.maxy = -9999;
         this.miny = 9999;
 
-        this.styles = ["red", "blue", "green", "black", "magenta", "cyan", "purple", "aqua", "olive", "lime", "navy"];
-        this.hexStyles = [0xFF0000, 0x0000FF, 0x00FF00, 0x000000, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00, 0x000080];
-        this.pts = [];
-        var _this = this;
+        this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
+        this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
 
-        return _this;
+        this.pts = [];
+
+        return this;
     };
 
+    /**
+     * Set the legend and colors up
+     * @param legend
+     */
     RewardGraph.prototype.setLegend = function (legend) {
         this.legend = legend;
         this.numLines = this.legend.length;
         this.pts = new Array(this.numLines);
-        for (var i = 0; i < this.numLines; i++) {
+        for (let i = 0; i < this.numLines; i++) {
             this.pts[i] = [];
         }
     };
@@ -59,8 +63,8 @@ var RewardGraph = RewardGraph || {};
                 yl: yl
             };
 
-        for (var k = 0; k < n; k++) {
-            var y = yl[k];
+        for (let k = 0; k < n; k++) {
+            let y = yl[k];
             if (y > this.maxy * 0.99) {
                 this.maxy = y * 1.05;
             }
@@ -92,10 +96,10 @@ var RewardGraph = RewardGraph || {};
      * @returns {undefined}
      */
     RewardGraph.prototype.drawPoints = function () {
-        var pad = 25;
-        var H = this.height;
-        var W = this.width;
-        var ctx = this.ctx;
+        var pad = 25,
+            H = this.height,
+            W = this.width,
+            ctx = this.ctx;
 
         ctx.clearRect(0, 0, W, H);
         ctx.font = "10px Georgia";
@@ -109,47 +113,53 @@ var RewardGraph = RewardGraph || {};
         ctx.strokeStyle = "#999";
         ctx.beginPath();
         var ng = 10;
-        for (var gl = 0; gl <= ng; gl++) {
-            var xpos = gl / ng * (W - 2 * pad) + pad;
+        for (let gl = 0; gl <= ng; gl++) {
+            let xpos = gl / ng * (W - 2 * pad) + pad;
             ctx.moveTo(xpos, pad);
             ctx.lineTo(xpos, H - pad);
             ctx.fillText(f2t(gl / ng * this.stepHorizon / 1000) + 'k', xpos, H - pad + 14);
         }
 
-        for (var v = 0; v <= ng; v++) {
-            var ypos = v / ng * (H - 2 * pad) + pad;
+        for (let v = 0; v <= ng; v++) {
+            let ypos = v / ng * (H - 2 * pad) + pad;
             ctx.moveTo(pad, ypos);
             ctx.lineTo(W - pad, ypos);
             ctx.fillText(f2t((ng - v) / ng * (this.maxy - this.miny) + this.miny), 0, ypos);
         }
         ctx.stroke();
+
         var agentN = [];
-        for (var z = 0; z < this.numLines; z++) {
+        for (let z = 0; z < this.numLines; z++) {
             agentN[z] = this.pts[z].length;
-            if (agentN[z] < 2)
+            if (agentN[z] < 2) {
                 return;
+            }
         }
 
         // Draw legend
-        for (var l = 0; l < this.numLines; l++) {
-            ctx.fillStyle = this.styles[l];
+        for (let l = 0; l < this.numLines; l++) {
+            ctx.fillStyle = this.styles[this.hexStyles.indexOf(this.legend[l].color)];
             ctx.fillText(this.legend[l].name, W - pad - 100, pad + 20 + l * 16);
         }
         ctx.fillStyle = "black";
 
         // Draw the actual curve
         var t = function (x, y, s) {
-            var tx = x / s.stepHorizon * (W - pad * 2) + pad;
-            var ty = H - ((y - s.miny) / (s.maxy - s.miny) * (H - pad * 2) + pad);
-            return {tx: tx, ty: ty};
+            let tx = x / s.stepHorizon * (W - pad * 2) + pad,
+                ty = H - ((y - s.miny) / (s.maxy - s.miny) * (H - pad * 2) + pad);
+
+            return {
+                tx: tx,
+                ty: ty
+            };
         };
 
         for (var k = 0; k < this.numLines; k++) {
-            ctx.strokeStyle = this.styles[k];
+            ctx.strokeStyle = this.styles[this.hexStyles.indexOf(this.legend[k].color)];
             ctx.beginPath();
-            for (var i = 0; i < agentN[k]; i++) {
+            for (let i = 0; i < agentN[k]; i++) {
                 // Draw line from i-1 to i
-                var p = this.pts[k][i],
+                let p = this.pts[k][i],
                     pt = t(p.step, p.yl[0], this);
                 if (i === 0) {
                     ctx.moveTo(pt.tx, pt.ty);
@@ -159,6 +169,7 @@ var RewardGraph = RewardGraph || {};
             }
             ctx.stroke();
         }
+        ctx.fillStyle = "black";
     };
 
     global.RewardGraph = RewardGraph;

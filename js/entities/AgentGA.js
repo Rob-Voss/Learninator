@@ -102,12 +102,12 @@
      * @returns {AgentGA}
      */
     var AgentGA = function (position, opts) {
+        var _this = this;
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = 'Agent GA';
-        if (this.worker) {
-            this.name += ' Worker';
-        }
+        this.name = 'Agent RLDQN' + (this.worker ? ' Worker' : '');
+
+        Agent.call(this, position, opts);
 
         this.target = null;
         this.score = 0;
@@ -152,10 +152,6 @@
             // pass in our layer defs
             layerDefs: this.layerDefs
         });
-
-        Agent.call(this, position, opts);
-
-        var _this = this;
 
         this.brain = new Brain();
         this.trainer = new GATrainer(this.brainOpts, this.brain.initialGene);

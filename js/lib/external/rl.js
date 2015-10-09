@@ -2798,8 +2798,6 @@
         _ESPNet;
 
     self.onmessage = function (e) {
-        importScripts('../Utility.js');
-
         var data = e.data,
             actionIndex;
         if (data.cmd === 'init') {
@@ -2817,6 +2815,7 @@
             case 'DQN':
                 switch (data.cmd) {
                     case 'init':
+                        importScripts('../Utility.js');
                         _DQNAgent = new DQNAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2870,6 +2869,7 @@
             case 'DP':
                 switch (data.cmd) {
                     case 'init':
+                        importScripts('../Utility.js');
                         _DPAgent = new DPAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2912,6 +2912,7 @@
             case 'TD':
                 switch (data.cmd) {
                     case 'init':
+                        importScripts('../Utility.js');
                         _TDAgent = new TDAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2954,6 +2955,7 @@
             case 'GA':
                 switch (data.cmd) {
                     case 'init':
+                        importScripts('../Utility.js');
                         _GATrainer = new GATrainer(oEnv, oOpts);
 
                         self.postMessage({
@@ -2996,6 +2998,7 @@
             case 'ESP':
                 switch (data.cmd) {
                     case 'init':
+                        importScripts('../Utility.js');
                         _ESPTrainer = new ESPTrainer(oEnv, oOpts);
 
                         self.postMessage({

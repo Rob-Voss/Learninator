@@ -26,60 +26,15 @@
         this.useGraph = false;
 
         // Collision type
-        this.CD = {
-            type: 'quad',
-            maxChildren: 2,
-            maxDepth: 10
-        };
+        this.cdType = 'quad';
+        this.maxChildren = 2;
+        this.maxDepth = 10;
+
         this.cheats = {
             quad: true,
             grid: false,
             population: false,
             walls: false
-        };
-
-        // flot stuff
-        this.nflot = 1000;
-        this.smoothRewardHistory = [];
-        this.smoothReward = [];
-        this.flott = [];
-
-        this.agentOpts = {
-            brainType: 'RLTD',
-            env: this,
-            spec: {
-                update: 'qlearn', // 'qlearn' or 'sarsa'
-                // discount factor, [0, 1)
-                gamma: 0.9,
-                // initial epsilon for epsilon-greedy policy, [0, 1)
-                epsilon: 0.2,
-                // value function learning rate
-                alpha: 0.1,
-                // eligibility trace decay, [0,1). 0 = no eligibility traces
-                lambda: 0,
-                // use replacing or accumulating traces
-                replacingTraces: true,
-                // number of planning steps per iteration. 0 = no planning
-                planN: 50,
-                // non-standard, updates policy smoothly to follow max_a Q
-                smoothPolicyUpdate: true,
-                // learning rate for smooth policy update
-                beta: 0.1
-            },
-            numEyes: 0,
-            numTypes: 0,
-            width: 20,
-            height: 20,
-            radius: 10,
-            collision: false,
-            interactive: false,
-            useSprite: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: true
-            }
         };
 
         this.maze = new Maze({
@@ -96,7 +51,44 @@
         this.gS = this.grid.yCount * this.grid.xCount;
         this.cs = this.grid.cellWidth;  // cell size
         this.agents = [
-            new AgentRLTD(new Vec(50, 50), this.agentOpts)
+            new AgentRLTD(new Vec(50, 50),
+                {
+                    brainType: 'RLTD',
+                    env: this,
+                    spec: {
+                        update: 'qlearn', // 'qlearn' or 'sarsa'
+                        // discount factor, [0, 1)
+                        gamma: 0.9,
+                        // initial epsilon for epsilon-greedy policy, [0, 1)
+                        epsilon: 0.2,
+                        // value function learning rate
+                        alpha: 0.1,
+                        // eligibility trace decay, [0,1). 0 = no eligibility traces
+                        lambda: 0,
+                        // use replacing or accumulating traces
+                        replacingTraces: true,
+                        // number of planning steps per iteration. 0 = no planning
+                        planN: 50,
+                        // non-standard, updates policy smoothly to follow max_a Q
+                        smoothPolicyUpdate: true,
+                        // learning rate for smooth policy update
+                        beta: 0.1
+                    },
+                    numEyes: 0,
+                    numTypes: 0,
+                    width: 20,
+                    height: 20,
+                    radius: 10,
+                    collision: false,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    }
+                })
         ];
 
         this.initGrid();
@@ -147,6 +139,12 @@
      * Initialize the Flot class
      */
     GridWorld.prototype.initFlot = function () {
+        // flot stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
+
         for (var a = 0; a < this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;

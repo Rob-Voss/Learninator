@@ -24,11 +24,10 @@
         this.useGraph = false;
 
         // Collision type
-        this.CD = {
-            type: 'quad',
-            maxChildren: 2,
-            maxDepth: 10
-        };
+        this.cdType = 'quad';
+        this.maxChildren = 2;
+        this.maxDepth = 10;
+
         // Cheats to display
         this.cheats = {
             quad: true,
@@ -122,12 +121,39 @@
             return this.trainer.chromosomes[n].clone();
         };
 
-        var vec1 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
-            vec2 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2));
-
         this.agents = [
-            new AgentGA(vec1, this.agentOpts),
-            new AgentGA(vec1, this.agentOpts)
+            new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'GA',
+                    numEyes: 0,
+                    numTypes: 0,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    }
+                }),
+            new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'GA',
+                    numEyes: 0,
+                    numTypes: 0,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    }
+                })
         ];
         this.agents[0].setTarget(this.agents[1]);
         this.agents[1].setTarget(this.agents[0]);

@@ -18,13 +18,9 @@
         this.closed = true;
 
         // Collision type
-        this.CD = {
-            type: 'quad',
-            maxChildren: 2,
-            maxDepth: 10
-        };
-        this.useFlot = true;
-        this.useGraph = false;
+        this.cdType = 'quad';
+        this.maxChildren = 2;
+        this.maxDepth = 10;
 
         this.cheats = {
             quad: true,
@@ -33,20 +29,8 @@
             walls: false
         };
 
-        this.agentOpts = {
-            brainType: 'RLDQN',
-            numEyes: 30,
-            numTypes: 5,
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                name: true
-            }
-        };
+        this.useFlot = true;
+        this.useGraph = false;
 
         this.entityOpts = {
             brainType: 'RLDQN',
@@ -60,16 +44,44 @@
             cheats: {
                 gridLocation: false,
                 position: false,
-                name: false
+                name: false,
+                id: false
             }
         };
 
-        var vec1 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
-            vec2 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2));
-
         this.agents = [
-            new AgentRLDQN(vec1, this.agentOpts),
-            new AgentRLDQN(vec2, this.agentOpts)
+            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        name: true,
+                        id: false
+                    }
+                }),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        name: true,
+                        id: false
+                    }
+                })
         ];
 
         this.walls = [

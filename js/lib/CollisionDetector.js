@@ -43,7 +43,7 @@
                     // Use the circle collision check
                     let collisionObj = Utility.circleCollision(entity, target);
                     // If there was a collision between an agent and an edible entity
-                    if (collisionObj && target.type === 3 && edibleEntity) {
+                    if (collisionObj && (target.type === 3 || target.type === 4) && edibleEntity) {
                         let idx = target.collisions.findIndex(Utility.getId, entity.id);
                         // If the entity doesn't already exist then add it
                         if (idx === -1 && !updatePos) {
@@ -133,6 +133,11 @@
                 this.quadContainer = new PIXI.Container();
                 this.drawRegions(this.tree.root);
                 this.stage.addChild(this.quadContainer);
+            } else {
+                if (this.quadContainer !== undefined) {
+                    this.stage.removeChild(this.quadContainer);
+                    this.quadContainer = new PIXI.Container();
+                }
             }
         };
     };
@@ -159,7 +164,8 @@
                 let entities = this.entities,
                     entity = entities.find(Utility.getId, cell.population[p]);
                 if (entity) {
-                    let dist = target.position.distanceTo(entity.position);
+                    let dist = target.position.distanceTo(entity.position),
+                        distFrom = target.position.distFrom(entity.position);
                     if (dist < entity.radius + target.radius) {
                         target.collisions.push(entity);
                     }
@@ -191,6 +197,11 @@
                 }
 
                 this.stage.addChild(this.populationCounts);
+            } else {
+                if (this.populationCounts !== undefined) {
+                    this.stage.removeChild(this.populationCounts);
+                    this.populationCounts = new PIXI.Container();
+                }
             }
 
             // Draw the grid
@@ -218,6 +229,11 @@
                     }
                 }
                 this.stage.addChild(this.gridOverlay);
+            } else {
+                if (this.gridOverlay !== undefined) {
+                    this.stage.removeChild(this.gridOverlay);
+                    this.gridOverlay = new PIXI.Container();
+                }
             }
         };
 

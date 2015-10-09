@@ -11,10 +11,7 @@
     var AgentRLTD = function (position, opts) {
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = "Agent RLTD";
-        if (this.worker) {
-            this.name += ' Worker';
-        }
+        this.name = 'Agent RLTD' + (this.worker ? ' Worker' : '');
 
         Agent.call(this, position, opts);
 

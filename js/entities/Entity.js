@@ -4,20 +4,33 @@
     /**
      * Initialize the Entity
      *
-     * @param {Number} typeId A type id (wall,nom,gnar,agent)
+     * @param {Number||String} type A type id (wall,nom,gnar,agent)
      * @param {Vec} position A vector of the position
      * @param {Object} opts Entity Options
      * @constructor
      * @returns {Entity}
      */
-    var Entity = function (typeId, position, opts) {
-        var entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent'];
+    var Entity = function (type, position, opts) {
+        this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
+        this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
+        this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
+
+        let typeOf = typeof type;
+        if (typeOf === 'string') {
+            this.type = this.entityTypes.indexOf(type);
+            this.typeName = type;
+            this.color = this.hexStyles[this.type];
+            this.name = (this.name === undefined) ? type : this.name;
+        } else if (typeOf === 'number') {
+            this.type = type || 1;
+            this.typeName = this.entityTypes[this.type];
+            this.color = this.hexStyles[this.type];
+            this.name = (this.name === undefined) ? this.entityTypes[this.type] : this.name;
+        }
 
         this.id = Utility.guid();
-        this.name = (this.name === undefined) ? entityTypes[typeId] : this.name;
-        this.type = typeId || 1;
         this.position = position || new Vec(5, 5);
-        this.radius = Utility.getOpt(opts, 'radius', 10);
+        this.radius = Utility.getOpt(opts, 'radius', undefined);
         this.width = Utility.getOpt(opts, 'width', undefined);
         this.height = Utility.getOpt(opts, 'height', undefined);
 
@@ -42,7 +55,7 @@
         var _this = this;
 
         if (this.useSprite) {
-            this.texture = PIXI.Texture.fromImage('img/' + entityTypes[typeId] + '.png');
+            this.texture = PIXI.Texture.fromImage('img/' + this.typeName + '.png');
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.width = this.width;
             this.sprite.height = this.height;
@@ -66,11 +79,31 @@
             }
         } else {
             this.shape = new PIXI.Graphics();
+            this.shape.interactive = this.interactive;
+            if (this.shape.interactive === true) {
+                this.shape
+                    .on('mousedown', _this.onDragStart)
+                    .on('touchstart', _this.onDragStart)
+                    .on('mouseup', _this.onDragEnd)
+                    .on('mouseupoutside', _this.onDragEnd)
+                    .on('touchend', _this.onDragEnd)
+                    .on('touchendoutside', _this.onDragEnd)
+                    .on('mouseover', _this.onMouseOver)
+                    .on('mouseout', _this.onMouseOut)
+                    .on('mousemove', _this.onDragMove)
+                    .on('touchmove', _this.onDragMove);
+                this.shape.entity = _this;
+            }
         }
+        // Add a container to hold our display cheats
+        this.cheatsContainer = new PIXI.Container();
+        this.addCheats();
 
-        // If cheats are on then show the entities grid location and x,y coords
-        if (this.cheats) {
-            this.addCheats();
+        // Now we add the container to the entity
+        if (this.useSprite) {
+            this.sprite.addChild(this.cheatsContainer);
+        } else {
+            this.shape.addChild(this.cheatsContainer);
         }
 
         return this;
@@ -81,11 +114,10 @@
      */
     Entity.prototype.addCheats = function () {
         var fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
-        this.cheatsContainer = new PIXI.Container();
 
         // If cheats are on then show the entities grid location and x,y coords
-        if (this.cheats.gridLocation === true) {
-            var textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
+        if (this.cheats.gridLocation && this.gridText === undefined) {
+            let textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
 
             this.gridText = new PIXI.Text(textG, fontOpts);
             this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
@@ -93,8 +125,8 @@
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position === true) {
-            var textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+        if (this.cheats.position && this.posText === undefined) {
+            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
                 textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
 
             this.posText = new PIXI.Text(textP + textV, fontOpts);
@@ -103,24 +135,19 @@
         }
 
         // If cheats are on then show the entities name
-        if (this.cheats.name === true) {
+        if (this.cheats.name && this.nameText === undefined) {
             this.nameText = new PIXI.Text(this.name, fontOpts);
             this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
             this.cheatsContainer.addChild(this.nameText);
         }
 
         // If cheats are on then show the entities id
-        if (this.cheats.id === true) {
+        if (this.cheats.id && this.idText === undefined) {
             this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
             this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
             this.cheatsContainer.addChild(this.idText);
         }
 
-        if (this.useSprite === true) {
-            this.sprite.addChild(this.cheatsContainer);
-        } else {
-            this.shape.addChild(this.cheatsContainer);
-        }
     };
 
     /**
@@ -129,35 +156,67 @@
     Entity.prototype.updateCheats = function () {
         var posText, gridText, nameText, idText;
         // If cheats are on then show the entities grid location and x,y coords
-        if (this.cheats.gridLocation === true) {
+        if (this.cheats.gridLocation) {
+            if (this.gridText === undefined) {
+                this.addCheats();
+            }
             gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-
             gridText.text = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
             gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+        } else {
+            if (this.gridText !== undefined) {
+                let index = this.cheatsContainer.getChildIndex(this.gridText);
+                this.cheatsContainer.removeChildAt(index);
+                this.gridText = undefined;
+            }
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position === true) {
+        if (this.cheats.position) {
+            if (this.posText === undefined) {
+                this.addCheats();
+            }
             let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
                 textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
             posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
-
             posText.text = textP + textV;
             posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+        } else {
+            if (this.posText !== undefined) {
+                let index = this.cheatsContainer.getChildIndex(this.posText);
+                this.cheatsContainer.removeChildAt(index);
+                this.posText = undefined;
+            }
         }
 
         // If cheats are on then show the entities name
-        if (this.cheats.name === true) {
+        if (this.cheats.name) {
+            if (this.nameText === undefined) {
+                this.addCheats();
+            }
             nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-
             nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+        } else {
+            if (this.nameText !== undefined) {
+                let index = this.cheatsContainer.getChildIndex(this.nameText);
+                this.cheatsContainer.removeChildAt(index);
+                this.nameText = undefined;
+            }
         }
 
         // If cheats are on then show the entities id
-        if (this.cheats.id === true) {
+        if (this.cheats.id) {
+            if (this.idText === undefined) {
+                this.addCheats();
+            }
             idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-
             idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+        } else {
+            if (this.idText !== undefined) {
+                let index = this.cheatsContainer.getChildIndex(this.idText);
+                this.cheatsContainer.removeChildAt(index);
+                this.idText = undefined;
+            }
         }
     };
 
@@ -172,18 +231,7 @@
         } else {
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000);
-
-            switch (this.type) {
-            case 1:
-                this.shape.beginFill(0xFF0000);
-                break;
-            case 2:
-                this.shape.beginFill(0x00FF00);
-                break;
-            case 3:
-                this.shape.beginFill(0x0000FF);
-                break;
-            }
+            this.shape.beginFill(this.color);
             this.shape.drawCircle(this.position.x, this.position.y, this.radius);
             this.shape.endFill();
         }
@@ -268,7 +316,6 @@
             var newPosition = this.data.getLocalPosition(this.parent);
             this.position.set(newPosition.x, newPosition.y);
             this.entity.position.set(newPosition.x, newPosition.y);
-            this.entity.position.round();
         }
 
         return this;
@@ -283,7 +330,7 @@
         this.alpha = 1;
         this.dragging = false;
         this.entity.position.set(this.position.x, this.position.y);
-        this.entity.position.round();
+
         // set the interaction data to null
         this.data = null;
 

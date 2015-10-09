@@ -12,8 +12,8 @@
             canvas: document.getElementById("rewardGraph"),
             stepHorizon: 1000
         });
-        this.xCount = 2;
-        this.yCount = 2;
+        this.xCount = 3;
+        this.yCount = 3;
         this.numItems = 20;
         this.closed = true;
         this.width = this.canvas.width;
@@ -38,40 +38,7 @@
             walls: false
         };
 
-        var agentOpts = {
-            brainType: 'RLDQN',
-            numEyes: 30,
-            numTypes: 5,
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: true
-            }
-        };
-
-        var agentWOpts = {
-            brainType: 'RLDQN',
-            numEyes: 30,
-            numTypes: 5,
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: true
-            },
-            worker: true
-        };
-
-        var entityOpts = {
+        this.entityOpts = {
             collision: true,
             interactive: false,
             useSprite: false,
@@ -84,18 +51,47 @@
             }
         };
 
-        var vec1 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
-            vec2 = new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2));
-
         this.agents = [
-            //new AgentRLDQN(vec1, agentWOpts),
-            new AgentRLDQN(vec2, agentOpts)
+            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    },
+                    worker: true
+                }),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    },
+                    worker: true
+                })
         ];
 
-        this.agents[0].load('zoo/wateragent.json');
-        //this.agents[1].load('zoo/wateragent.json');
+        //this.agents[0].load('zoo/wateragent.json');
+        this.agents[1].load('zoo/wateragent.json');
 
-        World.call(this, this, entityOpts);
+        World.call(this, this, this.entityOpts);
 
         return this;
     };
