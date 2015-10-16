@@ -1392,10 +1392,9 @@
          * @returns {number}
          */
         learnFromTuple: function (s0, a0, r0, s1, a1) {
-            // want: Q(s,a) = r + gamma * max_a' Q(s',a')
-
             // compute the target Q value
             var tMat = this.forwardQ(this.net, s1, false),
+            // want: Q(s,a) = r + gamma * max_a' Q(s',a')
                 qMax = r0 + this.gamma * tMat.w[maxi(tMat.w)],
 
             // now predict

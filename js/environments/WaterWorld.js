@@ -12,9 +12,9 @@
             canvas: document.getElementById("rewardGraph"),
             stepHorizon: 1000
         });
-        this.xCount = 3;
-        this.yCount = 3;
-        this.numItems = 20;
+        this.xCount = 4;
+        this.yCount = 4;
+        this.numItems = 50;
         this.closed = true;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
@@ -32,7 +32,7 @@
         this.maxDepth = 10;
 
         this.cheats = {
-            quad: true,
+            quad: false,
             grid: false,
             population: false,
             walls: false
@@ -89,7 +89,7 @@
         ];
 
         //this.agents[0].load('zoo/wateragent.json');
-        this.agents[1].load('zoo/wateragent.json');
+        //this.agents[1].load('zoo/wateragent.json');
 
         World.call(this, this, this.entityOpts);
 

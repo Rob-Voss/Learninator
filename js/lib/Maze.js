@@ -18,6 +18,7 @@
 
         this.cellWidth = this.width / this.xCount;
         this.cellHeight = this.height / this.yCount;
+
         this.walls = [];
         this.cellStack = [];
         this.path = [];
@@ -86,19 +87,20 @@
         var ctx = canvas.getContext("2d"),
             _ctx = ctx,
             _this = this,
-            path = this.path;
+            path = this.path, V, vW, vH, vX, vY, x, y;
         ctx.fillStyle = "rgba(0,165,0,.1)";
         ctx.strokeStyle = "rgb(0,0,0)";
-        for (var i = 0; i < this.path.length; i++) {
-            var V = path[i];
-            var vW = this.cellWidth,
-                vH = this.cellHeight,
-                vX = V.x,
-                vY = V.y,
+        for (let i = 0; i < this.path.length; i++) {
+            V = path[i];
+            vW = this.cellWidth;
+            vH = this.cellHeight;
+            vX = V.x;
+            vY = V.y;
             // Get the cell X coords and multiply by the cell width
-                x = _this.grid.cells[vX][vY].x * vW,
+            x = _this.grid.cells[vX][vY].x * vW;
             // Get the cell Y coords and multiply by the cell height
-                y = _this.grid.cells[vX][vY].y * vH;
+            y = _this.grid.cells[vX][vY].y * vH;
+
             (function () {
                 _ctx.fillRect(x, y, vW, vH);
             })();
@@ -111,7 +113,9 @@
      */
     Maze.prototype.drawMaze = function () {
         var grid = this.grid,
-            drawnEdges = [];
+            drawnEdges = [],
+            x1, y1, x2, y2,
+            v, topV, leftV, rightV, bottomV;
 
         var edgeAlreadyDrawn = function (v1, v2) {
             return _.detect(drawnEdges, function (edge) {
@@ -119,47 +123,47 @@
                 }) !== undefined;
         };
 
-        for (var i = 0; i < grid.xCount; i++) {
-            for (var j = 0; j < grid.yCount; j++) {
-                var v = grid.cells[i][j],
-                    topV = grid.getCellAt(v.x, v.y - 1),
-                    leftV = grid.getCellAt(v.x - 1, v.y),
-                    rightV = grid.getCellAt(v.x + 1, v.y),
-                    bottomV = grid.getCellAt(v.x, v.y + 1);
+        for (let i = 0; i < grid.xCount; i++) {
+            for (let j = 0; j < grid.yCount; j++) {
+                v = grid.cells[i][j];
+                topV = grid.getCellAt(v.x, v.y - 1);
+                leftV = grid.getCellAt(v.x - 1, v.y);
+                rightV = grid.getCellAt(v.x + 1, v.y);
+                bottomV = grid.getCellAt(v.x, v.y + 1);
 
                 if (!edgeAlreadyDrawn(v, topV) && grid.areConnected(v, topV)) {
-                    var x1 = v.x * this.cellWidth,
-                        y1 = v.y * this.cellHeight,
-                        x2 = x1 + this.cellWidth,
-                        y2 = y1;
+                    x1 = v.x * this.cellWidth;
+                    y1 = v.y * this.cellHeight;
+                    x2 = x1 + this.cellWidth;
+                    y2 = y1;
 
                     this.addWall(new Vec(x1, y1), new Vec(x2, y2));
                     drawnEdges.push([v, topV]);
                 }
 
                 if (!edgeAlreadyDrawn(v, leftV) && grid.areConnected(v, leftV)) {
-                    var x2 = x1,
-                        y2 = y1 + this.cellHeight;
+                    x2 = x1;
+                    y2 = y1 + this.cellHeight;
 
                     this.addWall(new Vec(x1, y1), new Vec(x2, y2));
                     drawnEdges.push([v, leftV]);
                 }
 
                 if (!edgeAlreadyDrawn(v, rightV) && grid.areConnected(v, rightV)) {
-                    var x1 = (v.x * this.cellWidth) + this.cellWidth,
-                        y1 = v.y * this.cellHeight,
-                        x2 = x1,
-                        y2 = y1 + this.cellHeight;
+                    x1 = (v.x * this.cellWidth) + this.cellWidth;
+                    y1 = v.y * this.cellHeight;
+                    x2 = x1;
+                    y2 = y1 + this.cellHeight;
 
                     this.addWall(new Vec(x1, y1), new Vec(x2, y2));
                     drawnEdges.push([v, rightV]);
                 }
 
                 if (!edgeAlreadyDrawn(v, bottomV) && grid.areConnected(v, bottomV)) {
-                    var x1 = v.x * this.cellWidth,
-                        y1 = (v.y * this.cellHeight) + this.cellHeight,
-                        x2 = x1 + this.cellWidth,
-                        y2 = y1;
+                    x1 = v.x * this.cellWidth;
+                    y1 = (v.y * this.cellHeight) + this.cellHeight;
+                    x2 = x1 + this.cellWidth;
+                    y2 = y1;
 
                     this.addWall(new Vec(x1, y1), new Vec(x2, y2));
                     drawnEdges.push([v, bottomV]);
@@ -209,12 +213,13 @@
         // Bottom right cell
             targetCell = this.grid.getCellAt(this.xCount - 1, this.yCount - 1),
             openSet = [startCell],
-            searchCell = startCell;
+            searchCell = startCell,
+            neighbors, neighbor;
 
         while (openSet.length > 0) {
-            var neighbors = this.grid.disconnectedNeighbors(searchCell);
-            for (var i = 0; i < neighbors.length; i++) {
-                var neighbor = neighbors[i];
+            neighbors = this.grid.disconnectedNeighbors(searchCell);
+            for (let i = 0; i < neighbors.length; i++) {
+                neighbor = neighbors[i];
                 if (neighbor === targetCell) {
                     neighbor.parent = searchCell;
                     this.path = neighbor.pathToOrigin();

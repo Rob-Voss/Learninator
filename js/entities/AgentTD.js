@@ -112,7 +112,6 @@
                         _this.rot1 = action[0] * 1;
                         _this.rot2 = action[1] * 1;
 
-                        _this.eat();
                         _this.move();
                         _this.learn();
                     }
@@ -147,7 +146,7 @@
     AgentTD.prototype.act = function () {
         // Loop through the eyes and check the walls and nearby entities
         for (let e = 0; e < this.numEyes; e++) {
-            this.eyes[e].sense(this.position, this.angle, this.world.walls, this.world.entities);
+            this.eyes[e].sense(this);
         }
 
         // Create input to brain
@@ -262,36 +261,91 @@
             this.angle -= 2 * Math.PI;
         }
 
-        if (this.collision) {
-            // The agent is trying to move from oldPos to position so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls, this.world.entities, this.radius);
+        // Check the world for collisions
+        this.world.collisionCheck(this, false);
+
+        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
+            let wall = this.world.walls[w],
+                result = Utility.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
             if (result) {
-                // The agent derped! Wall collision! Reset their position
+                this.collisions.unshift(wall);
+            }
+        }
+
+        // Go through and process what we ate/hit
+        var minRes = false,
+            result;
+        for (let i = 0; i < this.collisions.length; i++) {
+            // Nom or Gnar
+            if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
+                for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
+                    let wall = this.world.walls[w];
+                    result = Utility.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
+                    if (result) {
+                        if (!minRes) {
+                            minRes = result;
+                        } else {
+                            // Check if it's closer
+                            if (result.vecX < minRes.vecX) {
+                                // If yes, replace it
+                                minRes = result;
+                            }
+                        }
+                    }
+                }
+
+                if (!minRes) {
+                    //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
+                    //    stickBySize = this.stick - (this.collisions[i].radius / 100);
+                    //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
+                    this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
+                    this.world.deleteEntity(this.collisions[i]);
+                }
+            } else if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
+                // Agent
+                //console.log('Watch it ' + this.collisions[i].name);
+            } else if (this.collisions[i].type === 0) {
+                // Wall
                 this.position = this.oldPos.clone();
                 this.position.vx = 0;
                 this.position.vy = 0;
             }
         }
 
-        // Handle boundary conditions.. bounce agent
-        if (this.position.x < 2) {
-            this.position.x = 2;
+        // Handle boundary conditions.. bounce Agent
+        var top = this.world.height - (this.world.height - this.radius),
+            bottom = this.world.height - this.radius,
+            left = this.world.width - (this.world.width - this.radius),
+            right = this.world.width - this.radius;
+        if (this.position.x < left) {
+            this.position.x = left;
+            this.position.vx = 0;
+            this.position.vy = 0;
         }
-        if (this.position.x > this.world.width) {
-            this.position.x = this.world.width;
+
+        if (this.position.x > right) {
+            this.position.x = right;
+            this.position.vx = 0;
+            this.position.vy = 0;
         }
-        if (this.position.y < 2) {
-            this.position.y = 2;
+
+        if (this.position.y < top) {
+            this.position.y = top;
+            this.position.vx = 0;
+            this.position.vy = 0;
         }
-        if (this.position.y > this.world.height) {
-            this.position.y = this.world.height;
+
+        if (this.position.y > bottom) {
+            this.position.y = bottom;
+            this.position.vx = 0;
+            this.position.vy = 0;
         }
 
         this.direction = Utility.getDirection(this.angle);
 
         if (this.useSprite) {
             this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = -this.angle;
+            this.sprite.rotation = this.angle * 0.01745329252;
         }
 
         return this;

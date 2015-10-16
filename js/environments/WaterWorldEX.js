@@ -9,34 +9,38 @@
      */
     var WaterWorldEX = function () {
         this.canvas = document.getElementById("world");
+        this.rewardGraph = new RewardGraph({
+            canvas: document.getElementById("rewardGraph"),
+            stepHorizon: 1000
+        });
         this.xCount = 1;
         this.yCount = 1;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
-        this.numEntities = 10;
-        this.numEntityAgents = 10;
+        this.numItems = 60;
+        this.numEntityAgents = 4;
         this.closed = true;
 
         // Collision type
-        this.cdType = 'quad';
-        this.maxChildren = 2;
-        this.maxDepth = 10;
+        this.cdType = 'brute';
+        this.maxChildren = 3;
+        this.maxDepth = 20;
 
         this.cheats = {
-            quad: true,
+            quad: false,
             grid: false,
             population: false,
             walls: false
         };
 
-        this.useFlot = true;
-        this.useGraph = false;
+        this.useFlot = false;
+        this.useGraph = true;
 
-        this.entityOpts = {
+        this.entityAgentOpts = {
             brainType: 'RLDQN',
-            numEyes: 4,
-            numTypes: 1,
-            radius: 10,
+            numEyes: 6,
+            numTypes: 5,
+            radius: 20,
             collision: true,
             interactive: false,
             useSprite: false,
@@ -49,20 +53,34 @@
             }
         };
 
+        this.entityOpts = {
+            collision: true,
+            interactive: false,
+            useSprite: false,
+            movingEntities: true,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                id: false,
+                name: false
+            }
+        };
+
         this.agents = [
             new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
-                    numTypes: 5,
+                    numTypes: 3,
                     radius: 10,
+                    worker: true,
                     collision: true,
                     interactive: false,
                     useSprite: false,
                     cheats: {
                         gridLocation: false,
                         position: false,
-                        name: true,
+                        name: false,
                         id: false
                     }
                 }),
@@ -70,15 +88,16 @@
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
-                    numTypes: 5,
+                    numTypes: 3,
                     radius: 10,
+                    worker: true,
                     collision: true,
                     interactive: false,
                     useSprite: false,
                     cheats: {
                         gridLocation: false,
                         position: false,
-                        name: true,
+                        name: false,
                         id: false
                     }
                 })
@@ -93,219 +112,13 @@
 
         World.call(this, this, this.entityOpts);
 
-        this.addEntities();
+        this.addEntityAgents();
 
         return this;
     };
 
     WaterWorldEX.prototype = Object.create(World.prototype);
     WaterWorldEX.prototype.constructor = World;
-
-    /**
-     * Add some noms
-     * @returns {World}
-     */
-    WaterWorldEX.prototype.addEntities = function () {
-        for (let k = 0; k < this.numEntities; k++) {
-            let type = Utility.randi(1, 3),
-                x = Utility.randi(5, this.canvas.width - 10),
-                y = Utility.randi(5, this.canvas.height - 10),
-                z = 0,
-                vx = Math.random() * 5 - 2.5,
-                vy = Math.random() * 5 - 2.5,
-                vz = 0,
-                position = new Vec(x, y, z, vx, vy, vz),
-                entity;
-            if (type === 1) {
-                entity = new Entity(type, position, this.entityOpts);
-                this.stage.addChild(entity.shape || entity.sprite);
-            } else if (type === 2 && Utility.randf(0, 1) < 0.25) {
-                entity = new EntityRLDQN(position, this.entityOpts);
-
-                // Insert the population
-                this.stage.addChild(entity.shape || entity.sprite);
-                for (let ei = 0; ei < entity.eyes.length; ei++) {
-                    this.stage.addChild(entity.eyes[ei].shape);
-                }
-            } else {
-                entity = new Entity(type, position, this.entityOpts);
-                this.stage.addChild(entity.shape || entity.sprite);
-            }
-
-            this.entities.push(entity);
-        }
-    };
-
-    /**
-     * Draw it all
-     */
-    WaterWorldEX.prototype.draw = function () {
-        // draw walls in environment
-        for (let i = 0, n = this.walls.length; i < n; i++) {
-            this.walls[i].draw();
-        }
-
-        // draw agents
-        for (let i = 0, ni = this.agents.length; i < ni; i++) {
-            this.agents[i].draw();
-
-            // draw agents sight
-            for (let ei = 0, ne = this.agents[i].eyes.length; ei < ne; ei++) {
-                this.agents[i].eyes[ei].draw(this.agents[i].position, this.agents[i].angle);
-            }
-        }
-        // draw smart entities
-        for (let i = 0, n = this.entities.length; i < n; i++) {
-            this.entities[i].draw();
-
-            // draw agents sight
-            if (typeof this.entities[i].eyes !== 'undefined') {
-                for (let ei = 0, ne = this.entities[i].eyes.length; ei < ne; ei++) {
-                    this.entities[i].eyes[ei].draw(this.entities[i].position, this.entities[i].angle);
-                }
-            }
-        }
-    };
-
-    /**
-     * Return the number of states
-     *
-     * @returns {Number}
-     */
-    WaterWorldEX.prototype.getNumStates = function () {
-        return 8; // x,y,vx,vy, puck dx,dy
-    };
-
-    /**
-     * Return the number of actions
-     *
-     * @returns {Number}
-     */
-    WaterWorldEX.prototype.getMaxNumActions = function () {
-        return 5; // left, right, up, down, nothing
-    };
-
-    /**
-     *
-     * @returns {*[]}
-     */
-    WaterWorldEX.prototype.getState = function () {
-        var s = [
-            this.puck.position.x - 0.5,
-            this.puck.position.y - 0.5,
-            this.puck.position.vx * 10,
-            this.puck.position.vy * 10,
-            this.target.position.x - this.puck.position.x,
-            this.target.position.y - this.puck.position.y,
-            this.enemy.position.x - this.puck.position.x,
-            this.enemy.position.y - this.puck.position.y
-        ];
-        return s;
-    };
-
-    /**
-     * Set up the puck world and the actions avail
-     */
-    WaterWorldEX.prototype.reset = function () {
-        // Puck x,y,z,vx,vy,vz
-        this.puck = {};
-        this.target = {};
-        this.enemy = {};
-        this.puck.position = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
-        this.target.position = new Vec(Math.random(), Math.random()); // target
-        this.enemy.position = new Vec(Math.random(), Math.random()); // enemy
-        this.radius = 0.05;
-        this.t = 0;
-
-        this.BADRAD = 0.25;
-        this.tick();
-    };
-
-    /**
-     */
-    WaterWorldEX.prototype.sampleNextState = function () {
-        // world dynamics
-        this.puck.position.x += this.puck.position.vx; // newton
-        this.puck.position.y += this.puck.position.vy;
-        this.puck.position.vx *= 0.95; // damping
-        this.puck.position.vy *= 0.95;
-
-        // agent action influences puck velocity
-        var accel = 0.002;
-        switch (this.action) {
-            case 0:
-                this.puck.position.vx -= accel;
-                break;
-            case 1:
-                this.puck.position.vx += accel;
-                break;
-            case 2:
-                this.puck.position.vy -= accel;
-                break;
-            case 3:
-                this.puck.position.vy += accel;
-                break;
-        }
-
-        // handle boundary conditions and bounce
-        if (this.puck.position.x < this.radius) {
-            this.puck.position.vx *= -0.5; // bounce!
-            this.puck.position.x = this.radius;
-        }
-        if (this.puck.position.x > 1 - this.radius) {
-            this.puck.position.vx *= -0.5;
-            this.puck.position.x = 1 - this.radius;
-        }
-        if (this.puck.position.y < this.radius) {
-            this.puck.position.vy *= -0.5; // bounce!
-            this.puck.position.y = this.radius;
-        }
-        if (this.puck.position.y > 1 - this.radius) {
-            this.puck.position.vy *= -0.5;
-            this.puck.position.y = 1 - this.radius;
-        }
-
-        this.t += 1;
-        if (this.t % 73 === 0) {
-            this.enemy.position.x = Math.random(); // reset the target location
-            this.enemy.position.y = Math.random();
-        }
-
-        // compute distances
-        var dx1 = this.puck.position.x - this.target.position.x, // Distance from gewdness
-            dy1 = this.puck.position.y - this.target.position.y, // Distance from gewdness
-            d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-            dx2 = this.puck.position.x - this.enemy.position.x, // Distance from badness
-            dy2 = this.puck.position.y - this.enemy.position.y, // Distance from badness
-            d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
-            dxnorm = dx2 / d2,
-            dynorm = dy2 / d2,
-            speed = 0.001;
-        this.enemy.position.x += speed * dxnorm;
-        this.enemy.position.y += speed * dynorm;
-
-        // compute reward
-        // want to go close to green
-        var r = -d1;
-        if (d2 < this.BADRAD) {
-            // but if we're too close to red that's bad
-            r += 2 * (d2 - this.BADRAD) / this.BADRAD;
-        }
-
-        // give bonus for gliding with no force
-        if (this.action === 4) {
-            r += 0.05;
-        }
-
-        // evolve state in time
-        var ns = this.getState(),
-            out = {
-                ns: ns,
-                r: r
-            };
-
-        return out;
-    };
 
     global.WaterWorldEX = WaterWorldEX;
 

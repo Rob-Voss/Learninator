@@ -109,12 +109,12 @@
         this.cells = [];
         this.path = [];
 
-        for (var i = 0; i < this.xCount; i++) {
+        var row, c;
+        for (let i = 0; i < this.xCount; i++) {
             this.cells.push([]);
-            var row = this.cells[i];
-
-            for (var j = 0; j < this.yCount; j++) {
-                var c = new Cell(i, j, this.cellWidth, this.cellHeight);
+            row = this.cells[i];
+            for (let j = 0; j < this.yCount; j++) {
+                c = new Cell(i, j, this.cellWidth, this.cellHeight);
                 row.push(c);
             }
         }
@@ -152,9 +152,10 @@
      * @returns {Array}
      */
     Grid.prototype.connectedNeighbors = function (c) {
-        var _this = this;
+        var _this = this, con;
         return _.select(this.neighbors(c), function (c0) {
-            var con = _this.areConnected(c, c0);
+            con = _this.areConnected(c, c0);
+
             return con;
         });
     };
@@ -167,9 +168,10 @@
      * @returns {Array}
      */
     Grid.prototype.disconnectedNeighbors = function (c) {
-        var _this = this;
+        var _this = this, disc;
         return _.reject(this.neighbors(c), function (c0) {
-            var disc = _this.areConnected(c, c0);
+            disc = _this.areConnected(c, c0);
+
             return disc;
         });
     };
@@ -223,10 +225,11 @@
      * @returns {Object}
      */
     Grid.prototype.getGridLocation = function (entity) {
-        for (var x = 0; x < this.xCount; x++) {
-            var xCell = this.cells[x];
-            for (var y = 0; y < this.yCount; y++) {
-                var yCell = xCell[y];
+        var xCell, yCell;
+        for (let x = 0; x < this.xCount; x++) {
+            xCell = this.cells[x];
+            for (let y = 0; y < this.yCount; y++) {
+                yCell = xCell[y];
                 if ((entity.position.x >= yCell.coords.top.left.x && entity.position.x <= yCell.coords.bottom.right.x) &&
                     (entity.position.y >= yCell.coords.top.left.y && entity.position.y <= yCell.coords.bottom.right.y)) {
                     entity.gridLocation = this.cells[x][y];
@@ -284,8 +287,9 @@
      * @returns {unresolved}
      */
     Grid.prototype.unvisitedNeighbors = function (c) {
+        var unv;
         return _.select(this.connectedNeighbors(c), function (c0) {
-            var unv = !c0.visited;
+            unv = !c0.visited;
             return unv;
         });
     };

@@ -33,7 +33,7 @@
         this.cheats = {
             quad: true,
             grid: false,
-            population: true,
+            population: false,
             walls: false
         };
 
@@ -46,12 +46,12 @@
             radius: 10,
             collision: false,
             interactive: true,
-            useSprite: false,
+            useSprite: true,
             movingEntities: false,
             cheats: {
                 gridLocation: false,
                 position: false,
-                name: true,
+                name: false,
                 id: false
             }
         };
@@ -70,11 +70,11 @@
                 worker: true,
                 collision: true,
                 interactive: false,
-                useSprite: false,
+                useSprite: true,
                 cheats: {
                     gridLocation: false,
                     position: false,
-                    name: true,
+                    name: false,
                     id: false
                 }
             }),
@@ -88,11 +88,11 @@
                 worker: true,
                 collision: true,
                 interactive: false,
-                useSprite: false,
+                useSprite: true,
                 cheats: {
                     gridLocation: false,
                     position: false,
-                    name: true,
+                    name: false,
                     id: false
                 }
             })

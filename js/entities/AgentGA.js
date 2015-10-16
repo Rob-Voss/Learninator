@@ -194,6 +194,23 @@
     };
 
     /**
+     * Agent's chance to learn
+     * @returns {AgentGA}
+     */
+    AgentGA.prototype.learn = function () {
+
+        return this;
+    };
+
+    /**
+     *
+     */
+    AgentGA.prototype.moveA = function () {
+
+        return this;
+    };
+
+    /**
      *
      */
     AgentGA.prototype.processAction = function () {
@@ -259,96 +276,21 @@
     };
 
     /**
-     * Agent's chance to learn
-     * @returns {AgentGA}
-     */
-    AgentGA.prototype.learn = function () {
+    * Tick the agent
+    * @param {Object} world
+    */
+    AgentGA.prototype.tick = function (world) {
+        this.world = world;
+        // Let the agents behave in the world based on their input
+        this.act();
 
-        return this;
-    };
-
-    /**
-     *
-     */
-    AgentGA.prototype.moveA = function () {
-
-        return this;
-    };
-
-    /**
-     * Move around
-     * @returns {AgentGA}
-     */
-    AgentGA.prototype.move = function () {
-        var oldAngle = this.angle,
-            speed = 1;
-        this.oldPos = this.position.clone();
-
-        // Execute agent's desired action
-        switch (this.action) {
-            case 0:
-                this.position.vx += -speed;
-                break;
-            case 1:
-                this.position.vx += speed;
-                break;
-            case 2:
-                this.position.vy += -speed;
-                break;
-            case 3:
-                this.position.vy += speed;
-                break;
+        // If it's not a worker we need to run the rest of the steps
+        if (!this.worker) {
+            // Move eet!
+            this.move();
+            // This is where the agents learns based on the feedback of their actions on the environment
+            this.learn();
         }
-
-        // Forward the agent by velocity
-        this.position.vx *= 0.95;
-        this.position.vy *= 0.95;
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
-
-        if (this.collision) {
-            // The agent is trying to move from oldPos to position so we need to check walls
-            var result = Utility.collisionCheck(this.oldPos, this.position, this.world.walls);
-            if (result) {
-                // The agent derped! Wall collision! Reset their position
-                //this.position.set(result.vecI.x + this.radius, result.vecI.y + this.radius);
-                this.position = this.oldPos.clone();
-                this.position.vx = 0;
-                this.position.vy = 0;
-            }
-        }
-
-        // Handle boundary conditions.. bounce Agent
-        if (this.position.x < 2) {
-            this.position.x = 2;
-            this.position.vx = 0;
-            this.position.vy = 0;
-        }
-
-        if (this.position.x > this.world.width - 2) {
-            this.position.x = this.world.width - 2;
-            this.position.vx = 0;
-            this.position.vy = 0;
-        }
-
-        if (this.position.y < 2) {
-            this.position.y = 2;
-            this.position.vx = 0;
-            this.position.vy = 0;
-        }
-
-        if (this.position.y > this.world.height - 2) {
-            this.position.y = this.world.height - 2;
-            this.position.vx = 0;
-            this.position.vy = 0;
-        }
-
-        if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
-        }
-
-        var end = new Date().getTime(),
-            dist = this.position.distFrom(this.oldPos);
 
         return this;
     };

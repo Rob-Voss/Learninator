@@ -20,11 +20,13 @@
             this.type = this.entityTypes.indexOf(type);
             this.typeName = type;
             this.color = this.hexStyles[this.type];
+            this.legendColor = this.styles[this.type];
             this.name = (this.name === undefined) ? type : this.name;
         } else if (typeOf === 'number') {
             this.type = type || 1;
             this.typeName = this.entityTypes[this.type];
             this.color = this.hexStyles[this.type];
+            this.legendColor = this.styles[this.type];
             this.name = (this.name === undefined) ? this.entityTypes[this.type] : this.name;
         }
 
@@ -55,12 +57,13 @@
         var _this = this;
 
         if (this.useSprite) {
-            this.texture = PIXI.Texture.fromImage('img/' + this.typeName + '.png');
+            this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ','') + '.png');
             this.sprite = new PIXI.Sprite(this.texture);
             this.sprite.width = this.width;
             this.sprite.height = this.height;
             this.sprite.anchor.set(0.5, 0.5);
             this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.rotation = this.angle * 0.01745329252;
             this.sprite.interactive = this.interactive;
 
             if (this.sprite.interactive === true) {
@@ -227,13 +230,18 @@
     Entity.prototype.draw = function () {
         if (this.useSprite) {
             this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = -this.angle;
         } else {
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000);
             this.shape.beginFill(this.color);
             this.shape.drawCircle(this.position.x, this.position.y, this.radius);
             this.shape.endFill();
+        }
+        // draw entities sight
+        if (this.eyes !== undefined) {
+            for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
+                this.eyes[ae].draw(this);
+            }
         }
 
         return this;
@@ -249,23 +257,53 @@
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
 
-        this.world.collisionCheck(this, true);
+        this.world.collisionCheck(this);
+
+        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
+            var wall = this.world.walls[w],
+                result = Utility.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
+            if (result) {
+                this.collisions.unshift(wall);
+            }
+        }
+
+        for (let i = 0; i < this.collisions.length; i++) {
+            if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
+                // Agent
+                //console.log('Oh shit it\'s a ' + this.collisions[i].name);
+            } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
+                // Edible
+                //console.log('Watch it ' + this.collisions[i].name);
+            } else if (this.collisions[i].type === 0) {
+                // Wall
+                this.position = this.oldPos.clone();
+                this.position.vx *= -1;
+                this.position.vy *= -1;
+            }
+        }
 
         // Handle boundary conditions.. bounce Agent
-        if (this.position.x < 2) {
-            this.position.x = 2;
+        var top = this.world.height - (this.world.height - this.radius),
+            bottom = this.world.height - this.radius,
+            left = this.world.width - (this.world.width - this.radius),
+            right = this.world.width - this.radius;
+        if (this.position.x < left) {
+            this.position.x = left;
             this.position.vx *= -1;
         }
-        if (this.position.x > this.world.width - 2) {
-            this.position.x = this.world.width - 2;
+
+        if (this.position.x > right) {
+            this.position.x = right;
             this.position.vx *= -1;
         }
-        if (this.position.y < 2) {
-            this.position.y = 2;
+
+        if (this.position.y < top) {
+            this.position.y = top;
             this.position.vy *= -1;
         }
-        if (this.position.y > this.world.height - 2) {
-            this.position.y = this.world.height - 2;
+
+        if (this.position.y > bottom) {
+            this.position.y = bottom;
             this.position.vy *= -1;
         }
 
@@ -329,7 +367,6 @@
     Entity.prototype.onDragEnd = function () {
         this.alpha = 1;
         this.dragging = false;
-        this.entity.position.set(this.position.x, this.position.y);
 
         // set the interaction data to null
         this.data = null;

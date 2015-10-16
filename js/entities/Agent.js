@@ -19,13 +19,15 @@
         this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
         // The number of Agent's eyes
         this.numEyes = Utility.getOpt(opts, 'numEyes',  9);
+        this.range = Utility.getOpt(opts, 'range',  85);
+        this.proximity = Utility.getOpt(opts, 'proximity',  85);
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
 
         // The Agent's eyes
         this.eyes = [];
         for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * 0.21, Utility.getOpt(opts, 'range',  85), Utility.getOpt(opts, 'proximity',  85)));
+            this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
         }
 
         this.action = null;
@@ -63,24 +65,18 @@
     Agent.prototype.constructor = Entity;
 
     /**
-     * Find nearby entities to nom on
+     * Agent's chance to learn
      * @returns {Agent}
      */
-    Agent.prototype.eat = function () {
-        this.digestionSignal = 0;
+    Agent.prototype.learn = function () {
+        this.lastReward = this.digestionSignal;
+        this.pts.push(this.digestionSignal);
 
-        // Check the world for collisions
-        this.world.collisionCheck(this, false);
-
-        // Go through and process what we ate
-        if (this.collisions.length > 0) {
-            for (let i = 0; i < this.collisions.length; i++) {
-                //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
-                //    stickBySize = this.stick - (this.collisions[i].radius / 100);
-                //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
-                this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;//rewardBySize : stickBySize;
-                this.world.deleteEntity(this.collisions[i]);
-            }
+        if (!this.worker) {
+            this.brain.learn(this.digestionSignal);
+            this.epsilon = this.brain.epsilon;
+        } else {
+            this.post('learn', this.digestionSignal);
         }
 
         return this;
@@ -116,8 +112,6 @@
 
         // If it's not a worker we need to run the rest of the steps
         if (!this.worker) {
-            // Find nearby entities to nom
-            this.eat();
             // Move eet!
             this.move();
             // This is where the agents learns based on the feedback of their actions on the environment

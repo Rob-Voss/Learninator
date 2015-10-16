@@ -61,7 +61,10 @@
 
         function animate() {
             if (!_this.pause) {
+                _this.updatePopulation();
                 _this.tick();
+                _this.updatePopulation();
+                _this.draw();
             }
             _this.renderer.render(_this.stage);
             requestAnimationFrame(animate);
@@ -73,7 +76,7 @@
     };
 
     /**
-     *
+     * Add the Agents
      * @returns {World}
      */
     World.prototype.addAgents = function () {
@@ -88,16 +91,19 @@
             agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
             this.stage.addChild(agentContainer);
 
-            if (this.agents[a].color === lastColor) {
-                this.agents[a].color = lastColor + 128;
+            this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+            // If we are already using another agent's color, mix it up a bit
+            if (this.agents[a].legendColor === lastColor) {
+                this.agents[a].legendColor = this.agents[a].styles[this.agents[a].type + 1];
             }
+            // Set up the Legend in the reward graph
             if (this.useGraph === true && this.rewardGraph !== undefined) {
                 agents.push({
                     name: this.agents[a].name,
-                    color: this.agents[a].color
+                    color: this.agents[a].legendColor
                 });
             }
-            lastColor = this.agents[a].color;
+            lastColor = this.agents[a].legendColor;
         }
 
         if (this.useGraph === true && this.rewardGraph !== undefined) {
@@ -108,12 +114,44 @@
     };
 
     /**
-     *
+     * Add some noms
      * @returns {World}
      */
-    World.prototype.addEntities = function () {
+    World.prototype.addEntityAgents = function () {
+        for (let k = 0; k < this.numEntityAgents; k++) {
+            let x = Utility.randi(5, this.width - 10),
+                y = Utility.randi(5, this.height - 10),
+                vx = Math.random() * 5 - 2.5,
+                vy = Math.random() * 5 - 2.5,
+                position = new Vec(x, y, 0, vx, vy),
+                entity = new EntityRLDQN(position, this.entityAgentOpts);
+            entity.target = this.entities[Utility.randi(0, this.numEntityAgents)];
+            entity.enemy = this.agents[Utility.randi(0, this.agents.length)];
+
+            let agentContainer = new PIXI.Container();
+            for (let ei = 0; ei < entity.eyes.length; ei++) {
+                agentContainer.addChild(entity.eyes[ei].shape);
+            }
+            agentContainer.addChild(entity.shape || entity.sprite);
+            this.stage.addChild(agentContainer);
+
+            this.agents.push(entity);
+        }
+
+        return this;
+    };
+
+    /**
+     * Add new entities
+     * @parameter {Number} number
+     * @returns {World}
+     */
+    World.prototype.addEntities = function (number) {
+        if (number === undefined) {
+            number = this.numItems - this.entities.length;
+        }
         // Populating the world
-        for (let k = 0; k < this.numItems; k++) {
+        for (let k = 0; k < number; k++) {
             this.addEntity();
         }
 
@@ -122,6 +160,7 @@
 
     /**
      * Add an entity to the world
+     * @returns {World}
      */
     World.prototype.addEntity = function () {
         // Random radius
@@ -131,7 +170,7 @@
             y = Utility.randi(2, this.height - 2),
             vx = Utility.randf(-2, 2),
             vy = Utility.randf(-2, 2),
-            position = new Vec(x, y, 0, vx, vy, 0),
+            position = new Vec(x, y, 0, vx, vy),
             entity = new Entity(type, position, this.entityOpts);
 
         // Insert the population
@@ -142,7 +181,7 @@
     };
 
     /**
-     *
+     * Add the Walls
      * @returns {World}
      */
     World.prototype.addWalls = function () {
@@ -164,6 +203,7 @@
     /**
      * Remove the entity from the world
      * @param {Object} entity
+     * @returns {World}
      */
     World.prototype.deleteEntity = function (entity) {
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
@@ -174,7 +214,7 @@
 
     /**
      * Draws the world
-     *
+     * @returns {World}
      */
     World.prototype.draw = function () {
         // draw walls in environment
@@ -197,22 +237,20 @@
             if (this.agents[a].cheats) {
                 this.agents[a].updateCheats();
             }
-            // draw agents sight
-            for (let ae = 0, ne = this.agents[a].eyes.length; ae < ne; ae++) {
-                this.agents[a].eyes[ae].draw(this.agents[a].position, this.agents[a].angle);
-            }
         }
 
         this.graphRewards();
+
+        return this;
     };
 
     /**
      * Tick the environment
+     * @returns {World}
      */
     World.prototype.tick = function () {
         this.lastTime = this.clock;
         this.clock++;
-        this.updatePopulation();
 
         // Loop through the agents of the world and make them do work!
         for (let a = 0; a < this.agents.length; a++) {
@@ -226,24 +264,32 @@
 
         // Loop through and destroy old items
         for (let e = 0; e < this.entities.length; e++) {
-            if ((this.entities[e].type === 2 && this.entities[e].age > 2500 ) || this.entities[e].age > 5000 || this.entities[e].cleanUp === true) {
+            let entity = this.entities[e],
+                edibleEntity = (entity.type === 2 || entity.type === 1);
+            if ((entity.type === 2 && entity.age > 2500 ) || (edibleEntity && entity.age > 5000) || entity.cleanUp === true) {
                 this.deleteEntity(this.entities[e]);
             }
         }
 
-        // If we have less then the number of items allowed throw a random one in
+        // If we have less then the number of Items allowed throw a random one in
         if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-            for (let ni = 0; ni < (this.numItems - this.entities.length); ni++) {
-                this.addEntity();
-            }
+            this.addEntities(this.numItems - this.entities.length);
         }
 
-        this.updatePopulation();
-        this.draw();
+        // If we have less then the number of Agents allowed throw a random one in
+        //if (this.agents.length < this.numAgents && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+            //var missing = this.numAgents - this.agents.length;
+            //for (let na = 0; na < missing; na++) {
+            //    this.addAgent();
+            //}
+        //}
+
+        return this;
     };
 
     /**
      * Graph the agent rewards
+     * @returns {World}
      */
     World.prototype.graphRewards = function () {
         // If we are using flot based rewards
@@ -270,6 +316,8 @@
                 if (typeof this.series[a] !== 'undefined') {
                     this.series[a].data = this.getFlotRewards(a);
                 }
+                // Clear them up since we've drawn them
+                this.agents[a].pts = [];
             }
 
             this.plot.setData(this.series);
@@ -286,10 +334,13 @@
                 }
             }
         }
+
+        return this;
     };
 
     /**
      * Initialize the Flot class
+     * @returns {World}
      */
     World.prototype.initFlot = function () {
         for (let a = 0; a < this.agents.length; a++) {
@@ -334,6 +385,8 @@
                 max: 2.0
             }
         });
+
+        return this;
     };
 
     /**

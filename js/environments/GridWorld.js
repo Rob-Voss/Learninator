@@ -481,6 +481,10 @@
         return 0;
     };
 
+    /**
+     *
+     * @param s
+     */
     GridWorld.prototype.cellClicked = function (s) {
         if (s === this.selected) {
             this.selected = -1; // toggle off

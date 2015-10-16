@@ -1,6 +1,10 @@
 Menu.prototype = new PIXI.Container();
 Menu.prototype.constructor = Menu;
 
+/**
+ *
+ * @constructor
+ */
 function Menu() {
     PIXI.Container.call(this);
     this.interactive = true;
@@ -30,6 +34,14 @@ function Menu() {
     this.addMenuButton("-", 30, 12, zoomOut);
 }
 
+/**
+ *
+ * @param text
+ * @param x
+ * @param y
+ * @param obj
+ * @param callback
+ */
 Menu.prototype.addMenuButton = function (text, x, y, obj, callback) {
     var button = new PIXI.Text(text, {font: "40px Arial", fill: "#FFFFFF"});
     button.position.x = x;

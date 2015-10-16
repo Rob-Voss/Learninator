@@ -1,3 +1,12 @@
+/**
+ *
+ * @param canvas
+ * @param x
+ * @param y
+ * @param label
+ * @param onclick
+ * @constructor
+ */
 function Button(canvas, x, y, label, onclick) {
     this.canvas = canvas;
     this.context = this.canvas.getContext("2d");
@@ -14,6 +23,9 @@ function Button(canvas, x, y, label, onclick) {
     this.draw();
 }
 
+/**
+ *
+ */
 Button.prototype.draw = function () {
     // draw border
     this.context.fillStyle = this.borderColor;
@@ -34,6 +46,12 @@ Button.prototype.draw = function () {
     this.context.fillText(this.label, this.pos.x + (this.width - this.context.measureText(this.label).width) / 2, this.pos.y + (this.height + 9) / 2);
 };
 
+/**
+ *
+ * @param e
+ * @param mouse
+ * @returns {boolean}
+ */
 Button.prototype.contains = function (e, mouse) {
     if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
         mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
@@ -42,6 +60,11 @@ Button.prototype.contains = function (e, mouse) {
     return false;
 };
 
+/**
+ *
+ * @param e
+ * @param mouse
+ */
 Button.prototype.mouseClick = function (e, mouse) {
     if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
         mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
@@ -52,6 +75,11 @@ Button.prototype.mouseClick = function (e, mouse) {
     this.draw();
 };
 
+/**
+ *
+ * @param e
+ * @param mouse
+ */
 Button.prototype.mouseUp = function (e, mouse) {
     if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
         mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {
@@ -66,6 +94,11 @@ Button.prototype.mouseUp = function (e, mouse) {
     this.draw();
 };
 
+/**
+ *
+ * @param e
+ * @param mouse
+ */
 Button.prototype.mouseMove = function (e, mouse) {
     if (mouse.pos.x > this.pos.x && mouse.pos.x < this.pos.x + this.width &&
         mouse.pos.y > this.pos.y && mouse.pos.y < this.pos.y + this.height) {

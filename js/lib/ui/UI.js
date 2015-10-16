@@ -3,6 +3,11 @@ var UI = UI || {};
 (function (global) {
     "use strict";
 
+    /**
+     *
+     * @param options
+     * @constructor
+     */
     var UI = function (options) {
         this.canvas = options.canvas;
         this.ctx = this.canvas.getContext("2d");

@@ -8,7 +8,7 @@
     var QuadCD = function () {
         this.nodes = [];
         // init the quadtree
-        let args = {
+        var args = {
             x: 0,
             y: 0,
             height: this.height,
@@ -22,10 +22,9 @@
         /**
          * Set up the CD function
          * @param target
-         * @param updatePos
          */
-        this.collisionCheck = function (target, updatePos) {
-            var region;
+        this.collisionCheck = function (target) {
+            var region, _this = this;
             target.collisions = [];
 
             /**
@@ -41,48 +40,51 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined && target.radius !== undefined) {
                     // Use the circle collision check
-                    let collisionObj = Utility.circleCollision(entity, target);
-                    // If there was a collision between an agent and an edible entity
-                    if (collisionObj && (target.type === 3 || target.type === 4) && edibleEntity) {
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        // If the entity doesn't already exist then add it
-                        if (idx === -1 && !updatePos) {
-                            target.collisions.push(entity);
-                        }
-                    } else if (collisionObj && edibleTarget && edibleEntity) {
-                    // If there was a collision between edible entities
-                        if (updatePos) {
+                    var collisionObj = Utility.circleCollision(entity, target);
+                    if (collisionObj) {
+                        // If there was a collision between an agent and an edible entity
+                        if ((edibleTarget || entity.type === 5) && (edibleEntity || entity.type === 5)) {
+                            // If there was a collision between edible entities
                             target.position.vx = collisionObj.target.vx;
                             target.position.vy = collisionObj.target.vy;
                             entity.position.vx = collisionObj.entity.vx;
                             entity.position.vy = collisionObj.entity.vy;
-                        } else {
-                            return;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
                         }
                     } else {
-                    // Nada so return
+                        // Nada so return
                         return;
                     }
-                } else {
-                // We will check based on width and height
-                    if (entity.position.x + entity.width < target.position.x) {
+                    // Is it an entity versus a wall?
+                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
+                    var result = Utility.lineIntersect(target.oldPos, target.position, entity.v1, entity.v2);
+                    if (result) {
+                        // Reset the position
+                        target.position = target.oldPos.clone();
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                        }
+                        // If it's a consumable try and change the direction
+                        if (target.type === 2 || target.type === 1) {
+                            target.position.vx *= -1;
+                            target.position.vy *= -1;
+                            // If it's an Agent bounce it
+                        } else if (target.type === 3 || target.type === 4) {
+                            target.position.vx = 0;
+                            target.position.vy = 0;
+                        }
+                    } else {
+                        // Nada so return
                         return;
                     }
-                    if (entity.position.x > target.position.x + target.width) {
-                        return;
-                    }
-                    if (entity.position.y + entity.height < target.position.y) {
-                        return;
-                    }
-                    if (entity.position.y > target.position.y + target.height) {
-                        return;
-                    }
-                    target.collisions.push(entity);
                 }
             }
-
-            // clear the quadtree
-            this.updatePopulation();
 
             region = this.tree.retrieve(target, check);
         };
@@ -272,16 +274,67 @@
         /**
          * Set up the CD function
          * @param target
-         * @param updatePos
          */
-        this.collisionCheck = function (target, updatePos) {
+        this.collisionCheck = function (target) {
+            let tmpEntities = this.agents.concat(this.entities);
+            target.collisions = [];
             // Loop through all the entities in the world and check distances
-            for (let j = 0; j < this.entities.length; j++) {
-                let dist = target.position.distFrom(this.entities[j].position);
-                if (dist < this.entities[j].radius + target.radius) {
-                    let result = Utility.collisionCheck(target.position, this.entities[j].position, this.walls, this.entities, target.radius);
-                    if (!result) {
-                        target.collisions.push(this.entities[j]);
+            for (let j = 0; j < tmpEntities.length; j++) {
+                let entity = tmpEntities[j];
+
+                if (entity === target) {
+                    continue;
+                }
+                let edibleEntity = (entity.type === 2 || entity.type === 1),
+                    edibleTarget = (target.type === 2 || target.type === 1);
+                // If both entities have a radius
+                if (entity.radius !== undefined && target.radius !== undefined) {
+                    // Use the circle collision check
+                    var collisionObj = Utility.circleCollision(entity, target);
+                    if (collisionObj) {
+                        // If there was a collision between an agent and an edible entity
+                        if ((edibleEntity && edibleTarget) ||
+                            (edibleTarget && entity.type === 5) ||
+                            (entity.type === 5 && target.type === 5) ||
+                            (entity.type === 5 && (target.type === 3 || target.type === 4))) {
+                            // If there was a collision between edible entities
+                            target.position.vx = collisionObj.target.vx;
+                            target.position.vy = collisionObj.target.vy;
+                            entity.position.vx = collisionObj.entity.vx;
+                            entity.position.vy = collisionObj.entity.vy;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                        }
+                    } else {
+                        // Nada so return
+                        continue;
+                    }
+                    // Is it an entity versus a wall?
+                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
+                    var result = Utility.lineIntersect(target.oldPos, target.position, entity.v1, entity.v2);
+                    if (result) {
+                        // Reset the position
+                        target.position = target.oldPos.clone();
+                        // If it's a consumable try and change the direction
+                        if (target.type === 2 || target.type === 1) {
+                            target.position.vx *= -1;
+                            target.position.vy *= -1;
+                            // If it's an Agent bounce it
+                        } else if (target.type === 3 || target.type === 4) {
+                            target.position.vx = 0;
+                            target.position.vy = 0;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                        }
+                    } else {
+                        // Nada so return
+                        continue;
                     }
                 }
             }

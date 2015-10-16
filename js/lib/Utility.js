@@ -201,53 +201,57 @@ var Utility = Utility || {};
      * @returns {{collPtX: number, collPtY: number, distSquared: number, distFrom: (*|Number), target: {vx: *, vy: *}, entity: {vx: number, vy: number}}}
      */
     Utility.circleCollision = function (entity, target) {
-        var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
-            collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
-            xDist = target.position.x - entity.position.x,
-            yDist = target.position.y - entity.position.y,
-            distFrom = target.position.distFrom(entity.position),
-            radiusDist = target.radius + entity.radius,
-            distSquared = xDist * xDist + yDist * yDist,
-            radiusSquared = (target.radius + entity.radius) * (target.radius + entity.radius);
+        if (entity.radius !== undefined && target.radius !== undefined) {
+            var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
+                collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
+                xDist = target.position.x - entity.position.x,
+                yDist = target.position.y - entity.position.y,
+                distFrom = target.position.distFrom(entity.position),
+                radiusDist = target.radius + entity.radius,
+                distSquared = xDist * xDist + yDist * yDist,
+                radiusSquared = (target.radius + entity.radius) * (target.radius + entity.radius);
 
-        // Check the squared distances instead of the the distances,
-        // same result, but avoids a square root.
-        if (distFrom <= radiusDist) {
-            var xVelocity = entity.position.vx - target.position.vx,
-                yVelocity = entity.position.vy - target.position.vy,
-                dotProduct = xDist * xVelocity + yDist * yVelocity;
-            //Neat vector maths, used for checking if the objects moves towards one another.
-            if (dotProduct > 0) {
-                var collisionScale = dotProduct / distSquared,
-                    xCollision = xDist * collisionScale,
-                    yCollision = yDist * collisionScale,
-                // The Collision vector is the speed difference projected on the Dist vector,
-                // thus it is the component of the speed difference needed for the collision.
-                    combinedMass = target.radius + entity.radius,
-                    collisionWeightA = 2 * entity.radius / combinedMass,
-                    collisionWeightB = 2 * target.radius / combinedMass;
+            // Check the squared distances instead of the the distances,
+            // same result, but avoids a square root.
+            if (distFrom <= radiusDist) {
+                var xVelocity = entity.position.vx - target.position.vx,
+                    yVelocity = entity.position.vy - target.position.vy,
+                    dotProduct = xDist * xVelocity + yDist * yVelocity;
+                // Neat vector maths, used for checking if the objects are moving towards one another.
+                if (dotProduct > 0) {
+                    var collisionScale = dotProduct / distSquared,
+                        xCollision = xDist * collisionScale,
+                        yCollision = yDist * collisionScale,
+                    // The Collision vector is the speed difference projected on the Dist vector,
+                    // thus it is the component of the speed difference needed for the collision.
+                        combinedMass = (target.type === 5 ? target.radius * 2 : target.radius) + (entity.type === 5 ? entity.radius * 2 : entity.radius),
+                        collisionWeightA = 2 * entity.radius / combinedMass,
+                        collisionWeightB = 2 * target.radius / combinedMass;
 
-                return {
-                    collPtX: collPtX,
-                    collPtY: collPtY,
-                    distance: {
-                        distanceSquared: distSquared,
-                        radiusSquared: radiusSquared,
-                        distanceFrom: distFrom,
-                        radiusFrom: radiusDist,
-                    },
-                    target: {
-                        vx: target.position.vx + collisionWeightA * xCollision,
-                        vy: target.position.vy + collisionWeightA * yCollision
-                    },
-                    entity: {
-                        vx: entity.position.vx - collisionWeightB * xCollision,
-                        vy: entity.position.vy - collisionWeightB * yCollision
-                    }
-                };
+                    return {
+                        collPtX: collPtX,
+                        collPtY: collPtY,
+                        distance: {
+                            distanceSquared: distSquared,
+                            radiusSquared: radiusSquared,
+                            distanceFrom: distFrom,
+                            radiusFrom: radiusDist,
+                        },
+                        target: {
+                            type: target.type,
+                            vx: target.position.vx + collisionWeightA * xCollision,
+                            vy: target.position.vy + collisionWeightA * yCollision
+                        },
+                        entity: {
+                            type: entity.type,
+                            vx: entity.position.vx - collisionWeightB * xCollision,
+                            vy: entity.position.vy - collisionWeightB * yCollision
+                        }
+                    };
+                }
+            } else {
+                return;
             }
-        } else {
-            return;
         }
     };
 
@@ -270,10 +274,7 @@ var Utility = Utility || {};
                 var wall = walls[i],
                     wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
                 if (wResult) {
-                    wResult.type = 0; // 0 is wall
-                    wResult.width = wall.width;
-                    wResult.height = wall.height;
-
+                    wResult.target = wall;
                     if (!minRes) {
                         minRes = wResult;
                     } else {
@@ -293,12 +294,7 @@ var Utility = Utility || {};
                 var entity = entities[e],
                     iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius + rad);
                 if (iResult) {
-                    iResult.type = entity.type;
-                    iResult.id = entity.id;
-                    iResult.radius = entity.radius;
-                    iResult.position = entity.position;
-                    iResult.vx = entity.position.vx; // velocity information
-                    iResult.vy = entity.position.vy;
+                    iResult.target = entity;
                     if (!minRes) {
                         minRes = iResult;
                     } else {
@@ -309,7 +305,6 @@ var Utility = Utility || {};
                 }
             }
         }
-
         return minRes;
     };
 
@@ -373,7 +368,7 @@ var Utility = Utility || {};
      * @param {Vec} v4 Wall or Line end
      * @returns {Object|Boolean}
      */
-    Utility.lineIntersect = function (v1, v2, v3, v4) {
+    Utility.lineIntersect = function (v1, v2, v3, v4, rad) {
         var denom = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y),
             result = {};
 
@@ -389,6 +384,7 @@ var Utility = Utility || {};
             // Intersection point
             var vecI = new Vec(v1.x + pX * (v2.x - v1.x), v1.y + pX * (v2.y - v1.y));
 
+            result.distance = v2.distanceTo(vecI);
             result.vecX = pX;
             result.vecY = pY;
             result.vecI = vecI;

@@ -20,11 +20,9 @@
         this.numItems = 0;
 
         // Collision type
-        this.CD = {
-            type: 'quad',
-            maxChildren: 2,
-            maxDepth: 10
-        };
+        this.cdType = 'quad';
+        this.maxChildren = 2;
+        this.maxDepth = 10;
 
         this.cheats = {
             quad: true,

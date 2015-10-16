@@ -9,7 +9,7 @@
 
     <script src="js/lib/Array.js"></script>
     <script src="js/lib/CollisionDetector.js"></script>
-    <script src="js/lib/Dat.js"></script>
+    <script src="js/lib/ui/Dat.js"></script>
     <script src="js/lib/Grid.js"></script>
     <script src="js/lib/Maze.js"></script>
     <script src="js/lib/QuadTree.js"></script>
@@ -145,55 +145,13 @@
             world = new PuckWorld();
             world.initDraw();
             initFlot();
-
-            var wGUI = new dat.GUI(),
-                    wFolder = wGUI.addFolder('World'),
-                    aFolder = wFolder.addFolder('Agents'),
-                    cFolder = wFolder.addFolder('Cheats'),
-                    coFolder = wFolder.addFolder('Collision');
-
-            wFolder.add(world, 'pause').name('Pause');
-            wFolder.add(world, 'useGraph').name('Use Graph');
-            wFolder.add(world, 'useFlot').name('Use Flot');
-            wFolder.add(world, 'numItems').name('# Entities');
-            coFolder.add(world.CD, 'type').name('CD Type');
-            coFolder.add(world.CD, 'maxChildren').name('Max Child');
-            coFolder.add(world.CD, 'maxDepth').name('Max Depth');
-
-            cFolder.add(world.cheats, 'population').name('Population #s');
-            cFolder.add(world.cheats, 'walls').name('Walls #s');
-            cFolder.add(world.cheats, 'grid').name('Grid');
-            cFolder.add(world.cheats, 'quad').name('Quad');
-
-            for (var a = 0; a < world.agents.length; a++) {
-                var agent = world.agents[a],
-                        folder = aFolder.addFolder('Agent ' + a),
-                        acFolder = folder.addFolder('Cheats'),
-                        pFolder = folder.addFolder('Position');
-
-                folder.add(agent, 'collision').listen().name('Collision');
-                folder.add(agent, 'epsilon').step(0.001).min(0.000).max(1.000).listen().name('Epsilon');
-                folder.add(agent, 'interactive').name('Interactive Entities');
-                acFolder.add(agent.cheats, 'gridLocation').listen().name('GridLocation');
-                acFolder.add(agent.cheats, 'position').listen().name('Position');
-                acFolder.add(agent.cheats, 'name').listen().name('Name');
-                pFolder.add(agent, 'direction').listen().name('Direction');
-                pFolder.add(agent.position, 'x').listen().name('Pos X');
-                pFolder.add(agent.position, 'y').listen().name('Pos Y');
-                pFolder.add(agent.position, 'vx').listen().name('Vel X');
-                pFolder.add(agent.position, 'vy').listen().name('Vel Y');
-                pFolder.add(agent.gridLocation, 'x').listen().name('Grid X');
-                pFolder.add(agent.gridLocation, 'y').listen().name('Grid Y');
-            }
+            datGUI(world);
         }
-
     </script>
 </head>
 <body onload="start();">
-<div id="wrap">
-    <div id="draw"></div>
-</div>
-<div id="flotreward" style="width:600px; height: 300px;"></div>
+<div id="draw"></div>
+<div id="flotreward" style="width:400px; height: 200px;"></div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

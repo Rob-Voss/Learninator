@@ -83,7 +83,7 @@ var RewardGraph = RewardGraph || {};
         if (this.pts[idx] !== undefined) {
             this.pts[idx].push(point);
         } else {
-            console.log('this.pts[' + idx + '] = undefined. this.pts=' + this.pts);
+            this.pts[idx] = [];
         }
 
         if (step > this.stepHorizon) {
@@ -138,10 +138,9 @@ var RewardGraph = RewardGraph || {};
 
         // Draw legend
         for (let l = 0; l < this.numLines; l++) {
-            ctx.fillStyle = this.styles[this.hexStyles.indexOf(this.legend[l].color)];
+            ctx.fillStyle = this.legend[l].color;
             ctx.fillText(this.legend[l].name, W - pad - 100, pad + 20 + l * 16);
         }
-        ctx.fillStyle = "black";
 
         // Draw the actual curve
         var t = function (x, y, s) {
@@ -154,14 +153,14 @@ var RewardGraph = RewardGraph || {};
             };
         };
 
-        for (var k = 0; k < this.numLines; k++) {
-            ctx.strokeStyle = this.styles[this.hexStyles.indexOf(this.legend[k].color)];
+        for (let l = 0; l < this.numLines; l++) {
+            ctx.strokeStyle = this.legend[l].color;
             ctx.beginPath();
-            for (let i = 0; i < agentN[k]; i++) {
+            for (let k = 0; k < agentN[l]; k++) {
                 // Draw line from i-1 to i
-                let p = this.pts[k][i],
+                let p = this.pts[l][k],
                     pt = t(p.step, p.yl[0], this);
-                if (i === 0) {
+                if (k === 0) {
                     ctx.moveTo(pt.tx, pt.ty);
                 } else {
                     ctx.lineTo(pt.tx, pt.ty);

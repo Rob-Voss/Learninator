@@ -47,33 +47,33 @@ var Interactions = Interactions || {};
             getMouse(event);
 
             switch (event.type) {
-                case 'contextmenu':
-                    mouseClick(event);
-                    break;
-                case 'click':
-                    mouseClick(event);
-                    break;
-                case 'mouseup':
-                    mouseUp(event);
-                    break;
-                case 'mousedown':
-                    mouseDown(event);
-                    break;
-                case 'mousemove':
-                    mouseMove(event);
-                    break;
-                case 'dblclick':
-                    doubleClick(event);
-                    break;
-                case 'drag':
-                    mouseDrag(event);
-                    break;
-                case 'drop':
-                    mouseDrop(event);
-                    break;
+            case 'contextmenu':
+                mouseClick(event);
+                break;
+            case 'click':
+                mouseClick(event);
+                break;
+            case 'mouseup':
+                mouseUp(event);
+                break;
+            case 'mousedown':
+                mouseDown(event);
+                break;
+            case 'mousemove':
+                mouseMove(event);
+                break;
+            case 'dblclick':
+                doubleClick(event);
+                break;
+            case 'drag':
+                mouseDrag(event);
+                break;
+            case 'drop':
+                mouseDrop(event);
+                break;
 
             }
-        };
+        }
 
         // This fixes a problem where double clicking causes text to get selected on the canvas
         this.canvas.addEventListener('selectstart', function (event) {
@@ -119,7 +119,7 @@ var Interactions = Interactions || {};
             Utility.getGridLocation(_this.mouse, _this.grid, _this.vW, _this.vH);
             _this.mouse.offset = new Vec(offset.x, offset.y);
             _this.mouse.button = event.button;
-        };
+        }
 
         /**
          * Mouse Down
@@ -178,7 +178,7 @@ var Interactions = Interactions || {};
                 _this.selection = null;
                 _this.dragging = false;
             }
-        };
+        }
 
         /**
          * Mouse move
@@ -206,8 +206,9 @@ var Interactions = Interactions || {};
                     return _this.selection.mouseMove(event, _this.mouse);
                 }
             }
+
             return;
-        };
+        }
 
         /**
          * Mouse release
@@ -235,8 +236,9 @@ var Interactions = Interactions || {};
                 _this.selection.mouseUp(event, _this.mouse);
             }
             _this.selection = null;
+
             return;
-        };
+        }
 
         /**
          * Mouse Click
@@ -245,7 +247,7 @@ var Interactions = Interactions || {};
          */
         function mouseClick(event) {
             return;
-        };
+        }
     };
 
     global.Interactions = Interactions;

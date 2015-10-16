@@ -1,9 +1,3 @@
-#wrap {
-	width:800px;
-	margin-left: auto;
-	margin-right: auto;
-}
-
 h2 {
 	text-align: center;
 }
@@ -25,6 +19,13 @@ canvas {
 	color: #FFFFFF;
 }
 
+#rewardGraph, #flotreward {
+    position: inherit;
+    float: right;
+    margin-top: 20px;
+    alignment: top;
+}
+
 .button {
     width: 100px;
     height: 50px;
@@ -38,10 +39,6 @@ canvas {
     font-size: 15px;
     font-family: sans-serif;
     background-repeat: no-repeat;
-}
-
-#draw {
-    margin-left: 100px;
 }
 
 svg {
