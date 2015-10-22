@@ -1,17 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Deep Q Learning tweaks and my playground for improving my JS skills</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Learninator</title>
+
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
+          rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>
+                Learninator!
+            </h2>
+            <p>
+                My fun and exploration into deep learning took me down the path of learning mo betta JavaScript skills.
+                Most of them were an exercise in using the PIXIjs animation library and then from there into improving the code re-usability and collision detection.
+                Here are some of the modifications and code I have done based around that.
+            </p>
+            <p>
+                <a class="btn" href="#"></a>
+            </p>
+        </div>
+    </div>
 
-<ul>
-    <li><a href="GridWorld.html">Grid World</a></li>
-    <li><a href="MazeWorld.html">Maze World</a></li>
-    <li><a href="WaterWorld.html">Water World</a></li>
-    <li><a href="WaterWorldEX.html">Water World EXtreme</a></li>
-    <li><a href="PuckWorld.html">Puck World</a></li>
-</ul>
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/WaterWorld.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Water World</h3>
+            <h4>.</h4>
+            <p>This is barely a modification of the WaterWorld DQN demo from @karpathy's REINFORCEjs
+                library, mainly just converted to using my CollisionDetection and Grid/Maze libraries.</p>
+            <a class="btn btn-primary" href="WaterWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/WaterWorldEX.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Water World EXtreme</h3>
+            <h4>.</h4>
+            <p>This time I took the concept of the Puck World demo and added in an Entity Agent
+                that will set one of the Agents as its target and the other Agent as its target to
+                follow like a puppy dog. What makes this especially fun is that they don't consume the
+                resources, they just collide with everything at twice the mass.</p>
+            <a class="btn btn-primary" href="WaterWorldEX.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/WaterWorld.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Water World GA</h3>
+            <h4>.</h4>
+            <p>This isn't working yet. It will have the concept of Genetic Algorithm learning
+                based Agents in it though hopefully.</p>
+            <a class="btn btn-primary" href="WaterWorldGA.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/MazeWorld.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Maze World</h3>
+            <h4>.</h4>
+            <p>This is a modification of @karpathy's Deep Q Learning demo using his convnetJS
+                libraries. I wanted to again add in a random Maze for the environment and be able to
+                modify how many walls etc. that the agents would encounter.</p>
+            <a class="btn btn-primary" href="MazeWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/GridWorld.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Grid World</h3>
+            <h4>.</h4>
+            <p>This is a modification of @karpathy's original demo, I had already made a Maze
+                generator and grid based positioning. This resulted in me making a new Maze every
+                reload instead of relying on a hard-coded environment state and instead could adjust
+                generate the states via the generated Maze.</p>
+            <a class="btn btn-primary" href="GridWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-7">
+            <a href="#">
+                <img class="img-responsive" src="img/thumbs/PuckWorld.png" alt="">
+            </a>
+        </div>
+        <div class="col-md-5">
+            <h3>Puck World</h3>
+            <h4>.</h4>
+            <p>Barely modified version of the original</p>
+            <a class="btn btn-primary" href="PuckWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+        </div>
+    </div>
+
+    <hr>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
 </body>
 </html>

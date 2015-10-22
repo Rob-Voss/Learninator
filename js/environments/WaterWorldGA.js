@@ -3,10 +3,12 @@
 
     /**
      * World object contains many agents and walls and food and stuff
-     * @returns {WaterWorld}
+     * @returns {WaterWorldGA}
+     * @name WaterWorldGA
+     * @extends World
      * @constructor
      */
-    var WaterWorldGA = function () {
+    function WaterWorldGA() {
         var _this = this;
         this.canvas = document.getElementById("world");
         this.xCount = 4;
@@ -165,7 +167,7 @@
         this.agents[1].brain.populate(this.trainer.getChromosome()); // best one
 
         return this;
-    };
+    }
 
     WaterWorldGA.prototype = Object.create(World.prototype);
     WaterWorldGA.prototype.constructor = World;

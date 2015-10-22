@@ -6,6 +6,7 @@ var UI = UI || {};
     /**
      *
      * @param options
+     * @name UI
      * @constructor
      */
     var UI = function (options) {

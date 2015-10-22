@@ -6,6 +6,8 @@ var Interactions = Interactions || {};
     /**
      * Holder for interactions with the world
      * @returns {Interactions}
+     * @name Interactions
+     * @constructor
      */
     var Interactions = function () {
         if (document.defaultView && document.defaultView.getComputedStyle) {

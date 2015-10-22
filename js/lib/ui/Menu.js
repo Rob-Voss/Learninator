@@ -2,7 +2,7 @@ Menu.prototype = new PIXI.Container();
 Menu.prototype.constructor = Menu;
 
 /**
- *
+ * @name Menu
  * @constructor
  */
 function Menu() {

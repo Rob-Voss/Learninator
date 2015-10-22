@@ -14,6 +14,7 @@
      * @param {Number} ay
      * @param {Number} az
      * @returns {Vec}
+     * @name Vec
      * @constructor
      */
     var Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {

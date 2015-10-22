@@ -6,7 +6,9 @@ var RewardGraph = RewardGraph || {};
     /**
      * RewardGraph
      * @param {Object} opts
-     * @returns {Graph_L3.Graph}
+     * @returns {RewardGraph}
+     * @name RewardGraph
+     * @constructor
      */
     var RewardGraph = function (opts) {
         this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById("rewardGraph"));

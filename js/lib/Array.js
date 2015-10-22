@@ -3,7 +3,12 @@ var Array = Array || {};
 (function (global) {
     "use strict";
 
-    // Array Remove - By John Resig (MIT Licensed)
+    /**
+     * Array Remove - By John Resig (MIT Licensed)
+     * @param from
+     * @param to
+     * @returns {Number}
+     */
     Array.prototype.remove = function (from, to) {
         var rest = this.slice((to || from) + 1 || this.length);
         this.length = from < 0 ? this.length + from : from;
@@ -78,7 +83,7 @@ var Array = Array || {};
      * @returns {number}
      */
     Array.prototype.findIndex = function (predicate) {
-        if (this == null) {
+        if (this === null) {
             throw new TypeError('Array.prototype.findIndex called on null or undefined');
         }
         if (typeof predicate !== 'function') {

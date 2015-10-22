@@ -1,18 +1,23 @@
+var AgentRLTD = AgentRLTD || {};
+
 (function (global) {
     "use strict";
 
     /**
      * Initialize the AgentRLTD
+     * @name AgentRLTD
+     * @extends Agent
+     * @constructor
      *
-     * @param {Vec} position
-     * @param {Object} opts
+     * @param {Vec} position - The x, y location
+     * @param {agentOpts} opts - The Agent options
+     * @param {cheatOpts} opts.cheats - The cheats to display
+     * @param {brainOpts} opts.spec - The brain options
+     * @param {Object} opts.env - The environment
      * @returns {AgentRLTD}
      */
-    var AgentRLTD = function (position, opts) {
-        // Is it a worker
-        this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = 'Agent RLTD' + (this.worker ? ' Worker' : '');
-
+    function AgentRLTD(position, opts) {
+        var _this = this;
         Agent.call(this, position, opts);
 
         this.nStepsHistory = [];
@@ -33,7 +38,6 @@
             beta: 0.1 // learning rate for smooth policy update
         });
 
-        var _this = this;
 
         if (!this.worker) {
             this.brain = new TDAgent(this.env, this.brainOpts);
@@ -106,14 +110,13 @@
 
             this.brain.post('init', {env: jEnv, opts: jOpts});
         }
-    };
+    }
 
     AgentRLTD.prototype = Object.create(Agent.prototype);
     AgentRLTD.prototype.constructor = Agent;
 
     /**
      * Agent's chance to act on the world
-     *
      * @param {Object} world
      */
     AgentRLTD.prototype.tick = function (world) {

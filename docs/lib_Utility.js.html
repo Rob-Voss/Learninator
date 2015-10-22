@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/Utility.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/Utility.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *
+ * @type {{Utility}}
+ * @name Utility
+ */
+var Utility = Utility || {};
+
+(function (global) {
+    "use strict";
+
+    // Random number utilities
+    var retV = false,
+        vVal = 0.0;
+
+    Utility.rgbToHex = function (R, G, B) {
+        return '0x' + Utility.toHex(R) + Utility.toHex(G) + Utility.toHex(B);
+    };
+
+    Utility.toHex = function (n) {
+        n = parseInt(n, 10);
+        if (isNaN(n)) {
+            return '00';
+        }
+        n = Math.max(0, Math.min(n, 255));
+        return '0123456789ABCDEF'.charAt((n - n % 16) / 16) + '0123456789ABCDEF'.charAt(n % 16);
+    };
+
+    Utility.hexToR = function (h) {
+        return parseInt(h.substring(0, 2), 16);
+    };
+
+    Utility.hexToG = function (h) {
+        return parseInt(h.substring(2, 4), 16);
+    };
+
+    Utility.hexToB = function (h) {
+        return parseInt(h.substring(4, 6), 16);
+    };
+
+    /**
+     * Utility fun
+     * @param condition
+     * @param message
+     */
+    Utility.assert = function (condition, message) {
+        // from http://stackoverflow.com/questions/15313418/javascript-assert
+        if (!condition) {
+            message = message || "Assertion failed";
+            if (Error !== undefined) {
+                throw new Error(message);
+            }
+            throw message; // Fallback
+        }
+    };
+
+    /**
+     * Stringify an object including it's functions if it has any
+     * @param {Object} obj
+     */
+    Utility.stringify = function (obj) {
+        return JSON.stringify(obj, function (key, value) {
+            return (typeof value === 'function') ? value.toString() : value;
+        });
+    };
+
+    /**
+     * Parse an object that has been stringified, and rebuild it's functions
+     * @param {String} str
+     */
+    Utility.parse = function (str) {
+        return JSON.parse(str, function (key, value) {
+            if (typeof value !== 'string') {
+                return value;
+            }
+            return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
+        });
+    };
+
+    /**
+     * Syntactic sugar function for getting default parameter values
+     * @param {Object} opt
+     * @param {String} fieldName
+     * @param {Mixed} defaultValue
+     * @returns {*}
+     */
+    Utility.getOpt = function (opt, fieldName, defaultValue) {
+        if (typeof opt === 'undefined') {
+            return defaultValue;
+        }
+        return (typeof opt[fieldName] !== 'undefined') ? opt[fieldName] : defaultValue;
+    };
+
+    /**
+     * Gaussian random number
+     * @returns {Number}
+     */
+    Utility.gaussRandom = function () {
+        if (retV) {
+            retV = false;
+
+            return vVal;
+        }
+
+        var u = 2 * Math.random() - 1,
+            v = 2 * Math.random() - 1,
+            r = u * u + v * v,
+            c = Math.sqrt(-2 * Math.log(r) / r);
+        if (r === 0 || r > 1) {
+            return Utility.gaussRandom();
+        }
+
+        vVal = v * c; // cache this
+        retV = true;
+
+        return u * c;
+    };
+
+    /**
+     * Return a random Float within the range of a-b
+     * @param {Float} lo
+     * @param {Float} hi
+     * @returns {Number}
+     */
+    Utility.randf = function (lo, hi) {
+        return Math.random() * (hi - lo) + lo;
+    };
+
+    /**
+     * Return a random Integer within the range of a-b
+     * @param {Number} lo
+     * @param {Number} hi
+     * @returns {Number}
+     */
+    Utility.randi = function (lo, hi) {
+        return Math.floor(this.randf(lo, hi));
+    };
+
+    /**
+     * Return a random Number
+     * @param {Float} mu
+     * @param {Float} std
+     * @returns {Number}
+     */
+    Utility.randn = function (mu, std) {
+        return mu + Utility.gaussRandom() * std;
+    };
+
+    /**
+     * A helper function returns array of zeros of length n
+     * and uses typed arrays if available
+     * @param {Number} n
+     * @returns {Float64Array}
+     */
+    Utility.zeros = function (n) {
+        if (typeof n === 'undefined' || isNaN(n)) {
+            return [];
+        }
+        if (typeof ArrayBuffer === 'undefined') {
+            // lacking browser support
+            var arr = new Array(n);
+            for (let i = 0; i &lt; n; i++) {
+                arr[i] = 0;
+            }
+            return arr;
+        } else {
+            return new Float64Array(n);
+        }
+    };
+
+    /**
+     * Find an object in the array via id attribute
+     *
+     * @param {Array} ar
+     * @param {String} id
+     * @returns {undefined}
+     */
+    Utility.findObject = function (ar, id) {
+        ar.map(function (el) {
+            return el.id;
+        }).indexOf(id);
+    };
+
+    /**
+     * Get the object with the matching id property
+     *
+     * @param element
+     * @param index
+     * @param array
+     * @returns {boolean}
+     */
+    Utility.getId = function (element, index, array) {
+        if (element.id === this) {
+            return true;
+        }
+        return false;
+    };
+
+    /**
+     * Load JSON
+     * @param file
+     * @param callback
+     */
+    Utility.loadJSON = function (file, callback) {
+        var xObj = new XMLHttpRequest();
+        xObj.overrideMimeType("application/json");
+        xObj.open('GET', file, true);
+        xObj.onreadystatechange = function () {
+            if (xObj.readyState === 4 &amp;&amp; xObj.status === "200") {
+                callback(xObj.responseText);
+            }
+        };
+        xObj.send(null);
+    };
+
+    /**
+     * Calculate the direction.
+     * @param angle
+     * @returns {string}
+     */
+    Utility.getDirection = function (angle) {
+        var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
+            octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
+        return directions[octant];
+    };
+
+    /**
+     * Returns string representation of float but truncated to length of d digits
+     * @param {Number} x Float
+     * @param {Number} d Decimals
+     * @returns {String}
+     */
+    Utility.flt2str = function (x, d) {
+        d = (typeof(d) === undefined) ? 5 : d;
+        var dd = 1.0 * Math.pow(10, d);
+
+        return '' + Math.floor(x * dd) / dd;
+    };
+
+    /**
+     * Find the area of a triangle
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @param {Vec} v3
+     * @returns {Number}
+     */
+    Utility.area = function (v1, v2, v3) {
+        return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+    };
+
+    /**
+     * Do stuff
+     * @returns {Number}
+     */
+    Utility.S4 = function () {
+        return (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1);
+    };
+
+    /**
+     * Generate a UUID
+     * @returns {String}
+     */
+    Utility.guid = function () {
+        return (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0, 3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
+    };
+
+    global.Utility = Utility;
+
+}(this));</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:19:49 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

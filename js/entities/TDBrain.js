@@ -1,3 +1,6 @@
+var Experience = Experience || {};
+var TDBrain = TDBrain || {};
+
 (function (global) {
     "use strict";
 
@@ -5,29 +8,33 @@
      * An agent is in state0 and does action0
      * environment then assigns reward0 and provides the new state state1
      * Experience nodes store all this information, which is used in the Q-learning update step
+     * @name Experience
+     * @constructor
+     *
      * @param {Number} state0
      * @param {Number} action0
      * @param {Number} reward0
      * @param {Number} state1
-     * @returns {undefined}
+     * @returns {Experience}
      */
-    var Experience = function (state0, action0, reward0, state1) {
+    function Experience(state0, action0, reward0, state1) {
         this.state0 = state0;
         this.action0 = action0;
         this.reward0 = reward0;
         this.state1 = state1;
 
         return this;
-    };
+    }
 
     /**
      * A Brain object does all the magic.
      * Over time it receives some inputs and some rewards and its job is to set
      * the outputs to maximize the expected reward
-     * @param {Object} opts
-     * @returns {Brain}
+     * @name TDBrain
+     * @constructor
+     * @returns {TDBrain}
      */
-    var TDBrain = function (opts) {
+    function TDBrain(opts) {
         // In number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporalWindow times, and followed by current x
         // so to have no information from previous time step going into value function, set to 0.
@@ -163,7 +170,7 @@
         this.averageRewardWindow = new Window(1000, 10);
         this.averageLossWindow = new Window(1000, 10);
         this.learning = true;
-    };
+    }
 
     /**
      *
@@ -174,7 +181,7 @@
          * Returns a random action
          * In the future we can set some actions to be more or less likely
          * at "rest"/default state.
-         * @returns {Number}
+         * @returns {number}
          */
         randomAction: function () {
             if (this.randomActionDistribution.length === 0) {
@@ -195,7 +202,7 @@
          * Compute the value of doing any action in this state and return the
          * argmax action and its value
          * @param {type} s
-         * @returns {Brain_L3.Brain.prototype.policy.BrainAnonym$0}
+         * @returns {Object}
          */
         policy: function (s) {
             var sVol = new convnetjs.Vol(1, 1, this.netInputs);
@@ -220,7 +227,7 @@
          * Return s = (x,a,x,a,x,a,xt) state vector.
          * It's a concatenation of last windowSize (x,a) pairs and current state x
          * @param {type} xt
-         * @returns {Array|@exp;Array}
+         * @returns {Array}
          */
         getNetInput: function (xt) {
             var w = [];
@@ -246,7 +253,7 @@
         /**
          * Compute forward (behavior) pass given the input neuron signals from body
          * @param {Array} inputArray
-         * @returns {Number|maxact.action}
+         * @returns {number}
          */
         forward: function (inputArray) {
             var netInput, action;
@@ -292,7 +299,7 @@
         /**
          * Learn
          * @param {Number} reward
-         * @returns {undefined}
+         * @returns {TDBrain}
          */
         backward: function (reward) {
             this.latestReward = reward;

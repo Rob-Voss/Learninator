@@ -1,3 +1,12 @@
+/**
+ *
+ * @param canvas
+ * @param resolution
+ * @param focalLength
+ * @param isMobile
+ * @name Camera
+ * @constructor
+ */
 function Camera(canvas, resolution, focalLength, isMobile) {
     this.ctx = canvas.getContext('2d');
     this.width = canvas.width;
@@ -87,6 +96,14 @@ Camera.prototype.project = function (height, angle, distance) {
     };
 };
 
+/**
+ *
+ * @param x
+ * @param y
+ * @param direction
+ * @name Player
+ * @constructor
+ */
 function Player(x, y, direction) {
     this.x = x;
     this.y = y;

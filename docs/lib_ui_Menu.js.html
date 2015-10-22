@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/ui/Menu.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/ui/Menu.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>Menu.prototype = new PIXI.Container();
+Menu.prototype.constructor = Menu;
+
+/**
+ * @name Menu
+ * @constructor
+ */
+function Menu() {
+    PIXI.Container.call(this);
+    this.interactive = true;
+
+    this.background = new PIXI.Graphics();
+    this.background.lineStyle(1, 0x000000, 1);
+    this.background.beginFill(0xA08000, 1);
+    this.background.drawRect(50 - 4, 0, 4, 800);
+    this.background.endFill();
+    this.background.lineStyle(0, 0x000000, 1);
+    this.background.beginFill(0x203040, 1);
+    this.background.drawRect(0, 0, 50 - 4, 800);
+    this.background.endFill();
+    this.addChild(this.background);
+
+    this.selectedTileText = new PIXI.Text("Selected Tile: " + 1, {font: "12px Arial", fill: "#FFFFFF", align: "left"});
+    this.addChild(this.selectedTileText);
+
+    function zoomIn() {
+    }
+
+    function zoomOut() {
+    }
+
+
+    this.addMenuButton("+", 0, 12, zoomIn);
+    this.addMenuButton("-", 30, 12, zoomOut);
+}
+
+/**
+ *
+ * @param text
+ * @param x
+ * @param y
+ * @param obj
+ * @param callback
+ */
+Menu.prototype.addMenuButton = function (text, x, y, obj, callback) {
+    var button = new PIXI.Text(text, {font: "40px Arial", fill: "#FFFFFF"});
+    button.position.x = x;
+    button.position.y = y;
+    button.interactive = true;
+    button.buttonMode = true;
+    button.hitArea = new PIXI.Rectangle(0, 12, 30, 30);
+
+    button.mousedown = button.touchstart = function (data) {
+        button.setStyle({font: "40px Arial", fill: "#FF0000"});
+    };
+    button.mouseover = function (data) {
+        button.setStyle({font: "40px Arial", fill: "#FFFF00"});
+    };
+    button.mouseup = button.touchend = function (data) {
+        button.setStyle({font: "40px Arial", fill: "#FFFFFF"});
+    };
+    button.mouseupoutside = button.touchendoutside = function (data) {
+        button.setStyle({font: "40px Arial", fill: "#FFFFFF"});
+    };
+    button.mouseout = function (data) {
+        button.setStyle({font: "40px Arial", fill: "#FFFFFF"});
+    };
+    this.addChild(button);
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:19:49 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

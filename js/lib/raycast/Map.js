@@ -1,3 +1,11 @@
+/**
+ *
+ * @param src
+ * @param width
+ * @param height
+ * @name Bitmap
+ * @constructor
+ */
 function Bitmap(src, width, height) {
     this.image = new Image();
     this.image.src = src;
@@ -5,6 +13,12 @@ function Bitmap(src, width, height) {
     this.height = height;
 }
 
+/**
+ *
+ * @param size
+ * @name Map
+ * @constructor
+ */
 function Map(size) {
     this.size = size * 2;
     this.wallGrid = [];

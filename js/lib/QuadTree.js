@@ -2,11 +2,7 @@ var QuadTree = {}; // global var for the quadtree
 
 (function (global) {
     "use strict";
-
-    /*
-     * QuadTree Implementation in JavaScript
-     * @author: silflow <https://github.com/silflow>
-     *
+    /**
      * Usage:
      * To create a new empty Quadtree, do this:
      * var tree = new QuadTree(args)
@@ -32,6 +28,13 @@ var QuadTree = {}; // global var for the quadtree
      * the same region or overlapping.
      *
      * tree.clear() removes all items from the quadtree.
+     */
+
+    /**
+     * QuadTree Implementation in JavaScript
+     * @author: silflow <https://github.com/silflow>
+     * @name QuadTree
+     * @constructor
      */
     var QuadTree = function (args) {
         var node,
@@ -82,7 +85,7 @@ var QuadTree = {}; // global var for the quadtree
                     // check if node has subnodes
                     if (nodes.length) {
                         // call retrieve on all matching subnodes
-                        this.findOverlappingNodes(item, function(dir) {
+                        this.findOverlappingNodes(item, function (dir) {
                             nodes[dir].retrieve(item, callback, instance);
                         });
                     }

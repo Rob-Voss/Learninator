@@ -1,17 +1,21 @@
+var AgentRLDQN = AgentRLDQN || {};
+
 (function (global) {
     "use strict";
 
     /**
      * Initialize the AgentRLDQN
-     * @param {Vec} position
-     * @param {Object} opts
+     * @name AgentRLDQN
+     * @extends Agent
+     * @constructor
+     *
+     * @param {Vec} position - The x, y location
+     * @param {agentOpts} opts - The Agent options
+     * @param {cheatOpts} opts.cheats - The cheats to display
+     * @param {brainOpts} opts.spec - The brain options
      * @returns {AgentRLDQN}
      */
-    var AgentRLDQN = function (position, opts) {
-        // Is it a worker
-        this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = 'Agent RLDQN' + (this.worker ? ' Worker' : '');
-
+    function AgentRLDQN(position, opts) {
         // Reward or punishment
         this.carrot = +1;
         this.stick = -1;
@@ -88,7 +92,7 @@
 
             this.post('init', {env: jEnv, opts: jOpts});
         }
-    };
+    }
 
     AgentRLDQN.prototype = Object.create(Agent.prototype);
     AgentRLDQN.prototype.constructor = Agent;
@@ -184,11 +188,11 @@
         this.position.y += this.position.vy;
 
         // Check the world for collisions
-        this.world.collisionCheck(this, false);
+        this.world.check(this, false);
 
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             var wall = this.world.walls[w],
-                result = Utility.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
+                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.unshift(wall);
             }
@@ -201,7 +205,7 @@
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
                     var wall = this.world.walls[w],
-                        result = Utility.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
+                        result = this.world.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
                             minRes = result;

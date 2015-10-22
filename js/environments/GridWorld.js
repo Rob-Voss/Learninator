@@ -3,10 +3,12 @@
 
     /**
      * GridWorld Environment
-     *
+     * @returns {GridWorld}
+     * @name GridWorld
+     * @extends World
      * @constructor
      */
-    var GridWorld = function () {
+    function GridWorld() {
         this.rs = {};
         this.trs = {};
         this.tvs = {};
@@ -97,7 +99,7 @@
         this.tick();
 
         return this;
-    };
+    }
 
     GridWorld.prototype = Object.create(World.prototype);
     GridWorld.prototype.constructor = World;
@@ -183,8 +185,8 @@
                 max: this.nflot
             },
             yaxis: {
-                min: -0.05,
-                max: 0.05
+                min: 0,
+                max: 1000
             }
         });
     };
@@ -675,7 +677,7 @@
                     .attr('width', this.cs - 2)
                     .attr('fill', '#FFF')
                     .attr('stroke', 'black')
-                    .attr('stroke-width', '1');
+                    .attr('stroke-width', '0.3');
                 this.rs[s] = r;
 
                 // reward text

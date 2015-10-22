@@ -1,3 +1,9 @@
+/**
+ *
+ * @param world
+ * @name datGUI
+ * @constructor
+ */
 function datGUI (world) {
     var wGUI = new dat.GUI(),
         wFolder = wGUI.addFolder('World'),
@@ -20,8 +26,7 @@ function datGUI (world) {
 
     for (var a = 0; a < world.agents.length; a++) {
         if (world.agents[a].type !== 5) {
-            var folder = aFolder.addFolder(world.agents[a].name + ' ' + a),
-                pFolder = folder.addFolder('Pos Info');
+            var folder = aFolder.addFolder(world.agents[a].name + ' ' + a);
 
             folder.add(world.agents[a], 'collision').listen().name('Collision');
             folder.add(world.agents[a], 'interactive').name('Interactive Agent');
@@ -29,13 +34,6 @@ function datGUI (world) {
             folder.add(world.agents[a].cheats, 'position').listen().name('Show Pos');
             folder.add(world.agents[a].cheats, 'name').listen().name('Show Name');
             folder.add(world.agents[a].cheats, 'id').listen().name('Show ID');
-            pFolder.add(world.agents[a], 'direction').listen().name('Direction');
-            pFolder.add(world.agents[a].position, 'x').listen().name('Pos X');
-            pFolder.add(world.agents[a].position, 'y').listen().name('Pos Y');
-            pFolder.add(world.agents[a].position, 'vx').listen().name('Vel X');
-            pFolder.add(world.agents[a].position, 'vy').listen().name('Vel Y');
-            pFolder.add(world.agents[a].gridLocation, 'x').listen().name('Grid X');
-            pFolder.add(world.agents[a].gridLocation, 'y').listen().name('Grid Y');
         }
     }
-};
+}

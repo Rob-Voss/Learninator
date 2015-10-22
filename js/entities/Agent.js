@@ -1,16 +1,49 @@
+var Agent = Agent || {};
+
 (function (global) {
     "use strict";
 
     /**
+     * Options for the Agent
+     * @typedef {Object} agentOpts
+     * @property {boolean} worker - Is the Agent a Web Worker
+     * @property {string} brainType - The type of Brain to use
+     * @property {number} numTypes - The number of types the Agent can sense
+     * @property {number} numEyes - The number of the Agent's eyes
+     * @property {number} range - The range of the eyes
+     * @property {number} proximity - The proximity range of the eyes
+     */
+
+    /**
+     * The options for the Agents brain
+     * @typedef {Object} brainOpts
+     * @param {boolean} opts.spec.update - qlearn | sarsa
+     * @param {boolean} opts.spec.gamma - Discount factor [0, 1]
+     * @param {boolean} opts.spec.epsilon - Initial epsilon for epsilon-greedy policy [0, 1]
+     * @param {boolean} opts.spec.alpha - Value function learning rate
+     * @param {boolean} opts.spec.experienceAddEvery - Number of time steps before we add another experience to replay memory
+     * @param {boolean} opts.spec.experienceSize - Size of experience
+     * @param {boolean} opts.spec.learningStepsPerIteration - Number of steps to go through during one tick
+     * @param {boolean} opts.spec.tdErrorClamp - For robustness
+     * @param {boolean} opts.spec.numHiddenUnits - Number of neurons in hidden layer
+     */
+
+    /**
      * Initialize the Agent
+     * @name Agent
+     * @extends Entity
+     * @constructor
      *
-     * @param {Vec} position
-     * @param {Object} opts
+     * @param {Vec} position - The x, y location
+     * @param {agentOpts} opts - The Agent options
+     * @param {cheatOpts} opts.cheats - The cheats to display
+     * @param {brainOpts} opts.spec - The brain options
      * @returns {Agent}
      */
-    var Agent = function (position, opts) {
-        let type = (this.worker) ? 'Agent Worker' : 'Agent';
-        Entity.call(this, type, position, opts);
+    function Agent(position, opts) {
+        // Is it a worker
+        this.worker = Utility.getOpt(opts, 'worker', false);
+        Entity.call(this, (this.worker) ? 'Agent Worker' : 'Agent', position, opts);
 
         // Just a text value for the brain type, also useful for worker ops
         this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
@@ -59,7 +92,7 @@
         var _this = this;
 
         return this;
-    };
+    }
 
     Agent.prototype = Object.create(Entity.prototype);
     Agent.prototype.constructor = Entity;
@@ -102,6 +135,18 @@
     };
 
     /**
+     *
+     */
+    Agent.prototype.saveAgent = function (id) {
+        var brain;
+        if (!this.worker) {
+            brain = this.brain;
+        }
+
+        return JSON.stringify(brain.toJSON());
+    };
+
+    /**
      * Tick the agent
      * @param {Object} world
      */
@@ -121,6 +166,109 @@
         return this;
     };
 
+    /**
+     * Eye sensor has a maximum range and senses walls
+     * @param angle
+     * @param range
+     * @param proximity
+     * @returns {Eye}
+     * @name Eye
+     * @constructor
+     */
+    function Eye(angle, position, range, proximity) {
+        this.angle = angle;
+        this.maxRange = range || 85;
+        this.sensedProximity = proximity || 85;
+        this.position = position || new Vec(0, 0);
+        this.maxPos = new Vec(0, 0);
+        this.sensedType = -1;
+        this.collisions = [];
+
+        // PIXI graphics
+        this.shape = new PIXI.Graphics();
+
+        return this;
+    }
+
+    /**
+     * Draw the lines for the eyes
+     * @param agent
+     */
+    Eye.prototype.draw = function (agent) {
+        this.position = agent.position.clone();
+        this.shape.clear();
+
+        switch (this.sensedType) {
+            case -1:
+            case 0:
+                // Is it wall or nothing?
+                this.shape.lineStyle(0.5, 0x000000);
+                break;
+            case 1:
+                // It is noms
+                this.shape.lineStyle(0.5, 0xFF0000);
+                break;
+            case 2:
+                // It is gnar gnar
+                this.shape.lineStyle(0.5, 0x00FF00);
+                break;
+            case 3:
+            case 4:
+            case 5:
+                // Is it another Agent
+                this.shape.lineStyle(0.5, 0xFAFAFA);
+                break;
+            default:
+                this.shape.lineStyle(0.5, 0x000000);
+                break;
+        }
+
+        var aEyeX = this.position.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
+            aEyeY = this.position.y + this.sensedProximity * Math.cos(agent.angle + this.angle);
+        this.maxPos.set(aEyeX, aEyeY);
+
+        // Draw the agent's line of sights
+        this.shape.moveTo(this.position.x, this.position.y);
+        this.shape.lineTo(aEyeX, aEyeY);
+    };
+
+    /**
+     * Sense the surroundings
+     * @param agent
+     */
+    Eye.prototype.sense = function (agent) {
+        this.position = agent.position.clone();
+        var result,
+            aEyeX = this.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
+            aEyeY = this.position.y + this.maxRange * Math.cos(agent.angle + this.angle);
+        this.maxPos.set(aEyeX, aEyeY);
+        result = agent.world.sightCheck(this.position, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities));
+        if (result) {
+            // eye collided with an entity
+            this.sensedProximity = result.vecI.distFrom(this.position);
+            this.sensedType = result.target.type;
+            if ('vx' in result.vecI) {
+                this.x = result.vecI.x;
+                this.y = result.vecI.y;
+                this.vx = result.vecI.vx;
+                this.vy = result.vecI.vy;
+            } else {
+                this.x = 0;
+                this.y = 0;
+                this.vx = 0;
+                this.vy = 0;
+            }
+        } else {
+            this.sensedProximity = this.maxRange;
+            this.sensedType = -1;
+            this.x = 0;
+            this.y = 0;
+            this.vx = 0;
+            this.vy = 0;
+        }
+    };
+
+    global.Eye = Eye;
     global.Agent = Agent;
 
 }(this));

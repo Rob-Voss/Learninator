@@ -3,10 +3,12 @@
 
     /**
      * PuckWorld Environment
-     *
+     * @returns {PuckWorld}
+     * @name PuckWorld
+     * @extends World
      * @constructor
      */
-    var PuckWorld = function () {
+    function PuckWorld() {
         this.width = 600;
         this.height = 600;
         this.radius = 0.05;
@@ -53,7 +55,7 @@
         this.reset();
 
         return this;
-    };
+    }
 
     PuckWorld.prototype.tick = function () {
         var _this = this,

@@ -1,3 +1,6 @@
+var AgentGA = AgentGA || {};
+var Brain = Brain || {};
+
 (function (global) {
     "use strict";
 
@@ -97,16 +100,18 @@
 
     /**
      * Initialize the AgentGA
-     * @param {Vec} position
-     * @param {Object} opts
+     * @name AgentGA
+     * @extends Agent
+     * @constructor
+     *
+     * @param {Vec} position - The x, y location
+     * @param {agentOpts} opts - The Agent options
+     * @param {cheatOpts} opts.cheats - The cheats to display
+     * @param {brainOpts} opts.spec - The brain options
      * @returns {AgentGA}
      */
-    var AgentGA = function (position, opts) {
+    function AgentGA(position, opts) {
         var _this = this;
-        // Is it a worker
-        this.worker = Utility.getOpt(opts, 'worker', false);
-        this.name = 'Agent RLDQN' + (this.worker ? ' Worker' : '');
-
         Agent.call(this, position, opts);
 
         this.target = null;

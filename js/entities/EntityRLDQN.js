@@ -1,32 +1,29 @@
+var EntityRLDQN = EntityRLDQN || {};
+
 (function (global) {
     "use strict";
 
     /**
      * Initialize the EntityRLDQN
-     * @param {Vec} position
-     * @param {Object} opts
+     * @name EntityRLDQN
+     * @extends Entity
+     * @constructor
+     *
+     * @param {Vec} position - The x, y location
+     * @param {agentOpts} opts - The Entity options
+     * @param {brainOpts} opts.spec - The brain options
      * @returns {EntityRLDQN}
      */
-    var EntityRLDQN = function (position, opts) {
+    function EntityRLDQN(position, opts) {
         this.name = 'Entity RLDQN';
         this.action = null;
         this.state = null;
         this.stepsPerTick = 1;
         this.BADRAD = 25;
         this.type = 5;
+        this.stepsPerTick = 1;
 
-        // Just a text value for the brain type, also useful for worker ops
-        this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
-        // The number of item types the Agent's eyes can see
-        this.numTypes = Utility.getOpt(opts, 'numTypes', 5);
-        // The number of Agent's eyes
-        this.numEyes = Utility.getOpt(opts, 'numEyes',  6);
-        this.range = Utility.getOpt(opts, 'range',  75);
-        this.proximity = Utility.getOpt(opts, 'proximity',  75);
-        // The number of Agent's eyes, each one sees the number of knownTypes + stuff
-        this.numStates = this.numEyes * this.numTypes + 6;
-
-        Entity.call(this, this.type, position, opts);
+        Agent.call(this, position, opts);
 
         // Reward or punishment
         this.carrot = +1;
@@ -44,6 +41,9 @@
 
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
+
+        // The number of Agent's eyes, each one sees the number of knownTypes + stuff
+        this.numStates = this.numEyes * this.numTypes + 6;
 
         // The Agent's eyes
         this.eyes = [];
@@ -67,10 +67,41 @@
         this.brain = new DQNAgent(this, this.brainOpts);
 
         return this;
-    };
+    }
 
     EntityRLDQN.prototype = Object.create(Entity.prototype);
     EntityRLDQN.prototype.constructor = Entity;
+
+    /**
+     * Load a pre-trained agent
+     * @param {String} file
+     */
+    EntityRLDQN.prototype.load = function (file) {
+        var _this = this;
+        $.getJSON(file, function(data) {
+            if (!_this.worker) {
+                _this.brain.fromJSON(data);
+                _this.brain.epsilon = 0.05;
+                _this.brain.alpha = 0;
+            } else {
+                _this.post('load', JSON.stringify(data));
+            }
+        });
+
+        return this;
+    };
+
+    /**
+     *
+     */
+    EntityRLDQN.prototype.saveAgent = function (id) {
+        var brain;
+        if (!this.worker) {
+            brain = this.brain;
+        }
+
+        return JSON.stringify(brain.toJSON());
+    };
 
     /**
      * Agent's chance to act on the world
@@ -86,15 +117,11 @@
             inputArray = new Array(this.numStates);
         for (let i = 0; i < this.numEyes; i++) {
             let eye = this.eyes[i];
-            inputArray[i * this.numTypes] = 0.9; // Wall?
-            inputArray[i * this.numTypes + 1] = this.carrot; // Nom?
-            inputArray[i * this.numTypes + 2] = this.stick; // Gnar?
-            inputArray[i * this.numTypes + 3] = this.stick; // Agent?
-            inputArray[i * this.numTypes + 4] = this.stick; // Agent?
-            inputArray[i * this.numTypes + 5] = eye.x; // position information
-            inputArray[i * this.numTypes + 6] = eye.y; // of the sensed target
-            inputArray[i * this.numTypes + 7] = eye.vx; // Velocity information
-            inputArray[i * this.numTypes + 8] = eye.vy; // of the sensed target
+            inputArray[i * this.numTypes] = 1.0; // Wall?
+            inputArray[i * this.numTypes + 1] = 1.0; // Nom?
+            inputArray[i * this.numTypes + 2] = 1.0; // Gnar?
+            inputArray[i * this.numTypes + 3] = eye.vx; // Agent?
+            inputArray[i * this.numTypes + 4] = eye.vy; // Agent?
             if (eye.sensedType !== -1) {
                 // sensedType is 0 for wall, 1 for food and 2 for poison.
                 // lets do a 1-of-k encoding into the input array
@@ -118,7 +145,7 @@
      * @returns {Number}
      */
     EntityRLDQN.prototype.getNumStates = function () {
-        return this.numStates; // x,y,vx,vy, puck dx,dy
+        return 8; //this.numStates; // x,y,vx,vy, puck dx,dy
     };
 
     /**
@@ -129,24 +156,46 @@
         return this.actions.length; // left, right, up, down, nothing
     };
 
+    /**
+     *
+     * @returns {Array}
+     */
+    EntityRLDQN.prototype.getState = function () {
+        var s = [
+            this.enemy.position.x / 1000,
+            this.enemy.position.y / 1000,
+            this.enemy.position.vx / 10,
+            this.enemy.position.vy / 10,
+            (this.target.position.x / 1000) - (this.position.x / 1000),
+            (this.target.position.y / 1000) - (this.position.y / 1000),
+            (this.enemy.position.x / 1000) - (this.position.x / 1000),
+            (this.enemy.position.y / 1000) - (this.position.y / 1000)
+        ];
+        return s;
+    };
+
+    /**
+     *
+     * @returns {EntityRLDQN}
+     */
     EntityRLDQN.prototype.move = function () {
-        var speed = 0.50, r, ns, out;
+        var speed = 0.50;
 
         // Execute agent's desired action
         switch (this.action) {
-            case 0:
+            case 0: // Right
                 this.position.vx -= speed;
                 break;
-            case 1:
+            case 1: // Left
                 this.position.vx += speed;
                 break;
-            case 2:
+            case 2: // Up
                 this.position.vy -= speed;
                 break;
-            case 3:
+            case 3: // Down
                 this.position.vy += speed;
                 break;
-            case 4:
+            case 4: // Hover
                 this.position.vx = 0;
                 this.position.vy = 0;
                 break;
@@ -160,13 +209,13 @@
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
 
-        this.world.collisionCheck(this);
+        this.world.check(this);
 
         // Add any walls we hit
         // @TODO I need to get these damn walls into the CollisionDetection call
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             var wall = this.world.walls[w],
-                result = Utility.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
+                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
             if (result) {
                 this.collisions.push(wall);
             }
@@ -176,10 +225,11 @@
         for (let i = 0; i < this.collisions.length; i++) {
             if (this.collisions[i].type === 3 || this.collisions[i].type === 4 || this.collisions[i].type === 5) {
                 // Agent
-                this.enemy = this.collisions[i];
+                //this.target = this.collisions[i];
             } else if (this.collisions[i].type === 1) {
                 // Edible
-                this.target = this.collisions[i];
+                //this.target = this.collisions[i];
+                //this.enemy = this.collisions[i];
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
@@ -226,30 +276,41 @@
      * @param {Object} smallWorld
      */
     EntityRLDQN.prototype.sampleNextState = function () {
-        if (this.target && this.enemy) {
-            // Compute distances
-            var r,
-                dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
-                dy1 = (this.position.y / 1000) - (this.target.position.y / 1000), // Distance from Noms
-                d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-                dx2 = (this.position.x / 1000) - (this.enemy.position.x / 1000), // Distance from Agent
-                dy2 = (this.position.y / 1000) - (this.enemy.position.y / 1000), // Distance from Agent
-                d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        // Compute distances
+        var dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
+            dy1 = (this.position.y / 1000) - (this.target.position.y / 1000), // Distance from Noms
+            dx2 = (this.position.x / 1000) - (this.enemy.position.x / 1000), // Distance from Agent
+            dy2 = (this.position.y / 1000) - (this.enemy.position.y / 1000), // Distance from Agent
+            d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
+            d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
+            // Compute reward we want to go close to Agent we like
+            r = -d1,
+            eRng = this.enemy.range / 1000;
 
-            // Compute reward we want to go close to Noms
-            r = -d1;
-            if (d2 < (this.enemy.range / 1000)) {
-                // but if we're too close to red that's bad
-                r += 2 * (d2 - this.enemy.range / 1000) / (this.enemy.range / 1000);
-            }
-
-            // Give bonus for gliding with no force
-            if (this.action === 4) {
-                r += 0.05;
-            }
-
-            return r;
+        if (d2 < eRng) {
+            // but if we're too close to the bad Agent that's bad
+            r += 2 * (d2 - eRng) / eRng;
         }
+
+        // Give bonus for gliding with no force
+        //if (this.action === 4) {
+        //    r += 0.05;
+        //}
+
+        var vv = r + 0.5,
+            ms = 255.0,
+            red, green, blue;
+        if (vv > 0) {
+            red = 255 - vv * ms;
+            blue = 255 - vv * ms;
+            this.color = parseInt(Utility.rgbToHex(red, 255, blue));
+        } else {
+            green = 255 + vv * ms;
+            blue = 255 + vv * ms;
+            this.color = parseInt(Utility.rgbToHex(255, green, blue));
+        }
+
+        return r;
     };
 
     /**
@@ -262,12 +323,16 @@
         var obs;
 
         for (var k = 0; k < this.stepsPerTick; k++) {
-            this.state = this.act();
+            // Loop through the eyes and check the walls and nearby entities
+            for (let e = 0; e < this.numEyes; e++) {
+                this.eyes[e].sense(this);
+            }
+            //this.state = this.act();
+            this.state = this.getState();
             this.action = this.brain.act(this.state);
             this.move();
             this.reward = this.sampleNextState();
             this.pts.push(this.reward);
-            //console.log('Reward:'+this.reward);
             this.brain.learn(this.reward);
         }
 

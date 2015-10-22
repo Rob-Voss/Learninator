@@ -8,7 +8,9 @@ var Window = Window || {};
      * keeping running track of validation or training accuracy during SGD
      * @param {Number} size
      * @param {Number} minSize
-     * @returns {undefined}
+     * @returns {Window}
+     * @name Window
+     * @constructor
      */
     var Window = function (size, minSize) {
         this.v = [];

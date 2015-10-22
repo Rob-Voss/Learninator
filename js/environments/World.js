@@ -6,8 +6,10 @@
      * @param {Object} opts
      * @param {Object} entityOpts
      * @returns {World}
+     * @name World
+     * @constructor
      */
-    var World = function (opts, entityOpts) {
+    function World(opts, entityOpts) {
         var _this = this;
         this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById('world'));
         this.ctx = this.canvas.getContext('2d');
@@ -20,6 +22,7 @@
 
         // Basics for the environment
         this.agents = Utility.getOpt(opts, 'agents', []);
+        this.entityAgents = Utility.getOpt(opts, 'entityAgents', []);
         this.entities = Utility.getOpt(opts, 'entities', []);
         this.walls = Utility.getOpt(opts, 'walls', []);
 
@@ -30,18 +33,11 @@
         this.pause = false;
 
         // PIXI gewdness
-        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas}, true);
-        this.renderer.backgroundColor = 0xFFFFFF;
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas, transparent: true});
         document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
 
-        if (this.cdType === 'grid') {
-            GridCD.apply(this);
-        } else if (this.cdType === 'quad') {
-            QuadCD.apply(this);
-        } else if (this.cdType === 'brute') {
-            BruteCD.apply(this);
-        }
+        CD.apply(this, [this.cdType]);
 
         this.addAgents();
         this.addWalls();
@@ -63,7 +59,6 @@
             if (!_this.pause) {
                 _this.updatePopulation();
                 _this.tick();
-                _this.updatePopulation();
                 _this.draw();
             }
             _this.renderer.render(_this.stage);
@@ -73,7 +68,7 @@
         requestAnimationFrame(animate);
 
         return this;
-    };
+    }
 
     /**
      * Add the Agents
@@ -99,7 +94,7 @@
             // Set up the Legend in the reward graph
             if (this.useGraph === true && this.rewardGraph !== undefined) {
                 agents.push({
-                    name: this.agents[a].name,
+                    name: this.agents[a].id.substring(0, 10),
                     color: this.agents[a].legendColor
                 });
             }
@@ -125,8 +120,9 @@
                 vy = Math.random() * 5 - 2.5,
                 position = new Vec(x, y, 0, vx, vy),
                 entity = new EntityRLDQN(position, this.entityAgentOpts);
-            entity.target = this.entities[Utility.randi(0, this.numEntityAgents)];
-            entity.enemy = this.agents[Utility.randi(0, this.agents.length)];
+
+            entity.enemy = this.agents[k];
+            entity.target = (k === 0) ? this.agents[k + 1]: this.agents[k - 1];
 
             let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < entity.eyes.length; ei++) {
@@ -134,8 +130,8 @@
             }
             agentContainer.addChild(entity.shape || entity.sprite);
             this.stage.addChild(agentContainer);
-
-            this.agents.push(entity);
+            this.entityAgents.push(entity);
+            this.entities.push(entity);
         }
 
         return this;
@@ -358,7 +354,7 @@
                     fill: true
                 },
                 color: a,
-                label: this.agents[a].name
+                label: this.agents[a].id.substring(0, 10)
             };
         }
 
@@ -381,8 +377,8 @@
                 max: this.nflot
             },
             yaxis: {
-                min: -2.0,
-                max: 2.0
+                min: -0.1,
+                max: 0.1
             }
         });
 
@@ -407,6 +403,42 @@
         return res;
     };
 
+    /**
+     * Wall is made up of two Vectors
+     * @name Wall
+     * @constructor
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {Wall}
+     */
+    function Wall(v1, v2) {
+        this.type = 0;
+        this.v1 = v1;
+        this.v2 = v2;
+        this.position = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+        var dist = v1.distFrom(v2);
+        this.width = (v1.x < v2.x) ? dist : 2;
+        this.height = (v1.y < v2.y) ? dist : 2;
+
+        this.shape = new PIXI.Graphics();
+        this.draw();
+
+        return this;
+    }
+
+    /**
+     * Draws it
+     */
+    Wall.prototype.draw = function () {
+        this.shape.clear();
+        this.shape.lineStyle(1, 0x000000);
+        this.shape.moveTo(this.v1.x, this.v1.y);
+        this.shape.lineTo(this.v2.x, this.v2.y);
+        this.shape.endFill();
+    };
+
+    global.Wall = Wall;
     global.World = World;
 
 }(this));

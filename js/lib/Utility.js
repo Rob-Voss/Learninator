@@ -1,3 +1,8 @@
+/**
+ *
+ * @type {{Utility}}
+ * @name Utility
+ */
 var Utility = Utility || {};
 
 (function (global) {
@@ -6,6 +11,31 @@ var Utility = Utility || {};
     // Random number utilities
     var retV = false,
         vVal = 0.0;
+
+    Utility.rgbToHex = function (R, G, B) {
+        return '0x' + Utility.toHex(R) + Utility.toHex(G) + Utility.toHex(B);
+    };
+
+    Utility.toHex = function (n) {
+        n = parseInt(n, 10);
+        if (isNaN(n)) {
+            return '00';
+        }
+        n = Math.max(0, Math.min(n, 255));
+        return '0123456789ABCDEF'.charAt((n - n % 16) / 16) + '0123456789ABCDEF'.charAt(n % 16);
+    };
+
+    Utility.hexToR = function (h) {
+        return parseInt(h.substring(0, 2), 16);
+    };
+
+    Utility.hexToG = function (h) {
+        return parseInt(h.substring(2, 4), 16);
+    };
+
+    Utility.hexToB = function (h) {
+        return parseInt(h.substring(4, 6), 16);
+    };
 
     /**
      * Utility fun
@@ -194,121 +224,6 @@ var Utility = Utility || {};
     };
 
     /**
-     * Check for collision of circular entities, and calculate collsion point
-     * as well as velocity changes that should occur to them
-     * @param {Entity} entity
-     * @param {Entity} target
-     * @returns {{collPtX: number, collPtY: number, distSquared: number, distFrom: (*|Number), target: {vx: *, vy: *}, entity: {vx: number, vy: number}}}
-     */
-    Utility.circleCollision = function (entity, target) {
-        if (entity.radius !== undefined && target.radius !== undefined) {
-            var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
-                collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
-                xDist = target.position.x - entity.position.x,
-                yDist = target.position.y - entity.position.y,
-                distFrom = target.position.distFrom(entity.position),
-                radiusDist = target.radius + entity.radius,
-                distSquared = xDist * xDist + yDist * yDist,
-                radiusSquared = (target.radius + entity.radius) * (target.radius + entity.radius);
-
-            // Check the squared distances instead of the the distances,
-            // same result, but avoids a square root.
-            if (distFrom <= radiusDist) {
-                var xVelocity = entity.position.vx - target.position.vx,
-                    yVelocity = entity.position.vy - target.position.vy,
-                    dotProduct = xDist * xVelocity + yDist * yVelocity;
-                // Neat vector maths, used for checking if the objects are moving towards one another.
-                if (dotProduct > 0) {
-                    var collisionScale = dotProduct / distSquared,
-                        xCollision = xDist * collisionScale,
-                        yCollision = yDist * collisionScale,
-                    // The Collision vector is the speed difference projected on the Dist vector,
-                    // thus it is the component of the speed difference needed for the collision.
-                        combinedMass = (target.type === 5 ? target.radius * 2 : target.radius) + (entity.type === 5 ? entity.radius * 2 : entity.radius),
-                        collisionWeightA = 2 * entity.radius / combinedMass,
-                        collisionWeightB = 2 * target.radius / combinedMass;
-
-                    return {
-                        collPtX: collPtX,
-                        collPtY: collPtY,
-                        distance: {
-                            distanceSquared: distSquared,
-                            radiusSquared: radiusSquared,
-                            distanceFrom: distFrom,
-                            radiusFrom: radiusDist,
-                        },
-                        target: {
-                            type: target.type,
-                            vx: target.position.vx + collisionWeightA * xCollision,
-                            vy: target.position.vy + collisionWeightA * yCollision
-                        },
-                        entity: {
-                            type: entity.type,
-                            vx: entity.position.vx - collisionWeightB * xCollision,
-                            vy: entity.position.vy - collisionWeightB * yCollision
-                        }
-                    };
-                }
-            } else {
-                return;
-            }
-        }
-    };
-
-    /**
-     * A helper function to get check for colliding walls/items
-     * @param {Vec} v1
-     * @param {Vec} v2
-     * @param {Array} walls
-     * @param {Array} entities
-     * @param {Number} radius
-     * @returns {Boolean}
-     */
-    Utility.collisionCheck = function (v1, v2, walls, entities, radius) {
-        var minRes = false,
-            rad = radius ? radius : 0;
-
-        // Collide with walls
-        if (walls) {
-            for (var i = 0, wl = walls.length; i < wl; i++) {
-                var wall = walls[i],
-                    wResult = Utility.lineIntersect(v1, v2, wall.v1, wall.v2);
-                if (wResult) {
-                    wResult.target = wall;
-                    if (!minRes) {
-                        minRes = wResult;
-                    } else {
-                        // Check if it's closer
-                        if (wResult.vecX < minRes.vecX) {
-                            // If yes, replace it
-                            minRes = wResult;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Collide with items
-        if (entities) {
-            for (var e = 0, el = entities.length; e < el; e++) {
-                var entity = entities[e],
-                    iResult = Utility.linePointIntersect(v1, v2, entity.position, entity.radius + rad);
-                if (iResult) {
-                    iResult.target = entity;
-                    if (!minRes) {
-                        minRes = iResult;
-                    } else {
-                        if (iResult.vecX < minRes.vecX) {
-                            minRes = iResult;
-                        }
-                    }
-                }
-            }
-        }
-        return minRes;
-    };
-
-    /**
      * Returns string representation of float but truncated to length of d digits
      * @param {Number} x Float
      * @param {Number} d Decimals
@@ -319,80 +234,6 @@ var Utility = Utility || {};
         var dd = 1.0 * Math.pow(10, d);
 
         return '' + Math.floor(x * dd) / dd;
-    };
-
-    /**
-     * Find the position of intersect between a line and a point
-     * @param {Vec} v1 From position
-     * @param {Vec} v2 To position
-     * @param {Vec} v0 Target position
-     * @param {Number} rad Target radius
-     * @returns {Object|Boolean}
-     */
-    Utility.linePointIntersect = function (v1, v2, v0, rad) {
-        // Create a perpendicular vector
-        var x = v2.y - v1.y,
-            y = v2.x - v1.x,
-            xDiff = v1.y - v0.y,
-            yDiff = v1.x - v0.x,
-            v = new Vec(x, -y),
-            d = Math.abs(y * xDiff - yDiff * x),
-            vecX = 0,
-            result = {};
-
-        d = d / v.length();
-        if (d > rad) {
-            return false;
-        }
-
-        v.normalize();
-        v.scale(d);
-
-        var vecI = v0.add(v);
-        vecX = (Math.abs(y) > Math.abs(x)) ? (vecI.x - v1.x) / (y) : (vecI.y - v1.y) / (x);
-
-        if (vecX > 0.0 && vecX < 1.0) {
-            result.vecX = vecX;
-            result.vecI = vecI;
-
-            return result;
-        }
-        return false;
-    };
-
-    /**
-     * Line intersection helper function: line segment (v1,v2) intersect segment (v3,v4)
-     * @param {Vec} v1 From position
-     * @param {Vec} v2 To position
-     * @param {Vec} v3 Wall or Line start
-     * @param {Vec} v4 Wall or Line end
-     * @returns {Object|Boolean}
-     */
-    Utility.lineIntersect = function (v1, v2, v3, v4, rad) {
-        var denom = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y),
-            result = {};
-
-        if (denom === 0.0) {
-            // They be parallel lines if it be this yar!
-            return false;
-        }
-
-        var pX = ((v4.x - v3.x) * (v1.y - v3.y) - (v4.y - v3.y) * (v1.x - v3.x)) / denom,
-            pY = ((v2.x - v1.x) * (v1.y - v3.y) - (v2.y - v1.y) * (v1.x - v3.x)) / denom;
-
-        if (pX > 0.0 && pX < 1.0 && pY > 0.0 && pY < 1.0) {
-            // Intersection point
-            var vecI = new Vec(v1.x + pX * (v2.x - v1.x), v1.y + pX * (v2.y - v1.y));
-
-            result.distance = v2.distanceTo(vecI);
-            result.vecX = pX;
-            result.vecY = pY;
-            result.vecI = vecI;
-
-            return result;
-        }
-
-        return false;
     };
 
     /**

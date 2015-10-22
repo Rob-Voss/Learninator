@@ -8,7 +8,9 @@
     /**
      * A maze
      * @param {Object} opts
-     * @returns {undefined}
+     * @returns {Maze}
+     * @name Maze
+     * @constructor
      */
     var Maze = function (opts) {
         this.xCount = opts.xCount;

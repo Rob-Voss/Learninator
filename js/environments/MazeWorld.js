@@ -3,11 +3,12 @@
 
     /**
      * Maze contains many agents and walls and food and stuff
-     *
      * @returns {MazeWorld}
+     * @name MazeWorld
+     * @extends World
      * @constructor
      */
-    var MazeWorld = function () {
+    function MazeWorld() {
         this.canvas = document.getElementById("world");
         this.rewardGraph = new RewardGraph({
             canvas: document.getElementById("rewardGraph"),
@@ -41,12 +42,10 @@
         this.Aarr = null;
 
         this.entityOpts = {
-            width: 20,
-            height: 20,
             radius: 10,
             collision: false,
             interactive: true,
-            useSprite: true,
+            useSprite: false,
             movingEntities: false,
             cheats: {
                 gridLocation: false,
@@ -64,13 +63,13 @@
                 brainType: 'TD',
                 numEyes: 9,
                 numTypes: 3,
-                width: 20,
-                height: 20,
+                range: 85,
+                proximity: 85,
                 radius: 10,
                 worker: true,
                 collision: true,
                 interactive: false,
-                useSprite: true,
+                useSprite: false,
                 cheats: {
                     gridLocation: false,
                     position: false,
@@ -82,13 +81,13 @@
                 brainType: 'TD',
                 numEyes: 9,
                 numTypes: 3,
-                width: 20,
-                height: 20,
+                range: 85,
+                proximity: 85,
                 radius: 10,
                 worker: true,
                 collision: true,
                 interactive: false,
-                useSprite: true,
+                useSprite: false,
                 cheats: {
                     gridLocation: false,
                     position: false,
@@ -101,7 +100,7 @@
         World.call(this, this, this.entityOpts);
 
         return this;
-    };
+    }
 
     MazeWorld.prototype = Object.create(World.prototype);
     MazeWorld.prototype.constructor = World;

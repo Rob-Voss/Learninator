@@ -4,9 +4,11 @@
     /**
      * World object contains many agents and walls and food and stuff
      * @returns {WaterWorld}
+     * @name WaterWorld
+     * @extends World
      * @constructor
      */
-    var WaterWorld = function () {
+    function WaterWorld() {
         this.canvas = document.getElementById("world");
         this.rewardGraph = new RewardGraph({
             canvas: document.getElementById("rewardGraph"),
@@ -52,11 +54,13 @@
         };
 
         this.agents = [
-            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
                     numTypes: 5,
+                    range: 120,
+                    proximity: 120,
                     radius: 10,
                     collision: true,
                     interactive: false,
@@ -69,11 +73,13 @@
                     },
                     worker: true
                 }),
-            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
                     numTypes: 5,
+                    range: 120,
+                    proximity: 120,
                     radius: 10,
                     collision: true,
                     interactive: false,
@@ -88,8 +94,8 @@
                 })
         ];
 
-        //this.agents[0].load('zoo/wateragent.json');
-        //this.agents[1].load('zoo/wateragent.json');
+        this.agents[0].load('zoo/wateragent.json');
+        this.agents[1].load('zoo/wateragent.json');
 
         World.call(this, this, this.entityOpts);
 

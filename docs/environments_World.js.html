@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: environments/World.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: environments/World.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>(function (global) {
+    "use strict";
+
+    /**
+     * Make a World
+     * @param {Object} opts
+     * @param {Object} entityOpts
+     * @returns {World}
+     * @name World
+     * @constructor
+     */
+    function World(opts, entityOpts) {
+        var _this = this;
+        this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById('world'));
+        this.ctx = this.canvas.getContext('2d');
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+
+        // Population/collision detection type
+        this.numItems = Utility.getOpt(opts, 'numItems', 20);
+        this.cheats = Utility.getOpt(opts, 'cheats', false);
+
+        // Basics for the environment
+        this.agents = Utility.getOpt(opts, 'agents', []);
+        this.entityAgents = Utility.getOpt(opts, 'entityAgents', []);
+        this.entities = Utility.getOpt(opts, 'entities', []);
+        this.walls = Utility.getOpt(opts, 'walls', []);
+
+        // Entity options
+        this.entityOpts = entityOpts;
+
+        this.clock = 0;
+        this.pause = false;
+
+        // PIXI gewdness
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas, transparent: true});
+        document.body.appendChild(this.renderer.view);
+        this.stage = new PIXI.Container();
+
+        CD.apply(this, [this.cdType]);
+
+        this.addAgents();
+        this.addWalls();
+        this.addEntities();
+
+        if (this.useFlot === true) {
+            // flot stuff
+            this.nflot = 1000;
+            this.smoothRewardHistory = [];
+            this.smoothReward = [];
+            this.flott = [];
+
+            this.initFlot();
+        } else if (this.useGraph === true) {
+            this.rewardGraph = Utility.getOpt(opts, 'rewardGraph', new RewardGraph(opts));
+        }
+
+        function animate() {
+            if (!_this.pause) {
+                _this.updatePopulation();
+                _this.tick();
+                _this.draw();
+            }
+            _this.renderer.render(_this.stage);
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        return this;
+    }
+
+    /**
+     * Add the Agents
+     * @returns {World}
+     */
+    World.prototype.addAgents = function () {
+        // Add the agents
+        let agents = [],
+            lastColor;
+        for (let a = 0; a &lt; this.agents.length; a++) {
+            let agentContainer = new PIXI.Container();
+            for (let ei = 0; ei &lt; this.agents[a].eyes.length; ei++) {
+                agentContainer.addChild(this.agents[a].eyes[ei].shape);
+            }
+            agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
+            this.stage.addChild(agentContainer);
+
+            this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+            // If we are already using another agent's color, mix it up a bit
+            if (this.agents[a].legendColor === lastColor) {
+                this.agents[a].legendColor = this.agents[a].styles[this.agents[a].type + 1];
+            }
+            // Set up the Legend in the reward graph
+            if (this.useGraph === true &amp;&amp; this.rewardGraph !== undefined) {
+                agents.push({
+                    name: this.agents[a].id.substring(0, 10),
+                    color: this.agents[a].legendColor
+                });
+            }
+            lastColor = this.agents[a].legendColor;
+        }
+
+        if (this.useGraph === true &amp;&amp; this.rewardGraph !== undefined) {
+            this.rewardGraph.setLegend(agents);
+        }
+
+        return this;
+    };
+
+    /**
+     * Add some noms
+     * @returns {World}
+     */
+    World.prototype.addEntityAgents = function () {
+        for (let k = 0; k &lt; this.numEntityAgents; k++) {
+            let x = Utility.randi(5, this.width - 10),
+                y = Utility.randi(5, this.height - 10),
+                vx = Math.random() * 5 - 2.5,
+                vy = Math.random() * 5 - 2.5,
+                position = new Vec(x, y, 0, vx, vy),
+                entity = new EntityRLDQN(position, this.entityAgentOpts);
+
+            entity.enemy = this.agents[k];
+            entity.target = (k === 0) ? this.agents[k + 1]: this.agents[k - 1];
+
+            let agentContainer = new PIXI.Container();
+            for (let ei = 0; ei &lt; entity.eyes.length; ei++) {
+                agentContainer.addChild(entity.eyes[ei].shape);
+            }
+            agentContainer.addChild(entity.shape || entity.sprite);
+            this.stage.addChild(agentContainer);
+            this.entityAgents.push(entity);
+            this.entities.push(entity);
+        }
+
+        return this;
+    };
+
+    /**
+     * Add new entities
+     * @parameter {Number} number
+     * @returns {World}
+     */
+    World.prototype.addEntities = function (number) {
+        if (number === undefined) {
+            number = this.numItems - this.entities.length;
+        }
+        // Populating the world
+        for (let k = 0; k &lt; number; k++) {
+            this.addEntity();
+        }
+
+        return this;
+    };
+
+    /**
+     * Add an entity to the world
+     * @returns {World}
+     */
+    World.prototype.addEntity = function () {
+        // Random radius
+        this.entityOpts.radius = 10;//Utility.randi(5, 10);
+        let type = Utility.randi(1, 3),
+            x = Utility.randi(2, this.width - 2),
+            y = Utility.randi(2, this.height - 2),
+            vx = Utility.randf(-2, 2),
+            vy = Utility.randf(-2, 2),
+            position = new Vec(x, y, 0, vx, vy),
+            entity = new Entity(type, position, this.entityOpts);
+
+        // Insert the population
+        this.entities.push(entity);
+        this.stage.addChild(entity.shape || entity.sprite);
+
+        return this;
+    };
+
+    /**
+     * Add the Walls
+     * @returns {World}
+     */
+    World.prototype.addWalls = function () {
+        this.wallContainer = new PIXI.Container();
+        // Add the walls to the world
+        for (let w = 0; w &lt; this.walls.length; w++) {
+            this.wallContainer.addChild(this.walls[w].shape);
+            if (this.cheats.walls) {
+                let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
+                wallText.position.set(this.walls[w].v1.x + 10, this.walls[w].v1.y);
+                this.wallContainer.addChild(wallText);
+            }
+        }
+        this.stage.addChild(this.wallContainer);
+
+        return this;
+    };
+
+    /**
+     * Remove the entity from the world
+     * @param {Object} entity
+     * @returns {World}
+     */
+    World.prototype.deleteEntity = function (entity) {
+        this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
+        this.stage.removeChild(entity.shape || entity.sprite);
+
+        return this;
+    };
+
+    /**
+     * Draws the world
+     * @returns {World}
+     */
+    World.prototype.draw = function () {
+        // draw walls in environment
+        for (let i = 0, n = this.walls.length; i &lt; n; i++) {
+            this.walls[i].draw();
+        }
+
+        // draw items
+        for (let e = 0, ni = this.entities.length; e &lt; ni; e++) {
+            this.entities[e].draw();
+            if (this.entities[e].cheats) {
+                this.entities[e].updateCheats();
+            }
+        }
+
+        // draw agents
+        for (let a = 0, na = this.agents.length; a &lt; na; a++) {
+            // draw agents body
+            this.agents[a].draw();
+            if (this.agents[a].cheats) {
+                this.agents[a].updateCheats();
+            }
+        }
+
+        this.graphRewards();
+
+        return this;
+    };
+
+    /**
+     * Tick the environment
+     * @returns {World}
+     */
+    World.prototype.tick = function () {
+        this.lastTime = this.clock;
+        this.clock++;
+
+        // Loop through the agents of the world and make them do work!
+        for (let a = 0; a &lt; this.agents.length; a++) {
+            this.agents[a].tick(this);
+        }
+
+        // Loop through the entities of the world and make them do work son!
+        for (let e = 0; e &lt; this.entities.length; e++) {
+            this.entities[e].tick(this);
+        }
+
+        // Loop through and destroy old items
+        for (let e = 0; e &lt; this.entities.length; e++) {
+            let entity = this.entities[e],
+                edibleEntity = (entity.type === 2 || entity.type === 1);
+            if ((entity.type === 2 &amp;&amp; entity.age > 2500 ) || (edibleEntity &amp;&amp; entity.age > 5000) || entity.cleanUp === true) {
+                this.deleteEntity(this.entities[e]);
+            }
+        }
+
+        // If we have less then the number of Items allowed throw a random one in
+        if (this.entities.length &lt; this.numItems &amp;&amp; this.clock % 10 === 0 &amp;&amp; Utility.randf(0, 1) &lt; 0.25) {
+            this.addEntities(this.numItems - this.entities.length);
+        }
+
+        // If we have less then the number of Agents allowed throw a random one in
+        //if (this.agents.length &lt; this.numAgents &amp;&amp; this.clock % 10 === 0 &amp;&amp; Utility.randf(0, 1) &lt; 0.25) {
+            //var missing = this.numAgents - this.agents.length;
+            //for (let na = 0; na &lt; missing; na++) {
+            //    this.addAgent();
+            //}
+        //}
+
+        return this;
+    };
+
+    /**
+     * Graph the agent rewards
+     * @returns {World}
+     */
+    World.prototype.graphRewards = function () {
+        // If we are using flot based rewards
+        if (this.useFlot === true) {
+            for (let a = 0, ac = this.agents.length; a &lt; ac; a++) {
+                let agent = this.agents[a],
+                    rew = agent.lastReward;
+
+                if (this.smoothReward[a] === null) {
+                    this.smoothReward[a] = rew;
+                }
+                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
+                this.flott[a] += 1;
+                if (this.flott[a] === 50) {
+                    for (let i = 0, hl = this.smoothRewardHistory[a].length; i &lt;= hl; i++) {
+                        // record smooth reward
+                        if (hl >= this.nflot) {
+                            this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
+                        }
+                        this.smoothRewardHistory[a].push(this.smoothReward[a]);
+                        this.flott[a] = 0;
+                    }
+                }
+                if (typeof this.series[a] !== 'undefined') {
+                    this.series[a].data = this.getFlotRewards(a);
+                }
+                // Clear them up since we've drawn them
+                this.agents[a].pts = [];
+            }
+
+            this.plot.setData(this.series);
+            this.plot.draw();
+        } else if (this.useGraph === true) {
+            // Or maybe we are using simple Graph based rewards
+            for (let a = 0, al = this.agents.length; a &lt; al; a++) {
+                if (this.clock % 100 === 0 &amp;&amp; this.agents[a].pts.length !== 0) {
+                    // Throw some points on a Graph
+                    this.rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
+                    this.rewardGraph.drawPoints();
+                    // Clear them up since we've drawn them
+                    this.agents[a].pts = [];
+                }
+            }
+        }
+
+        return this;
+    };
+
+    /**
+     * Initialize the Flot class
+     * @returns {World}
+     */
+    World.prototype.initFlot = function () {
+        for (let a = 0; a &lt; this.agents.length; a++) {
+            this.smoothReward[a] = null;
+            this.smoothRewardHistory[a] = null;
+        }
+        this.container = document.getElementById('flotreward');
+        this.series = [];
+        for (let a = 0, ac = this.agents.length; a &lt; ac; a++) {
+            this.flott[a] = 0;
+            this.smoothRewardHistory[a] = [];
+            this.series[a] = {
+                data: this.getFlotRewards(a),
+                lines: {
+                    fill: true
+                },
+                color: a,
+                label: this.agents[a].id.substring(0, 10)
+            };
+        }
+
+        this.plot = $.plot(this.container, this.series, {
+            grid: {
+                borderWidth: 1,
+                minBorderMargin: 20,
+                labelMargin: 5,
+                backgroundColor: {
+                    colors: ["#FFF", "#e4f4f4"]
+                },
+                margin: {
+                    top: 5,
+                    bottom: 5,
+                    left: 5
+                }
+            },
+            xaxis: {
+                min: 0,
+                max: this.nflot
+            },
+            yaxis: {
+                min: -0.1,
+                max: 0.1
+            }
+        });
+
+        return this;
+    };
+
+    /**
+     * zip rewards into flot data
+     * @param {Number} an
+     * @returns {Array}
+     */
+    World.prototype.getFlotRewards = function (an) {
+        var res = [];
+        if (this.smoothRewardHistory[an] === null) {
+            this.smoothRewardHistory[an] = [];
+        }
+
+        for (let i = 0, hl = this.smoothRewardHistory[an].length; i &lt; hl; i++) {
+            res.push([i, this.smoothRewardHistory[an][i]]);
+        }
+
+        return res;
+    };
+
+    /**
+     * Wall is made up of two Vectors
+     * @name Wall
+     * @constructor
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {Wall}
+     */
+    function Wall(v1, v2) {
+        this.type = 0;
+        this.v1 = v1;
+        this.v2 = v2;
+        this.position = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+        var dist = v1.distFrom(v2);
+        this.width = (v1.x &lt; v2.x) ? dist : 2;
+        this.height = (v1.y &lt; v2.y) ? dist : 2;
+
+        this.shape = new PIXI.Graphics();
+        this.draw();
+
+        return this;
+    }
+
+    /**
+     * Draws it
+     */
+    Wall.prototype.draw = function () {
+        this.shape.clear();
+        this.shape.lineStyle(1, 0x000000);
+        this.shape.moveTo(this.v1.x, this.v1.y);
+        this.shape.lineTo(this.v2.x, this.v2.y);
+        this.shape.endFill();
+    };
+
+    global.Wall = Wall;
+    global.World = World;
+
+}(this));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:19:49 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

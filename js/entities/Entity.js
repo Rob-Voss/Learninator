@@ -1,16 +1,41 @@
+var Entity = Entity || {};
+
 (function (global) {
     "use strict";
 
     /**
+     * Options for the cheats to display
+     * @typedef {Object} cheatOpts
+     * @property {boolean} position - Show Vec x, y
+     * @property {boolean} name - Show the name
+     * @property {boolean} id - Show the ID
+     * @property {boolean} gridLocation - Show the gridLocation x, y
+     */
+
+    /**
+     * Options for the Entity
+     * @typedef {Object} entityOpts
+     * @property {number} radius - The radius of the Entity
+     * @property {number} width - The width of the Entity
+     * @property {number} height - The height of the Entity
+     * @property {boolean} interactive - Is it interactive
+     * @property {boolean} collision - Does it collide with stuff
+     * @property {boolean} movingEntities - Does it move
+     * @property {boolean} useSprite - Should it use a sprite
+     */
+
+    /**
      * Initialize the Entity
-     *
-     * @param {Number||String} type A type id (wall,nom,gnar,agent)
-     * @param {Vec} position A vector of the position
-     * @param {Object} opts Entity Options
+     * @name Entity
      * @constructor
+     *
+     * @param {number|string} type A type id (wall,nom,gnar,agent)
+     * @param {Vec} position - The x, y location
+     * @param {entityOpts} opts - The Entity options
+     * @param {cheatOpts} opts.cheats - The cheats to display
      * @returns {Entity}
      */
-    var Entity = function (type, position, opts) {
+    function Entity(type, position, opts) {
         this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
         this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
         this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
@@ -110,7 +135,7 @@
         }
 
         return this;
-    };
+    }
 
     /**
      * Set up the cheat displays
@@ -257,11 +282,11 @@
         this.position.x += this.position.vx;
         this.position.y += this.position.vy;
 
-        this.world.collisionCheck(this);
+        this.world.check(this);
 
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             var wall = this.world.walls[w],
-                result = Utility.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
+                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.unshift(wall);
             }

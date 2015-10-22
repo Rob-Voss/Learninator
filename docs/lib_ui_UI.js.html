@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/ui/UI.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/ui/UI.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var UI = UI || {};
+
+(function (global) {
+    "use strict";
+
+    /**
+     *
+     * @param options
+     * @name UI
+     * @constructor
+     */
+    var UI = function (options) {
+        this.canvas = options.canvas;
+        this.ctx = this.canvas.getContext("2d");
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        this.horizCells = options.horizCells;
+        this.vertCells = options.vertCells;
+        this.vW = this.width / this.horizCells;
+        this.vH = this.height / this.vertCells;
+        this.cellSize = options.cellSize;
+
+        this.entities = [];
+
+        this.clock = 0;
+        this.interval = 60;
+        this.fill = 'black';
+
+        // When set to true, the canvas will redraw everything
+        this.redraw = true;
+        this.drawGrid = true;
+        this.pause = false;
+
+        var _this = this;
+
+        var button = new Button(this.canvas, this.width - 100, 1, "Click Me", function () {
+            console.log('Click');
+        });
+
+        this.entities.push(button);
+
+        // Apply the Interactions class to the world
+        Interactions.apply(this);
+
+        setInterval(function () {
+            if (!_this.pause) {
+                _this.tick();
+                if (_this.redraw || _this.clock % 50 === 0) {
+                    _this.draw();
+                }
+            }
+        }, _this.interval);
+    };
+
+    UI.prototype = {
+        /**
+         * Find the area of a triangle
+         * @param {Vec} v1
+         * @param {Vec} v2
+         * @param {Vec} v3
+         * @returns {Number}
+         */
+        area: function (v1, v2, v3) {
+            return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+        },
+        /**
+         * Clear the canvas
+         * @returns {undefined}
+         */
+        clear: function () {
+            this.ctx.clearRect(0, 0, this.width, this.height);
+        },
+        /**
+         * Determine if a point is inside the shapes's bounds
+         * @param {Vec} v
+         * @returns {Boolean}
+         */
+        contains: function (v) {
+            if (this.type === 'tria') {
+                var v1 = this.pos,
+                    v2 = new Vec(this.pos.x + this.width / 2, this.pos.y + this.height),
+                    v3 = new Vec(this.pos.x - this.width / 2, this.pos.y + this.height),
+                    A = this.area(v1, v2, v3),
+                    A1 = this.area(v, v2, v3),
+                    A2 = this.area(v1, v, v3),
+                    A3 = this.area(v1, v2, v);
+                return (A === A1 + A2 + A3);
+            } else if (this.type === 'rect') {
+                return (this.pos.x &lt;= v.x) &amp;&amp; (this.pos.x + this.width >= v.x) &amp;&amp;
+                    (this.pos.y &lt;= v.y) &amp;&amp; (this.pos.y + this.height >= v.y);
+            } else if (this.type === 1 || this.type === 2 || this.type === 3) {
+                var result = this.pos.distFrom(v) &lt; this.radius;
+
+                return result;
+            }
+        },
+        /**
+         * Draws this item to a given context
+         * @returns {undefined}
+         */
+        draw: function () {
+            this.clear();
+
+            this.ctx.fillStyle = this.fill;
+            this.ctx.lineWidth = "1";
+            this.ctx.strokeStyle = "black";
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, 0);
+            this.ctx.lineTo(this.width, 0);
+            this.ctx.lineTo(this.width, this.height);
+            this.ctx.lineTo(0, this.height);
+            this.ctx.lineTo(0, 0);
+            this.ctx.closePath();
+            this.ctx.stroke();
+
+            if (this.drawGrid) {
+                this.ctx.addGrid(this.cellSize);
+            }
+
+            for (var i = this.entities.length - 1; i >= 0; i--) {
+                this.entities[i].draw();
+            }
+        },
+        /**
+         * Tick the environment
+         */
+        tick: function () {
+            this.clock++;
+
+            // Drop old the items
+            if (!this.redraw) {
+                this.draw();
+            }
+        }
+    };
+
+    global.UI = UI;
+
+}(this));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:19:49 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

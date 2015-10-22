@@ -9,6 +9,7 @@
      * @param {Number} width
      * @param {Number} height
      * @returns {Cell}
+     * @name Cell
      * @constructor
      */
     var Cell = function (x, y, width, height) {
@@ -98,6 +99,8 @@
      *
      * @param {Object} env
      * @returns {Grid}
+     * @name Grid
+     * @constructor
      */
     var Grid = function (env) {
         this.xCount = env.xCount || 1;

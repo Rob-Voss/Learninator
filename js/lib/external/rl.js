@@ -1,3 +1,4 @@
+
 (function (global) {
     "use strict";
 
@@ -58,7 +59,7 @@
         /**
          *
          * @param net
-         * @returns {{}}
+         * @returns {}
          */
         netToJSON = function (net) {
             var j = {};
@@ -72,7 +73,7 @@
         /**
          *
          * @param j
-         * @returns {{}}
+         * @returns {}
          */
         netFromJSON = function (j) {
             var net = {};
@@ -129,7 +130,6 @@
          * @param mu
          * @param std
          * @returns {Mat}
-         * @constructor
          */
         randMat = function (n, d, mu, std) {
             var m = new Mat(n, d);
@@ -138,7 +138,7 @@
             return m;
         },
         /**
-         * fill matrix with random gaussian numbers
+         * Fill matrix with random gaussian numbers
          * @param m
          * @param mu
          * @param std
@@ -147,6 +147,16 @@
             for (var i = 0, n = m.w.length; i < n; i++) {
                 m.w[i] = Utility.randn(mu, std);
             }
+        },
+        /**
+         * returns a random cauchy random variable with gamma (controls magnitude sort of like stdev in randn)
+         * http://en.wikipedia.org/wiki/Cauchy_distribution
+         * @param m
+         * @param gamma
+         * @returns {}
+         */
+        randc = function(m, gamma) {
+            return m + gamma * 0.01 * Utility.randn(0.0, 1.0) / Utility.randn(0.0, 1.0);
         },
         /**
          *
@@ -174,21 +184,21 @@
          * @param m
          * @returns {Mat}
          */
-        softmax = function (m) {
+        softMax = function (m) {
             var out = new Mat(m.n, m.d), // probability volume
-                maxval = -999999,
+                maxVal = -999999,
                 s = 0.0;
-            for (var i = 0, n = m.w.length; i < n; i++) {
-                if (m.w[i] > maxval) {
-                    maxval = m.w[i];
+            for (let i = 0, n = m.w.length; i < n; i++) {
+                if (m.w[i] > maxVal) {
+                    maxVal = m.w[i];
                 }
             }
 
-            for (var i = 0, n = m.w.length; i < n; i++) {
-                out.w[i] = Math.exp(m.w[i] - maxval);
+            for (let i = 0, n = m.w.length; i < n; i++) {
+                out.w[i] = Math.exp(m.w[i] - maxVal);
                 s += out.w[i];
             }
-            for (var i = 0, n = m.w.length; i < n; i++) {
+            for (let i = 0, n = m.w.length; i < n; i++) {
                 out.w[i] /= s;
             }
 
@@ -202,7 +212,7 @@
          * @param inputSize
          * @param hiddenSizes
          * @param outputSize
-         * @returns {{}}
+         * @returns {}
          */
         initLSTM = function (inputSize, hiddenSizes, outputSize) {
             // hidden size should be a list
@@ -239,7 +249,7 @@
          * @param {Array} hiddenSizes
          * @param x is 1D column vector with observation
          * @param {Object} prev is a struct containing hidden and cell from previous iteration
-         * @returns {{h: Array, c: Array, o: (*|Vec|undefined|Life.Vector|Set.<T>)}}
+         * @returns {}
          */
         forwardLSTM = function (G, model, hiddenSizes, x, prev) {
             var hiddenPrevs = [],
@@ -316,7 +326,7 @@
          * @param w
          * @returns {number}
          */
-        maxi = function (w) {
+        maxI = function (w) {
             var maxv = w[0],
                 maxix = 0;
             for (var i = 1, n = w.length; i < n; i++) {
@@ -334,7 +344,7 @@
          * @param w
          * @returns {number}
          */
-        samplei = function (w) {
+        sampleI = function (w) {
             var r = Utility.randf(0, 1),
                 x = 0.0,
                 i = 0;
@@ -379,6 +389,7 @@
      * Mat holds a matrix
      * @param n
      * @param d
+     * @name Mat
      * @constructor
      */
     var Mat = function (n, d) {
@@ -437,7 +448,7 @@
         },
         /**
          *
-         * @returns {{}}
+         * @returns {}
          */
         toJSON: function () {
             var json = {};
@@ -465,6 +476,7 @@
     /**
      * Transformer definitions
      * @param needsBackprop
+     * @name Graph
      * @constructor
      */
     var Graph = function (needsBackprop) {
@@ -713,7 +725,7 @@
     };
 
     /**
-     *
+     * @name Solver
      * @constructor
      */
     var Solver = function () {
@@ -787,6 +799,7 @@
      * - assumes finite MDP :(
      * @param env
      * @param opt
+     * @name DPAgent
      * @constructor
      */
     var DPAgent = function (env, opt) {
@@ -903,6 +916,7 @@
      * - learns from experience :)
      * @param env
      * @param opt
+     * @name TDAgent
      * @constructor
      */
     var TDAgent = function (env, opt) {
@@ -1234,20 +1248,30 @@
      * @param {Object} env
      * @param {Object} opt
      * @returns {DQNAgent}
+     * @name DQNAgent
      * @constructor
+     *
+     * @param {Object} opt.spec - The brain options
+     * @param {boolean} opt.spec.gamma - Discount factor [0, 1]
+     * @param {boolean} opt.spec.epsilon - Initial epsilon for epsilon-greedy policy [0, 1]
+     * @param {boolean} opt.spec.alpha - Value function learning rate
+     * @param {boolean} opt.spec.experienceAddEvery - Number of time steps before we add another experience to replay memory
+     * @param {boolean} opt.spec.experienceSize - Size of experience
+     * @param {boolean} opt.spec.learningStepsPerIteration - Number of steps to go through during one tick
+     * @param {boolean} opt.spec.tdErrorClamp - For robustness
+     * @param {boolean} opt.spec.numHiddenUnits - Number of neurons in hidden layer
      */
     var DQNAgent = function (env, opt) {
         this.gamma = Utility.getOpt(opt, 'gamma', 0.75); // future reward discount factor
         this.epsilon = Utility.getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
         this.alpha = Utility.getOpt(opt, 'alpha', 0.01); // value function learning rate
-
         this.experienceAddEvery = Utility.getOpt(opt, 'experienceAddEvery', 25); // number of time steps before we add another experience to replay memory
         this.experienceSize = Utility.getOpt(opt, 'experienceSize', 5000); // size of experience replay
         this.learningStepsPerIteration = Utility.getOpt(opt, 'learningStepsPerIteration', 10);
         this.tdErrorClamp = Utility.getOpt(opt, 'tdErrorClamp', 1.0);
-
         this.numHiddenUnits = Utility.getOpt(opt, 'numHiddenUnits', 100);
 
+        this.tdError = 0; // for visualization only...
         this.env = env;
         this.reset();
 
@@ -1284,7 +1308,7 @@
             this.a0 = null;
             this.a1 = null;
 
-            this.tderror = 0; // for visualization only...
+            this.tdError = 0; // for visualization only...
         },
         /**
          *
@@ -1342,7 +1366,7 @@
             } else {
                 // greedy wrt Q function
                 var aMat = this.forwardQ(this.net, s, false);
-                a = maxi(aMat.w); // returns index of argmax action
+                a = maxI(aMat.w); // returns index of argmax action
             }
 
             // shift state memory
@@ -1360,8 +1384,8 @@
         learn: function (r1) {
             if (this.r0 !== null && this.alpha > 0) {
                 // learn from this tuple to get a sense of how "surprising" it is to the agent
-                var tdError = this.learnFromTuple(this.s0, this.a0, this.r0, this.s1, this.a1);
-                this.tdError = tdError; // a measure of surprise
+                // a measure of surprise
+                this.tdError = this.learnFromTuple(this.s0, this.a0, this.r0, this.s1, this.a1);
 
                 // decide if we should keep this experience in the replay
                 if (this.t % this.experienceAddEvery === 0) {
@@ -1395,28 +1419,26 @@
             // compute the target Q value
             var tMat = this.forwardQ(this.net, s1, false),
             // want: Q(s,a) = r + gamma * max_a' Q(s',a')
-                qMax = r0 + this.gamma * tMat.w[maxi(tMat.w)],
-
-            // now predict
+                qMax = r0 + this.gamma * tMat.w[maxI(tMat.w)],
+            // now predict so use backProp
                 pred = this.forwardQ(this.net, s0, true),
-
-                tdError = pred.w[a0] - qMax,
                 clamp = this.tdErrorClamp;
-            if (Math.abs(tdError) > clamp) {  // huber loss to robustify
-                if (tdError > clamp) {
-                    tdError = clamp;
+            this.tdError = pred.w[a0] - qMax;
+            if (Math.abs(this.tdError) > clamp) {  // huber loss to robustify
+                if (this.tdError > clamp) {
+                    this.tdError = clamp;
                 }
-                if (tdError < -clamp) {
-                    tdError = -clamp;
+                if (this.tdError < -clamp) {
+                    this.tdError = -clamp;
                 }
             }
-            pred.dw[a0] = tdError;
+            pred.dw[a0] = this.tdError;
             this.lastG.backward(); // compute gradients on net params
 
             // update net
             updateNet(this.net, this.alpha);
 
-            return tdError;
+            return this.tdError;
         }
     };
 
@@ -1424,6 +1446,7 @@
      * buggy implementation, doesnt work...
      * @param env
      * @param opt
+     * @name SimpleReinforceAgent
      * @constructor
      */
     var SimpleReinforceAgent = function (env, opt) {
@@ -1474,7 +1497,7 @@
          *
          * @param s
          * @param needsBackprop
-         * @returns {{a: *, G: Graph}}
+         * @returns {{}}
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
@@ -1492,7 +1515,7 @@
          *
          * @param s
          * @param needsBackprop
-         * @returns {{a: *, G: Graph}}
+         * @returns {{}}
          */
         forwardValue: function (s, needsBackprop) {
             var net = this.baselineNet,
@@ -1624,6 +1647,7 @@
      * buggy implementation as well, doesn't work
      * @param env
      * @param opt
+     * @name RecurrentReinforceAgent
      * @constructor
      */
     var RecurrentReinforceAgent = function (env, opt) {
@@ -1767,6 +1791,7 @@
      * Buggy implementation as well, doesn't work
      * @param env
      * @param opt
+     * @name DeterministPG
      * @constructor
      */
     var DeterministPG = function (env, opt) {
@@ -1813,7 +1838,7 @@
          *
          * @param s
          * @param needsBackprop
-         * @returns {{a: *, G: Graph}}
+         * @returns {{}}
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
@@ -1942,15 +1967,10 @@
         }
     };
 
-    // returns a random cauchy random variable with gamma (controls magnitude sort of like stdev in randn)
-    // http://en.wikipedia.org/wiki/Cauchy_distribution
-    var randc = function(m, gamma) {
-        return m + gamma * 0.01 * Utility.randn(0.0, 1.0) / Utility.randn(0.0, 1.0);
-    };
-
     /**
      * chromosome implementation using an array of floats
      * @param floatArray
+     * @name Chromosome
      * @constructor
      */
     var Chromosome = function(floatArray) {
@@ -2210,6 +2230,7 @@
      * - initGene: init float array to initialize the chromosomes can be result obtained from pretrained sessions.
      * @param opts
      * @param initGene
+     * @name GATrainer
      * @constructor
      */
     var GATrainer = function (opts, initGene) {
@@ -2363,7 +2384,9 @@
      * @param {Number} nInput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + nSp
      * @param {Number} nHidden Number of hidden neurons in each sub population (ie, 16)
      * @param {Array} genes (optional) array of nSp genes (floatArrays) to initialise the network (pretrained)
-     * @returns {ga_L3.ESPNet}
+     * @returns {ESPNet}
+     * @name ESPNet
+     * @constructor
      */
     var ESPNet = function (nSp, nInput, nHidden, genes) {
         this.net = []; // an array of convnet.js feed forward nn's
@@ -2438,7 +2461,7 @@
         },
         /**
          * Returns array of output of each nSp neurons after a forward pass.
-         * @returns {Number.w|d.w|e.w|a.w|Array.w|b@call;bind.w}
+         * @returns {Array}
          */
         forward: function () {
             var i, j,
@@ -2467,7 +2490,7 @@
         },
         /**
          * Return an array of nSp genes (floatArrays of length getNetworkSize())
-         * @returns {Array|@exp;Array}
+         * @returns {Array}
          */
         getGenes: function () {
             var i,
@@ -2511,6 +2534,7 @@
      * @param espnet
      * @param opts
      * @param initGenes
+     * @name ESPTrainer
      * @constructor
      */
     var ESPTrainer = function (espnet, opts, initGenes) {
@@ -3042,15 +3066,9 @@
 // exports
 
     // various utils
-    global.maxi = maxi;
-    global.samplei = samplei;
-    global.softmax = softmax;
-
-    // classes
-    global.Mat = Mat;
-    global.RandMat = randMat;
-    global.forwardLSTM = forwardLSTM;
-    global.initLSTM = initLSTM;
+    global.maxi = maxI;
+    global.samplei = sampleI;
+    global.softmax = softMax;
 
     // more utils
     global.updateMat = updateMat;
@@ -3064,9 +3082,17 @@
     global.pushGeneToNetwork = pushGeneToNetwork;
     global.randomizeNetwork = randomizeNetwork;
 
+    // classes
+    global.Mat = Mat;
+    global.RandMat = randMat;
+    global.forwardLSTM = forwardLSTM;
+    global.initLSTM = initLSTM;
+
     // optimization
     global.Solver = Solver;
     global.Graph = Graph;
+
+    // Agents
     global.DPAgent = DPAgent;
     global.TDAgent = TDAgent;
     global.DQNAgent = DQNAgent;
@@ -3079,6 +3105,7 @@
 //  global.SimpleReinforceAgent = SimpleReinforceAgent;
 //  global.RecurrentReinforceAgent = RecurrentReinforceAgent;
 //  global.DeterministPG = DeterministPG;
+
 })(this);
 
 

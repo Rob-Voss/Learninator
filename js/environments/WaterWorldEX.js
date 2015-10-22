@@ -3,11 +3,12 @@
 
     /**
      * World object contains many agents and walls and food and stuff
-     *
      * @returns {WaterWorldEX}
+     * @name WaterWorldEX
+     * @extends World
      * @constructor
      */
-    var WaterWorldEX = function () {
+    function WaterWorldEX() {
         this.canvas = document.getElementById("world");
         this.rewardGraph = new RewardGraph({
             canvas: document.getElementById("rewardGraph"),
@@ -17,8 +18,8 @@
         this.yCount = 1;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
-        this.numItems = 60;
-        this.numEntityAgents = 4;
+        this.numItems = 40;
+        this.numEntityAgents = 2;
         this.closed = true;
 
         // Collision type
@@ -33,13 +34,15 @@
             walls: false
         };
 
-        this.useFlot = false;
-        this.useGraph = true;
+        this.useFlot = true;
+        this.useGraph = false;
 
         this.entityAgentOpts = {
             brainType: 'RLDQN',
             numEyes: 6,
             numTypes: 5,
+            range: 85,
+            proximity: 85,
             radius: 20,
             collision: true,
             interactive: false,
@@ -49,7 +52,7 @@
                 gridLocation: false,
                 position: false,
                 name: false,
-                id: false
+                id: true
             }
         };
 
@@ -67,13 +70,15 @@
         };
 
         this.agents = [
-            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
-                    numTypes: 3,
+                    numTypes: 5,
+                    range: 120,
+                    proximity: 120,
                     radius: 10,
-                    worker: true,
+                    worker: false,
                     collision: true,
                     interactive: false,
                     useSprite: false,
@@ -81,16 +86,18 @@
                         gridLocation: false,
                         position: false,
                         name: false,
-                        id: false
+                        id: true
                     }
                 }),
-            new AgentRLDQN(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
                     numEyes: 30,
-                    numTypes: 3,
+                    numTypes: 5,
+                    range: 120,
+                    proximity: 120,
                     radius: 10,
-                    worker: true,
+                    worker: false,
                     collision: true,
                     interactive: false,
                     useSprite: false,
@@ -98,24 +105,28 @@
                         gridLocation: false,
                         position: false,
                         name: false,
-                        id: false
+                        id: true
                     }
                 })
         ];
 
         this.walls = [
-            new Wall(new Vec(0, 0), new Vec(0 + this.canvas.width, 0)),
-            new Wall(new Vec(0 + this.canvas.width, 0), new Vec(0 + this.canvas.width, 0 + this.canvas.height)),
-            new Wall(new Vec(0 + this.canvas.width, 0 + this.canvas.height), new Vec(0, 0 + this.canvas.height)),
-            new Wall(new Vec(0, 0 + this.canvas.height), new Vec(0, 0))
+            new Wall(new Vec(0, 0), new Vec(0 + this.width, 0)),
+            new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height)),
+            new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height)),
+            new Wall(new Vec(0, 0 + this.height), new Vec(0, 0))
         ];
 
         World.call(this, this, this.entityOpts);
-
         this.addEntityAgents();
 
+        //this.agents[0].load('zoo/wateragent.json');
+        //this.agents[1].load('zoo/wateragent.json');
+        //this.entityAgents[0].load('zoo/puckagent.json');
+        //this.entityAgents[1].load('zoo/puckagent.json');
+
         return this;
-    };
+    }
 
     WaterWorldEX.prototype = Object.create(World.prototype);
     WaterWorldEX.prototype.constructor = World;

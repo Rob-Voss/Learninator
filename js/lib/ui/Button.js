@@ -5,6 +5,7 @@
  * @param y
  * @param label
  * @param onclick
+ * @name Button
  * @constructor
  */
 function Button(canvas, x, y, label, onclick) {
