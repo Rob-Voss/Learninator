@@ -11,8 +11,6 @@ var AgentTD = AgentTD || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Agent options
-     * @param {cheatOpts} opts.cheats - The cheats to display
-     * @param {brainOpts} opts.spec - The brain options
      * @returns {AgentTD}
      */
     function AgentTD(position, opts) {

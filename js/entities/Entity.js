@@ -22,6 +22,7 @@ var Entity = Entity || {};
      * @property {boolean} collision - Does it collide with stuff
      * @property {boolean} movingEntities - Does it move
      * @property {boolean} useSprite - Should it use a sprite
+     * @property {cheatOpts} opts.cheats - The cheats to display
      */
 
     /**
@@ -32,7 +33,6 @@ var Entity = Entity || {};
      * @param {number|string} type A type id (wall,nom,gnar,agent)
      * @param {Vec} position - The x, y location
      * @param {entityOpts} opts - The Entity options
-     * @param {cheatOpts} opts.cheats - The cheats to display
      * @returns {Entity}
      */
     function Entity(type, position, opts) {

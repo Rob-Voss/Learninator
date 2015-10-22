@@ -106,8 +106,6 @@ var Brain = Brain || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Agent options
-     * @param {cheatOpts} opts.cheats - The cheats to display
-     * @param {brainOpts} opts.spec - The brain options
      * @returns {AgentGA}
      */
     function AgentGA(position, opts) {

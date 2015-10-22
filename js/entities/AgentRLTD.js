@@ -11,9 +11,6 @@ var AgentRLTD = AgentRLTD || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Agent options
-     * @param {cheatOpts} opts.cheats - The cheats to display
-     * @param {brainOpts} opts.spec - The brain options
-     * @param {Object} opts.env - The environment
      * @returns {AgentRLTD}
      */
     function AgentRLTD(position, opts) {
