@@ -1680,6 +1680,75 @@ pushed down to the new sub nodes.
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>cheats</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#cheatOpts">cheatOpts</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The cheats to display</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>spec</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#brainOpts">brainOpts</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The brain options</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>env</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The environment</td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1758,6 +1827,242 @@ pushed down to the new sub nodes.
 
 
 
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>update</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">qlearn | sarsa</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>gamma</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Discount factor [0, 1]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>epsilon</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Initial epsilon for epsilon-greedy policy [0, 1]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>alpha</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Value function learning rate</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>experienceAddEvery</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Number of time steps before we add another experience to replay memory</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>experienceSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Size of experience</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>learningStepsPerIteration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Number of steps to go through during one tick</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tdErrorClamp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">For robustness</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>numHiddenUnits</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Number of neurons in hidden layer</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
 <dl class="details">
 
     
@@ -1787,7 +2092,7 @@ pushed down to the new sub nodes.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="entities_Agent.js.html">entities/Agent.js</a>, <a href="entities_Agent.js.html#line17">line 17</a>
+        <a href="entities_Agent.js.html">entities/Agent.js</a>, <a href="entities_Agent.js.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -2207,6 +2512,29 @@ pushed down to the new sub nodes.
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>cheats</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#cheatOpts">cheatOpts</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The cheats to display</td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -2278,7 +2606,7 @@ pushed down to the new sub nodes.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:19:49 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Oct 22 2015 15:28:51 GMT-0700 (PDT)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -11,7 +11,6 @@ var EntityRLDQN = EntityRLDQN || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Entity options
-     * @param {brainOpts} opts.spec - The brain options
      * @returns {EntityRLDQN}
      */
     function EntityRLDQN(position, opts) {
