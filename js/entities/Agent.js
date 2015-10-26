@@ -15,6 +15,9 @@ var Agent = Agent || {};
      * @property {cheatOpts} cheats - The cheats to display
      * @property {brainOpts} spec - The brain options
      * @property {Object} env - The environment
+     * @property {cheatOpts} opts.cheats - The cheats to display
+     * @property {brainOpts} opts.spec - The brain options
+     * @property {Object} opts.env - The environment
      */
 
     /**
@@ -39,6 +42,8 @@ var Agent = Agent || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Agent options
+     * @param {cheatOpts} opts.cheats - The cheats to display
+     * @param {brainOpts} opts.spec - The brain options
      * @returns {Agent}
      */
     function Agent(position, opts) {
