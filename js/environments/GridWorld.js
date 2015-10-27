@@ -20,24 +20,9 @@
         this.action = null;
         this.state = 0;
         this.stepsPerTick = 1;
+        this.nStepsHistory = [];
         this.pause = false;
         this.numItems = 0;
-
-        // Reward graphing type
-        this.useFlot = true;
-        this.useGraph = false;
-
-        // Collision type
-        this.cdType = 'quad';
-        this.maxChildren = 2;
-        this.maxDepth = 10;
-
-        this.cheats = {
-            quad: true,
-            grid: false,
-            population: false,
-            walls: false
-        };
 
         this.maze = new Maze({
             xCount: 10,
@@ -57,29 +42,8 @@
                 {
                     brainType: 'RLTD',
                     env: this,
-                    spec: {
-                        update: 'qlearn', // 'qlearn' or 'sarsa'
-                        // discount factor, [0, 1)
-                        gamma: 0.9,
-                        // initial epsilon for epsilon-greedy policy, [0, 1)
-                        epsilon: 0.2,
-                        // value function learning rate
-                        alpha: 0.1,
-                        // eligibility trace decay, [0,1). 0 = no eligibility traces
-                        lambda: 0,
-                        // use replacing or accumulating traces
-                        replacingTraces: true,
-                        // number of planning steps per iteration. 0 = no planning
-                        planN: 50,
-                        // non-standard, updates policy smoothly to follow max_a Q
-                        smoothPolicyUpdate: true,
-                        // learning rate for smooth policy update
-                        beta: 0.1
-                    },
                     numEyes: 0,
                     numTypes: 0,
-                    width: 20,
-                    height: 20,
                     radius: 10,
                     collision: false,
                     interactive: false,
@@ -105,55 +69,21 @@
     GridWorld.prototype.constructor = World;
 
     /**
-     * Graph the agent rewards
-     */
-    GridWorld.prototype.graphRewards = function () {
-        // If we are using flot based rewards
-        for (var a = 0, ac = this.agents.length; a < ac; a++) {
-            var agent = this.agents[a],
-                rew = agent.lastReward;
-
-            if (this.smoothReward[a] === null) {
-                this.smoothReward[a] = rew;
-            }
-            this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
-            this.flott[a] += 1;
-            if (this.flott[a] === 50) {
-                for (var i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
-                    // record smooth reward
-                    if (hl >= this.nflot) {
-                        this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
-                    }
-                    this.smoothRewardHistory[a].push(this.smoothReward[a]);
-                    this.flott[a] = 0;
-                }
-            }
-            if (typeof this.series[a] !== 'undefined') {
-                this.series[a].data = this.getFlotRewards(a);
-            }
-        }
-
-        this.plot.setData(this.series);
-        this.plot.draw();
-    };
-
-    /**
      * Initialize the Flot class
      */
     GridWorld.prototype.initFlot = function () {
+        var _this = this;
+        this.container = document.getElementById('flotreward');
         // flot stuff
         this.nflot = 1000;
         this.smoothRewardHistory = [];
         this.smoothReward = [];
         this.flott = [];
+        this.series = [];
 
         for (var a = 0; a < this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;
-        }
-        this.container = document.getElementById('flotreward');
-        this.series = [];
-        for (var a = 0, ac = this.agents.length; a < ac; a++) {
             this.flott[a] = 0;
             this.smoothRewardHistory[a] = [];
             this.series[a] = {
@@ -166,7 +96,7 @@
             };
         }
 
-        this.plot = $.plot(this.container, this.series, {
+        this.plot = $.plot(_this.container, _this.series, {
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
@@ -189,6 +119,12 @@
                 max: 1000
             }
         });
+
+        setInterval(function(){
+            _this.series[0].data = _this.getFlotRewards();
+            _this.plot.setData(_this.series);
+            _this.plot.draw();
+        }, 100);
     };
 
     /**
@@ -196,16 +132,11 @@
      * @param {Number} an
      * @returns {Array}
      */
-    GridWorld.prototype.getFlotRewards = function (an) {
+    GridWorld.prototype.getFlotRewards = function () {
         var res = [];
-        if (this.smoothRewardHistory[an] === null) {
-            this.smoothRewardHistory[an] = [];
+        for(var i = 0, n = this.agents[0].nStepsHistory.length; i < n; i++) {
+            res.push([i, this.agents[0].nStepsHistory[i]]);
         }
-
-        for (var i = 0, hl = this.smoothRewardHistory[an].length; i < hl; i++) {
-            res.push([i, this.smoothRewardHistory[an][i]]);
-        }
-
         return res;
     };
 
@@ -213,8 +144,7 @@
      *
      */
     GridWorld.prototype.tick = function () {
-        var _this = this,
-            obs;
+        var _this = this;
         if (_this.sid === -1) {
             _this.sid = setInterval(function () {
                 for (var k = 0; k < _this.stepsPerTick; k++) {
@@ -252,7 +182,6 @@
                 }
 
                 _this.drawGrid();
-                _this.graphRewards();
             }, 20);
         } else {
             clearInterval(_this.sid);

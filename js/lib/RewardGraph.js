@@ -5,10 +5,11 @@ var RewardGraph = RewardGraph || {};
 
     /**
      * RewardGraph
-     * @param {Object} opts
-     * @returns {RewardGraph}
      * @name RewardGraph
      * @constructor
+     *
+     * @param {Object} opts
+     * @returns {RewardGraph}
      */
     var RewardGraph = function (opts) {
         this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById("rewardGraph"));

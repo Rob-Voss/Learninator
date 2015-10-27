@@ -11,24 +11,17 @@
     function WaterWorldGA() {
         var _this = this;
         this.canvas = document.getElementById("world");
-        this.xCount = 4;
-        this.yCount = 4;
-        this.numItems = 1;
-        this.closed = true;
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-        this.maze = new Maze(this);
+        this.mazeOptions = {
+            xCount: 4,
+            yCount: 4,
+            width: this.canvas.width,
+            height: this.canvas.height,
+            closed: true
+        };
+        this.maze = new Maze(this.mazeOptions);
         this.grid = this.maze.grid;
         this.walls = this.maze.walls;
-
-        // Reward graphing type
-        this.useFlot = true;
-        this.useGraph = false;
-
-        // Collision type
-        this.cdType = 'quad';
-        this.maxChildren = 2;
-        this.maxDepth = 10;
+        this.numItems = 1;
 
         // Cheats to display
         this.cheats = {

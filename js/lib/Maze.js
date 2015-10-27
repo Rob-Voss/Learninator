@@ -6,18 +6,22 @@
     "use strict";
 
     /**
-     * A maze
-     * @param {Object} opts
-     * @returns {Maze}
+     * A maze generator
      * @name Maze
      * @constructor
+     *
+     * @param {Object} opts - The options for the Maze
+     * @param {number} opts.xCount - The horizontal Cell count
+     * @param {number} opts.yCount - The vertical Cell count
+     * @param {number} opts.width - The width
+     * @param {number} opts.height - The height
+     * @returns {Maze}
      */
     var Maze = function (opts) {
-        this.xCount = opts.xCount;
-        this.yCount = opts.yCount;
-        this.width = opts.width;
-        this.height = opts.height;
-
+        this.xCount = Utility.getOpt(opts, 'xCount', 6);
+        this.yCount = Utility.getOpt(opts, 'yCount', 6);
+        this.width = Utility.getOpt(opts, 'width', 600);
+        this.height = Utility.getOpt(opts, 'height', 600);
         this.cellWidth = this.width / this.xCount;
         this.cellHeight = this.height / this.yCount;
 
@@ -25,7 +29,7 @@
         this.cellStack = [];
         this.path = [];
 
-        this.grid = new Grid(this);
+        this.grid = new Grid(opts);
 
         this.draw(opts.closed);
 
@@ -38,10 +42,12 @@
      * Add a Wall to the Maze
      * @param {Vec} v1
      * @param {Vec} v2
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.addWall = function (v1, v2) {
         this.walls.push(new Wall(v1, v2));
+
+        return this;
     };
 
     /**
@@ -62,36 +68,41 @@
 
     /**
      * Draw it
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.draw = function (closed) {
         this.generate();
         this.drawBorders(closed);
         this.drawMaze();
+
+        return this;
     };
 
     /**
      * Draw the borders
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.drawBorders = function (closed) {
         this.addWall(new Vec(closed ? 2 : this.cellWidth, 2), new Vec(this.width - 2, 2));
         this.addWall(new Vec(this.width - 2, 2), new Vec(this.width - 2, this.height - 2));
         this.addWall(new Vec(this.width - (closed ? 2 : this.cellWidth), this.height - 2), new Vec(2, this.height - 2));
         this.addWall(new Vec(2, this.height - 2), new Vec(2, 2));
+
+        return this;
     };
 
     /**
      * Draw the solution
-     * @returns {undefined}
+     * @param {Canvas} canvas
+     * @returns {Maze}
      */
     Maze.prototype.drawSolution = function (canvas) {
-        var ctx = canvas.getContext("2d"),
-            _ctx = ctx,
+        var V, vW, vH, vX, vY, x, y,
+            _ctx = canvas.getContext("2d"),
             _this = this,
-            path = this.path, V, vW, vH, vX, vY, x, y;
-        ctx.fillStyle = "rgba(0,165,0,.1)";
-        ctx.strokeStyle = "rgb(0,0,0)";
+            path = this.path;
+        _ctx.fillStyle = "rgba(0,165,0,.1)";
+        _ctx.strokeStyle = "rgb(0,0,0)";
         for (let i = 0; i < this.path.length; i++) {
             V = path[i];
             vW = this.cellWidth;
@@ -107,6 +118,8 @@
                 _ctx.fillRect(x, y, vW, vH);
             })();
         }
+
+        return this;
     };
 
     /**
@@ -172,21 +185,25 @@
                 }
             }
         }
+
+        return this;
     };
 
     /**
      * Build the maze
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.generate = function () {
         var initialCell = this.grid.getCellAt(0, 0);
         this.recurse(initialCell);
+
+        return this;
     };
 
     /**
      * Recurse through a Cell's neighbors
      * @param {Cell} cell
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.recurse = function (cell) {
         cell.visit();
@@ -202,11 +219,13 @@
                 this.recurse(waitingCell);
             }
         }
+
+        return this;
     };
 
     /**
      * Solve the Maze
-     * @returns {undefined}
+     * @returns {Maze}
      */
     Maze.prototype.solve = function () {
         var closedSet = [],
@@ -249,6 +268,8 @@
                 }
             });
         }
+
+        return this;
     };
 
     global.Maze = Maze;

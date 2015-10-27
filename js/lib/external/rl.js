@@ -2874,6 +2874,13 @@
                             input: _DQNAgent.epsilon
                         });
                         break;
+                    case 'save':
+                        self.postMessage({
+                            cmd: 'save',
+                            msg: 'complete',
+                            input: _DQNAgent.toJSON()
+                        });
+                        break;
                     case 'stop':
                         self.postMessage({
                             cmd: 'stop',

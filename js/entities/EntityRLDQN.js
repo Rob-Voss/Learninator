@@ -14,6 +14,8 @@ var EntityRLDQN = EntityRLDQN || {};
      * @returns {EntityRLDQN}
      */
     function EntityRLDQN(position, opts) {
+        var _this = this;
+
         this.name = 'Entity RLDQN';
         this.action = null;
         this.state = null;
@@ -21,8 +23,6 @@ var EntityRLDQN = EntityRLDQN || {};
         this.BADRAD = 25;
         this.type = 5;
         this.stepsPerTick = 1;
-
-        Agent.call(this, position, opts);
 
         // Reward or punishment
         this.carrot = +1;
@@ -41,6 +41,8 @@ var EntityRLDQN = EntityRLDQN || {};
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
+        Agent.call(this, position, opts);
+
         // The number of Agent's eyes, each one sees the number of knownTypes + stuff
         this.numStates = this.numEyes * this.numTypes + 6;
 
@@ -49,19 +51,6 @@ var EntityRLDQN = EntityRLDQN || {};
         for (var k = 0; k < this.numEyes; k++) {
             this.eyes.push(new Eye(k * Math.PI / 3, this.position, 75, 75));
         }
-
-        // Set the brain options
-        this.brainOpts = Utility.getOpt(opts, 'spec', {
-            update: "qlearn", // qlearn | sarsa
-            gamma: 0.9, // discount factor, [0, 1)
-            epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
-            alpha: 0.005, // value function learning rate
-            experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
-            experienceSize: 10000, // size of experience
-            learningStepsPerIteration: 5,
-            tdErrorClamp: 1.0, // for robustness
-            numHiddenUnits: 100 // number of neurons in hidden layer
-        });
 
         this.brain = new DQNAgent(this, this.brainOpts);
 

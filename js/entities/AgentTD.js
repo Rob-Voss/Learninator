@@ -29,10 +29,10 @@ var AgentTD = AgentTD || {};
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
-        Agent.call(this, position, opts);
-
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
+
+        Agent.call(this, position, opts);
 
         // Amount of temporal memory. 0 = agent lives in-the-moment :)
         this.temporalWindow = 1;

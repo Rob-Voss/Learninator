@@ -3,62 +3,119 @@
 
     /**
      * Make a World
-     * @param {Object} opts
-     * @param {Object} entityOpts
-     * @returns {World}
      * @name World
      * @constructor
+     *
+     * @param {worldOpts} worldOpts
+     * @returns {World}
      */
-    function World(opts, entityOpts) {
+    function World(worldOpts) {
         var _this = this;
-        this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById('world'));
+        this.canvas = this.canvas || document.getElementById('world');
         this.ctx = this.canvas.getContext('2d');
         this.width = this.canvas.width;
         this.height = this.canvas.height;
 
-        // Population/collision detection type
-        this.numItems = Utility.getOpt(opts, 'numItems', 20);
-        this.cheats = Utility.getOpt(opts, 'cheats', false);
-
-        // Basics for the environment
-        this.agents = Utility.getOpt(opts, 'agents', []);
-        this.entityAgents = Utility.getOpt(opts, 'entityAgents', []);
-        this.entities = Utility.getOpt(opts, 'entities', []);
-        this.walls = Utility.getOpt(opts, 'walls', []);
-
-        // Entity options
-        this.entityOpts = entityOpts;
+        // PIXI gewdness
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas, transparent: true}, true);
+        this.renderer.roundPixels = true;
+        document.body.appendChild(this.renderer.view);
+        this.stage = new PIXI.Container();
 
         this.clock = 0;
         this.pause = false;
 
-        // PIXI gewdness
-        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas, transparent: true});
-        document.body.appendChild(this.renderer.view);
-        this.stage = new PIXI.Container();
+        // flot reward graph stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
 
-        CD.apply(this, [this.cdType]);
+        // The speed to run the simulation at
+        this.simSpeed = this.simSpeed || Utility.getOpt(worldOpts, 'simSpeed', 1);
 
-        this.addAgents();
+        // The collision detection type
+        this.collision = this.collision || Utility.getOpt(worldOpts, 'collision', {
+            type: 'quad',
+            maxChildren: 3,
+            maxDepth: 10
+        });
+
+        // The cheats to display
+        this.cheats = this.cheats || Utility.getOpt(worldOpts, 'cheats', {
+            quad: false,
+            grid: false,
+            population: false,
+            walls: false
+        });
+
+        // Walls
+        this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
+            new Wall(new Vec(0, 0), new Vec(0 + this.width, 0)),
+            new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height)),
+            new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height)),
+            new Wall(new Vec(0, 0 + this.height), new Vec(0, 0))
+        ]);
+
+        // Population of Agents for the environment
+        this.numAgents = this.numAgents || Utility.getOpt(worldOpts, 'numAgents', 0);
+        this.agents = this.agents || Utility.getOpt(worldOpts, 'agents', []);
+
+        // Population of Agents that are considered 'smart' entities for the environment
+        this.numEntityAgents = this.numEntityAgents || Utility.getOpt(worldOpts, 'numEntityAgents', 0);
+        this.entityAgents = this.entityAgents || Utility.getOpt(worldOpts, 'entityAgents', []);
+        // Entity Agent options
+        this.entityAgentOpts = this.entityAgentOpts || Utility.getOpt(worldOpts, 'entityAgentOpts', {
+            radius: 10,
+            collision: true,
+            interactive: true,
+            useSprite: false,
+            movingEntities: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: false,
+                id: false
+            }
+        });
+
+        this.numEntities = this.numEntities || Utility.getOpt(worldOpts, 'numEntities', 20);
+        this.entities = this.entities || Utility.getOpt(worldOpts, 'entities', []);
+        // Entity options
+        this.entityOpts = this.entityOpts || Utility.getOpt(worldOpts, 'entityOpts', {
+            radius: 10,
+            collision: true,
+            interactive: true,
+            useSprite: false,
+            movingEntities: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: false,
+                id: false
+            }
+        });
+
+        CollisionDetector.apply(this, [this.collision]);
+
         this.addWalls();
+        this.addAgents();
+        this.addEntityAgents();
         this.addEntities();
 
-        if (this.useFlot === true) {
-            // flot stuff
-            this.nflot = 1000;
-            this.smoothRewardHistory = [];
-            this.smoothReward = [];
-            this.flott = [];
-
-            this.initFlot();
-        } else if (this.useGraph === true) {
-            this.rewardGraph = Utility.getOpt(opts, 'rewardGraph', new RewardGraph(opts));
-        }
+        this.initFlot();
 
         function animate() {
             if (!_this.pause) {
-                _this.updatePopulation();
-                _this.tick();
+                if (_this.simSpeed === 3) {
+                    for (let k = 0; k < 50; k++) {
+                        _this.updatePopulation();
+                        _this.tick();
+                    }
+                } else {
+                    _this.updatePopulation();
+                    _this.tick();
+                }
                 _this.draw();
             }
             _this.renderer.render(_this.stage);
@@ -76,9 +133,7 @@
      */
     World.prototype.addAgents = function () {
         // Add the agents
-        let agents = [],
-            lastColor;
-        for (let a = 0; a < this.agents.length; a++) {
+        for (let a = 0; a < this.numAgents; a++) {
             let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 agentContainer.addChild(this.agents[a].eyes[ei].shape);
@@ -87,22 +142,6 @@
             this.stage.addChild(agentContainer);
 
             this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
-            // If we are already using another agent's color, mix it up a bit
-            if (this.agents[a].legendColor === lastColor) {
-                this.agents[a].legendColor = this.agents[a].styles[this.agents[a].type + 1];
-            }
-            // Set up the Legend in the reward graph
-            if (this.useGraph === true && this.rewardGraph !== undefined) {
-                agents.push({
-                    name: this.agents[a].id.substring(0, 10),
-                    color: this.agents[a].legendColor
-                });
-            }
-            lastColor = this.agents[a].legendColor;
-        }
-
-        if (this.useGraph === true && this.rewardGraph !== undefined) {
-            this.rewardGraph.setLegend(agents);
         }
 
         return this;
@@ -122,7 +161,7 @@
                 entity = new EntityRLDQN(position, this.entityAgentOpts);
 
             entity.enemy = this.agents[k];
-            entity.target = (k === 0) ? this.agents[k + 1]: this.agents[k - 1];
+            entity.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
 
             let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < entity.eyes.length; ei++) {
@@ -144,34 +183,22 @@
      */
     World.prototype.addEntities = function (number) {
         if (number === undefined) {
-            number = this.numItems - this.entities.length;
+            number = this.numEntities - this.entities.length;
         }
         // Populating the world
         for (let k = 0; k < number; k++) {
-            this.addEntity();
+            let type = Utility.randi(1, 3),
+                x = Utility.randi(2, this.width - 2),
+                y = Utility.randi(2, this.height - 2),
+                vx = Utility.randf(-2, 2),
+                vy = Utility.randf(-2, 2),
+                position = new Vec(x, y, 0, vx, vy),
+                entity = new Entity(type, position, this.entityOpts);
+
+            // Insert the population
+            this.entities.push(entity);
+            this.stage.addChild(entity.shape || entity.sprite);
         }
-
-        return this;
-    };
-
-    /**
-     * Add an entity to the world
-     * @returns {World}
-     */
-    World.prototype.addEntity = function () {
-        // Random radius
-        this.entityOpts.radius = 10;//Utility.randi(5, 10);
-        let type = Utility.randi(1, 3),
-            x = Utility.randi(2, this.width - 2),
-            y = Utility.randi(2, this.height - 2),
-            vx = Utility.randf(-2, 2),
-            vy = Utility.randf(-2, 2),
-            position = new Vec(x, y, 0, vx, vy),
-            entity = new Entity(type, position, this.entityOpts);
-
-        // Insert the population
-        this.entities.push(entity);
-        this.stage.addChild(entity.shape || entity.sprite);
 
         return this;
     };
@@ -268,16 +295,16 @@
         }
 
         // If we have less then the number of Items allowed throw a random one in
-        if (this.entities.length < this.numItems && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-            this.addEntities(this.numItems - this.entities.length);
+        if (this.entities.length < this.numEntities && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+            this.addEntities();
         }
 
         // If we have less then the number of Agents allowed throw a random one in
         //if (this.agents.length < this.numAgents && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-            //var missing = this.numAgents - this.agents.length;
-            //for (let na = 0; na < missing; na++) {
-            //    this.addAgent();
-            //}
+        //var missing = this.numAgents - this.agents.length;
+        //for (let na = 0; na < missing; na++) {
+        //    this.addAgent();
+        //}
         //}
 
         return this;
@@ -288,48 +315,34 @@
      * @returns {World}
      */
     World.prototype.graphRewards = function () {
-        // If we are using flot based rewards
-        if (this.useFlot === true) {
-            for (let a = 0, ac = this.agents.length; a < ac; a++) {
-                let agent = this.agents[a],
-                    rew = agent.lastReward;
+        for (let a = 0, ac = this.agents.length; a < ac; a++) {
+            let agent = this.agents[a],
+                rew = agent.lastReward;
 
-                if (this.smoothReward[a] === null) {
-                    this.smoothReward[a] = rew;
-                }
-                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
-                this.flott[a] += 1;
-                if (this.flott[a] === 50) {
-                    for (let i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
-                        // record smooth reward
-                        if (hl >= this.nflot) {
-                            this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
-                        }
-                        this.smoothRewardHistory[a].push(this.smoothReward[a]);
-                        this.flott[a] = 0;
+            if (this.smoothReward[a] === null) {
+                this.smoothReward[a] = rew;
+            }
+            this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
+            this.flott[a] += 1;
+            if (this.flott[a] === 50) {
+                for (let i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
+                    // record smooth reward
+                    if (hl >= this.nflot) {
+                        this.smoothRewardHistory[a] = this.smoothRewardHistory[a].slice(1);
                     }
-                }
-                if (typeof this.series[a] !== 'undefined') {
-                    this.series[a].data = this.getFlotRewards(a);
-                }
-                // Clear them up since we've drawn them
-                this.agents[a].pts = [];
-            }
-
-            this.plot.setData(this.series);
-            this.plot.draw();
-        } else if (this.useGraph === true) {
-            // Or maybe we are using simple Graph based rewards
-            for (let a = 0, al = this.agents.length; a < al; a++) {
-                if (this.clock % 100 === 0 && this.agents[a].pts.length !== 0) {
-                    // Throw some points on a Graph
-                    this.rewardGraph.addPoint(this.clock / 100, a, this.agents[a].pts);
-                    this.rewardGraph.drawPoints();
-                    // Clear them up since we've drawn them
-                    this.agents[a].pts = [];
+                    this.smoothRewardHistory[a].push(this.smoothReward[a]);
+                    this.flott[a] = 0;
                 }
             }
+            if (typeof this.series[a] !== 'undefined') {
+                this.series[a].data = this.getFlotRewards(a);
+            }
+            // Clear them up since we've drawn them
+            this.agents[a].pts = [];
         }
+
+        this.plot.setData(this.series);
+        this.plot.draw();
 
         return this;
     };
@@ -339,6 +352,7 @@
      * @returns {World}
      */
     World.prototype.initFlot = function () {
+        var _this = this;
         for (let a = 0; a < this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;
@@ -382,22 +396,30 @@
             }
         });
 
+        setInterval(function () {
+            for (let a = 0, ac = _this.agents.length; a < ac; a++) {
+                _this.series[a].data = _this.getFlotRewards(a);
+            }
+            _this.plot.setData(_this.series);
+            _this.plot.draw();
+        }, 100);
+
         return this;
     };
 
     /**
      * zip rewards into flot data
-     * @param {Number} an
+     * @param {Number} a
      * @returns {Array}
      */
-    World.prototype.getFlotRewards = function (an) {
+    World.prototype.getFlotRewards = function (a) {
         var res = [];
-        if (this.smoothRewardHistory[an] === null) {
-            this.smoothRewardHistory[an] = [];
+        if (this.smoothRewardHistory[a] === null) {
+            this.smoothRewardHistory[a] = [];
         }
 
-        for (let i = 0, hl = this.smoothRewardHistory[an].length; i < hl; i++) {
-            res.push([i, this.smoothRewardHistory[an][i]]);
+        for (let i = 0, hl = this.smoothRewardHistory[a].length; i < hl; i++) {
+            res.push([i, this.smoothRewardHistory[a][i]]);
         }
 
         return res;
@@ -417,6 +439,7 @@
         this.v1 = v1;
         this.v2 = v2;
         this.position = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+        // Is it wider than it is high or visaversa
         var dist = v1.distFrom(v2);
         this.width = (v1.x < v2.x) ? dist : 2;
         this.height = (v1.y < v2.y) ? dist : 2;
@@ -429,6 +452,7 @@
 
     /**
      * Draws it
+     * @returns {Wall}
      */
     Wall.prototype.draw = function () {
         this.shape.clear();
@@ -436,6 +460,8 @@
         this.shape.moveTo(this.v1.x, this.v1.y);
         this.shape.lineTo(this.v2.x, this.v2.y);
         this.shape.endFill();
+
+        return this;
     };
 
     global.Wall = Wall;

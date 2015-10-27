@@ -15,13 +15,13 @@ var AgentRLTD = AgentRLTD || {};
      */
     function AgentRLTD(position, opts) {
         var _this = this;
+
         Agent.call(this, position, opts);
 
         this.nStepsHistory = [];
         this.nStepsCounter = 0;
         this.nflot = 1000;
         this.score = 0;
-        this.env = Utility.getOpt(opts, 'env', {});
 
         this.brainOpts = Utility.getOpt(opts, 'spec', {
             update: 'qlearn', // 'qlearn' or 'sarsa'
@@ -35,12 +35,11 @@ var AgentRLTD = AgentRLTD || {};
             beta: 0.1 // learning rate for smooth policy update
         });
 
-
         if (!this.worker) {
-            this.brain = new TDAgent(this.env, this.brainOpts);
-            this.state = this.env.startState();
+            this.brain = new TDAgent(_this.env, this.brainOpts);
+            this.state = _this.env.startState();
 
-            this.env.reset();
+            _this.env.reset();
 
             return this;
         } else {
@@ -57,9 +56,9 @@ var AgentRLTD = AgentRLTD || {};
                 switch (data.cmd) {
                 case 'init':
                     if (data.msg === 'complete') {
-                        _this.state = _this.startState();
+                        _this.state = _this.env.startState();
 
-                        _this.reset();
+                        _this.env.reset();
                     }
                     break;
                 case 'act':
@@ -130,10 +129,10 @@ var AgentRLTD = AgentRLTD || {};
 
             // evolve environment to next state
             this.state = obs.ns;
-            this.gridLocation = world.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+            this.gridLocation = this.world.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
 
-            let x = this.gridLocation.coords.bottom.right.x - (world.grid.cellWidth / 2),
-                y = this.gridLocation.coords.bottom.right.y - (world.grid.cellHeight / 2);
+            let x = this.gridLocation.coords.bottom.right.x - (this.world.grid.cellWidth / 2),
+                y = this.gridLocation.coords.bottom.right.y - (this.world.grid.cellHeight / 2);
             this.position.set(x, y);
 
             this.nStepsCounter += 1;
@@ -147,8 +146,8 @@ var AgentRLTD = AgentRLTD || {};
                 this.nStepsHistory.push(this.nStepsCounter);
                 this.nStepsCounter = 0;
 
-                this.gridLocation = world.grid.getCellAt(0, 0);
-                this.position.set(world.grid.cellWidth / 2, world.grid.cellHeight / 2);
+                this.gridLocation = this.world.grid.getCellAt(0, 0);
+                this.position.set(this.world.grid.cellWidth / 2, this.world.grid.cellHeight / 2);
             }
         } else {
             this.post('act', this.state);

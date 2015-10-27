@@ -32,6 +32,8 @@ var TDBrain = TDBrain || {};
      * the outputs to maximize the expected reward
      * @name TDBrain
      * @constructor
+     *
+     * @param {brainOpts} opt
      * @returns {TDBrain}
      */
     function TDBrain(opts) {

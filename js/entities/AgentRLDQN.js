@@ -28,68 +28,12 @@ var AgentRLDQN = AgentRLDQN || {};
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
-        Agent.call(this, position, opts);
-
         // The number of Agent's eyes, each one sees the number of knownTypes + the two velocity inputs
         this.numStates = this.numEyes * this.numTypes + 2;
 
-        // Set the brain options
-        this.brainOpts = Utility.getOpt(opts, 'spec', {
-            update: "qlearn", // qlearn | sarsa
-            gamma: 0.9, // discount factor, [0, 1)
-            epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
-            alpha: 0.005, // value function learning rate
-            experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
-            experienceSize: 10000, // size of experience
-            learningStepsPerIteration: 5,
-            tdErrorClamp: 1.0, // for robustness
-            numHiddenUnits: 100 // number of neurons in hidden layer
-        });
+        Agent.call(this, position, opts);
 
-        var _this = this;
-
-        // If it's a worker then we have to load it a bit different
-        if (!this.worker) {
-            this.brain = new DQNAgent(_this.env, this.brainOpts);
-
-            return this;
-        } else {
-            this.post = function (cmd, input) {
-                this.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
-            };
-
-            var jEnv = Utility.stringify(_this.env),
-                jOpts = Utility.stringify(_this.brainOpts);
-
-            this.brain = new Worker('js/lib/external/rl.js');
-            this.brain.onmessage = function (e) {
-                var data = e.data;
-                switch (data.cmd) {
-                case 'init':
-                    if (data.msg === 'complete') {
-                        //
-                    }
-                    break;
-                case 'act':
-                    if (data.msg === 'complete') {
-                        _this.action = data.input;
-                        _this.move();
-                        _this.learn();
-                    }
-                    break;
-                case 'learn':
-                    if (data.msg === 'complete') {
-                        _this.epsilon = parseFloat(data.input);
-                    }
-                    break;
-                default:
-                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-                    break;
-                }
-            };
-
-            this.post('init', {env: jEnv, opts: jOpts});
-        }
+        this.reset();
     }
 
     AgentRLDQN.prototype = Object.create(Agent.prototype);
@@ -270,6 +214,69 @@ var AgentRLDQN = AgentRLDQN || {};
 
         return this;
     };
+
+    /**
+     * Reset or set up the Agent
+     */
+    AgentRLDQN.prototype.reset = function () {
+        var _this = this;
+
+        // If it's a worker then we have to load it a bit different
+        if (!this.worker) {
+            this.brain = new DQNAgent(this.env, this.brainOpts);
+
+            return this;
+        } else {
+            this.post = function (cmd, input) {
+                this.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
+            };
+
+            var jEnv = Utility.stringify(this.env),
+                jOpts = Utility.stringify(this.brainOpts);
+
+            this.brain = new Worker('js/lib/external/rl.js');
+            this.brain.onmessage = function (e) {
+                var data = e.data;
+                switch (data.cmd) {
+                    case 'act':
+                        if (data.msg === 'complete') {
+                            _this.action = data.input;
+                            _this.move();
+                            _this.learn();
+                        }
+                        break;
+                    case 'init':
+                        if (data.msg === 'complete') {
+                            //
+                        }
+                        break;
+                    case 'learn':
+                        if (data.msg === 'complete') {
+                            _this.epsilon = parseFloat(data.input);
+                        }
+                        break;
+                    case 'load':
+                        if (data.msg === 'complete') {
+                            //
+                        }
+                        break;
+                    case 'save':
+                        if (data.msg === 'complete') {
+                            _this.brainState = JSON.stringify(data.input);
+                        }
+                        break;
+                    default:
+                        console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                        break;
+                }
+            };
+
+            this.post('init', {env: jEnv, opts: jOpts});
+        }
+
+        return this;
+    };
+
 
     global.AgentRLDQN = AgentRLDQN;
 

@@ -6,11 +6,12 @@ var Window = Window || {};
     /**
      * A window stores _size_ number of values and returns averages. Useful for
      * keeping running track of validation or training accuracy during SGD
+     * @name Window
+     * @constructor
+     *
      * @param {Number} size
      * @param {Number} minSize
      * @returns {Window}
-     * @name Window
-     * @constructor
      */
     var Window = function (size, minSize) {
         this.v = [];

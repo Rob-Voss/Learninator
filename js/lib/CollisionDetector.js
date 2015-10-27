@@ -1,20 +1,19 @@
-var CD = CD || {};
+var CollisionDetector = CollisionDetector || {};
 
 (function (global) {
     "use strict";
 
     /**
      * Collision Detector wrapper
-     * @param type
      * @name CollisionDetector
      * @constructor
      */
-    var CD = function (type) {
-        if (type === 'grid') {
+    var CollisionDetector = function () {
+        if (this.collision.type === 'grid') {
             GridCD.apply(this);
-        } else if (type === 'quad') {
+        } else if (this.collision.type === 'quad') {
             QuadCD.apply(this);
-        } else if (type === 'brute') {
+        } else if (this.collision.type === 'brute') {
             BruteCD.apply(this);
         }
 
@@ -566,6 +565,6 @@ var CD = CD || {};
         };
     };
 
-    global.CD = CD;
+    global.CollisionDetector = CollisionDetector;
 
 }(this));

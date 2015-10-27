@@ -4,10 +4,11 @@ var UI = UI || {};
     "use strict";
 
     /**
-     *
-     * @param options
+     * UI Class to use with PIXI
      * @name UI
      * @constructor
+     *
+     * @param options
      */
     var UI = function (options) {
         this.canvas = options.canvas;

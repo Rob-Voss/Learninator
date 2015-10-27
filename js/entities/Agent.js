@@ -15,9 +15,6 @@ var Agent = Agent || {};
      * @property {cheatOpts} cheats - The cheats to display
      * @property {brainOpts} spec - The brain options
      * @property {Object} env - The environment
-     * @property {cheatOpts} opts.cheats - The cheats to display
-     * @property {brainOpts} opts.spec - The brain options
-     * @property {Object} opts.env - The environment
      */
 
     /**
@@ -42,31 +39,58 @@ var Agent = Agent || {};
      *
      * @param {Vec} position - The x, y location
      * @param {agentOpts} opts - The Agent options
-     * @param {cheatOpts} opts.cheats - The cheats to display
-     * @param {brainOpts} opts.spec - The brain options
      * @returns {Agent}
      */
     function Agent(position, opts) {
+        var _this = this;
+        this.brainState = {};
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
         Entity.call(this, (this.worker) ? 'Agent Worker' : 'Agent', position, opts);
-
-        // Just a text value for the brain type, also useful for worker ops
+        // Just a text value for the brain type, also useful for worker posts
         this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
-
         // The number of item types the Agent's eyes can see
         this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
         // The number of Agent's eyes
         this.numEyes = Utility.getOpt(opts, 'numEyes',  9);
+        // The range of the Agent's eyes
         this.range = Utility.getOpt(opts, 'range',  85);
+        // The proximity of the Agent's eyes
         this.proximity = Utility.getOpt(opts, 'proximity',  85);
-        // The number of Agent's eyes, each one sees the number of knownTypes
+        // The number of Agent's eyes times the number of known types
         this.numStates = this.numEyes * this.numTypes;
 
+        // Set the brain options
+        this.brainOpts = Utility.getOpt(opts, 'spec', {
+            update: "qlearn", // qlearn | sarsa
+            gamma: 0.9, // discount factor, [0, 1)
+            epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+            alpha: 0.005, // value function learning rate
+            experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
+            experienceSize: 10000, // size of experience
+            learningStepsPerIteration: 5,
+            tdErrorClamp: 1.0, // for robustness
+            numHiddenUnits: 100 // number of neurons in hidden layer
+        });
+
+        // The Agent's environment
+        this.env = Utility.getOpt(opts, 'env',  {
+            numActions: this.numActions,
+            numStates: this.numStates,
+            getMaxNumActions: function () {
+                return this.numActions;
+            },
+            getNumStates: function () {
+                return this.numStates;
+            }
+        });
+
         // The Agent's eyes
-        this.eyes = [];
-        for (var k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
+        if (this.eyes === undefined) {
+            this.eyes = [];
+            for (var k = 0; k < this.numEyes; k++) {
+                this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
+            }
         }
 
         this.action = null;
@@ -80,22 +104,6 @@ var Agent = Agent || {};
         this.direction = 'N';
         this.brain = {};
         this.world = {};
-
-        // Set up the environment variable for RL
-        this.env = {
-            numActions: this.numActions,
-            numStates: this.numStates
-        };
-
-        this.env.getMaxNumActions = function () {
-            return this.numActions;
-        };
-
-        this.env.getNumStates = function () {
-            return this.numStates;
-        };
-
-        var _this = this;
 
         return this;
     }
@@ -143,13 +151,12 @@ var Agent = Agent || {};
     /**
      *
      */
-    Agent.prototype.saveAgent = function (id) {
-        var brain;
+    Agent.prototype.save = function () {
         if (!this.worker) {
-            brain = this.brain;
+            this.brainState = JSON.stringify(this.brain.toJSON());
+        } else {
+            this.post('save');
         }
-
-        return JSON.stringify(brain.toJSON());
     };
 
     /**
@@ -165,7 +172,8 @@ var Agent = Agent || {};
         if (!this.worker) {
             // Move eet!
             this.move();
-            // This is where the agents learns based on the feedback of their actions on the environment
+            // This is where the agents learns based on the feedback of their
+            // actions on the environment
             this.learn();
         }
 

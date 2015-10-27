@@ -1,16 +1,20 @@
+/**
+ * Original code borrowed from https://github.com/felipecsl/random-maze-generator
+ *
+ */
 (function (global) {
     "use strict";
 
     /**
      * Create a cell
+     * @name Cell
+     * @constructor
      *
      * @param {Number} x
      * @param {Number} y
      * @param {Number} width
      * @param {Number} height
      * @returns {Cell}
-     * @name Cell
-     * @constructor
      */
     var Cell = function (x, y, width, height) {
         this.x = x;
@@ -50,7 +54,6 @@
 
     /**
      * Calculate the path to the origin
-     *
      * @returns {Array}
      */
     Cell.prototype.pathToOrigin = function () {
@@ -68,7 +71,6 @@
 
     /**
      * Score
-     *
      * @returns {Number}
      */
     Cell.prototype.score = function () {
@@ -85,8 +87,7 @@
 
     /**
      * Mark it as visited
-     *
-     * @return {undefined}
+     * @return {Cell}
      */
     Cell.prototype.visit = function () {
         this.visited = true;
@@ -96,17 +97,23 @@
 
     /**
      * Grid
-     *
-     * @param {Object} env
-     * @returns {Grid}
      * @name Grid
      * @constructor
+     *
+     * @param {Object} opts - The options for the Grid
+     * @param {number} opts.xCount - The horizontal Cell count
+     * @param {number} opts.yCount - The vertical Cell count
+     * @param {number} opts.width - The width
+     * @param {number} opts.height - The height
+     * @returns {Grid}
      */
-    var Grid = function (env) {
-        this.xCount = env.xCount || 1;
-        this.yCount = env.yCount || 1;
-        this.cellWidth = env.width / this.xCount;
-        this.cellHeight = env.height / this.yCount;
+    var Grid = function (opts) {
+        this.xCount = Utility.getOpt(opts, 'xCount', 6);
+        this.yCount = Utility.getOpt(opts, 'yCount', 6);
+        this.width = Utility.getOpt(opts, 'width', 600);
+        this.height = Utility.getOpt(opts, 'height', 600);
+        this.cellWidth = this.width / this.xCount;
+        this.cellHeight = this.height / this.yCount;
 
         this.removedEdges = [];
         this.cells = [];

@@ -3,6 +3,8 @@
 
     /**
      * A 2D vector utility
+     * @name Vec
+     * @constructor
      *
      * @param {Number} x
      * @param {Number} y
@@ -14,8 +16,6 @@
      * @param {Number} ay
      * @param {Number} az
      * @returns {Vec}
-     * @name Vec
-     * @constructor
      */
     var Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {
         this.x = x || 0;

@@ -3,60 +3,42 @@
 
     /**
      * Maze contains many agents and walls and food and stuff
-     * @returns {MazeWorld}
      * @name MazeWorld
      * @extends World
      * @constructor
+     *
+     * @returns {MazeWorld}
      */
     function MazeWorld() {
-        this.canvas = document.getElementById("world");
-        this.rewardGraph = new RewardGraph({
-            canvas: document.getElementById("rewardGraph"),
-            stepHorizon: 1000
-        });
-        this.xCount = 6;
-        this.yCount = 6;
-        this.closed = true;
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-        this.numItems = 20;
-        this.maze = new Maze(this);
-        this.useFlot = false;
-        this.useGraph = true;
-
-        // Collision type
-        this.cdType = 'quad';
-        this.maxChildren = 2;
-        this.maxDepth = 10;
-
-        this.closed = true;
-
-        this.cheats = {
-            quad: true,
-            grid: false,
-            population: false,
-            walls: false
+        this.canvas = document.getElementById('world');
+        this.mazeOptions = {
+            xCount: 6,
+            yCount: 6,
+            closed: true,
+            width: this.canvas.width,
+            height: this.canvas.height
         };
+        this.maze = new Maze(this.mazeOptions);
+        this.grid = this.maze.grid;
+        this.walls = this.maze.walls;
 
-        this.Rarr = null;
-        this.Aarr = null;
-
+        this.numEntities = 40;
         this.entityOpts = {
             radius: 10,
-            collision: false,
-            interactive: true,
+            collision: true,
+            interactive: false,
             useSprite: false,
             movingEntities: false,
             cheats: {
                 gridLocation: false,
                 position: false,
-                name: false,
-                id: false
+                id: false,
+                name: false
             }
         };
 
-        this.grid = this.maze.grid;
-        this.walls = this.maze.walls;
+        this.Rarr = null;
+        this.Aarr = null;
 
         this.agents = [
             new AgentTD(new Vec(1, 1), {
@@ -96,8 +78,9 @@
                 }
             })
         ];
+        this.numAgents = this.agents.length;
 
-        World.call(this, this, this.entityOpts);
+        World.call(this);
 
         return this;
     }
