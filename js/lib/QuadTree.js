@@ -71,6 +71,7 @@ var QuadTree = {}; // global var for the quadtree
                 width: width, // width
                 height: height, // height
                 depth: depth, // depth level of the node
+                items: items,
 
                 /**
                  * Iterates all items that match the selector and invokes the supplied callback on them.

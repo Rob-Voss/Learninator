@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: lib/CollisionDetector.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>var CollisionDetector = CollisionDetector || {};
@@ -446,8 +446,8 @@
 
             // Draw the grid
             if (this.cheats.grid) {
-                this.stage.removeChild(this.gridOverlay);
-                this.gridOverlay = new PIXI.Container();
+                this.stage.removeChild(this.collisionOverlay);
+                this.collisionOverlay = new PIXI.Container();
 
                 // If we are using grid based collision set up an overlay
                 for (let x = 0; x &lt; this.grid.cells.length; x++) {
@@ -465,14 +465,14 @@
                         grid.lineTo(coords.top.right.x, coords.top.right.y);
                         grid.endFill();
 
-                        this.gridOverlay.addChild(grid);
+                        this.collisionOverlay.addChild(grid);
                     }
                 }
-                this.stage.addChild(this.gridOverlay);
+                this.stage.addChild(this.collisionOverlay);
             } else {
-                if (this.gridOverlay !== undefined) {
-                    this.stage.removeChild(this.gridOverlay);
-                    this.gridOverlay = new PIXI.Container();
+                if (this.collisionOverlay !== undefined) {
+                    this.stage.removeChild(this.collisionOverlay);
+                    this.collisionOverlay = new PIXI.Container();
                 }
             }
         };

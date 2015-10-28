@@ -269,6 +269,9 @@ var Entity = Entity || {};
                 this.eyes[ae].draw(this);
             }
         }
+        if (this.cheats) {
+            this.updateCheats();
+        }
 
         return this;
     };

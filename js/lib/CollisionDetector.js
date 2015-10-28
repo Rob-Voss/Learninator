@@ -1,5 +1,3 @@
-var CollisionDetector = CollisionDetector || {};
-
 (function (global) {
     "use strict";
 
@@ -7,13 +5,15 @@ var CollisionDetector = CollisionDetector || {};
      * Collision Detector wrapper
      * @name CollisionDetector
      * @constructor
+     *
+     * @param {Object} opts
      */
-    var CollisionDetector = function () {
-        if (this.collision.type === 'grid') {
+    var CollisionDetector = function (opts) {
+        if (opts.type === 'grid') {
             GridCD.apply(this);
-        } else if (this.collision.type === 'quad') {
+        } else if (opts.type === 'quad') {
             QuadCD.apply(this);
-        } else if (this.collision.type === 'brute') {
+        } else if (opts.type === 'brute') {
             BruteCD.apply(this);
         }
 
@@ -207,9 +207,11 @@ var CollisionDetector = CollisionDetector || {};
         };
 
     };
+    global.CollisionDetector = CollisionDetector;
 
     /**
      * QuadTree CD
+     * @name QuadCD
      * @constructor
      */
     var QuadCD = function () {
@@ -231,7 +233,8 @@ var CollisionDetector = CollisionDetector || {};
          * @param target
          */
         this.check = function (target) {
-            var region, _this = this, collisionObj;
+            var region, collisionObj,
+                _this = this;
             target.collisions = [];
 
             /**
@@ -303,7 +306,7 @@ var CollisionDetector = CollisionDetector || {};
          * Draw the regions from a node
          */
         this.drawRegions = function (aNode) {
-            let nodes = aNode.getNodes(),
+            var nodes = aNode.getNodes(),
                 rect = new PIXI.Graphics();
             if (nodes) {
                 for (let i = 0; i < nodes.length; i++) {
@@ -316,7 +319,13 @@ var CollisionDetector = CollisionDetector || {};
             rect.drawRect(aNode.x, aNode.y, aNode.width, aNode.height);
             rect.endFill();
 
-            this.quadContainer.addChild(rect);
+            if (aNode.items !== undefined) {
+                var popText = new PIXI.Text(aNode.items.length, {font: "20px Arial", fill: "#006400", align: "center"});
+                popText.position.set(aNode.x + aNode.width / 2, aNode.y + aNode.height / 2);
+                rect.addChild(popText);
+            }
+
+            this.collisionOverlay.addChild(rect);
         };
 
         /**
@@ -341,21 +350,26 @@ var CollisionDetector = CollisionDetector || {};
             this.tree.insert(this.nodes);
 
             if (this.cheats.quad) {
-                this.stage.removeChild(this.quadContainer);
-                this.quadContainer = new PIXI.Container();
+                if (this.collisionOverlay !== undefined) {
+                    this.stage.removeChild(this.collisionOverlay);
+                }
+                this.collisionOverlay = new PIXI.Container();
+
                 this.drawRegions(this.tree.root);
-                this.stage.addChild(this.quadContainer);
+                this.stage.addChild(this.collisionOverlay);
             } else {
-                if (this.quadContainer !== undefined) {
-                    this.stage.removeChild(this.quadContainer);
-                    this.quadContainer = new PIXI.Container();
+                if (this.collisionOverlay !== undefined) {
+                    this.stage.removeChild(this.collisionOverlay);
+                    this.collisionOverlay = new PIXI.Container();
                 }
             }
         };
     };
+    global.QuadCD = QuadCD;
 
     /**
      * Grid CD
+     * @name GridCD
      * @constructor
      */
     var GridCD = function () {
@@ -366,9 +380,8 @@ var CollisionDetector = CollisionDetector || {};
         /**
          * Set up the CD function
          * @param target
-         * @param updatePos
          */
-        this.check = function (target, updatePos) {
+        this.check = function (target) {
             target.collisions = [];
             // Loop through all the entities in the current cell and check distances
             let cell = this.grid.getCellAt(target.gridLocation.x, target.gridLocation.y);
@@ -389,37 +402,13 @@ var CollisionDetector = CollisionDetector || {};
          *
          */
         this.drawRegions = function () {
-            // If the cheats flag is on then update population
-            if (this.cheats.population) {
-                this.stage.removeChild(this.populationCounts);
-                this.populationCounts = new PIXI.Container();
-
-                // If we are using grid based collision/population tracking set it up
-                for (let x = 0; x < this.grid.cells.length; x++) {
-                    let xCell = this.grid.cells[x];
-                    for (let y = 0; y < this.grid.cells[x].length; y++) {
-                        // Draw population counts text
-                        let yCell = xCell[y],
-                            fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
-                            coords = yCell.coords,
-                            popText = new PIXI.Text(yCell.population.length, fontOpts);
-                        popText.position.set(coords.bottom.left.x + (this.cellWidth / 2), coords.bottom.left.y - (this.cellHeight / 2));
-                        this.populationCounts.addChild(popText);
-                    }
-                }
-
-                this.stage.addChild(this.populationCounts);
-            } else {
-                if (this.populationCounts !== undefined) {
-                    this.stage.removeChild(this.populationCounts);
-                    this.populationCounts = new PIXI.Container();
-                }
-            }
-
             // Draw the grid
             if (this.cheats.grid) {
-                this.stage.removeChild(this.gridOverlay);
-                this.gridOverlay = new PIXI.Container();
+                // Clear the collision detection holder
+                if (this.collisionOverlay !== undefined) {
+                    this.stage.removeChild(this.collisionOverlay);
+                }
+                this.collisionOverlay = new PIXI.Container();
 
                 // If we are using grid based collision set up an overlay
                 for (let x = 0; x < this.grid.cells.length; x++) {
@@ -437,14 +426,21 @@ var CollisionDetector = CollisionDetector || {};
                         grid.lineTo(coords.top.right.x, coords.top.right.y);
                         grid.endFill();
 
-                        this.gridOverlay.addChild(grid);
+                        // Draw population counts text
+                        let fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
+                            popText = new PIXI.Text(yCell.population.length, fontOpts);
+                        popText.position.set(coords.bottom.left.x + (this.cellWidth / 2), coords.bottom.left.y - (this.cellHeight / 2));
+                        grid.addChild(popText);
+
+                        this.collisionOverlay.addChild(grid);
                     }
                 }
-                this.stage.addChild(this.gridOverlay);
+                this.stage.addChild(this.collisionOverlay);
             } else {
-                if (this.gridOverlay !== undefined) {
-                    this.stage.removeChild(this.gridOverlay);
-                    this.gridOverlay = new PIXI.Container();
+                // Clear the collision detection holder
+                if (this.collisionOverlay !== undefined) {
+                    this.stage.removeChild(this.collisionOverlay);
+                    this.collisionOverlay = new PIXI.Container();
                 }
             }
         };
@@ -475,9 +471,11 @@ var CollisionDetector = CollisionDetector || {};
             this.drawRegions(this.tree.root);
         };
     };
+    global.GridCD = GridCD;
 
     /**
      * Brute Force CD
+     * @name BruteD
      * @constructor
      */
     var BruteCD = function () {
@@ -554,6 +552,17 @@ var CollisionDetector = CollisionDetector || {};
          *
          */
         this.drawRegions = function () {
+            // Clear the collision detection holder
+            if (this.collisionOverlay !== undefined) {
+                this.stage.removeChild(this.collisionOverlay);
+            }
+            this.collisionOverlay = new PIXI.Container();
+
+            let fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
+                popText = new PIXI.Text(this.entities.length, fontOpts);
+            popText.position.set(this.width / 2, this.height / 2);
+            this.collisionOverlay.addChild(popText);
+            this.stage.addChild(this.collisionOverlay);
 
         };
 
@@ -564,7 +573,6 @@ var CollisionDetector = CollisionDetector || {};
 
         };
     };
-
-    global.CollisionDetector = CollisionDetector;
+    global.BruteCD = BruteCD;
 
 }(this));

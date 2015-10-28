@@ -22,6 +22,18 @@
         document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
 
+        //var menuOpts = {
+        //    render: {
+        //        width: this.width,
+        //        height: this.height
+        //    },
+        //    menu: {
+        //        width: 120
+        //    }
+        //};
+        //this.menu = this.menu || Utility.getOpt(worldOpts, 'menu', new Menu(menuOpts));
+        //this.stage.addChild(this.menu);
+
         this.clock = 0;
         this.pause = false;
 
@@ -37,15 +49,14 @@
         // The collision detection type
         this.collision = this.collision || Utility.getOpt(worldOpts, 'collision', {
             type: 'quad',
-            maxChildren: 3,
-            maxDepth: 10
+            maxChildren: 1,
+            maxDepth: 20
         });
 
         // The cheats to display
         this.cheats = this.cheats || Utility.getOpt(worldOpts, 'cheats', {
             quad: false,
             grid: false,
-            population: false,
             walls: false
         });
 
@@ -96,7 +107,7 @@
             }
         });
 
-        CollisionDetector.apply(this, [this.collision]);
+        this.setCollisionDetection(this.collision);
 
         this.addWalls();
         this.addAgents();
@@ -224,6 +235,17 @@
     };
 
     /**
+     * Set up the collision detection
+     * @param {Object} collision
+     * @returns {World}
+     */
+    World.prototype.setCollisionDetection = function (collision) {
+        CollisionDetector.apply(this, [collision]);
+
+        return this;
+    };
+
+    /**
      * Remove the entity from the world
      * @param {Object} entity
      * @returns {World}
@@ -248,18 +270,12 @@
         // draw items
         for (let e = 0, ni = this.entities.length; e < ni; e++) {
             this.entities[e].draw();
-            if (this.entities[e].cheats) {
-                this.entities[e].updateCheats();
-            }
         }
 
         // draw agents
         for (let a = 0, na = this.agents.length; a < na; a++) {
             // draw agents body
             this.agents[a].draw();
-            if (this.agents[a].cheats) {
-                this.agents[a].updateCheats();
-            }
         }
 
         this.graphRewards();

@@ -1,5 +1,3 @@
-var Menu = Menu || {};
-
 (function (global) {
     "use strict";
 
@@ -7,41 +5,24 @@ var Menu = Menu || {};
      * @name Menu
      * @constructor
      */
-    function Menu() {
+
+    var Menu = function (opts) {
         PIXI.Container.call(this);
+
+        this.menuWidth = opts.menu.width;
         this.interactive = true;
 
         this.background = new PIXI.Graphics();
         this.background.lineStyle(1, 0x000000, 1);
         this.background.beginFill(0xA08000, 1);
-        this.background.drawRect(50 - 4, 0, 4, 800);
+        this.background.drawRect(this.menuWidth - 4, 0, 4, opts.render.width);
         this.background.endFill();
         this.background.lineStyle(0, 0x000000, 1);
         this.background.beginFill(0x203040, 1);
-        this.background.drawRect(0, 0, 50 - 4, 800);
+        this.background.drawRect(0, 0, this.menuWidth - 4, opts.render.width);
         this.background.endFill();
         this.addChild(this.background);
-
-        this.selectedTileText = new PIXI.Text("Selected Tile: " + 1, {
-            font: "12px Arial",
-            fill: "#FFFFFF",
-            align: "left"
-        });
-
-        this.addChild(this.selectedTileText);
-
-        function zoomIn() {
-            // Merps
-        }
-
-        function zoomOut() {
-            // Derps
-        }
-
-
-        this.addMenuButton("+", 0, 12, zoomIn);
-        this.addMenuButton("-", 30, 12, zoomOut);
-    }
+    };
 
     Menu.prototype = new PIXI.Container();
     Menu.prototype.constructor = Menu;

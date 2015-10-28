@@ -24,7 +24,6 @@
         this.cheats = {
             quad: true,
             grid: false,
-            population: false,
             walls: false
         };
 
@@ -83,11 +82,9 @@
         ];
         this.numAgents = this.agents.length;
 
-        this.agents[0].load('zoo/wateragent.json');
-        this.agents[1].load('zoo/wateragent.json');
+        this.menu = true;
 
         World.call(this);
-        world.stage.addChild(new Menu());
 
         return this;
     }

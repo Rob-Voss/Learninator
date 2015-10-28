@@ -14,7 +14,6 @@
         this.cheats = {
             quad: true,
             grid: false,
-            population: false,
             walls: false
         };
 
