@@ -166,7 +166,7 @@ var AgentRLDQN = AgentRLDQN || {};
                     //    stickBySize = this.stick - (this.collisions[i].radius / 100);
                     //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
                     this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
-                    this.world.deleteEntity(this.collisions[i]);
+                    this.collisions[i].cleanUp = true;
                 }
             } else if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
                 // Agent

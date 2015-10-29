@@ -37,6 +37,7 @@ var Entity = Entity || {};
      * @returns {Entity}
      */
     function Entity(type, position, opts) {
+        var _this = this;
         this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
         this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
         this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
@@ -61,12 +62,12 @@ var Entity = Entity || {};
         this.radius = Utility.getOpt(opts, 'radius', undefined);
         this.width = Utility.getOpt(opts, 'width', undefined);
         this.height = Utility.getOpt(opts, 'height', undefined);
-
-        this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.interactive = Utility.getOpt(opts, 'interactive', false);
         this.collision = Utility.getOpt(opts, 'collision', true);
         this.movingEntities = Utility.getOpt(opts, 'movingEntities', false);
         this.useSprite = Utility.getOpt(opts, 'useSprite', false);
+
+        this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.gridLocation = new Vec(0, 0);
         this.cleanUp = false;
 
@@ -80,7 +81,9 @@ var Entity = Entity || {};
         this.oldPos = this.position.clone();
         this.oldAngle = 0;
 
-        var _this = this;
+        // Add a container to hold our display cheats
+        this.cheatsContainer = new PIXI.Container();
+        this.addCheats();
 
         if (this.useSprite) {
             this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ','') + '.png');
@@ -106,6 +109,7 @@ var Entity = Entity || {};
                     .on('touchmove', _this.onDragMove);
                 this.sprite.entity = _this;
             }
+            this.sprite.addChild(this.cheatsContainer);
         } else {
             this.shape = new PIXI.Graphics();
             this.shape.interactive = this.interactive;
@@ -123,15 +127,6 @@ var Entity = Entity || {};
                     .on('touchmove', _this.onDragMove);
                 this.shape.entity = _this;
             }
-        }
-        // Add a container to hold our display cheats
-        this.cheatsContainer = new PIXI.Container();
-        this.addCheats();
-
-        // Now we add the container to the entity
-        if (this.useSprite) {
-            this.sprite.addChild(this.cheatsContainer);
-        } else {
             this.shape.addChild(this.cheatsContainer);
         }
 

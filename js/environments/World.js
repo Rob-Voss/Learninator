@@ -22,17 +22,20 @@
         document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
 
-        //var menuOpts = {
-        //    render: {
-        //        width: this.width,
-        //        height: this.height
-        //    },
-        //    menu: {
-        //        width: 120
-        //    }
-        //};
-        //this.menu = this.menu || Utility.getOpt(worldOpts, 'menu', new Menu(menuOpts));
-        //this.stage.addChild(this.menu);
+        this.menuOpts = {
+            render: {
+                width: this.width,
+                height: this.height
+            },
+            menu: {
+                x: 0,
+                y: 0,
+                width: 120,
+                height: 60
+            }
+        };
+        this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
+        this.stage.addChild(this.menu);
 
         this.clock = 0;
         this.pause = false;
@@ -118,16 +121,21 @@
 
         function animate() {
             if (!_this.pause) {
-                if (_this.simSpeed === 3) {
-                    for (let k = 0; k < 50; k++) {
-                        _this.updatePopulation();
-                        _this.tick();
-                    }
-                } else {
-                    _this.updatePopulation();
+                let ticker = 0;
+                switch (parseFloat(_this.simSpeed)) {
+                    case 1:
+                        ticker = 1;
+                        break;
+                    case 2:
+                        ticker = 30;
+                        break;
+                    case 3:
+                        ticker = 60;
+                        break;
+                }
+                for (let k = 0; k < ticker; k++) {
                     _this.tick();
                 }
-                _this.draw();
             }
             _this.renderer.render(_this.stage);
             requestAnimationFrame(animate);
@@ -181,7 +189,6 @@
             agentContainer.addChild(entity.shape || entity.sprite);
             this.stage.addChild(agentContainer);
             this.entityAgents.push(entity);
-            this.entities.push(entity);
         }
 
         return this;
@@ -235,24 +242,14 @@
     };
 
     /**
-     * Set up the collision detection
-     * @param {Object} collision
-     * @returns {World}
-     */
-    World.prototype.setCollisionDetection = function (collision) {
-        CollisionDetector.apply(this, [collision]);
-
-        return this;
-    };
-
-    /**
      * Remove the entity from the world
      * @param {Object} entity
      * @returns {World}
      */
     World.prototype.deleteEntity = function (entity) {
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
-        this.stage.removeChild(entity.shape || entity.sprite);
+        let idx = this.stage.getChildIndex(entity.shape || entity.sprite);
+        this.stage.removeChildAt(idx);
 
         return this;
     };
@@ -284,10 +281,22 @@
     };
 
     /**
+     * Set up the collision detection
+     * @param {Object} collision
+     * @returns {World}
+     */
+    World.prototype.setCollisionDetection = function (collision) {
+        CollisionDetector.apply(this, [collision]);
+
+        return this;
+    };
+
+    /**
      * Tick the environment
      * @returns {World}
      */
     World.prototype.tick = function () {
+        this.updatePopulation();
         this.lastTime = this.clock;
         this.clock++;
 
@@ -311,7 +320,7 @@
         }
 
         // If we have less then the number of Items allowed throw a random one in
-        if (this.entities.length < this.numEntities && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
+        if (this.entities.length < this.numEntities) {
             this.addEntities();
         }
 
@@ -322,6 +331,9 @@
         //    this.addAgent();
         //}
         //}
+
+        this.updatePopulation();
+        this.draw();
 
         return this;
     };

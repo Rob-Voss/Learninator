@@ -2824,6 +2824,7 @@
         var data = e.data,
             actionIndex;
         if (data.cmd === 'init') {
+            importScripts('../Utility.js');
             var oEnv = JSON.parse(data.input.env, function (key, value) {
                 if (typeof value !== 'string') {
                     return value;
@@ -2838,7 +2839,6 @@
             case 'DQN':
                 switch (data.cmd) {
                     case 'init':
-                        importScripts('../Utility.js');
                         _DQNAgent = new DQNAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2899,7 +2899,6 @@
             case 'DP':
                 switch (data.cmd) {
                     case 'init':
-                        importScripts('../Utility.js');
                         _DPAgent = new DPAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2942,7 +2941,6 @@
             case 'TD':
                 switch (data.cmd) {
                     case 'init':
-                        importScripts('../Utility.js');
                         _TDAgent = new TDAgent(oEnv, oOpts);
 
                         self.postMessage({
@@ -2985,7 +2983,6 @@
             case 'GA':
                 switch (data.cmd) {
                     case 'init':
-                        importScripts('../Utility.js');
                         _GATrainer = new GATrainer(oEnv, oOpts);
 
                         self.postMessage({
@@ -3028,7 +3025,6 @@
             case 'ESP':
                 switch (data.cmd) {
                     case 'init':
-                        importScripts('../Utility.js');
                         _ESPTrainer = new ESPTrainer(oEnv, oOpts);
 
                         self.postMessage({
@@ -3073,9 +3069,9 @@
 // exports
 
     // various utils
-    global.maxi = maxI;
-    global.samplei = sampleI;
-    global.softmax = softMax;
+    global.maxI = maxI;
+    global.sampleI = sampleI;
+    global.softMax = softMax;
 
     // more utils
     global.updateMat = updateMat;
@@ -3091,7 +3087,7 @@
 
     // classes
     global.Mat = Mat;
-    global.RandMat = randMat;
+    global.randMat = randMat;
     global.forwardLSTM = forwardLSTM;
     global.initLSTM = initLSTM;
 

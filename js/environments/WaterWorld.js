@@ -11,8 +11,8 @@
     function WaterWorld() {
         this.canvas = document.getElementById("world");
         this.mazeOptions = {
-            xCount: 4,
-            yCount: 4,
+            xCount: 2,
+            yCount: 2,
             width: this.canvas.width,
             height: this.canvas.height,
             closed: true
@@ -22,7 +22,7 @@
         this.walls = this.maze.walls;
 
         this.cheats = {
-            quad: true,
+            quad: false,
             grid: false,
             walls: false
         };
@@ -82,7 +82,7 @@
         ];
         this.numAgents = this.agents.length;
 
-        this.menu = true;
+        this.simSpeed = 1;
 
         World.call(this);
 

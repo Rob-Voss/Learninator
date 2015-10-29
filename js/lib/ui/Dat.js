@@ -12,6 +12,7 @@ function datGUI (world) {
         cFolder = wFolder.addFolder('World Cheats'),
         coFolder = wFolder.addFolder('Collision');
     wFolder.add(world, 'pause').listen().name('Pause');
+    wFolder.add(world, 'simSpeed', [1, 2, 3]).listen().name('simSpeed');
 
     // Set up the cheats
     for (var wc in world.cheats) {
