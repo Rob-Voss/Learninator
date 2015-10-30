@@ -22,20 +22,32 @@
         document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
 
-        this.menuOpts = {
+        //this.menuOpts = {
+        //    render: {
+        //        width: this.width,
+        //        height: this.height
+        //    },
+        //    menu: {
+        //        x: 0,
+        //        y: 0,
+        //        width: 120,
+        //        height: 60
+        //    }
+        //};
+        //this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
+        //this.stage.addChild(this.menu);
+
+        this.displayOpts = {
+            title: 'Agent Scores',
+            width: 120,
+            height: 60,
             render: {
                 width: this.width,
                 height: this.height
-            },
-            menu: {
-                x: 0,
-                y: 0,
-                width: 120,
-                height: 60
             }
         };
-        this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
-        this.stage.addChild(this.menu);
+        this.display = new Display(0, 0, this.displayOpts);
+        this.stage.addChild(this.display);
 
         this.clock = 0;
         this.pause = false;
@@ -346,6 +358,7 @@
         for (let a = 0, ac = this.agents.length; a < ac; a++) {
             let agent = this.agents[a],
                 rew = agent.lastReward;
+            this.display.updateItem(a, '[' + agent.id.substring(0, 5) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
 
             if (this.smoothReward[a] === null) {
                 this.smoothReward[a] = rew;

@@ -1,6 +1,3 @@
-var Experience = Experience || {};
-var TDBrain = TDBrain || {};
-
 (function (global) {
     "use strict";
 
@@ -72,7 +69,7 @@ var TDBrain = TDBrain || {};
             if (this.randomActionDistribution.length !== this.numActions) {
                 console.log('TROUBLE. randomActionDistribution should be same length as numActions.');
             }
-            var a = this.randomActionDistribution,
+            let a = this.randomActionDistribution,
                 s = 0.0;
             for (let k = 0; k < a.length; k++) {
                 s += a[k];
@@ -86,7 +83,7 @@ var TDBrain = TDBrain || {};
 
         // States that go into neural net to predict optimal action
         // look at x0, a0, x1, a1, x2, a2,...xt
-        // this variable controls the size of that temporal window.
+        // this letiable controls the size of that temporal window.
         // Actions are encoded as 1-of-k hot vectors
         this.netInputs = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
 
@@ -98,7 +95,7 @@ var TDBrain = TDBrain || {};
         this.netWindow = new Array(this.windowSize);
 
         // Create [state -> value of all possible actions] modeling net for the value function
-        var layerDefs = [];
+        let layerDefs = [];
         if (typeof opts.layerDefs !== 'undefined') {
             // Advanced usage feature.
             // Because size of the input to the network, and number of actions must check out.
@@ -130,8 +127,8 @@ var TDBrain = TDBrain || {};
             });
             if (typeof opts.hiddenLayerSizes !== 'undefined') {
                 // Allow user to specify this via the option, for convenience
-                var hl = opts.hiddenLayerSizes;
-                for (var q = 0; q < hl.length; q++) {
+                let hl = opts.hiddenLayerSizes;
+                for (let q = 0; q < hl.length; q++) {
                     layerDefs.push({
                         type: 'fc',
                         num_neurons: hl[q],
@@ -148,7 +145,7 @@ var TDBrain = TDBrain || {};
         this.valueNet.makeLayers(layerDefs);
 
         // And finally we need a Temporal Difference Learning trainer!
-        var tdTrainerOptions = {
+        let tdTrainerOptions = {
             learning_rate: 0.01,
             momentum: 0.0,
             batch_size: 64,
@@ -164,7 +161,7 @@ var TDBrain = TDBrain || {};
         // Experience replay
         this.experience = [];
 
-        // various housekeeping variables
+        // letious housekeeping letiables
         this.age = 0; // incremented every backward()
         this.forwardPasses = 0; // incremented every forward()
         this.latestReward = 0;
@@ -190,9 +187,9 @@ var TDBrain = TDBrain || {};
                 return Utility.randi(0, this.numActions);
             } else {
                 // okay, lets do some fancier sampling:
-                var p = Utility.randf(0, 1.0),
+                let p = Utility.randf(0, 1.0),
                     cumprob = 0.0;
-                for (var k = 0; k < this.numActions; k++) {
+                for (let k = 0; k < this.numActions; k++) {
                     cumprob += this.randomActionDistribution[k];
                     if (p < cumprob) {
                         return k;
@@ -207,13 +204,13 @@ var TDBrain = TDBrain || {};
          * @returns {Object}
          */
         policy: function (s) {
-            var sVol = new convnetjs.Vol(1, 1, this.netInputs);
+            let sVol = new convnetjs.Vol(1, 1, this.netInputs);
             sVol.w = s;
 
-            var actionValues = this.valueNet.forward(sVol),
+            let actionValues = this.valueNet.forward(sVol),
                 maxK = 0,
                 maxVal = actionValues.w[0];
-            for (var k = 1; k < this.numActions; k++) {
+            for (let k = 1; k < this.numActions; k++) {
                 if (actionValues.w[k] > maxVal) {
                     maxK = k;
                     maxVal = actionValues.w[k];
@@ -232,17 +229,17 @@ var TDBrain = TDBrain || {};
          * @returns {Array}
          */
         getNetInput: function (xt) {
-            var w = [];
+            let w = [];
             // Start with current state
             w = w.concat(xt);
-            var n = this.windowSize;
+            let n = this.windowSize;
             // Now go backwards and append states and actions from history temporalWindow times
-            for (var k = 0; k < this.temporalWindow; k++) {
+            for (let k = 0; k < this.temporalWindow; k++) {
                 // State
                 w = w.concat(this.stateWindow[n - 1 - k]);
                 // Action encoded as 1-of-k indicator vector.
-                var action1ofk = new Array(this.numActions);
-                for (var q = 0; q < this.numActions; q++) {
+                let action1ofk = new Array(this.numActions);
+                for (let q = 0; q < this.numActions; q++) {
                     action1ofk[q] = 0.0;
                 }
                 // We scale it up a bit because we don't want weight regularization
@@ -258,7 +255,7 @@ var TDBrain = TDBrain || {};
          * @returns {number}
          */
         forward: function (inputArray) {
-            var netInput, action;
+            let netInput, action;
             this.forwardPasses += 1;
             this.lastInputArray = inputArray; // back this up
 
@@ -278,7 +275,7 @@ var TDBrain = TDBrain || {};
                     action = this.randomAction();
                 } else {
                     // Otherwise use our policy to make decision
-                    var maxAct = this.policy(netInput);
+                    let maxAct = this.policy(netInput);
                     action = maxAct.action;
                 }
             } else {
@@ -315,7 +312,7 @@ var TDBrain = TDBrain || {};
                 // It is time t+1 and we have to store (s_t, a_t, r_t, s_{t+1}) as new experience
                 // (given that an appropriate number of state measurements already exist, of course)
                 if (this.forwardPasses > this.temporalWindow + 1) {
-                    var e = new Experience(),
+                    let e = new Experience(),
                         n = this.windowSize;
                     e.state0 = this.netWindow[n - 2];
                     e.action0 = this.actionWindow[n - 2];
@@ -325,7 +322,7 @@ var TDBrain = TDBrain || {};
                         this.experience.push(e);
                     } else {
                         // Replace. finite memory!
-                        var ri = Utility.randi(0, this.experienceSize);
+                        let ri = Utility.randi(0, this.experienceSize);
                         this.experience[ri] = e;
                     }
                 }
@@ -333,13 +330,13 @@ var TDBrain = TDBrain || {};
                 // Learn based on experience, once we have some samples to go on
                 // this is where the magic happens...
                 if (this.experience.length > this.startLearnThreshold) {
-                    var actionValueCost = 0.0;
-                    for (var k = 0; k < this.tdTrainer.batch_size; k++) {
-                        var randExp = Utility.randi(0, this.experience.length),
+                    let actionValueCost = 0.0;
+                    for (let k = 0; k < this.tdTrainer.batch_size; k++) {
+                        let randExp = Utility.randi(0, this.experience.length),
                             exp = this.experience[randExp],
                             x = new convnetjs.Vol(1, 1, this.netInputs);
                         x.w = exp.state0;
-                        var maxAct = this.policy(exp.state1),
+                        let maxAct = this.policy(exp.state1),
                             rew = exp.reward0 + this.gamma * maxAct.value,
                             yStruct = {
                                 dim: exp.action0,
@@ -359,10 +356,10 @@ var TDBrain = TDBrain || {};
         }
     };
 
-    var _TDBrain;
+    let _TDBrain;
 
     self.onmessage = function (e) {
-        var data = e.data;
+        let data = e.data;
         switch (data.target) {
             case 'TD':
                 switch (data.cmd) {
@@ -387,7 +384,7 @@ var TDBrain = TDBrain || {};
                         });
                         break;
                     case 'act':
-                        var actionIndex = _TDBrain.forward(data.input);
+                        let actionIndex = _TDBrain.forward(data.input);
                         self.postMessage({
                             cmd: 'act',
                             msg: 'complete',
@@ -398,7 +395,7 @@ var TDBrain = TDBrain || {};
                         _TDBrain.backward(data.input);
 
                         // return the Average reward
-                        var avg = _TDBrain.averageRewardWindow.getAverage().toFixed(1);
+                        let avg = _TDBrain.averageRewardWindow.getAverage().toFixed(2);
                         self.postMessage({
                             cmd: 'learn',
                             msg: 'complete',

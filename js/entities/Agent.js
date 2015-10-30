@@ -1,5 +1,3 @@
-var Agent = Agent || {};
-
 (function (global) {
     "use strict";
 
@@ -42,8 +40,6 @@ var Agent = Agent || {};
      * @returns {Agent}
      */
     function Agent(position, opts) {
-        var _this = this;
-        this.brainState = {};
         // Is it a worker
         this.worker = Utility.getOpt(opts, 'worker', false);
         Entity.call(this, (this.worker) ? 'Agent Worker' : 'Agent', position, opts);
@@ -59,6 +55,7 @@ var Agent = Agent || {};
         this.proximity = Utility.getOpt(opts, 'proximity',  85);
         // The number of Agent's eyes times the number of known types
         this.numStates = this.numEyes * this.numTypes;
+        this.brainState = {};
 
         // Set the brain options
         this.brainOpts = Utility.getOpt(opts, 'spec', {
@@ -88,7 +85,7 @@ var Agent = Agent || {};
         // The Agent's eyes
         if (this.eyes === undefined) {
             this.eyes = [];
-            for (var k = 0; k < this.numEyes; k++) {
+            for (let k = 0; k < this.numEyes; k++) {
                 this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
             }
         }
@@ -134,7 +131,7 @@ var Agent = Agent || {};
      * @param {String} file
      */
     Agent.prototype.load = function (file) {
-        var _this = this;
+        let _this = this;
         $.getJSON(file, function(data) {
             if (!_this.worker) {
                 _this.brain.fromJSON(data);
@@ -237,7 +234,7 @@ var Agent = Agent || {};
                 break;
         }
 
-        var aEyeX = this.position.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
+        let aEyeX = this.position.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
             aEyeY = this.position.y + this.sensedProximity * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);
 
@@ -252,7 +249,7 @@ var Agent = Agent || {};
      */
     Eye.prototype.sense = function (agent) {
         this.position = agent.position.clone();
-        var result,
+        let result,
             aEyeX = this.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
             aEyeY = this.position.y + this.maxRange * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);

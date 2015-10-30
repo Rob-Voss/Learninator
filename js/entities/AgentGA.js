@@ -1,6 +1,3 @@
-var AgentGA = AgentGA || {};
-var Brain = Brain || {};
-
 (function (global) {
     "use strict";
 
@@ -48,8 +45,8 @@ var Brain = Brain || {};
      * Get output from neural network:
      */
     Brain.prototype.forward = function () {
-        var a = this.net.forward(this.convInputState);
-        for (var i = 0; i < this.nOutput; i++) {
+        let a = this.net.forward(this.convInputState);
+        for (let i = 0; i < this.nOutput; i++) {
             this.prevOutputState[i] = this.outputState[i]; // backs up previous value.
             this.outputState[i] = isNaN(a.w[i]) ? 0 : a.w[i];
         }
@@ -69,8 +66,7 @@ var Brain = Brain || {};
      * @param target
      */
     Brain.prototype.setCurrentInputState = function (agent, target) {
-        var i,
-            scaleFactor = 10, // scale inputs to be in the order of magnitude of 10.
+        let i, scaleFactor = 10, // scale inputs to be in the order of magnitude of 10.
             scaleFeedback = 1; // to scale back up the feedback.
         this.inputState[0] = agent.state.x;
         this.inputState[1] = agent.state.y;
@@ -109,7 +105,6 @@ var Brain = Brain || {};
      * @returns {AgentGA}
      */
     function AgentGA(position, opts) {
-        var _this = this;
         Agent.call(this, position, opts);
 
         this.target = null;
@@ -217,7 +212,7 @@ var Brain = Brain || {};
      *
      */
     AgentGA.prototype.processAction = function () {
-        var right = this.action.right,
+        let right = this.action.right,
             left = this.action.left,
             up = this.action.up,
             down = this.action.down;
@@ -258,7 +253,7 @@ var Brain = Brain || {};
      * this function converts the brain's output layer into actions to move forward, backward, or jump
      */
     AgentGA.prototype.setBrainAction = function () {
-        var right = this.brain.outputState[0] > 0.75, // sigmoid decision.
+        let right = this.brain.outputState[0] > 0.75, // sigmoid decision.
             left = this.brain.outputState[1] > 0.75, // sigmoid decision.
             up = this.brain.outputState[2] > 0.75, // sigmoid decision.
             down = this.brain.outputState[3] > 0.75; // sigmoid decision.

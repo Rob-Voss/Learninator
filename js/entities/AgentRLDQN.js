@@ -1,5 +1,3 @@
-var AgentRLDQN = AgentRLDQN || {};
-
 (function (global) {
     "use strict";
 
@@ -50,7 +48,7 @@ var AgentRLDQN = AgentRLDQN || {};
         }
 
         // in forward pass the agent simply behaves in the environment
-        var ne = this.numEyes * this.numTypes,
+        let ne = this.numEyes * this.numTypes,
             inputArray = new Array(this.numStates);
         for (let i = 0; i < this.numEyes; i++) {
             let eye = this.eyes[i];
@@ -102,7 +100,7 @@ var AgentRLDQN = AgentRLDQN || {};
      * @returns {AgentRLDQN}
      */
     AgentRLDQN.prototype.move = function () {
-        var speed = 1;
+        let speed = 1;
         this.oldAngle = this.angle;
         this.oldPos = this.position.clone();
         this.digestionSignal = 0;
@@ -133,7 +131,7 @@ var AgentRLDQN = AgentRLDQN || {};
         this.world.check(this, false);
 
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            var wall = this.world.walls[w],
+            let wall = this.world.walls[w],
                 result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.unshift(wall);
@@ -141,12 +139,12 @@ var AgentRLDQN = AgentRLDQN || {};
         }
 
         // Go through and process what we ate/hit
-        var minRes = false;
+        let minRes = false;
         for (let i = 0; i < this.collisions.length; i++) {
             // Nom or Gnar
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-                    var wall = this.world.walls[w],
+                    let wall = this.world.walls[w],
                         result = this.world.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
@@ -180,7 +178,7 @@ var AgentRLDQN = AgentRLDQN || {};
         }
 
         // Handle boundary conditions.. bounce Agent
-        var top = this.world.height - (this.world.height - this.radius),
+        let top = this.world.height - (this.world.height - this.radius),
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
@@ -219,7 +217,7 @@ var AgentRLDQN = AgentRLDQN || {};
      * Reset or set up the Agent
      */
     AgentRLDQN.prototype.reset = function () {
-        var _this = this;
+        let _this = this;
 
         // If it's a worker then we have to load it a bit different
         if (!this.worker) {
@@ -231,12 +229,12 @@ var AgentRLDQN = AgentRLDQN || {};
                 this.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
             };
 
-            var jEnv = Utility.stringify(this.env),
+            let jEnv = Utility.stringify(this.env),
                 jOpts = Utility.stringify(this.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
             this.brain.onmessage = function (e) {
-                var data = e.data;
+                let data = e.data;
                 switch (data.cmd) {
                     case 'act':
                         if (data.msg === 'complete') {
@@ -252,7 +250,7 @@ var AgentRLDQN = AgentRLDQN || {};
                         break;
                     case 'learn':
                         if (data.msg === 'complete') {
-                            _this.epsilon = parseFloat(data.input);
+                            _this.brainState = JSON.stringify(data.input);
                         }
                         break;
                     case 'load':

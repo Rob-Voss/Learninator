@@ -1,5 +1,3 @@
-var AgentTD = AgentTD || {};
-
 (function (global) {
     "use strict";
 
@@ -85,56 +83,8 @@ var AgentTD = AgentTD || {};
             tdTrainerOptions: this.tdTrainerOptions
         };
 
-        var _this = this;
+        this.reset();
 
-        if (!this.worker) {
-            this.brain = new TDBrain(this.brainOpts);
-        } else {
-            this.post = function (cmd, input) {
-                this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
-            };
-
-            this.brain = new Worker('js/entities/TDBrain.js');
-            this.brain.onmessage = function (e) {
-                var data = e.data;
-                switch (data.cmd) {
-                case 'init':
-                    if (data.msg === 'complete') {
-
-                    }
-                    break;
-                case 'act':
-                    if (data.msg === 'complete') {
-                        _this.previousActionIdx = _this.actionIndex;
-                        _this.actionIndex = data.input;
-                        var action = _this.actions[_this.actionIndex];
-
-                        // Demultiplex into behavior variables
-                        _this.rot1 = action[0] * 1;
-                        _this.rot2 = action[1] * 1;
-
-                        _this.move();
-                        _this.learn();
-                    }
-                    break;
-                case 'learn':
-                    if (data.msg === 'complete') {
-                        _this.pts.push(parseFloat(data.input));
-                    }
-                    break;
-                case 'load':
-                    if (data.msg === 'complete') {
-                        _this.epsilon = parseFloat(data.input);
-                    }
-                    break;
-                default:
-                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-                    break;
-                }
-            };
-
-            this.post('init', this.brainOpts);
-        }
         return this;
     }
 
@@ -151,7 +101,7 @@ var AgentTD = AgentTD || {};
         }
 
         // Create input to brain
-        var inputArray = new Array(this.numEyes * this.numTypes);
+        let inputArray = new Array(this.numEyes * this.numTypes);
         for (let i = 0; i < this.numEyes; i++) {
             inputArray[i * this.numTypes] = 1.0;
             inputArray[i * this.numTypes + 1] = 1.0;
@@ -167,7 +117,7 @@ var AgentTD = AgentTD || {};
             // Get action from brain
             this.previousActionIdx = this.actionIndex;
             this.actionIndex = this.brain.forward(inputArray);
-            var action = this.actions[this.actionIndex];
+            let action = this.actions[this.actionIndex];
 
             // Demultiplex into behavior variables
             this.rot1 = action[0] * 1;
@@ -230,25 +180,25 @@ var AgentTD = AgentTD || {};
         this.oldAngle = this.angle;
 
         //Steer the agent according to outputs of wheel velocities
-        var v = new Vec(0, this.radius / 2.0);
+        let v = new Vec(0, this.radius / 2.0);
         v = v.rotate(this.oldAngle + Math.PI / 2);
             // Positions of wheel 1
-        var w1pos = this.position.add(v),
+        let w1pos = this.position.add(v),
             // Positions of wheel 2
             w2pos = this.position.sub(v);
 
-        var vv = this.position.sub(w2pos);
+        let vv = this.position.sub(w2pos);
         vv = vv.rotate(-this.rot1);
 
-        var vv2 = this.position.sub(w1pos);
+        let vv2 = this.position.sub(w1pos);
         vv2 = vv2.rotate(this.rot2);
 
-        var newPos = w2pos.add(vv),
+        let newPos = w2pos.add(vv),
             newPos2 = w1pos.add(vv2);
 
         newPos.scale(0.5);
         newPos2.scale(0.5);
-        var position = newPos.add(newPos2);
+        let position = newPos.add(newPos2);
 
         this.position = position;
 
@@ -274,7 +224,7 @@ var AgentTD = AgentTD || {};
         }
 
         // Go through and process what we ate/hit
-        var minRes = false,
+        let minRes = false,
             result;
         for (let i = 0; i < this.collisions.length; i++) {
             // Nom or Gnar
@@ -300,7 +250,7 @@ var AgentTD = AgentTD || {};
                     //    stickBySize = this.stick - (this.collisions[i].radius / 100);
                     //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
                     this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
-                    this.world.deleteEntity(this.collisions[i]);
+                    this.collisions[i].cleanUp = true;
                 }
             } else if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
                 // Agent
@@ -314,7 +264,7 @@ var AgentTD = AgentTD || {};
         }
 
         // Handle boundary conditions.. bounce Agent
-        var top = this.world.height - (this.world.height - this.radius),
+        let top = this.world.height - (this.world.height - this.radius),
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
@@ -350,6 +300,59 @@ var AgentTD = AgentTD || {};
         }
 
         return this;
+    };
+
+    AgentTD.prototype.reset = function () {
+        let _this = this;
+        if (!this.worker) {
+            this.brain = new TDBrain(this.brainOpts);
+        } else {
+            this.post = function (cmd, input) {
+                this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
+            };
+
+            this.brain = new Worker('js/entities/TDBrain.js');
+            this.brain.onmessage = function (e) {
+                let data = e.data;
+                switch (data.cmd) {
+                    case 'init':
+                        if (data.msg === 'complete') {
+
+                        }
+                        break;
+                    case 'act':
+                        if (data.msg === 'complete') {
+                            _this.previousActionIdx = _this.actionIndex;
+                            _this.actionIndex = data.input;
+                            let action = _this.actions[_this.actionIndex];
+
+                            // Demultiplex into behavior variables
+                            _this.rot1 = action[0] * 1;
+                            _this.rot2 = action[1] * 1;
+
+                            _this.move();
+                            _this.learn();
+                        }
+                        break;
+                    case 'learn':
+                        if (data.msg === 'complete') {
+                            _this.pts.push(parseFloat(data.input));
+                            _this.avgReward = parseFloat(data.input);
+                        }
+                        break;
+                    case 'load':
+                        if (data.msg === 'complete') {
+                            _this.epsilon = parseFloat(data.input);
+                        }
+                        break;
+                    default:
+                        console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                        break;
+                }
+            };
+
+            this.post('init', this.brainOpts);
+        }
     };
 
     global.AgentTD = AgentTD;

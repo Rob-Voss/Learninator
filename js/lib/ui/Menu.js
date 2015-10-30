@@ -18,17 +18,19 @@
         this.renderHeight = Utility.getOpt(opts.render, 'height', 100);
 
         this.background = new PIXI.Graphics();
-        //this.background.lineStyle(1, 0x000000, 1);
-        //this.background.beginFill(0xA08000, 1);
-        //this.background.drawRect(this.menuX - 4, this.menuY - 4, this.menuWidth, this.menuHeight);
-        //this.background.endFill();
+        this.background.lineStyle(1, 0x000000, 1);
+        this.background.beginFill(0xA08000, 1);
+        this.background.drawRect(this.menuX + 4, this.menuY + 4, this.menuWidth, this.menuHeight);
+        this.background.endFill();
         this.background.lineStyle(0, 0x000000, 1);
         this.background.beginFill(0x203040, 1);
-        this.background.drawRect(this.menuX + 4, this.menuY + 4, this.menuWidth - 6, this.menuHeight - 6);
+        this.background.drawRect(this.menuX + 6, this.menuY + 6, this.menuWidth - 4, this.menuHeight - 4);
         this.background.endFill();
         this.addChild(this.background);
 
-        this.selectedTileText = new PIXI.Text("Selected Tile: " + 1, {font: "10px Arial", fill: "#FFFFFF", align: "left"});
+        this.selectedTileText = new PIXI.Text("Selected Agent: " , {font: "10px Arial", fill: "#FFFFFF", align: "left"});
+        this.selectedTileText.x = this.menuX + 8;
+        this.selectedTileText.y = this.menuY + 8;
         this.addChild(this.selectedTileText);
 
         function zoomIn() {
@@ -37,45 +39,45 @@
         function zoomOut() {
         }
 
-        this.addMenuButton("+", 0, 12, zoomIn);
-        this.addMenuButton("-", 30, 12, zoomOut);
+        this.addMenuButton("+", this.menuX + 8, this.menuY + 10, zoomIn);
+        this.addMenuButton("-", this.menuX + 8, this.menuY + 20, zoomOut);
     };
 
     Menu.prototype = new PIXI.Container();
     Menu.prototype.constructor = Menu;
 
     Menu.prototype.addMenuButton = function (text, x, y, obj, callback) {
-        var button = new PIXI.Text(text, {font: "40px Arial", fill: "#FFFFFF"});
+        var button = new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"});
         button.position.x = x;
         button.position.y = y;
         button.interactive = true;
         button.buttonMode = true;
-        button.hitArea = new PIXI.Rectangle(0, 12, 30, 30);
+        button.hitArea = new PIXI.Rectangle(x, y, button.width, button.height);
 
         button.mousedown = button.touchstart = function (event) {
             this.data = event.data;
-            button.style = {font: "40px Arial", fill: "#FF0000"};
+            button.style = {fill: "#FF0000"};
         };
 
         button.mouseover = function (event) {
             this.data = event.data;
-            button.style = {font: "40px Arial", fill: "#FFFF00"};
+            button.style = {fill: "#FFFF00"};
         };
 
         button.mouseup = button.touchend = function (event) {
             this.data = event.data;
             callback.call(obj);
-            button.style = {font: "40px Arial", fill: "#FFFFFF"};
+            button.style = {fill: "#FFFFFF"};
         };
 
         button.mouseupoutside = button.touchendoutside = function (event) {
             this.data = event.data;
-            button.style = {font: "40px Arial", fill: "#FFFFFF"};
+            button.style = {fill: "#FFFFFF"};
         };
 
         button.mouseout = function (event) {
             this.data = event.data;
-            button.style = {font: "40px Arial", fill: "#FFFFFF"};
+            button.style = {fill: "#FFFFFF"};
         };
 
         this.addChild(button);

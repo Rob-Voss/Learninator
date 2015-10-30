@@ -1,5 +1,3 @@
-var AgentRLTD = AgentRLTD || {};
-
 (function (global) {
     "use strict";
 
@@ -14,8 +12,6 @@ var AgentRLTD = AgentRLTD || {};
      * @returns {AgentRLTD}
      */
     function AgentRLTD(position, opts) {
-        var _this = this;
-
         Agent.call(this, position, opts);
 
         this.nStepsHistory = [];
@@ -35,6 +31,13 @@ var AgentRLTD = AgentRLTD || {};
             beta: 0.1 // learning rate for smooth policy update
         });
 
+    }
+
+    AgentRLTD.prototype = Object.create(Agent.prototype);
+    AgentRLTD.prototype.constructor = Agent;
+
+    AgentRLTD.prototype.reset = function () {
+        let _this = this;
         if (!this.worker) {
             this.brain = new TDAgent(_this.env, this.brainOpts);
             this.state = _this.env.startState();
@@ -47,69 +50,66 @@ var AgentRLTD = AgentRLTD || {};
                 this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
             };
 
-            var jEnv = Utility.stringify(_this.env),
+            let jEnv = Utility.stringify(_this.env),
                 jOpts = Utility.stringify(_this.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
             this.brain.onmessage = function (e) {
-                var data = e.data;
+                let data = e.data;
                 switch (data.cmd) {
-                case 'init':
-                    if (data.msg === 'complete') {
-                        _this.state = _this.env.startState();
+                    case 'init':
+                        if (data.msg === 'complete') {
+                            _this.state = _this.env.startState();
 
-                        _this.env.reset();
-                    }
-                    break;
-                case 'act':
-                    if (data.msg === 'complete') {
-                        // run it through environment dynamics
-                        var obs = _this.sampleNextState(_this.state, data.input);
-
-                        // allow opportunity for the agent to learn
-                        _this.brain.postMessage({cmd: 'learn', input: obs.r});
-                    }
-                    break;
-                case 'learn':
-                    if (data.msg === 'complete') {
-                        _this.Rarr[_this.state] = obs.r;
-
-                        // evolve environment to next state
-                        _this.state = obs.ns;
-                        _this.gridLocation = _this.world.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
-
-                        let x = _this.gridLocation.coords.bottom.right.x - (_this.world.grid.cellWidth / 2),
-                            y = _this.gridLocation.coords.bottom.right.y - (_this.world.grid.cellHeight / 2);
-                        _this.position.set(x, y);
-
-                        _this.nStepsCounter += 1;
-                        if (typeof obs.resetEpisode !== 'undefined') {
-                            _this.score += 1;
-                            _this.brain.postMessage({cmd: 'resetEpisode'});
-                            // record the reward achieved
-                            if (_this.nStepsHistory.length >= _this.nflot) {
-                                _this.nStepsHistory = _this.nStepsHistory.slice(1);
-                            }
-                            _this.nStepsHistory.push(_this.nStepsCounter);
-                            _this.nStepsCounter = 0;
-
-                            _this.gridLocation = _this.world.grid.getCellAt(0, 0);
-                            _this.position.set(_this.world.grid.cellWidth / 2, _this.world.grid.cellHeight / 2);
+                            _this.env.reset();
                         }
-                    }
-                    break;
-                default:
-                    console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
-                    break;
+                        break;
+                    case 'act':
+                        if (data.msg === 'complete') {
+                            // run it through environment dynamics
+                            var obs = _this.sampleNextState(_this.state, data.input);
+
+                            // allow opportunity for the agent to learn
+                            _this.brain.postMessage({cmd: 'learn', input: obs.r});
+                        }
+                        break;
+                    case 'learn':
+                        if (data.msg === 'complete') {
+                            _this.Rarr[_this.state] = obs.r;
+
+                            // evolve environment to next state
+                            _this.state = obs.ns;
+                            _this.gridLocation = _this.world.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
+
+                            let x = _this.gridLocation.coords.bottom.right.x - (_this.world.grid.cellWidth / 2),
+                                y = _this.gridLocation.coords.bottom.right.y - (_this.world.grid.cellHeight / 2);
+                            _this.position.set(x, y);
+
+                            _this.nStepsCounter += 1;
+                            if (typeof obs.resetEpisode !== 'undefined') {
+                                _this.score += 1;
+                                _this.brain.postMessage({cmd: 'resetEpisode'});
+                                // record the reward achieved
+                                if (_this.nStepsHistory.length >= _this.nflot) {
+                                    _this.nStepsHistory = _this.nStepsHistory.slice(1);
+                                }
+                                _this.nStepsHistory.push(_this.nStepsCounter);
+                                _this.nStepsCounter = 0;
+
+                                _this.gridLocation = _this.world.grid.getCellAt(0, 0);
+                                _this.position.set(_this.world.grid.cellWidth / 2, _this.world.grid.cellHeight / 2);
+                            }
+                        }
+                        break;
+                    default:
+                        console.log('Unknown command: ' + data.cmd + ' message:' + data.msg);
+                        break;
                 }
             };
 
             this.brain.post('init', {env: jEnv, opts: jOpts});
         }
-    }
-
-    AgentRLTD.prototype = Object.create(Agent.prototype);
-    AgentRLTD.prototype.constructor = Agent;
+    };
 
     /**
      * Agent's chance to act on the world
@@ -119,7 +119,7 @@ var AgentRLTD = AgentRLTD || {};
         this.world = world;
         if (!this.worker) {
             // ask agent for an action
-            var a = this.brain.act(this.state),
+            let a = this.brain.act(this.state),
             // run it through environment dynamics
                 obs = this.sampleNextState(this.state, a);
 

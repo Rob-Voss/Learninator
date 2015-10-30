@@ -3,6 +3,16 @@ html, body {
     height: 100%; /* Needed if you want to use height: 100% within the body tag */
 }
 
+* {
+    -webkit-box-sizing: inherit;
+    -moz-box-sizing: inherit;
+    box-sizing: inherit;
+}
+
+button, input, optgroup, select, textarea {
+    color: black;
+}
+
 .game-container {
     height: 100%; /* The 'html, body' styles above can be removed if you want to use a fixed height here (ie. 800px) */
     text-align: center; /* Horizontally align text elements to centre */

@@ -2843,7 +2843,8 @@
 
                         self.postMessage({
                             cmd: 'init',
-                            msg: 'complete'
+                            msg: 'complete',
+                            input: _DQNAgent.toJSON()
                         });
                         break;
                     case 'act':
@@ -2856,13 +2857,16 @@
                         });
                         break;
                     case 'load':
+                        if (_DQNAgent.brain.learning === false) {
+                            _DQNAgent.epsilon = 0.05;
+                            _DQNAgent.alpha = 0;
+                        }
                         _DQNAgent.fromJSON(JSON.parse(data.input));
-                        _DQNAgent.epsilon = 0.05;
-                        _DQNAgent.alpha = 0;
 
                         self.postMessage({
                             cmd: 'load',
-                            msg: 'complete'
+                            msg: 'complete',
+                            input: _DQNAgent.toJSON()
                         });
                         break;
                     case 'learn':
@@ -2871,7 +2875,7 @@
                         self.postMessage({
                             cmd: 'learn',
                             msg: 'complete',
-                            input: _DQNAgent.epsilon
+                            input: _DQNAgent.toJSON()
                         });
                         break;
                     case 'save':
@@ -2884,7 +2888,8 @@
                     case 'stop':
                         self.postMessage({
                             cmd: 'stop',
-                            msg: 'complete'
+                            msg: 'complete',
+                            input: _DQNAgent.toJSON()
                         });
                         close(); // Terminates the worker.
                         break;

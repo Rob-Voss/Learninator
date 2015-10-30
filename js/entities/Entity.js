@@ -1,5 +1,3 @@
-var Entity = Entity || {};
-
 (function (global) {
     "use strict";
 
@@ -37,7 +35,7 @@ var Entity = Entity || {};
      * @returns {Entity}
      */
     function Entity(type, position, opts) {
-        var _this = this;
+        let _this = this;
         this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
         this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
         this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
@@ -137,7 +135,7 @@ var Entity = Entity || {};
      * Set up the cheat displays
      */
     Entity.prototype.addCheats = function () {
-        var fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
+        let fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
 
         // If cheats are on then show the entities grid location and x,y coords
         if (this.cheats.gridLocation && this.gridText === undefined) {
@@ -178,7 +176,7 @@ var Entity = Entity || {};
      *
      */
     Entity.prototype.updateCheats = function () {
-        var posText, gridText, nameText, idText;
+        let posText, gridText, nameText, idText;
         // If cheats are on then show the entities grid location and x,y coords
         if (this.cheats.gridLocation) {
             if (this.gridText === undefined) {
@@ -284,7 +282,7 @@ var Entity = Entity || {};
         this.world.check(this);
 
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            var wall = this.world.walls[w],
+            let wall = this.world.walls[w],
                 result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.unshift(wall);
@@ -307,7 +305,7 @@ var Entity = Entity || {};
         }
 
         // Handle boundary conditions.. bounce Agent
-        var top = this.world.height - (this.world.height - this.radius),
+        let top = this.world.height - (this.world.height - this.radius),
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
@@ -375,7 +373,7 @@ var Entity = Entity || {};
      */
     Entity.prototype.onDragMove = function () {
         if (this.dragging) {
-            var newPosition = this.data.getLocalPosition(this.parent);
+            let newPosition = this.data.getLocalPosition(this.parent);
             this.position.set(newPosition.x, newPosition.y);
             this.entity.position.set(newPosition.x, newPosition.y);
         }

@@ -1,5 +1,3 @@
-var EntityRLDQN = EntityRLDQN || {};
-
 (function (global) {
     "use strict";
 
@@ -14,7 +12,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @returns {EntityRLDQN}
      */
     function EntityRLDQN(position, opts) {
-        var _this = this;
+        let _this = this;
 
         this.name = 'Entity RLDQN';
         this.action = null;
@@ -48,7 +46,7 @@ var EntityRLDQN = EntityRLDQN || {};
 
         // The Agent's eyes
         this.eyes = [];
-        for (var k = 0; k < this.numEyes; k++) {
+        for (let k = 0; k < this.numEyes; k++) {
             this.eyes.push(new Eye(k * Math.PI / 3, this.position, 75, 75));
         }
 
@@ -65,7 +63,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @param {String} file
      */
     EntityRLDQN.prototype.load = function (file) {
-        var _this = this;
+        let _this = this;
         $.getJSON(file, function(data) {
             if (!_this.worker) {
                 _this.brain.fromJSON(data);
@@ -83,7 +81,7 @@ var EntityRLDQN = EntityRLDQN || {};
      *
      */
     EntityRLDQN.prototype.saveAgent = function (id) {
-        var brain;
+        let brain;
         if (!this.worker) {
             brain = this.brain;
         }
@@ -101,7 +99,7 @@ var EntityRLDQN = EntityRLDQN || {};
         }
 
         // in forward pass the agent simply behaves in the environment
-        var ne = this.numEyes * this.numTypes,
+        let ne = this.numEyes * this.numTypes,
             inputArray = new Array(this.numStates);
         for (let i = 0; i < this.numEyes; i++) {
             let eye = this.eyes[i];
@@ -149,7 +147,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @returns {Array}
      */
     EntityRLDQN.prototype.getState = function () {
-        var s = [
+        let s = [
             this.enemy.position.x / 1000,
             this.enemy.position.y / 1000,
             this.enemy.position.vx / 10,
@@ -167,7 +165,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @returns {EntityRLDQN}
      */
     EntityRLDQN.prototype.move = function () {
-        var speed = 0.50;
+        let speed = 0.50;
 
         // Execute agent's desired action
         switch (this.action) {
@@ -202,7 +200,7 @@ var EntityRLDQN = EntityRLDQN || {};
         // Add any walls we hit
         // @TODO I need to get these damn walls into the CollisionDetection call
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            var wall = this.world.walls[w],
+            let wall = this.world.walls[w],
                 result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
             if (result) {
                 this.collisions.push(wall);
@@ -228,7 +226,7 @@ var EntityRLDQN = EntityRLDQN || {};
         }
 
         // Handle boundary conditions.. bounce Agent
-        var top = this.world.height - (this.world.height - this.radius),
+        let top = this.world.height - (this.world.height - this.radius),
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
@@ -265,7 +263,7 @@ var EntityRLDQN = EntityRLDQN || {};
      */
     EntityRLDQN.prototype.sampleNextState = function () {
         // Compute distances
-        var dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
+        let dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
             dy1 = (this.position.y / 1000) - (this.target.position.y / 1000), // Distance from Noms
             dx2 = (this.position.x / 1000) - (this.enemy.position.x / 1000), // Distance from Agent
             dy2 = (this.position.y / 1000) - (this.enemy.position.y / 1000), // Distance from Agent
@@ -285,7 +283,7 @@ var EntityRLDQN = EntityRLDQN || {};
         //    r += 0.05;
         //}
 
-        var vv = r + 0.5,
+        let vv = r + 0.5,
             ms = 255.0,
             red, green, blue;
         if (vv > 0) {
@@ -308,9 +306,9 @@ var EntityRLDQN = EntityRLDQN || {};
      */
     EntityRLDQN.prototype.tick = function (world) {
         this.world = world;
-        var obs;
+        let obs;
 
-        for (var k = 0; k < this.stepsPerTick; k++) {
+        for (let k = 0; k < this.stepsPerTick; k++) {
             // Loop through the eyes and check the walls and nearby entities
             for (let e = 0; e < this.numEyes; e++) {
                 this.eyes[e].sense(this);

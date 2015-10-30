@@ -83,10 +83,10 @@
      * @returns {Maze}
      */
     Maze.prototype.drawBorders = function (closed) {
-        this.addWall(new Vec(closed ? 2 : this.cellWidth, 2), new Vec(this.width - 2, 2));
-        this.addWall(new Vec(this.width - 2, 2), new Vec(this.width - 2, this.height - 2));
-        this.addWall(new Vec(this.width - (closed ? 2 : this.cellWidth), this.height - 2), new Vec(2, this.height - 2));
-        this.addWall(new Vec(2, this.height - 2), new Vec(2, 2));
+        this.addWall(new Vec(closed ? 0 : this.cellWidth, 0), new Vec(this.width, 0));
+        this.addWall(new Vec(this.width, 0), new Vec(this.width, this.height));
+        this.addWall(new Vec(this.width - (closed ? 0 : this.cellWidth), this.height), new Vec(0, this.height));
+        this.addWall(new Vec(0, this.height), new Vec(0, 0));
 
         return this;
     };
