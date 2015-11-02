@@ -85,5 +85,5 @@ function datGUI (world) {
     }
 
     wGUI.remember(world);
-    wFolder.open();
+    //wFolder.open();
 }

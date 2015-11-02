@@ -7,10 +7,10 @@
 
     <title>Maze World</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
-          rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/styles.css">
 
     <script>
         /**
@@ -40,6 +40,9 @@
     </script>
 </head>
 <body onload="start();">
+
+<twitch-nav></twitch-nav>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-8">
@@ -57,27 +60,7 @@
     </div>
 </div>
 
-<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="agentBrainModalLabel" id="agentBrainModal">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title" id="agentBrainModalLabel">
-
-                </h4>
-            </div>
-            <div class="modal-body">
-                <textarea id="brainModalContent" cols="30" rows="10"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
-        </div>
-    </div>
-</div>
+<agent-brain-modal></agent-brain-modal>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
@@ -111,6 +94,8 @@
 
 <script src="js/lib/external/convnet.js"></script>
 
+<link rel="import" href="/lib/twitch-nav.html">
+<link rel="import" href="/lib/agent-brain-modal.html">
 
 </body>
 </html>

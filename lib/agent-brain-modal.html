@@ -1,0 +1,38 @@
+<div class="container" id="agent-brain-modal">
+    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="agentBrainModalLabel" id="agentBrainModal">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="agentBrainModalLabel">
+
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <textarea id="brainModalContent" cols="30" rows="10"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // This element will be registered to index.html
+    // Because `document` here means the one in index.html
+    var XComponent = document.registerElement('agent-brain-modal', {
+        prototype: Object.create(HTMLElement.prototype, {
+            createdCallback: {
+                value: function () {
+                    var doc = document.querySelector('link[rel="import"]').import,
+                            template = doc.querySelector('#agent-brain-modal');
+                    document.body.appendChild(template.cloneNode(true));
+                }
+            }
+        })
+    });
+</script>
