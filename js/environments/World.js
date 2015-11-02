@@ -1,3 +1,6 @@
+var World = World || {},
+    Wall = Wall || {};
+
 (function (global) {
     "use strict";
 
@@ -37,17 +40,17 @@
         //this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
         //this.stage.addChild(this.menu);
 
-        this.displayOpts = {
-            title: 'Agent Scores',
-            width: 120,
-            height: 60,
-            render: {
-                width: this.width,
-                height: this.height
-            }
-        };
-        this.display = new Display(0, 0, this.displayOpts);
-        this.stage.addChild(this.display);
+        //this.displayOpts = {
+        //    title: 'Agent Scores',
+        //    width: 120,
+        //    height: 60,
+        //    render: {
+        //        width: this.width,
+        //        height: this.height
+        //    }
+        //};
+        //this.display = new Display(0, 0, this.displayOpts);
+        //this.stage.addChild(this.display);
 
         this.clock = 0;
         this.pause = false;
@@ -287,6 +290,12 @@
             this.agents[a].draw();
         }
 
+        // draw entity agents
+        for (let a = 0, na = this.entityAgents.length; a < na; a++) {
+            // draw agents body
+            this.entityAgents[a].draw();
+        }
+
         this.graphRewards();
 
         return this;
@@ -315,6 +324,12 @@
         // Loop through the agents of the world and make them do work!
         for (let a = 0; a < this.agents.length; a++) {
             this.agents[a].tick(this);
+        }
+
+        // Loop through entity agents
+        for (let a = 0, na = this.entityAgents.length; a < na; a++) {
+            // draw agents body
+            this.entityAgents[a].tick(this);
         }
 
         // Loop through the entities of the world and make them do work son!
@@ -358,8 +373,9 @@
         for (let a = 0, ac = this.agents.length; a < ac; a++) {
             let agent = this.agents[a],
                 rew = agent.lastReward;
-            this.display.updateItem(a, '[' + agent.id.substring(0, 5) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
-
+            if (this.display !== undefined) {
+                this.display.updateItem(a, '[' + agent.id.substring(0, 5) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
+            }
             if (this.smoothReward[a] === null) {
                 this.smoothReward[a] = rew;
             }

@@ -1,12 +1,15 @@
+var WaterWorldEX = WaterWorldEX || {};
+
 (function (global) {
     "use strict";
 
     /**
      * World object contains many agents and walls and food and stuff
-     * @returns {WaterWorldEX}
      * @name WaterWorldEX
      * @extends World
      * @constructor
+     *
+     * @returns {WaterWorldEX}
      */
     function WaterWorldEX() {
         this.canvas = document.getElementById("world");
@@ -20,7 +23,7 @@
         this.numEntityAgents = 2;
         this.entityAgentOpts = {
             brainType: 'RLDQN',
-            numEyes: 6,
+            numEyes: 0,
             numTypes: 5,
             range: 85,
             proximity: 85,

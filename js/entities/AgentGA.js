@@ -1,3 +1,6 @@
+var AgentGA = AgentGA || {},
+    Brain = Brain || {};
+
 (function (global) {
     "use strict";
 

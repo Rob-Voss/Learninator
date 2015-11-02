@@ -1,3 +1,5 @@
+var PuckWorld = PuckWorld || {};
+
 (function (global) {
     "use strict";
 

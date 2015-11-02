@@ -1,3 +1,5 @@
+var WaterWorld = WaterWorld || {};
+
 (function (global) {
     "use strict";
 
@@ -10,6 +12,7 @@
      */
     function WaterWorld() {
         this.canvas = document.getElementById("world");
+
         this.mazeOptions = {
             xCount: 2,
             yCount: 2,
@@ -85,6 +88,33 @@
         this.simSpeed = 1;
 
         World.call(this);
+
+        this.menuOpts = {
+            render: {
+                width: this.width,
+                height: this.height
+            },
+            menu: {
+                x: this.width - 130,
+                y: 0,
+                width: 120,
+                height: 60
+            }
+        };
+        this.menu = new Menu(this.menuOpts);
+        this.stage.addChild(this.menu);
+
+        this.displayOpts = {
+            title: 'Agent Scores',
+            width: 120,
+            height: 60,
+            render: {
+                width: this.width,
+                height: this.height
+            }
+        };
+        this.display = new Display(0, 0, this.displayOpts);
+        this.stage.addChild(this.display);
 
         return this;
     }

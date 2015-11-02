@@ -1,12 +1,15 @@
+var WaterWorldGA = WaterWorldGA || {};
+
 (function (global) {
     "use strict";
 
     /**
      * World object contains many agents and walls and food and stuff
-     * @returns {WaterWorldGA}
      * @name WaterWorldGA
      * @extends World
      * @constructor
+     *
+     * @returns {WaterWorldGA}
      */
     function WaterWorldGA() {
         var _this = this;

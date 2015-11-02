@@ -1,3 +1,6 @@
+var Experience = Experience || {},
+    TDBrain = TDBrain || {};
+
 (function (global) {
     "use strict";
 

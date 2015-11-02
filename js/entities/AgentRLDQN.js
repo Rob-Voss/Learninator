@@ -1,3 +1,5 @@
+var AgentRLDQN = AgentRLDQN || {};
+
 (function (global) {
     "use strict";
 

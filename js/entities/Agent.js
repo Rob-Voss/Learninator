@@ -1,3 +1,6 @@
+var Agent = Agent || {},
+    Eye = Eye || {};
+
 (function (global) {
     "use strict";
 

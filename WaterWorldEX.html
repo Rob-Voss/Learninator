@@ -12,28 +12,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
-    <script src="js/lib/Array.js"></script>
-    <script src="js/lib/CollisionDetector.js"></script>
-    <script src="js/lib/Grid.js"></script>
-    <script src="js/lib/Maze.js"></script>
-    <script src="js/lib/QuadTree.js"></script>
-    <script src="js/lib/RewardGraph.js"></script>
-    <script src="js/lib/Utility.js"></script>
-    <script src="js/lib/Vec.js"></script>
-    <script src="js/lib/Window.js"></script>
-    <script src="js/lib/ui/Dat.js"></script>
-
-    <script src="js/entities/Entity.js"></script>
-    <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentRLDQN.js"></script>
-    <script src="js/entities/EntityRLDQN.js"></script>
-
-    <script src="js/environments/World.js"></script>
-    <script src="js/environments/WaterWorldEX.js"></script>
-
-    <script src="js/lib/external/convnet.js"></script>
-    <script src="js/lib/external/rl.js"></script>
-
     <script>
         /**
          * Global world object
@@ -41,18 +19,56 @@
          */
         var world = world || {};
 
+        var jaxrendered = false;
+        function renderJax() {
+            if(jaxrendered) { return; }
+            (function () {
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                document.getElementsByTagName("head")[0].appendChild(script);
+                jaxrendered = true;
+            })();
+        }
+
         /**
          * Create existence!
          */
         function start() {
             world = new WaterWorldEX();
             datGUI(world);
+            // render markdown
+            $(".md").each(function () {
+                $(this).html(marked($(this).html()));
+            });
+            renderJax();
         }
 
     </script>
 </head>
 <body onload="start();">
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <div id="exp" class="md">
+
+### Setup
+
+This is another Deep Q Learning demo with a more realistic and larger setup:
+
+- The **state space** is even larger and continuous: The agent has 30 eye sensors pointing in all directions and in each direction is observes 5 variables: the range, the type of sensed object (green, red), and the velocity of the sensed object. The agent's proprioception includes two additional sensors for its own speed in both x and y directions. This is a total of 152-dimensional state space.
+- There are 4 **actions** available to the agent: To apply thrusters to the left, right, up and down. This gives the agent control over its velocity.
+- The **dynamics** integrate the velocity of the agent to change its position. The green and red targets bounce around.
+- The **reward** awarded to the agent is +1 for making contact with any red target (these are apples) and -1 for making contact with any green target (this is poison).
+
+The optimal strategy of the agent is to cruise around, run away from green targets and eat red targets. What's interesting about this demo is that the state space is so high-dimensional, and also that the sensed variables are agent-relative. They're not just toy x,y coordinates of some fixed number of targets as in previous demo.
+
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div id="flotreward"></div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <h2>
@@ -64,34 +80,25 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-8">
-            <div id="flotreward" style="width:600px; height: 300px;"></div>
-        </div>
-        <div class="col-md-4">
-            <div id="agentActions"></div>
-            <div id="cheats"></div>
-        </div>
-    </div>
+</div>
 
-    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="agentBrainModalLabel" id="agentBrainModal">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="agentBrainModalLabel">
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="agentBrainModalLabel" id="agentBrainModal">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="agentBrainModalLabel">
 
-                    </h4>
-                </div>
-                <div class="modal-body">
-                    <textarea id="brainModalContent" cols="30" rows="10"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                </div>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <textarea id="brainModalContent" cols="30" rows="10"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
             </div>
         </div>
     </div>
@@ -106,6 +113,35 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sylvester/0.1.3/sylvester.min.js"></script>
+
+<!-- markdown -->
+<script type="text/javascript" src="js/lib/external/marked.js"></script>
+<script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
+<link rel="stylesheet" href="css/highlight_default.css">
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="js/lib/Array.js"></script>
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/Grid.js"></script>
+<script src="js/lib/Maze.js"></script>
+<script src="js/lib/QuadTree.js"></script>
+<script src="js/lib/RewardGraph.js"></script>
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+<script src="js/lib/Window.js"></script>
+<script src="js/lib/ui/Dat.js"></script>
+<script src="js/lib/ui/Display.js"></script>
+
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
+<script src="js/entities/AgentRLDQN.js"></script>
+<script src="js/entities/EntityRLDQN.js"></script>
+
+<script src="js/environments/World.js"></script>
+<script src="js/environments/WaterWorldEX.js"></script>
+
+<script src="js/lib/external/convnet.js"></script>
+<script src="js/lib/external/rl.js"></script>
 
 </body>
 </html>

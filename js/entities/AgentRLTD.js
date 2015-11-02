@@ -1,3 +1,5 @@
+var AgentRLTD = AgentRLTD || {};
+
 (function (global) {
     "use strict";
 
@@ -31,6 +33,7 @@
             beta: 0.1 // learning rate for smooth policy update
         });
 
+        this.reset();
     }
 
     AgentRLTD.prototype = Object.create(Agent.prototype);
@@ -39,10 +42,10 @@
     AgentRLTD.prototype.reset = function () {
         let _this = this;
         if (!this.worker) {
-            this.brain = new TDAgent(_this.env, this.brainOpts);
-            this.state = _this.env.startState();
+            this.brain = new TDAgent(this.env, this.brainOpts);
+            this.state = this.env.startState();
 
-            _this.env.reset();
+            this.env.reset();
 
             return this;
         } else {

@@ -13,29 +13,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
-    <!-- markdown -->
-    <script type="text/javascript" src="js/lib/external/marked.js"></script>
-    <script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
-    <link rel="stylesheet" href="js/lib/external/highlight_default.css">
-    <script>hljs.initHighlightingOnLoad();</script>
-
-    <script src="js/lib/Utility.js"></script>
-    <script type="text/javascript" src="js/lib/external/rl.js"></script>
-
-    <!-- environment dynamics -->
-    <script src="js/environments/wallworld.js"></script>
-
-    <!-- GA
-    <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    ga('create', 'UA-3698471-24', 'auto');
-    ga('send', 'pageview');
-    </script>
-    -->
-
     <style>
         #wrap {
             width: 800px;
@@ -399,7 +376,7 @@
             (function () {
                 var script = document.createElement("script");
                 script.type = "text/javascript";
-                script.src = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
                 document.getElementsByTagName("head")[0].appendChild(script);
                 jaxrendered = true;
             })();
@@ -604,21 +581,21 @@ spec.num_hidden_units = 100 // number of neurons in hidden layer
 
     <div id="exp" class="md">
 
-        ### Setup
+### Setup
 
-        This is another Deep Q Learning demo with a more realistic and larger setup:
+This is another Deep Q Learning demo with a more realistic and larger setup:
 
-        - The **state space** is continuous: The agent has 8 eye sensors each observes 1 variable: the range of
-        walls/items. Along with 31 nostril sensors each observes 1 variable: the range of goals (ignoring walls). This
-        is a total of 39-dimensional state space.
-        - There are 5 **actions** available to the agent: To turn on the spot (left or right), forward turns (left or
-        right), or straight forward.
-        - The **reward** awarded to the agent is +1 for making contact with their goal.
+- The **state space** is continuous: The agent has 8 eye sensors each observes 1 variable: the range of
+walls/items. Along with 31 nostril sensors each observes 1 variable: the range of goals (ignoring walls). This
+is a total of 39-dimensional state space.
+- There are 5 **actions** available to the agent: To turn on the spot (left or right), forward turns (left or
+right), or straight forward.
+- The **reward** awarded to the agent is +1 for making contact with their goal.
 
-        ### TODO
+### TODO
 
-        * [ ] The agent's proprioception includes two additional sensors for its own speed ~~in both x and y
-        directions~~ on each wheel.
+* [ ] The agent's proprioception includes two additional sensors for its own speed ~~in both x and y
+directions~~ on each wheel.
 
     </div>
 
@@ -630,6 +607,18 @@ spec.num_hidden_units = 100 // number of neurons in hidden layer
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+
+<!-- markdown -->
+<script type="text/javascript" src="js/lib/external/marked.js"></script>
+<script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
+<link rel="stylesheet" href="css/highlight_default.css">
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="js/lib/Utility.js"></script>
+<script type="text/javascript" src="js/lib/external/rl.js"></script>
+
+<!-- environment dynamics -->
+<script src="js/environments/WallWorld.js"></script>
 
 </body>
 </html>

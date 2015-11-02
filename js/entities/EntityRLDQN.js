@@ -1,3 +1,5 @@
+var EntityRLDQN = EntityRLDQN || {};
+
 (function (global) {
     "use strict";
 
@@ -25,7 +27,7 @@
         // Reward or punishment
         this.carrot = +1;
         this.stick = -1;
-        this.reward = 0;
+        this.lastReward = 0;
         this.pts = [];
 
         // The Agent's actions
@@ -306,7 +308,6 @@
      */
     EntityRLDQN.prototype.tick = function (world) {
         this.world = world;
-        let obs;
 
         for (let k = 0; k < this.stepsPerTick; k++) {
             // Loop through the eyes and check the walls and nearby entities
@@ -317,9 +318,9 @@
             this.state = this.getState();
             this.action = this.brain.act(this.state);
             this.move();
-            this.reward = this.sampleNextState();
-            this.pts.push(this.reward);
-            this.brain.learn(this.reward);
+            this.lastReward = this.sampleNextState();
+            this.pts.push(this.lastReward);
+            this.brain.learn(this.lastReward);
         }
 
         return this;

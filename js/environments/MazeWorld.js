@@ -1,3 +1,5 @@
+var MazeWorld = MazeWorld || {};
+
 (function (global) {
     "use strict";
 

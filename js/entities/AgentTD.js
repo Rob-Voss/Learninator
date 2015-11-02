@@ -1,3 +1,5 @@
+var AgentTD = AgentTD || {};
+
 (function (global) {
     "use strict";
 

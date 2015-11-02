@@ -1,3 +1,5 @@
+var GridWorld = GridWorld || {};
+
 (function (global) {
     "use strict";
 
@@ -48,6 +50,7 @@
                     collision: false,
                     interactive: false,
                     useSprite: false,
+                    worker: false,
                     cheats: {
                         gridLocation: false,
                         position: false,
@@ -60,7 +63,6 @@
         this.initGrid();
         this.drawGrid();
         this.initFlot();
-        this.tick();
 
         return this;
     }
@@ -233,6 +235,8 @@
 
         this.Rarr = Rarr;
         this.Aarr = Aarr;
+
+        return this;
     };
 
     /**
@@ -500,13 +504,13 @@
 
                 // write value
                 var tv = this.tvs[s];
-                tv.text(vv.toFixed(2));
+                tv.text(vv !== null ? vv.toFixed(2) : 0);
 
                 // update policy arrows
                 var paa = this.pas[s];
                 for (var a = 0; a < 4; a++) {
-                    var pa = paa[a],
-                        prob = this.agents[0].brain.P[a * this.gS + s],
+                    var pa = paa[a];
+                    var prob = this.agents[0].brain.P[a * this.gS + s],
                         nx = 0,
                         ny = 0,
                         actions = this.Aarr[s],
