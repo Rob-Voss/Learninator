@@ -58,7 +58,6 @@ var Agent = Agent || {},
         this.proximity = Utility.getOpt(opts, 'proximity',  85);
         // The number of Agent's eyes times the number of known types
         this.numStates = this.numEyes * this.numTypes;
-        this.brainState = {};
 
         // Set the brain options
         this.brainOpts = Utility.getOpt(opts, 'spec', {
@@ -94,6 +93,7 @@ var Agent = Agent || {},
         }
 
         this.action = null;
+        this.avgReward = 0;
         this.lastReward = 0;
         this.digestionSignal = 0.0;
         this.rewardBonus = 0.0;
@@ -103,6 +103,7 @@ var Agent = Agent || {},
         this.pts = [];
         this.direction = 'N';
         this.brain = {};
+        this.brainState = {};
         this.world = {};
 
         return this;
@@ -181,7 +182,7 @@ var Agent = Agent || {},
     };
 
     /**
-     * Eye sensor has a maximum range and senses walls
+     * Eye sensor has a maximum range and senses entities and walls
      * @param angle
      * @param range
      * @param proximity

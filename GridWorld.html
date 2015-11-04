@@ -30,13 +30,17 @@
         };
         var jaxrendered = false;
         function renderJax() {
-            if (jaxrendered) {
+            if(jaxrendered) {
                 return;
             }
+            // render markdown
+            $(".md").each(function () {
+                $(this).html(marked($(this).html()));
+            });
             (function () {
                 var script = document.createElement("script");
                 script.type = "text/javascript";
-                script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
                 document.getElementsByTagName("head")[0].appendChild(script);
                 jaxrendered = true;
             })();
@@ -79,10 +83,6 @@
             $("#eps").html(world.agents[0].epsilon.toFixed(2));
             $("#slider").slider('value', world.agents[0].epsilon);
 
-            // render markdown
-            $(".md").each(function () {
-                $(this).html(marked($(this).html()));
-            });
             renderJax();
         }
     </script>
@@ -90,6 +90,7 @@
 <body onload="start();">
 
 <twitch-nav></twitch-nav>
+<agent-brain-modal></agent-brain-modal>
 
 <div class="container-fluid">
     <div class="row">
@@ -263,14 +264,6 @@ some state features, **DQN** (Deep Q Learning) is for you. Head over to the next
     </div>
 </div>
 
-<agent-brain-modal></agent-brain-modal>
-
-<!-- markdown -->
-<script type="text/javascript" src="js/lib/external/marked.js"></script>
-<script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
-<link rel="stylesheet" href="css/highlight_default.css">
-<script>hljs.initHighlightingOnLoad();</script>
-
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -279,6 +272,12 @@ some state features, **DQN** (Deep Q Learning) is for you. Head over to the next
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+
+<!-- markdown -->
+<script type="text/javascript" src="js/lib/external/marked.js"></script>
+<script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
+<link rel="stylesheet" href="css/highlight_default.css">
+<script>hljs.initHighlightingOnLoad();</script>
 
 <script src="js/lib/Array.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>

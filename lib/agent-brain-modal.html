@@ -1,4 +1,4 @@
-<div class="container" id="agent-brain-modal">
+<div class="container" id="agent-brain">
     <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="agentBrainModalLabel" id="agentBrainModal">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
@@ -21,6 +21,7 @@
         </div>
     </div>
 </div>
+
 <script>
     // This element will be registered to index.html
     // Because `document` here means the one in index.html
@@ -29,7 +30,7 @@
             createdCallback: {
                 value: function () {
                     var doc = document.querySelector('link[rel="import"]').import,
-                            template = doc.querySelector('#agent-brain-modal');
+                        template = doc.querySelector('#agent-brain');
                     document.body.appendChild(template.cloneNode(true));
                 }
             }

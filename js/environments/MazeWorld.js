@@ -12,13 +12,14 @@ var MazeWorld = MazeWorld || {};
      * @returns {MazeWorld}
      */
     function MazeWorld() {
-        this.canvas = document.getElementById('world');
+        this.width = 600;
+        this.height = 600;
         this.mazeOptions = {
             xCount: 6,
             yCount: 6,
             closed: true,
-            width: this.canvas.width,
-            height: this.canvas.height
+            width: this.width,
+            height: this.height
         };
         this.maze = new Maze(this.mazeOptions);
         this.grid = this.maze.grid;
@@ -28,7 +29,7 @@ var MazeWorld = MazeWorld || {};
         this.entityOpts = {
             radius: 10,
             collision: true,
-            interactive: false,
+            interactive: true,
             useSprite: false,
             movingEntities: false,
             cheats: {

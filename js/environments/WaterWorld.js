@@ -11,13 +11,13 @@ var WaterWorld = WaterWorld || {};
      * @constructor
      */
     function WaterWorld() {
-        this.canvas = document.getElementById("world");
-
+        this.width = 600;
+        this.height = 600;
         this.mazeOptions = {
             xCount: 2,
             yCount: 2,
-            width: this.canvas.width,
-            height: this.canvas.height,
+            width: this.width,
+            height: this.height,
             closed: true
         };
         this.maze = new Maze(this.mazeOptions);
@@ -88,21 +88,6 @@ var WaterWorld = WaterWorld || {};
         this.simSpeed = 1;
 
         World.call(this);
-
-        this.menuOpts = {
-            render: {
-                width: this.width,
-                height: this.height
-            },
-            menu: {
-                x: this.width - 130,
-                y: 0,
-                width: 120,
-                height: 60
-            }
-        };
-        this.menu = new Menu(this.menuOpts);
-        this.stage.addChild(this.menu);
 
         this.displayOpts = {
             title: 'Agent Scores',

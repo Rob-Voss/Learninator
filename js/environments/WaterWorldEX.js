@@ -12,8 +12,8 @@ var WaterWorldEX = WaterWorldEX || {};
      * @returns {WaterWorldEX}
      */
     function WaterWorldEX() {
-        this.canvas = document.getElementById("world");
-
+        this.width = 600;
+        this.height = 600;
         this.cheats = {
             quad: true,
             grid: false,

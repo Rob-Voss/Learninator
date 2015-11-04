@@ -14,41 +14,20 @@ var World = World || {},
      */
     function World(worldOpts) {
         var _this = this;
-        this.canvas = this.canvas || document.getElementById('world');
-        this.ctx = this.canvas.getContext('2d');
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
+        this.width = this.width || Utility.getOpt(worldOpts, 'width', 600);
+        this.height = this.height || Utility.getOpt(worldOpts, 'height', 600);
 
         // PIXI gewdness
-        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, {view: this.canvas, transparent: true}, true);
-        this.renderer.roundPixels = true;
-        document.body.appendChild(this.renderer.view);
         this.stage = new PIXI.Container();
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height);
+        this.renderer.backgroundColor = 0xFFFFFF;
+        // Round the pixels
+        //this.renderer.roundPixels = true;
+        document.body.querySelector('.game-container').appendChild(this.renderer.view);
 
-        //this.menuOpts = {
-        //    render: {
-        //        width: this.width,
-        //        height: this.height
-        //    },
-        //    menu: {
-        //        x: 0,
-        //        y: 0,
-        //        width: 120,
-        //        height: 60
-        //    }
-        //};
         //this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
         //this.stage.addChild(this.menu);
 
-        //this.displayOpts = {
-        //    title: 'Agent Scores',
-        //    width: 120,
-        //    height: 60,
-        //    render: {
-        //        width: this.width,
-        //        height: this.height
-        //    }
-        //};
         //this.display = new Display(0, 0, this.displayOpts);
         //this.stage.addChild(this.display);
 
@@ -374,7 +353,7 @@ var World = World || {},
             let agent = this.agents[a],
                 rew = agent.lastReward;
             if (this.display !== undefined) {
-                this.display.updateItem(a, '[' + agent.id.substring(0, 5) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
+                this.display.updateItem(a, '[' + agent.id.substring(0, 4) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
             }
             if (this.smoothReward[a] === null) {
                 this.smoothReward[a] = rew;

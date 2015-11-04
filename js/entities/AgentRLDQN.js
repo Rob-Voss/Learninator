@@ -257,7 +257,7 @@ var AgentRLDQN = AgentRLDQN || {};
                         break;
                     case 'load':
                         if (data.msg === 'complete') {
-                            //
+                            _this.brainState = JSON.stringify(data.input);
                         }
                         break;
                     case 'save':

@@ -4,6 +4,61 @@ var WaterWorldGA = WaterWorldGA || {};
     "use strict";
 
     /**
+     *
+     * @param chromosome1
+     * @param chromosome2
+     * @returns {number}
+     */
+    function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
+        var result = 0;
+        // put chromosomes into brains before getting them to duel it out.
+        _this.agents[0].brain.populate(chromosome1);
+        _this.agents[1].brain.populate(chromosome2);
+
+        result = _this.update(30 * 20);
+
+        return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
+    }
+
+    /**
+     *
+     * @param brain
+     * @param initialGene
+     * @constructor
+     */
+    function Trainer(brain, initialGene) {
+        this.net = new convnetjs.Net();
+        this.net.makeLayers(brain.layerDefs);
+        this.trainer = new GATrainer({
+            populationSize: 100 * 1,
+            mutationSize: 0.3,
+            mutationRate: 0.05,
+            numMatch: 4 * 2,
+            elitePercentage: 0.20
+        }, initialGene);
+
+        return this;
+    }
+
+    /**
+     *
+     */
+    Trainer.prototype.train = function () {
+        this.trainer.matchTrain(matchFunction);
+    };
+
+    /**
+     *
+     * @param n
+     * @returns {*}
+     */
+    Trainer.prototype.getChromosome = function (n) {
+        // returns a copy of the nth best chromosome (if not provided, returns first one, which is the best one)
+        n = n || 0;
+        return this.trainer.chromosomes[n].clone();
+    };
+
+    /**
      * World object contains many agents and walls and food and stuff
      * @name WaterWorldGA
      * @extends World
@@ -13,12 +68,13 @@ var WaterWorldGA = WaterWorldGA || {};
      */
     function WaterWorldGA() {
         var _this = this;
-        this.canvas = document.getElementById("world");
+        this.width = 600;
+        this.height = 600;
         this.mazeOptions = {
             xCount: 4,
             yCount: 4,
-            width: this.canvas.width,
-            height: this.canvas.height,
+            width: this.width,
+            height: this.height,
             closed: true
         };
         this.maze = new Maze(this.mazeOptions);
@@ -61,61 +117,6 @@ var WaterWorldGA = WaterWorldGA || {};
                 id: false,
                 name: false
             }
-        };
-
-        /**
-         *
-         * @param chromosome1
-         * @param chromosome2
-         * @returns {number}
-         */
-        function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
-            var result = 0;
-            // put chromosomes into brains before getting them to duel it out.
-            _this.agents[0].brain.populate(chromosome1);
-            _this.agents[1].brain.populate(chromosome2);
-
-            result = _this.update(30 * 20);
-
-            return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
-        }
-
-        /**
-         *
-         * @param brain
-         * @param initialGene
-         * @constructor
-         */
-        function Trainer(brain, initialGene) {
-            this.net = new convnetjs.Net();
-            this.net.makeLayers(brain.layerDefs);
-            this.trainer = new GATrainer({
-                populationSize: 100 * 1,
-                mutationSize: 0.3,
-                mutationRate: 0.05,
-                numMatch: 4 * 2,
-                elitePercentage: 0.20
-            }, initialGene);
-
-            return this;
-        }
-
-        /**
-         *
-         */
-        Trainer.prototype.train = function () {
-            this.trainer.matchTrain(matchFunction);
-        };
-
-        /**
-         *
-         * @param n
-         * @returns {*}
-         */
-        Trainer.prototype.getChromosome = function (n) {
-            // returns a copy of the nth best chromosome (if not provided, returns first one, which is the best one)
-            n = n || 0;
-            return this.trainer.chromosomes[n].clone();
         };
 
         this.agents = [

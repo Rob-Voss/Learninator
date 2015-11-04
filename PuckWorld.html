@@ -123,7 +123,13 @@
 
         var jaxrendered = false;
         function renderJax() {
-            if(jaxrendered) { return; }
+            if(jaxrendered) {
+                return;
+            }
+            // render markdown
+            $(".md").each(function () {
+                $(this).html(marked($(this).html()));
+            });
             (function () {
                 var script = document.createElement("script");
                 script.type = "text/javascript";
@@ -140,10 +146,6 @@
             world = new PuckWorld();
             world.initDraw();
             initFlot();
-            // render markdown
-            $(".md").each(function () {
-                $(this).html(marked($(this).html()));
-            });
             renderJax();
         }
     </script>
@@ -151,6 +153,7 @@
 <body onload="start();">
 
 <twitch-nav></twitch-nav>
+<agent-brain-modal></agent-brain-modal>
 
 <div class="container-fluid">
     <div class="row">
@@ -285,8 +288,6 @@ Speaking of high-dimensional continuous action spaces, this is what Policy Gradi
         </div>
     </div>
 </div>
-
-<agent-brain-modal></agent-brain-modal>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

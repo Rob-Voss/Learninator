@@ -92,7 +92,6 @@ var Entity = Entity || {};
             this.sprite.height = this.height;
             this.sprite.anchor.set(0.5, 0.5);
             this.sprite.position.set(this.position.x, this.position.y);
-            this.sprite.rotation = this.angle * 0.01745329252;
             this.sprite.interactive = this.interactive;
 
             if (this.sprite.interactive === true) {
@@ -391,6 +390,9 @@ var Entity = Entity || {};
     Entity.prototype.onDragEnd = function () {
         this.alpha = 1;
         this.dragging = false;
+        let newPosition = this.data.getLocalPosition(this.parent);
+        this.position.set(newPosition.x, newPosition.y);
+        this.entity.position.set(newPosition.x, newPosition.y);
 
         // set the interaction data to null
         this.data = null;
