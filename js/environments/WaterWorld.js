@@ -11,8 +11,8 @@ var WaterWorld = WaterWorld || {};
      * @constructor
      */
     function WaterWorld() {
-        this.width = 600;
-        this.height = 600;
+        this.width = 800;
+        this.height = 800;
         this.mazeOptions = {
             xCount: 2,
             yCount: 2,
@@ -88,18 +88,6 @@ var WaterWorld = WaterWorld || {};
         this.simSpeed = 1;
 
         World.call(this);
-
-        this.displayOpts = {
-            title: 'Agent Scores',
-            width: 120,
-            height: 60,
-            render: {
-                width: this.width,
-                height: this.height
-            }
-        };
-        this.display = new Display(0, 0, this.displayOpts);
-        this.stage.addChild(this.display);
 
         return this;
     }

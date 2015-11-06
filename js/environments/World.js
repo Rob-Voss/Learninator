@@ -13,32 +13,19 @@ var World = World || {},
      * @returns {World}
      */
     function World(worldOpts) {
-        var _this = this;
+        var _this = this,
+            rendererOptions = {
+                antialiasing: false,
+                transparent: false,
+                resolution: window.devicePixelRatio,
+                autoResize: true
+            };
+
         this.width = this.width || Utility.getOpt(worldOpts, 'width', 600);
         this.height = this.height || Utility.getOpt(worldOpts, 'height', 600);
 
-        // PIXI gewdness
-        this.stage = new PIXI.Container();
-        this.renderer = PIXI.autoDetectRenderer(this.width, this.height);
-        this.renderer.backgroundColor = 0xFFFFFF;
-        // Round the pixels
-        //this.renderer.roundPixels = true;
-        document.body.querySelector('.game-container').appendChild(this.renderer.view);
-
-        //this.menu = Utility.getOpt(worldOpts, 'menu', new Menu(this.menuOpts));
-        //this.stage.addChild(this.menu);
-
-        //this.display = new Display(0, 0, this.displayOpts);
-        //this.stage.addChild(this.display);
-
         this.clock = 0;
         this.pause = false;
-
-        // flot reward graph stuff
-        this.nflot = 1000;
-        this.smoothRewardHistory = [];
-        this.smoothReward = [];
-        this.flott = [];
 
         // The speed to run the simulation at
         this.simSpeed = this.simSpeed || Utility.getOpt(worldOpts, 'simSpeed', 1);
@@ -57,60 +44,51 @@ var World = World || {},
             walls: false
         });
 
-        // Walls
-        this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
-            new Wall(new Vec(0, 0), new Vec(0 + this.width, 0)),
-            new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height)),
-            new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height)),
-            new Wall(new Vec(0, 0 + this.height), new Vec(0, 0))
-        ]);
+        function resize() {
+            // Determine which screen dimension is most constrained
+            var ratio = Math.min(window.innerWidth / _this.width, window.innerHeight / _this.height);
 
-        // Population of Agents for the environment
-        this.numAgents = this.numAgents || Utility.getOpt(worldOpts, 'numAgents', 0);
-        this.agents = this.agents || Utility.getOpt(worldOpts, 'agents', []);
+            // Scale the view appropriately to fill that dimension
+            _this.stage.scale.x = _this.stage.scale.y = ratio;
 
-        // Population of Agents that are considered 'smart' entities for the environment
-        this.numEntityAgents = this.numEntityAgents || Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-        this.entityAgents = this.entityAgents || Utility.getOpt(worldOpts, 'entityAgents', []);
-        // Entity Agent options
-        this.entityAgentOpts = this.entityAgentOpts || Utility.getOpt(worldOpts, 'entityAgentOpts', {
-            radius: 10,
-            collision: true,
-            interactive: true,
-            useSprite: false,
-            movingEntities: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                name: false,
-                id: false
-            }
-        });
+            // Update the renderer dimensions
+            _this.renderer.resize(Math.ceil(_this.width * ratio), Math.ceil(_this.height * ratio));
 
-        this.numEntities = this.numEntities || Utility.getOpt(worldOpts, 'numEntities', 20);
-        this.entities = this.entities || Utility.getOpt(worldOpts, 'entities', []);
-        // Entity options
-        this.entityOpts = this.entityOpts || Utility.getOpt(worldOpts, 'entityOpts', {
-            radius: 10,
-            collision: true,
-            interactive: true,
-            useSprite: false,
-            movingEntities: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                name: false,
-                id: false
-            }
-        });
+            console.log("Resize\n" + "  Window inner " + window.innerWidth + "," + window.innerHeight +
+                " pixel ratio " + window.devicePixelRatio + "\n" +
+                "  Renderer " + _this.renderer.width + "," + _this.renderer.height +
+                " res " + _this.renderer.resolution + "\n" +
+                "  Scale " + _this.stage.scale.x + "," + _this.stage.scale.y + "\n");
+        }
 
+        // Create the canvas in which the game will show, and a
+        // generic container for all the graphical objects
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, rendererOptions);        this.renderer = PIXI.autoDetectRenderer(this.width, this.height);
+        this.renderer.backgroundColor = 0xFFFFFF;
+        // Round the pixels
+        //this.renderer.roundPixels = true;
+
+        // Put the renderer on screen in the corner
+        this.renderer.view.style.position = "absolute";
+        this.renderer.view.style.top = "0px";
+        this.renderer.view.style.left = "0px";
+
+        // The stage is essentially a display list of all game objects
+        // for Pixi to render; it's used in resize(), so it must exist
+        this.stage = new PIXI.Container();
+
+        // Size the renderer to fill the screen
+        resize();
+
+        // Actually place the renderer onto the page for display
+        document.body.querySelector('.game-container').appendChild(this.renderer.view);
+
+        // Listen for and adapt to changes to the screen size, e.g.,
+        // user changing the window or rotating their device
+        window.addEventListener("resize", resize);
+
+        this.populate(worldOpts);
         this.setCollisionDetection(this.collision);
-
-        this.addWalls();
-        this.addAgents();
-        this.addEntityAgents();
-        this.addEntities();
-
         this.initFlot();
 
         function animate() {
@@ -141,20 +119,88 @@ var World = World || {},
     }
 
     /**
+     * Set up the population
+     * @param {Object} worldOpts
+     * @returns {World}
+     */
+    World.prototype.populate = function (worldOpts) {
+        // Walls
+        this.wallContainer = new PIXI.Container();
+        this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
+                new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls),
+                new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls),
+                new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls),
+                new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls)
+            ]);
+        this.addWalls();
+        this.stage.addChild(this.wallContainer);
+
+        // Add the entities
+        this.entityContainer = new PIXI.Container();
+        this.numEntities = this.numEntities || Utility.getOpt(worldOpts, 'numEntities', 20);
+        this.entities = this.entities || Utility.getOpt(worldOpts, 'entities', []);
+        // Entity options
+        this.entityOpts = this.entityOpts || Utility.getOpt(worldOpts, 'entityOpts', {
+                radius: 10,
+                collision: true,
+                interactive: true,
+                useSprite: false,
+                movingEntities: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    name: false,
+                    id: false
+                }
+            });
+        this.addEntities();
+        this.stage.addChild(this.entityContainer);
+
+        // Population of Agents that are considered 'smart' entities for the environment
+        this.entityAgentContainer = new PIXI.Container();
+        this.numEntityAgents = this.numEntityAgents || Utility.getOpt(worldOpts, 'numEntityAgents', 0);
+        this.entityAgents = this.entityAgents || Utility.getOpt(worldOpts, 'entityAgents', []);
+        // Entity Agent options
+        this.entityAgentOpts = this.entityAgentOpts || Utility.getOpt(worldOpts, 'entityAgentOpts', {
+                radius: 10,
+                collision: true,
+                interactive: true,
+                useSprite: false,
+                movingEntities: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    name: false,
+                    id: false
+                }
+            });
+        this.addEntityAgents();
+        this.stage.addChild(this.entityAgentContainer);
+
+        // Population of Agents for the environment
+        this.agentContainer = new PIXI.Container();
+        this.numAgents = this.numAgents || Utility.getOpt(worldOpts, 'numAgents', 0);
+        this.agents = this.agents || Utility.getOpt(worldOpts, 'agents', []);
+        this.addAgents();
+        this.stage.addChild(this.agentContainer);
+
+        return this;
+    };
+
+    /**
      * Add the Agents
      * @returns {World}
      */
     World.prototype.addAgents = function () {
         // Add the agents
         for (let a = 0; a < this.numAgents; a++) {
+            this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
             let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                 agentContainer.addChild(this.agents[a].eyes[ei].shape);
             }
             agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
-            this.stage.addChild(agentContainer);
-
-            this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+            this.agentContainer.addChild(agentContainer);
         }
 
         return this;
@@ -166,23 +212,20 @@ var World = World || {},
      */
     World.prototype.addEntityAgents = function () {
         for (let k = 0; k < this.numEntityAgents; k++) {
-            let x = Utility.randi(5, this.width - 10),
+            let agentContainer = new PIXI.Container(),
+                x = Utility.randi(5, this.width - 10),
                 y = Utility.randi(5, this.height - 10),
                 vx = Math.random() * 5 - 2.5,
                 vy = Math.random() * 5 - 2.5,
                 position = new Vec(x, y, 0, vx, vy),
                 entity = new EntityRLDQN(position, this.entityAgentOpts);
-
             entity.enemy = this.agents[k];
             entity.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
-
-            let agentContainer = new PIXI.Container();
             for (let ei = 0; ei < entity.eyes.length; ei++) {
                 agentContainer.addChild(entity.eyes[ei].shape);
             }
             agentContainer.addChild(entity.shape || entity.sprite);
-            this.stage.addChild(agentContainer);
-            this.entityAgents.push(entity);
+            this.entityAgentContainer.addChild(agentContainer);
         }
 
         return this;
@@ -209,7 +252,7 @@ var World = World || {},
 
             // Insert the population
             this.entities.push(entity);
-            this.stage.addChild(entity.shape || entity.sprite);
+            this.entityContainer.addChild(entity.shape || entity.sprite);
         }
 
         return this;
@@ -220,17 +263,10 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.addWalls = function () {
-        this.wallContainer = new PIXI.Container();
         // Add the walls to the world
         for (let w = 0; w < this.walls.length; w++) {
             this.wallContainer.addChild(this.walls[w].shape);
-            if (this.cheats.walls) {
-                let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
-                wallText.position.set(this.walls[w].v1.x + 10, this.walls[w].v1.y);
-                this.wallContainer.addChild(wallText);
-            }
         }
-        this.stage.addChild(this.wallContainer);
 
         return this;
     };
@@ -242,8 +278,8 @@ var World = World || {},
      */
     World.prototype.deleteEntity = function (entity) {
         this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
-        let idx = this.stage.getChildIndex(entity.shape || entity.sprite);
-        this.stage.removeChildAt(idx);
+        let entityIdx = this.entityContainer.getChildIndex(entity.shape || entity.sprite);
+        this.entityContainer.removeChildAt(entityIdx);
 
         return this;
     };
@@ -389,6 +425,12 @@ var World = World || {},
      */
     World.prototype.initFlot = function () {
         var _this = this;
+        // flot reward graph stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
+
         for (let a = 0; a < this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;
@@ -468,9 +510,10 @@ var World = World || {},
      *
      * @param {Vec} v1
      * @param {Vec} v2
+     * @param {Boolean} cheats
      * @returns {Wall}
      */
-    function Wall(v1, v2) {
+    function Wall(v1, v2, cheats) {
         this.type = 0;
         this.v1 = v1;
         this.v2 = v2;
@@ -481,6 +524,11 @@ var World = World || {},
         this.height = (v1.y < v2.y) ? dist : 2;
 
         this.shape = new PIXI.Graphics();
+        if (cheats) {
+            let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
+            wallText.position.set(this.v1.x + 10, this.v1.y);
+            this.shape.addChild(wallText);
+        }
         this.draw();
 
         return this;

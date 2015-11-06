@@ -41,7 +41,8 @@
          */
         function start() {
             world = new WaterWorld();
-            datGUI(world);
+            var dialog = new Dialog();
+
             renderJax();
         }
     </script>
@@ -49,7 +50,6 @@
 <body onload="start();">
 
 <twitch-nav></twitch-nav>
-<agent-brain-modal></agent-brain-modal>
 
 <div class="container-fluid">
     <div class="row">
@@ -107,9 +107,8 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 <script src="js/lib/Window.js"></script>
-<script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/ui/Menu.js"></script>
-<script src="js/lib/ui/Display.js"></script>
+
+<script src="js/lib/ui/Dialog.js"></script>
 
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
@@ -118,11 +117,10 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <script src="js/environments/World.js"></script>
 <script src="js/environments/WaterWorld.js"></script>
 
+<script src="js/lib/external/EZGUI.js"></script>
 <script src="js/lib/external/convnet.js"></script>
 <script src="js/lib/external/rl.js"></script>
 
-<link rel="import" href="/lib/twitch-nav.html">
-<link rel="import" href="/lib/agent-brain-modal.html">
-
+<link rel="import" href="/templates/twitch-nav.html">
 </body>
 </html>

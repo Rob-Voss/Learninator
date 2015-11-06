@@ -1,0 +1,125 @@
+{
+  "__config__": {
+    "name": "UI",
+    "resources": [
+      "./images/glassPanel.png",
+      "./images/glassPanel_projection.png",
+      "./images/barHorizontal_white_left.png",
+      "./images/barHorizontal_white_mid.png",
+      "./images/barHorizontal_white_right.png",
+      "./images/barHorizontal_shadow_left.png",
+      "./images/barHorizontal_shadow_mid.png",
+      "./images/barHorizontal_shadow_right.png",
+      "./images/blue_button00.png",
+      "./images/blue_button01.png",
+      "./images/grey_button10.png",
+      "./images/grey_button11.png",
+      "./images/grey_button14.png",
+      "./images/grey_sliderDown.png",
+      "./images/grey_sliderHorizontal.png",
+      "./images/grey_sliderEnd.png",
+      "./images/grey_panel.png",
+      "./images/grey_box.png",
+      "./images/grey_boxCheckmark.png",
+      "./images/grey_circle.png",
+      "./images/grey_boxTick.png",
+      "./fonts/kenvector_future.ttf",
+      "./fonts/kenvector_future_thin.ttf"
+    ]
+  },
+  "default": {
+    "scale": 1,
+    "padding": 2,
+    "bg": {
+      "default": "./images/grey_panel.png"
+    },
+    "bgPadding": 2,
+    "corner": "",
+    "line": "",
+    "font": {
+      "size": "20px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "Header": {
+    "bg": "./images/barHorizontal_white_mid.png",
+    "bgTiling": "x",
+    "bgPadding": 0,
+    "corner-tl": "./images/barHorizontal_white_left.png",
+    "corner-bl": "./images/barHorizontal_white_left.png",
+    "corner-tr": "./images/barHorizontal_white_right.png",
+    "corner-br": "./images/barHorizontal_white_right.png",
+    "line": "",
+    "font": {
+      "color": "white"
+    }
+  },
+  "DialogHeader": {
+    "bg": "./images/barHorizontal_shadow_mid.png",
+    "bgTiling": "x",
+    "bgPadding": 0,
+    "corner-tl": "./images/barHorizontal_shadow_left.png",
+    "corner-tr": "./images/barHorizontal_shadow_right.png",
+    "font": {
+      "color": "white"
+    }
+  },
+  "Button": {
+    "bg": {
+      "default": "./images/blue_button00.png",
+      "down": "./images/blue_button01.png"
+    },
+    "bgTiling": "",
+    "bgPadding": 2,
+    "corner": "",
+    "line": "",
+    "font": {
+      "size": "20px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "List": {
+    "bg": "./images/grey_panel.png"
+  },
+  "hListItem": {
+    "bg": {
+      "default": "./images/grey_button10.png",
+      "down": "./images/grey_button11.png"
+    },
+    "bgTiling": "",
+    "bgPadding": 2,
+    "corner": "",
+    "line": "",
+    "font": {
+      "size": "20px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "Slider": {
+    "bg": "./images/grey_sliderDown.png"
+  },
+  "Slide": {
+    "bg": {
+      "default": "./images/grey_sliderHorizontal.png"
+    },
+    "bgTiling": "x",
+    "bgPadding": 2,
+    "corner": "",
+    "line": ""
+  },
+  "Checkbox": {
+    "bg": "./images/grey_box.png",
+    "corner": "",
+    "line": "",
+    "checkmark": "./images/grey_boxCheckmark.png"
+  },
+  "Radio": {
+    "bg": "./images/grey_circle.png",
+    "corner": "",
+    "line": "",
+    "checkmark": "./images/grey_boxTick.png"
+  }
+}
