@@ -1,0 +1,117 @@
+{
+    "__config__": {
+        "name": "space",
+        "resources": [
+            "./space-atlas.json",
+            "./fonts/kenvector_future.ttf",
+            "./fonts/kenvector_future_thin.ttf"
+        ]
+    },
+    "default": {
+        "bg": {
+            "default": "glassPanel_bg.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "glassPanel_corner_tl.png",
+        "corner-tr": "glassPanel_corner_tr.png",
+        "corner-bl": "glassPanel_corner_bl.png",
+        "corner-br": "glassPanel_corner_br.png",
+        "line": "glassPanel_line.png",
+        "font": {
+            "size": "20px",
+            "family": "Arial",
+            "color": "black"
+        }
+    },
+    "Layout": {
+        "bg": {
+            "default": "metalPanel_plate.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "metalPanel_plate_corner_tl.png",
+        "corner-tr": "metalPanel_plate_corner_tr.png",
+        "corner-bl": "metalPanel_plate_corner_bl.png",
+        "corner-br": "metalPanel_plate_corner_br.png",
+        "line": "metalPanel_plate_line.png"
+    },
+    "Window": {
+        "bg": {
+            "default": "metalPanel_plate.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "metalPanel_plate_corner_tl.png",
+        "corner-tr": "metalPanel_plate_corner_tr.png",
+        "corner-bl": "metalPanel_plate_corner_bl.png",
+        "corner-br": "metalPanel_plate_corner_br.png",
+        "line": "metalPanel_plate_line.png"
+    },
+    "GlassWindow": {
+        "bg": {
+            "default": "glassPanel_bg.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "glassPanel_corner_tl.png",
+        "corner-tr": "glassPanel_corner_tr.png",
+        "corner-bl": "glassPanel_corner_bl.png",
+        "corner-br": "glassPanel_corner_br.png",
+        "line": "glassPanel_line.png"
+    },
+    "MetalWindow": {
+        "bg": {
+            "default": "metalPanel_bg.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "metalPanel_corner_tl.png",
+        "corner-tr": "metalPanel_corner_tr.png",
+        "corner-bl": "metalPanel_corner_bl.png",
+        "corner-br": "metalPanel_corner_br.png",
+        "line": "metalPanel_line.png"
+    },
+    "Header": {
+        "bg": "barHorizontal_blue_mid.png",
+        "bgTiling": "x",
+        "bgPadding": 0,
+        "font": {
+            "color": "white"
+        }
+    },
+    "GreenHeader": {
+        "bg": "./images/barHorizontal_green_mid.png",
+        "bgTiling": "x",
+        "bgPadding": 0,
+        "font": {
+            "color": "white"
+        }
+    },
+    "Button": {
+        "bg": "barHorizontal_blue_mid.png",
+        "bgTiling": "x",
+        "font": {
+            "size": "20px",
+            "family": "Arial",
+            "color": "black"
+        }
+    },
+    "List": {
+        "bg": {
+            "default": "metalPanel_plate_bg.png"
+        },
+        "bgPadding": 2,
+        "corner-tl": "metalPanel_plate_corner_tl.png",
+        "corner-tr": "metalPanel_plate_corner_tr.png",
+        "corner-bl": "metalPanel_plate_corner_bl.png",
+        "corner-br": "metalPanel_plate_corner_br.png",
+        "line": "metalPanel_plate_line.png"
+    },
+    "hListItem": {
+        "bg": {
+            "default": "metalPanel.png"
+        },
+        "bgPadding": 2,
+        "font": {
+            "size": "20px",
+            "family": "Arial",
+            "color": "black"
+        }
+    }
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: lib/ui/Boot.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: lib/ui/Boot.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *
+ * @param world
+ * @name datGUI
+ * @constructor
+ */
+function bootGUI (world) {
+    var agentButtons = '',
+        agentActions = document.getElementById("agentActions");
+    for (var i = 0; i &lt; world.agents.length; i++) {
+        var agentId = world.agents[i].id.substring(0, 10),
+            dropDownStart = '&lt;button data-toggle="dropdown" class="btn btn-default dropdown-toggle">&lt;span class="caret">&lt;/span>&lt;/button>&lt;ul class="dropdown-menu">',
+            dropDownEnd = '&lt;/ul>&lt;/div>',
+            divider = '&lt;li class="divider">&lt;/li>';
+
+        agentButtons += '&lt;div class="btn-group">';
+        agentButtons += '&lt;button class="btn btn-default"> Agent ' + agentId + '&lt;/button>';
+        agentButtons += dropDownStart +
+            '&lt;li>&lt;a href="#" onclick="world.agents[' + i + '].load(\'zoo/wateragent.json\');">Load Pre-Trained&lt;/a>&lt;/li>' +
+            '&lt;li>&lt;a href="#" onclick="world.agents[' + i + '].reset();">Reset&lt;/a>&lt;/li>' +
+            divider +
+            '&lt;li>&lt;a href="#" onclick="">Something else here&lt;/a>&lt;/li>' +
+            dropDownEnd;
+    }
+    agentActions.innerHTML = agentButtons;
+
+    var cheatInput = '&lt;form>',
+        worldCheats = document.getElementById('cheatsPanelWorldContent');
+    for (var property in world.cheats) {
+        if (world.cheats.hasOwnProperty(property)) {
+            var type = typeof world.cheats[property],
+                value = world.cheats[property];
+            switch (type) {
+                case 'boolean':
+                    cheatInput += '&lt;div class="checkbox">&lt;label>&lt;input type="checkbox" onclick="">' + property + '&lt;/label>&lt;/div>';
+                    break;
+                case 'number':
+                    cheatInput += '&lt;input value="' + value + '" type="number" class="form-control" placeholder="' + property + '">';
+                    break;
+            }
+        }
+    }
+    worldCheats.innerHTML = cheatInput + '&lt;/form>';
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Oct 27 2015 14:32:58 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

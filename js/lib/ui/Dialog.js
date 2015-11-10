@@ -2,117 +2,108 @@
     "use strict";
 
     var Dialog = function () {
-        var guiObj = {
+        var avatarGuiObj = {
             id: 'main',
             component: 'Window',
+            skin: 'GreenMetalWindow',
             draggable: true,
             position: {x: 10, y: 10},
             width: 400,
-            height: 240,
-            padding: 5,
-            z: 500,
+            height: 280,
+            padding: 3,
+            z: 1,
             header: {
                 id: 'title',
-                skin: 'Header',
+                component: 'Header',
+                skin: 'BlueHeader',
                 text: 'Options',
-                position: {
-                    x: 0,
-                    y: 0
-                },
+                position: {x: 10, y: 10},
+                width: 375,
                 height: 30
             },
-            layout: [1, 3],
+            layout: [2, 2],
             children: [
                 {
-                    id: 'horizontalList',
-                    component: 'List',
-                    position: {x: 0, y: 5},
-                    width: 390,
-                    height: 70,
-                    layout: [6, null],
-                    children: [
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        null,
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60},
-                        {component: 'Button', position: 'center', width: 60, height: 60}
-                    ]
-                },
-                {
-                    id: 'textInput',
+                    id: 'inputs',
                     component: 'Layout',
-                    position: {x: 0, y: 10},
-                    width: 390,
-                    height: 50,
-                    padding: 5,
-                    layout: [2, 1],
+                    skin: 'Layout',
+                    position: {x: 30, y: 10},
+                    width: 330,
+                    height: 170,
+                    layout: [2, 2],
                     children: [
+                        {
+                            id: 'horizontalList',
+                            component: 'List',
+                            skin: 'List',
+                            position: {x: 5, y: 5},
+                            width: 300,
+                            height: 70,
+                            layout: [4, null],
+                            children: [
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 60, height: 56},
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
+                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45}
+                            ]
+                        },
+                        null,
                         {
                             id: 'text1',
                             text: '',
                             component: 'Input',
-                            position: {x: 0, y: 0},
-                            width: 200,
-                            height: 40
+                            skin: 'Input',
+                            position: {x: 5, y: 15},
+                            width: 150,
+                            height: 29
                         },
                         {
                             id: 'btnDone',
                             text: 'Done',
                             component: 'Button',
-                            position: 'right center',
-                            width: 55,
-                            height: 40
+                            skin: 'Button',
+                            position: {x: 20, y: 15},
+                            width: 100,
+                            height: 29
                         }
                     ]
                 },
+                null,
                 {
-                    id: 'dialogActions',
-                    component: 'Layout',
-                    position: {x: 0, y: 5},
-                    width: 390,
-                    height: 60,
-                    layout: [2, 1],
-                    children: [
-                        {
-                            id: 'btnCancel',
-                            skin: 'Button',
-                            component: 'Button',
-                            text: 'Cancel',
-                            position: 'center left',
-                            width: 100,
-                            height: 50,
-                            font: {
-                                size: '22px',
-                                family: 'Skranji',
-                                color: 'red'
-                            }
-                        },
-                        {
-                            id: 'btnSave',
-                            skin: 'Button',
-                            component: 'Button',
-                            text: 'Save',
-                            position: 'center right',
-                            width: 100,
-                            height: 50,
-                            font: {
-                                size: '22px',
-                                family: 'Skranji',
-                                color: 'green'
-                            }
-                        }
-                    ]
+                    id: 'btnCancel',
+                    component: 'Button',
+                    skin: 'BlueButton',
+                    text: 'Cancel',
+                    position: {x: 30, y: 60},
+                    width: 100,
+                    height: 29,
+                    font: {
+                        size: '22px',
+                        color: 'red'
+                    }
+                },
+                {
+                    id: 'btnSave',
+                    component: 'Button',
+                    skin: 'BlueButton',
+                    text: 'Save',
+                    position: {x: 60, y: 60},
+                    width: 100,
+                    height: 29,
+                    font: {
+                        size: '22px',
+                        color: 'green'
+                    }
                 }
             ]
         };
 
         function onAssetsLoaded() {
-            return EZGUI.Theme.load(['../assets/UI/UI-theme.json'], function () {
-                var guiContainer = EZGUI.create(guiObj, 'UI');
+            var theme = 'UI';
+            return EZGUI.Theme.load(['js/lib/ui/assets/' + theme + '-theme/' + theme + '-theme.json'], function () {
+                var guiContainer = EZGUI.create(avatarGuiObj, theme);
 
                 EZGUI.components.btnSave.on('click', function (event) {
                     guiContainer.visible = false;
