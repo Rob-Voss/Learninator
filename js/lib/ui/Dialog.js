@@ -1,61 +1,47 @@
 (function (global) {
     "use strict";
 
+    PIXI.utils.textureCache = {};
+    PIXI.utils.baseTextureCache = {};
+
     var Dialog = function () {
         var avatarGuiObj = {
             id: 'main',
             component: 'Window',
-            skin: 'GreenMetalWindow',
+            skin: 'RoundWindow',
             draggable: true,
             position: {x: 10, y: 10},
             width: 400,
             height: 280,
-            padding: 3,
+            padding: 5,
             z: 1,
             header: {
                 id: 'title',
                 component: 'Header',
-                skin: 'BlueHeader',
+                skin: 'Header',
                 text: 'Options',
-                position: {x: 10, y: 10},
-                width: 375,
+                position: {x: 5, y: 5},
+                width: 150,
                 height: 30
             },
-            layout: [2, 2],
+            layout: [1, null],
             children: [
                 {
                     id: 'inputs',
                     component: 'Layout',
                     skin: 'Layout',
-                    position: {x: 30, y: 10},
-                    width: 330,
-                    height: 170,
-                    layout: [2, 2],
+                    position: {x: 0, y: 0},
+                    width: 390,
+                    height: 280,
+                    layout: [2, 3],
                     children: [
-                        {
-                            id: 'horizontalList',
-                            component: 'List',
-                            skin: 'List',
-                            position: {x: 5, y: 5},
-                            width: 300,
-                            height: 70,
-                            layout: [4, null],
-                            children: [
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 60, height: 56},
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45},
-                                {component: 'hListItem', skin: 'hListItem', position: 'center', width: 49, height: 45}
-                            ]
-                        },
                         null,
                         {
                             id: 'text1',
                             text: '',
                             component: 'Input',
                             skin: 'Input',
-                            position: {x: 5, y: 15},
+                            position: {x: 5, y: 35},
                             width: 150,
                             height: 29
                         },
@@ -64,45 +50,42 @@
                             text: 'Done',
                             component: 'Button',
                             skin: 'Button',
-                            position: {x: 20, y: 15},
+                            position: {x: 0, y: 35},
                             width: 100,
                             height: 29
+                        },
+                        {
+                            id: 'btnCancel',
+                            component: 'Button',
+                            skin: 'Button',
+                            text: 'Cancel',
+                            position: {x: 5, y: 15},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'red'
+                            }
+                        },
+                        {
+                            id: 'btnSave',
+                            component: 'Button',
+                            skin: 'Button',
+                            text: 'Save',
+                            position: {x: 0, y: 15},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'green'
+                            }
                         }
                     ]
-                },
-                null,
-                {
-                    id: 'btnCancel',
-                    component: 'Button',
-                    skin: 'BlueButton',
-                    text: 'Cancel',
-                    position: {x: 30, y: 60},
-                    width: 100,
-                    height: 29,
-                    font: {
-                        size: '22px',
-                        color: 'red'
-                    }
-                },
-                {
-                    id: 'btnSave',
-                    component: 'Button',
-                    skin: 'BlueButton',
-                    text: 'Save',
-                    position: {x: 60, y: 60},
-                    width: 100,
-                    height: 29,
-                    font: {
-                        size: '22px',
-                        color: 'green'
-                    }
                 }
             ]
         };
 
         function onAssetsLoaded() {
-            var theme = 'UI';
-            return EZGUI.Theme.load(['js/lib/ui/assets/' + theme + '-theme/' + theme + '-theme.json'], function () {
+            var theme = 'grey';
+            return EZGUI.Theme.load(['gui-themes/' + theme + '-theme/' + theme + '-theme.json'], function () {
                 var guiContainer = EZGUI.create(avatarGuiObj, theme);
 
                 EZGUI.components.btnSave.on('click', function (event) {

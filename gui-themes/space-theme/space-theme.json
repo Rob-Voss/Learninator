@@ -1,0 +1,322 @@
+{
+  "__config__": {
+    "name": "space",
+    "resources": [
+      "./space-atlas.json",
+      "../fonts/kenvector_future.ttf",
+      "../fonts/kenvector_future_thin.ttf"
+    ]
+  },
+  "default": {
+    "bg": {
+      "default": ""
+    },
+    "bgPadding": 5,
+    "line": {
+      "default": ""
+    },
+    "corner": {
+      "default": ""
+    },
+    "font": {
+      "size": "10px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "Header": {
+    "bg": {
+      "default": ""
+    },
+    "image": {
+      "default": ""
+    },
+    "line": {
+      "default": ""
+    },
+    "corner": {
+      "default": ""
+    },
+    "font": {
+      "color": "white"
+    }
+  },
+  "GlassWindow": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "glassPanel_corner.png"
+    },
+    "line": {
+      "default": "glassPanel_line.png"
+    }
+  },
+  "GlassLayout": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "glassPanel_corner.png"
+    },
+    "line": {
+      "default": "glassPanel_line.png"
+    }
+  },
+  "GlassList": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "glassPanel_corner.png"
+    },
+    "line": {
+      "default": "glassPanel_line.png"
+    }
+  },
+  "ShadowRoundWindow": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 12,
+    "padding": 10,
+    "corner": {
+      "default": "dotShadow_corner.png"
+    },
+    "line": {
+      "default": "dotShadow_line.png"
+    }
+  },
+  "ShadowWindow": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    }
+  },
+  "ShadowLayout": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    }
+  },
+  "ShadowList": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    }
+  },
+  "ShadowHeader": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "ShadowButton": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "ShadowInput": {
+    "bg": {
+      "default": ""
+    },
+    "padding": 5,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "ShadowCheckbox": {
+    "image": {
+      "default": "squareShadow.png"
+    },
+    "checkmark": "squareGreen.png",
+    "padding": 5,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "ShadowRadio": {
+    "image": {
+      "default": "dotShadow.png"
+    },
+    "checkmark": "dotGreen.png",
+    "padding": 5,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "MetalWindow": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "metalPanel_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_line_t.png"
+    }
+  },
+  "MetalLayout": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "metalPanel_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_line_t.png"
+    }
+  },
+  "MetalList": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "metalPanel_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_line_t.png"
+    }
+  },
+  "GreenMetalWindow": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "padding": 5,
+    "corner-tl": {
+      "default": "metalPanel_green_corner_tl.png"
+    },
+    "corner-tr": {
+      "default": "metalPanel_green_corner_tr.png"
+    },
+    "corner-bl": {
+      "default": "metalPanel_green_corner_bl.png"
+    },
+    "corner-br": {
+      "default": "metalPanel_green_corner_br.png"
+    },
+    "line-t": {
+      "default": "metalPanel_green_line_t.png"
+    },
+    "line-l": {
+      "default": "metalPanel_line_l.png"
+    },
+    "line-r": {
+      "default": "metalPanel_line_r.png"
+    },
+    "line-b": {
+      "default": "metalPanel_green_line_b.png"
+    }
+  },
+  "MetalHeader": {
+    "bg": {
+      "default": ""
+    },
+    "image": {
+      "default": ""
+    },
+    "font": {
+      "color": "white"
+    }
+  },
+  "WhiteButton": {
+    "bg": {
+      "default": "barHorizontal_white_bg.png"
+    },
+    "corner": {
+      "default": "buttonWhite_corner.png"
+    },
+    "line": {
+      "default": "buttonWhite_line.png"
+    },
+    "font": {
+      "color": "black"
+    }
+  },
+  "BlueButton": {
+    "bg": {
+      "default": "barHorizontal_blue_bg.png"
+    },
+    "corner": {
+      "default": "barHorizontal_blue_corner.png"
+    },
+    "line": {
+      "default": "barHorizontal_blue_line.png"
+    },
+    "font": {
+      "color": "black"
+    }
+  },
+  "RedButton": {
+    "bg": {
+      "default": "barHorizontal_red_bg.png"
+    },
+    "corner": {
+      "default": "buttonRed_corner.png"
+    },
+    "line": {
+      "default": "buttonRed_line.png"
+    },
+    "font": {
+      "color": "black"
+    }
+  }
+}

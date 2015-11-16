@@ -580,38 +580,38 @@ var EZGUI;
                 _super.apply(this, arguments);
             }
             return GUIContainer;
-        })(PIXI.DisplayObjectContainer);
+        })(PIXI.Container);
         Compatibility.GUIContainer = GUIContainer;
         if (Compatibility.PIXIVersion == 3) {
             Compatibility['GUIContainer'] = PIXI['Container'];
         }
         else {
-            Compatibility['GUIContainer'] = PIXI['DisplayObjectContainer'];
+            Compatibility['GUIContainer'] = PIXI['Container'];
         }
-        var GUIDisplayObjectContainer = (function (_super) {
-            __extends(GUIDisplayObjectContainer, _super);
-            function GUIDisplayObjectContainer() {
+        var GUIContainer = (function (_super) {
+            __extends(GUIContainer, _super);
+            function GUIContainer() {
                 _super.call(this);
                 if (typeof Phaser != 'undefined') {
                     var game = Phaser.GAMES[0];
-                    if (!GUIDisplayObjectContainer.globalPhaserGroup)
-                        GUIDisplayObjectContainer.globalPhaserGroup = new Phaser.Group(game, game.stage, 'guigroup');
-                    this.phaserGroup = GUIDisplayObjectContainer.globalPhaserGroup.create(0, 0); //new Phaser.Group(Phaser.GAMES[0]);
+                    if (!GUIContainer.globalPhaserGroup)
+                        GUIContainer.globalPhaserGroup = new Phaser.Group(game, game.stage, 'guigroup');
+                    this.phaserGroup = GUIContainer.globalPhaserGroup.create(0, 0); //new Phaser.Group(Phaser.GAMES[0]);
                     this.phaserGroup.addChild(this);
                     this.phaserGroup.guiSprite = this;
                 }
             }
-            return GUIDisplayObjectContainer;
+            return GUIContainer;
         })(GUIContainer);
-        Compatibility.GUIDisplayObjectContainer = GUIDisplayObjectContainer;
+        Compatibility.GUIContainer = GUIContainer;
         //var dummy:any = (function (_super) {
-        //    __extends(GUIDisplayObjectContainer, _super);
-        //    function GUIDisplayObjectContainer() {
+        //    __extends(GUIContainer, _super);
+        //    function GUIContainer() {
         //        _super.call(this, [Phaser.GAMES[0]]);
         //    }
-        //    return GUIDisplayObjectContainer;
+        //    return GUIContainer;
         //})(Phaser.Group);
-        //Compatibility['GUIDisplayObjectContainer'] = dummy;
+        //Compatibility['GUIContainer'] = dummy;
         function createRenderTexture(width, height) {
             var texture;
             if (EZGUI.Compatibility.PIXIVersion == 3) {
@@ -671,11 +671,11 @@ EZGUI.Compatibility.TilingSprite.prototype['fixPhaser24'] = function () {
     }
 };
 if (PIXI.EventTarget) {
-    PIXI.EventTarget.mixin(EZGUI.Compatibility.GUIDisplayObjectContainer.prototype);
+    PIXI.EventTarget.mixin(EZGUI.Compatibility.GUIContainer.prototype);
 }
 else {
     if (EZGUI.Compatibility.isPhaser) {
-        var proto = EZGUI.Compatibility.GUIDisplayObjectContainer.prototype;
+        var proto = EZGUI.Compatibility.GUIContainer.prototype;
         proto.on = function (event, fct) {
             this._listeners = this._listeners || {};
             this._listeners[event] = this._listeners[event] || [];
@@ -1315,7 +1315,7 @@ var EZGUI;
                     if (!_this.draggable && _this.guiParent && _this.guiParent.draggable) {
                         _this.guiParent.emit('ezgui:mousedown', event, _this);
                     }
-                    //    
+                    //
                     //console.log('ezgui:mousedown', event);
                 }, this);
                 _this.phaserGroup.events.onInputUp.add(function (target, event) {
@@ -1499,7 +1499,7 @@ var EZGUI;
             delete EZGUI.components[this.guiID];
         };
         return GUIObject;
-    })(EZGUI.Compatibility.GUIDisplayObjectContainer);
+    })(EZGUI.Compatibility.GUIContainer);
     EZGUI.GUIObject = GUIObject;
     EZGUI.registerComponents(EZGUI.GUISprite, 'default');
 })(EZGUI || (EZGUI = {}));
@@ -2734,7 +2734,7 @@ var EZGUI;
 (function (EZGUI) {
     var Device;
     (function (Device) {
-        //Code taken from https://github.com/g13n/ua.js 
+        //Code taken from https://github.com/g13n/ua.js
         var userAgent = (window.navigator && navigator.userAgent) || "";
         function detect(pattern) {
             return (pattern).test(userAgent);
@@ -2922,7 +2922,7 @@ var EZGUI;
                     lx = this._settings.layout[0];
                     ly = this._settings.layout[1];
                     var x, y;
-                    //horizontal layout 
+                    //horizontal layout
                     if (ly == null) {
                         x = i;
                         y = 0;
@@ -3020,7 +3020,7 @@ var EZGUI;
                         lx = this._settings.layout[0];
                         ly = this._settings.layout[1];
                         var x, y;
-                        //horizontal layout 
+                        //horizontal layout
                         if (ly == null) {
                             x = i;
                             y = 0;
@@ -3100,7 +3100,7 @@ var EZGUI;
                         return this.container.addChild(child);
                 }
                 else {
-                    //return Compatibility.GUIDisplayObjectContainer.prototype.addChild.call(this, child, index);
+                    //return Compatibility.GUIContainer.prototype.addChild.call(this, child, index);
                     return _super.prototype.addChildAt.call(this, child, index);
                 }
             };

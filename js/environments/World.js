@@ -32,17 +32,17 @@ var World = World || {},
 
         // The collision detection type
         this.collision = this.collision || Utility.getOpt(worldOpts, 'collision', {
-            type: 'quad',
-            maxChildren: 1,
-            maxDepth: 20
-        });
+                type: 'quad',
+                maxChildren: 1,
+                maxDepth: 20
+            });
 
         // The cheats to display
         this.cheats = this.cheats || Utility.getOpt(worldOpts, 'cheats', {
-            quad: false,
-            grid: false,
-            walls: false
-        });
+                quad: false,
+                grid: false,
+                walls: false
+            });
 
         function resize() {
             // Determine which screen dimension is most constrained
@@ -53,17 +53,11 @@ var World = World || {},
 
             // Update the renderer dimensions
             _this.renderer.resize(Math.ceil(_this.width * ratio), Math.ceil(_this.height * ratio));
-
-            console.log("Resize\n" + "  Window inner " + window.innerWidth + "," + window.innerHeight +
-                " pixel ratio " + window.devicePixelRatio + "\n" +
-                "  Renderer " + _this.renderer.width + "," + _this.renderer.height +
-                " res " + _this.renderer.resolution + "\n" +
-                "  Scale " + _this.stage.scale.x + "," + _this.stage.scale.y + "\n");
         }
 
         // Create the canvas in which the game will show, and a
         // generic container for all the graphical objects
-        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, rendererOptions);        this.renderer = PIXI.autoDetectRenderer(this.width, this.height);
+        this.renderer = PIXI.autoDetectRenderer(this.width, this.height, rendererOptions);
         this.renderer.backgroundColor = 0xFFFFFF;
         // Round the pixels
         //this.renderer.roundPixels = true;

@@ -1,0 +1,103 @@
+{
+  "__config__": {
+    "name": "grey",
+    "resources": [
+      "./grey-atlas.json"
+    ]
+  },
+  "default": {
+    "bg": {
+      "default": "grey_bg.png"
+    },
+    "bgPadding": 5,
+    "font": {
+      "size": "10px",
+      "family": "Arial",
+      "color": "black"
+    },
+    "corner": {
+      "default": "grey_rounded_corner.png"
+    },
+    "line": {
+      "default": "grey_line.png"
+    }
+  },
+  "Window": {
+    "bg": {
+      "default": "grey_bg.png"
+    },
+    "bgPadding": 5,
+    "corner": {
+      "default": "grey_rounded_corner.png"
+    },
+    "line": {
+      "default": "grey_line.png"
+    }
+  },
+  "RoundWindow": {
+    "bg": {
+      "default": "grey_bg.png"
+    },
+    "bgPadding": 3,
+    "corner": {
+      "default": "grey_circle_corner.png"
+    },
+    "line": {
+      "default": "grey_circle_line.png"
+    }
+  },
+  "Header": {
+    "bg": {
+      "default": ""
+    },
+    "font": {
+      "color": "black"
+    }
+  },
+  "Button": {
+    "image": {
+      "default": "grey_button01.png",
+      "down": "grey_button02.png"
+    }
+  },
+  "hListItem": {
+    "image": {
+      "default": "grey_button08.png",
+      "down": "grey_button09.png"
+    }
+  },
+  "Label_": {
+    "bg": {
+      "default": ""
+    },
+    "corner": " ",
+    "line": " "
+  },
+  "Input": {
+    "image": {
+      "default": "grey_button05.png"
+    }
+  },
+  "Slider": {
+    "image": {
+      "default": "grey_sliderHorizontal.png"
+    }
+  },
+  "Slide": {
+    "image": {
+      "default": "grey_sliderDown.png"
+    }
+  },
+  "Checkbox": {
+    "bg": {
+      "default": "grey_box.png"
+    },
+    "checkmark": "grey_boxCheckmark.png"
+  },
+  "Radio": {
+    "bg": {
+      "default": "grey_circle.png"
+    },
+    "checkmark": "grey_boxTick.png"
+  }
+}
