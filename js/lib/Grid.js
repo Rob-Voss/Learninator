@@ -19,6 +19,8 @@
     var Cell = function (x, y, width, height) {
         this.x = x;
         this.y = y;
+        this.width = width;
+        this.height = height;
         this.visited = false;
         this.parent = null;
         this.heuristic = 0;
@@ -29,22 +31,22 @@
         this.coords = {
             top: {
                 left: {
-                    x: x * width,
-                    y: y * height
+                    x: this.x * this.width,
+                    y: this.y * this.height
                 },
                 right: {
-                    x: x * width + width,
-                    y: y * height
+                    x: this.x * this.width + this.width,
+                    y: this.y * this.height
                 }
             },
             bottom: {
                 left: {
-                    x: x * width,
-                    y: y * height + height
+                    x: this.x * this.width,
+                    y: this.y * this.height + this.height
                 },
                 right: {
-                    x: x * width + width,
-                    y: y * height + height
+                    x: this.x * this.width + this.width,
+                    y: this.y * this.height + this.height
                 }
             }
         };
