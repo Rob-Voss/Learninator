@@ -32,17 +32,17 @@ var World = World || {},
 
         // The collision detection type
         this.collision = this.collision || Utility.getOpt(worldOpts, 'collision', {
-                type: 'quad',
-                maxChildren: 1,
-                maxDepth: 20
-            });
+            type: 'quad',
+            maxChildren: 1,
+            maxDepth: 20
+        });
 
         // The cheats to display
         this.cheats = this.cheats || Utility.getOpt(worldOpts, 'cheats', {
-                quad: false,
-                grid: false,
-                walls: false
-            });
+            quad: false,
+            grid: false,
+            walls: false
+        });
 
         function resize() {
             // Determine which screen dimension is most constrained

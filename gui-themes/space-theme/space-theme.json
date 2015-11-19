@@ -41,6 +41,45 @@
       "color": "white"
     }
   },
+  "Slider": {
+    "image": {
+      "default": "shadowLine.png"
+    },
+    "padding": 5,
+    "corner": {
+      "default": ""
+    },
+    "line": {
+      "default": ""
+    }
+  },
+  "Slide": {
+    "image": {
+      "default": "squareWhite.png"
+    },
+    "corner": {
+      "default": ""
+    },
+    "line": {
+      "default": ""
+    }
+  },
+  "Label": {
+    "bgPadding": 0,
+    "bg": {
+      "default": ""
+    },
+    "corner": {
+      "default": ""
+    },
+    "line": {
+      "default": ""
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
   "GlassWindow": {
     "bg": {
       "default": "glassPanel_bg.png"
@@ -136,8 +175,12 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
+    "bgPadding": 5,
     "corner": {
-      "default": "buttonShadow_corner.png"
+      "default": ""
+    },
+    "line": {
+      "default": ""
     },
     "font": {
       "size": "10px",

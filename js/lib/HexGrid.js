@@ -5,16 +5,16 @@
      *
      * @constructor
      */
-    var HexGrid = function (width, height, tileSize, tileSpacing, pointyTiles) {
-        this.width = width || 600;
-        this.height = height || 600;
-        this.tileSize = tileSize || 20;
-        this.tileSpacing = tileSpacing || 0;
-        this.pointyTiles = pointyTiles || false;
+    var HexGrid = function (opts) {
+        this.width = Utility.getOpt(opts, 'width', 600);
+        this.height = Utility.getOpt(opts, 'height', 600);
+        this.tileSize = Utility.getOpt(opts, 'tileSize', 20);
+        this.tileSpacing = Utility.getOpt(opts, 'tileSpacing', 0);
+        this.pointyTiles = Utility.getOpt(opts, 'pointyTiles', false);
     };
 
     HexGrid.prototype = {
-        ring: function (q, r, radius) {
+        shapeRing: function (q, r, radius) {
             var i, j, len, moveDirection, moveDirectionIndex, moveDirections, ref, result;
             result = [];
             moveDirections = [[1, 0], [0, -1], [-1, 0], [-1, 1], [0, 1], [1, 0], [1, -1]];
@@ -26,7 +26,8 @@
                     if (moveDirectionIndex !== 0) {
                         result.push({
                             q: q,
-                            r: r
+                            r: r,
+                            s: -q - r
                         });
                     }
                 }
@@ -34,13 +35,14 @@
 
             return result;
         },
-        hexagon: function (q, r, radius, solid) {
+        shapeHexagon: function (q, r, radius, solid) {
             var currentRing, i, ref, result;
             result = [];
             if (solid) {
                 result.push({
                     q: q,
-                    r: r
+                    r: r,
+                    s: -q - r
                 });
             }
 
@@ -50,34 +52,43 @@
 
             return result;
         },
-        triangularShape: function (size) {
-            var k, i, _g3, _g2,
-                hexes = [],
-                _g1 = 0,
-                _g = size + 1;
-            while (_g1 < _g) {
-                k = _g1++;
-                _g3 = 0;
-                _g2 = k + 1;
-                while (_g3 < _g2) {
-                    i = _g3++;
-                    hexes.push(new Cube(i, -k, k - i));
+        shapeRectangle: function (w, h, constructor) {
+            var hexes = [],
+                i1 = -Math.floor(w / 2),
+                i2 = i1 + w,
+                j1 = -Math.floor(h / 2),
+                j2 = j1 + h;
+            for (let j = j1; j < j2; j++) {
+                let jOffset = -Math.floor(j / 2);
+                for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
+                    hexes.push(new constructor(i, j, -i - j));
                 }
             }
             return hexes;
         },
-        trapezoidalShape: function (minQ, maxQ, minR, maxR, toCube) {
-            var q, r, _g3, _g2,
-                hexes = [],
-                _g1 = minQ,
-                _g = maxQ + 1;
-            while (_g1 < _g) {
-                q = _g1++;
-                _g3 = minR;
-                _g2 = maxR + 1;
-                while (_g3 < _g2) {
-                    r = _g3++;
-                    hexes.push(toCube(new Hex(q, r)));
+        shapeParallelogram: function (q1, r1, q2, r2, constructor) {
+            var hexes = [];
+            for (let q = q1; q <= q2; q++) {
+                for (let r = r1; r <= r2; r++) {
+                    hexes.push(new constructor(q, r, -q - r));
+                }
+            }
+            return hexes;
+        },
+        shapeTriangle1: function (size) {
+            var hexes = [];
+            for (let q = 0; q <= size; q++) {
+                for (let r = 0; r <= size - q; r++) {
+                    hexes.push(new Hex(q, r, -q - r));
+                }
+            }
+            return hexes;
+        },
+        shapeTriangle2: function (size) {
+            var hexes = [];
+            for (let q = 0; q <= size; q++) {
+                for (let r = size - q; r <= size; r++) {
+                    hexes.push(new Hex(q, r, -q - r));
                 }
             }
             return hexes;
@@ -139,7 +150,8 @@
 
             return {
                 q: q,
-                r: r
+                r: r,
+                s: -q - r
             };
         },
         roundCube: function (coordinates) {
@@ -167,7 +179,8 @@
         cubeToAxial: function (cube) {
             return {
                 q: cube.x,
-                r: cube.y
+                r: cube.y,
+                s: -cube.x - cube.y
             };
         },
         axialToCube: function (axial) {

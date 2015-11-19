@@ -860,6 +860,26 @@
         "h": 6
       }
     },
+    "shadowLine.png": {
+      "frame": {
+        "x": 405,
+        "y": 378,
+        "w": 1,
+        "h": 2
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 2
+      },
+      "sourceSize": {
+        "w": 1,
+        "h": 2
+      }
+    },
     "crossair_black.png": {
       "frame": {
         "x": 404,

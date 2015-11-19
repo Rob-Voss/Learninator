@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Hex World</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body onload="start();">
+
+<div class="game-container"></div>
+
+<script>
+    /**
+     * Global world object
+     * @type {World}
+     */
+    var world = world || {};
+
+    function start() {
+        world = new HexWorld();
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.min.js"></script>
+
+<script src="js/lib/Array.js"></script>
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/Hex.js"></script>
+<script src="js/lib/HexGrid.js"></script>
+<script src="js/lib/QuadTree.js"></script>
+<script src="js/lib/RewardGraph.js"></script>
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+<script src="js/lib/Window.js"></script>
+
+<script src="js/entities/TDBrain.js"></script>
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
+<script src="js/entities/AgentTD.js"></script>
+
+<script src="js/environments/World.js"></script>
+<script src="js/environments/HexWorld.js"></script>
+
+<script src="js/lib/external/convnet.js"></script>
+
+<div id="flotreward"></div>
+</body>
+</html>

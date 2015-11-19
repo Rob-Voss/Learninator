@@ -65,8 +65,7 @@
                     let hex = new Hex(q, r, -q - r),
                         corners = this.layout.polygonCorners(hex),
                         center = this.layout.hexToPixel(hex);
-                    hex.draw(corners, center);
-                    hexes.push(hex);
+                    hexes.push(new Hex(q, r, -q - r, corners, center));
                 }
             }
             return hexes;
@@ -78,8 +77,7 @@
                     let hex = new Hex(q, r, -q - r),
                         corners = this.layout.polygonCorners(hex),
                         center = this.layout.hexToPixel(hex);
-                    hex.draw(corners, center);
-                    hexes.push(hex);
+                    hexes.push(new Hex(q, r, -q - r, corners, center));
                 }
             }
             return hexes;
@@ -93,8 +91,7 @@
                     let hex = new Hex(q, r, -q - r),
                         corners = this.layout.polygonCorners(hex),
                         center = this.layout.hexToPixel(hex);
-                    hex.draw(corners, center);
-                    hexes.push(hex);
+                    hexes.push(new Hex(q, r, -q - r, corners, center));
                 }
             }
             return hexes;
@@ -108,11 +105,10 @@
             for (let j = j1; j < j2; j++) {
                 let jOffset = -Math.floor(j / 2);
                 for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    let hex = constructor(i, j, -i - j),
+                    let hex = new constructor(i, j, -i - j),
                         corners = this.layout.polygonCorners(hex),
                         center = this.layout.hexToPixel(hex);
-                    hex.draw(corners, center);
-                    hexes.push(hex);
+                    hexes.push(new constructor(i, j, -i - j, corners, center));
                 }
             }
             return hexes;
@@ -125,153 +121,11 @@
             }
 
             hexes.forEach(function (hex) {
-                console.log(hex.toString(), hex.shape.position.x, hex.shape.position.y);
                 _this.stage.addChild(hex.shape);
                 if (withLabels) {
                     //_this.drawHexLabel(hex);
                 }
             });
-        }
-    };
-
-    var Point = function (x, y) {
-        this.x = x;
-        this.y = y;
-
-        return this;
-    };
-
-    var Cube = function (x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        return this;
-    };
-
-    Cube.prototype = {
-        toString: function () {
-            return this.v().join(",");
-        },
-        v: function () {
-            return [this.x, this.y, this.z];
-        },
-        rotateLeft: function () {
-            return new Cube(-this.y, -this.z, -this.x);
-        },
-        rotateRight: function () {
-            return new Cube(-this.z, -this.x, -this.y);
-        },
-        equals: function (other) {
-            return this.x === other.x && this.y === other.y && this.z === other.z;
-        }
-    };
-
-    var Hex = function (q, r, s) {
-        var _this = this;
-        this.q = q;
-        this.r = r;
-        this.s = s || -q - r;
-
-        return this;
-    };
-
-    Hex.prototype = {
-        add: function (b) {
-            return new Hex(this.q + b.q, this.r + b.r, this.s + b.s);
-        },
-        diagonals: function (direction) {
-            return hexDiagonals[direction];
-        },
-        diagonalNeighbor: function (direction) {
-            return this.add(this.diagonals[direction]);
-        },
-        direction: function (direction) {
-            return hexDirections[direction];
-        },
-        distance: function (b) {
-            return this.length(this.subtract(b));
-        },
-        draw: function (corners, center) {
-            var _this = this;
-            this.color = 0xDDDDDD;
-            this.corners = corners;
-            this.position = center;
-            this.shape = new PIXI.Graphics();
-            this.shape.lineStyle(1, 0xa0a0a0, 1);
-            this.shape.beginFill(this.color);
-            this.shape.drawPolygon(this.corners);
-            this.shape.endFill();
-
-            this.shape.hitArea = new PIXI.Polygon(this.corners);
-            this.shape.position.set(this.position.x, this.position.y);
-            this.shape.interactive = true;
-
-            this.shape.mouseover = function (mouseData) {
-                console.log(_this.toString());
-            };
-
-            this.shape.click = function (mouseData) {
-                console.log(_this.toString());
-            };
-        },
-        length: function () {
-            return Math.trunc((Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2);
-        },
-        lerp: function (b, t) {
-            this.q += (b.q - this.q) * t;
-            this.r += (b.r - this.r) * t;
-            this.s += (b.s - this.s) * t;
-
-            return this;
-        },
-        lineDraw: function (b) {
-            var N = this.distance(b),
-                results = [],
-                step = 1.0 / Math.max(N, 1);
-
-            for (let i = 0; i <= N; i++) {
-                results.push(this.round(this.lerp(b, step * i)));
-            }
-
-            return results;
-        },
-        neighbor: function (direction) {
-            return this.add(this.direction(direction));
-        },
-        round: function () {
-            var q = Math.trunc(Math.round(this.q)),
-                r = Math.trunc(Math.round(this.r)),
-                s = Math.trunc(Math.round(this.s)),
-                q_diff = Math.abs(q - this.q),
-                r_diff = Math.abs(r - this.r),
-                s_diff = Math.abs(s - this.s);
-
-            if (q_diff > r_diff && q_diff > s_diff) {
-                q = -r - s;
-            } else if (r_diff > s_diff) {
-                r = -q - s;
-            } else {
-                s = -q - r;
-            }
-            this.q = q;
-            this.r = r;
-            this.s = s;
-
-            return this;
-        },
-        scale: function (k) {
-            this.q *= k;
-            this.r *= k;
-            this.s *= k;
-
-            return this;
-        },
-        subtract: function (b) {
-            return new Hex(this.q - b.q, this.r - b.r, this.s - b.s);
-        },
-        toString: function () {
-            return this.q + ":" + this.r;
         }
     };
 
@@ -377,9 +231,6 @@
     Layout.layoutFlat = layoutFlat;
 
     global.HexLib = HexLib;
-    global.Cube = Cube;
-    global.Hex = Hex;
-    global.Point = Point;
     global.Layout = Layout;
     global.OffsetCoord = OffsetCoord;
     global.Orientation = Orientation;

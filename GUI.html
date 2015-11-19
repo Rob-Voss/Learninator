@@ -20,6 +20,7 @@
          * @type {World}
          */
         var stage = stage || {},
+                resizable = false,
                 renderer = renderer || {},
                 theme = 'space',
                 width = 600,
@@ -44,8 +45,8 @@
                         component: 'Header',
                         skin: 'ShadowHeader',
                         text: 'Options',
-                        position: {x: 0, y: 0},
-                        width: 400,
+                        position: {x: 5, y: 0},
+                        width: 390,
                         height: 30
                     },
                     layout: [1, 1],
@@ -55,22 +56,13 @@
                             component: 'Layout',
                             skin: 'ShadowLayout',
                             position: {x: 0, y: 0},
-                            width: 400,
-                            height: 400,
-                            layout: [2, 4],
+                            width: 380,
+                            height: 360,
+                            layout: [2, 5],
                             children: [
                                 {
                                     id: 'chk1',
                                     text: 'Checkbox #1',
-                                    component: 'Checkbox',
-                                    skin: 'ShadowCheckbox',
-                                    position: {x: 0, y: 0},
-                                    width: 25,
-                                    height: 25
-                                },
-                                {
-                                    id: 'chk2',
-                                    text: 'Checkbox #2',
                                     component: 'Checkbox',
                                     skin: 'ShadowCheckbox',
                                     position: {x: 0, y: 0},
@@ -88,12 +80,21 @@
                                     height: 25
                                 },
                                 {
+                                    id: 'chk2',
+                                    text: 'Checkbox #2',
+                                    component: 'Checkbox',
+                                    skin: 'ShadowCheckbox',
+                                    position: {x: 0, y: 0},
+                                    width: 25,
+                                    height: 25
+                                },
+                                {
                                     id: 'radio2',
                                     text: 'Radio #2',
                                     component: 'ShadowRadio',
                                     skin: 'ShadowRadio',
                                     group: 'odd',
-                                    position: {x: 10, y: 0},
+                                    position: {x: 0, y: 0},
                                     width: 25,
                                     height: 25
                                 },
@@ -117,6 +118,27 @@
                                     font: {
                                         color: 'white'
                                     }
+                                },
+                                {
+                                    id: 'mySlider',
+                                    component: 'Slider',
+                                    position: {x: 0, y: 0},
+                                    slide: {
+                                        component: 'Slide',
+                                        width: 10,
+                                        height: 10
+                                    },
+                                    width: 150,
+                                    height: 5
+
+                                },
+                                {
+                                    id: 'myLabel',
+                                    text: 'none',
+                                    component: 'Label',
+                                    position: {x: 0, y: 0},
+                                    width: 120,
+                                    height: 29
                                 },
                                 {
                                     id: 'btnCancel',
@@ -198,16 +220,16 @@
             // for Pixi to render; it's used in resize(), so it must exist
             stage = new PIXI.Container();
 
-            // Size the renderer to fill the screen
-            resize();
-
             // Actually place the renderer onto the page for display
             document.body.querySelector('.game-container').appendChild(renderer.view);
+            if (resizable) {
+                // Size the renderer to fill the screen
+                resize();
 
-            // Listen for and adapt to changes to the screen size, e.g.,
-            // user changing the window or rotating their device
-            window.addEventListener("resize", resize);
-
+                // Listen for and adapt to changes to the screen size, e.g.,
+                // user changing the window or rotating their device
+                window.addEventListener("resize", resize);
+            }
             loadTheme('space');
 
             requestAnimationFrame(animate);
