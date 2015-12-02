@@ -14,18 +14,47 @@ var HexWorld = HexWorld || {};
     function HexWorld() {
         this.width = 600;
         this.height = 600;
+        this.walls = [];
 
-        this.numEntities = 2;
+        this.cheats = {
+            quad: true,
+            grid: false,
+            walls: false
+        };
+
+        this.agents = [
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)), {
+                brainType: 'RLDQN',
+                numEyes: 30,
+                numTypes: 5,
+                range: 120,
+                proximity: 120,
+                radius: 10,
+                collision: true,
+                interactive: true,
+                useSprite: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    id: false,
+                    name: true
+                },
+                worker: true
+            })
+        ];
+        this.numAgents = this.agents.length;
+
+        this.numEntities = 3;
         this.entityOpts = {
             radius: 10,
             collision: true,
             interactive: true,
             useSprite: false,
-            movingEntities: false,
+            movingEntities: true,
             cheats: {
                 gridLocation: false,
                 position: false,
-                id: false,
+                id: true,
                 name: false
             }
         };
@@ -33,47 +62,39 @@ var HexWorld = HexWorld || {};
         this.gridOptions = {
             width: this.width,
             height: this.height,
-            tileSize: 20,
-            tileSpacing: 2,
+            tileSize: 50,
+            tileSpacing: 40,
             pointyTiles: true
         };
         this.grid = new HexGrid(this.gridOptions);
-        this.cells = this.grid.shapeRectangle(10, 10, Hex);
-
-        this.Rarr = null;
-        this.Aarr = null;
-
-        this.agents = [
-            new AgentTD(new Vec(1, 1), {
-                brainType: 'TD',
-                numEyes: 9,
-                numTypes: 3,
-                range: 85,
-                proximity: 85,
-                radius: 10,
-                worker: true,
-                collision: true,
-                interactive: false,
-                useSprite: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    name: false,
-                    id: false
+        this.grid.shapeRing(0, 0, 1);
+        for (let i = 0; i < this.grid.cells.length; i++) {
+            let cell = this.grid.cells[i];
+            for (let c = 0; c < cell.corners.length; c++) {
+                let x1 = cell.corners[c].x,
+                    y1 = cell.corners[c].y,
+                    x2, y2;
+                if (c !== cell.corners.length - 1) {
+                    x2 = cell.corners[c + 1].x;
+                    y2 = cell.corners[c + 1].y;
+                } else {
+                    x2 = cell.corners[0].x;
+                    y2 = cell.corners[0].y;
                 }
-            })
-        ];
-        this.numAgents = this.agents.length;
+                let v1 = new Vec(x1, y1),
+                    v2 = new Vec(x2, y2);
+                this.walls.push(new Wall(v1, v2));
+            }
+        }
+
+        this.walls.push(new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls));
 
         World.call(this);
-        this.cellsContainer = new PIXI.Container();
-        for (var ci = 0; ci < this.cells.length; ci++) {
-            var q = this.cells[ci].q,
-                r = this.cells[ci].r,
-                hex = new Hex(q, r, -q - r, this.grid.getCenterXY(q, r), this.grid.tileSize, this.grid.pointyTiles);
-            this.cellsContainer.addChild(hex.shape);
-        }
-        this.stage.addChild(this.cellsContainer);
+
+        this.stage.addChild(this.grid.drawGrid(false));
 
         return this;
     }

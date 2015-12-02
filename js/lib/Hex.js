@@ -1,13 +1,6 @@
 (function (global) {
     "use strict";
 
-    var Point = function (x, y) {
-        this.x = x;
-        this.y = y;
-
-        return this;
-    };
-
     var Cube = function (x, y, z) {
         this.x = x;
         this.y = y;
@@ -51,21 +44,15 @@
                 this.position.y + this.size * Math.sin(angleRad)));
         }
 
-        this.color = this.colorForHex();
+        //this.color = this.colorForHex();
         this.shape = new PIXI.Graphics();
         this.shape.lineStyle(1, 0x000000, 1);
-        this.shape.beginFill(this.color);
-        for (let i = 0; i < this.corners.length; i++) {
-            if (i === 0) {
-                this.shape.moveTo(this.corners[i].x, this.corners[i].y);
-            } else {
-                this.shape.lineTo(this.corners[i].x, this.corners[i].y);
-            }
-        }
-        this.shape.endFill();
-
-        this.shape.hitArea = new PIXI.Polygon(this.corners);
+        this.shape.alpha = 1;
         this.shape.interactive = true;
+        //this.shape.beginFill(this.color);
+        this.shape.drawPolygon(this.corners);
+        //this.shape.endFill();
+        this.shape.hitArea = new PIXI.Polygon(this.corners);
 
         this.shape.mouseover = function (mouseData) {
             console.log(_this.toString());
@@ -74,7 +61,6 @@
         this.shape.click = function (mouseData) {
             console.log(_this.toString());
         };
-
         return this;
     };
 
@@ -106,6 +92,9 @@
         },
         distance: function (b) {
             return this.length(this.subtract(b));
+        },
+        draw: function (withLabels) {
+
         },
         length: function () {
             return Math.trunc((Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2);
@@ -167,7 +156,11 @@
         }
     };
 
-    global.Point = Point;
+    var hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)],
+        hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
+    Hex.hexDirections = hexDirections;
+    Hex.hexDiagonals = hexDiagonals;
+
     global.Cube = Cube;
     global.Hex = Hex;
 

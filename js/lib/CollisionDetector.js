@@ -1,6 +1,235 @@
 (function (global) {
     "use strict";
 
+    // Trigonometry functions to help with calculating circle movement
+    // -------------------------------------------------------------
+    var trig = {
+        /**
+         * Returns the distance between `point1` and `point2` as the crow flies.
+         * Uses Pythagoras's theorem.
+         * @param point1
+         * @param point2
+         * @returns {number}
+         */
+        distance: function (point1, point2) {
+            var x = point1.x - point2.x,
+                y = point1.y - point2.y,
+                distance = Math.sqrt(x * x + y * y);
+
+            return distance;
+        },
+        /**
+         *  Returns the magnitude of the passed vector.
+         *  Sort of like the vector's speed.
+         *  A vector with a larger x or y will have a larger magnitude.
+         * @param vector
+         * @returns {number}
+         */
+        magnitude: function (vector) {
+            let magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+
+            return magnitude;
+        },
+
+        /**
+         * Returns the unit vector for `vector`.
+         * A unit vector points in the same direction as the original, but has a magnitude of 1.
+         * It's like a direction with a speed that is the same as all other unit vectors.
+         * @param vector
+         * @returns {{x: number, y: number}}
+         */
+        unitVector: function (vector) {
+            let unit = {
+                x: vector.x / trig.magnitude(vector),
+                y: vector.y / trig.magnitude(vector)
+            };
+
+            return unit;
+        },
+        /**
+         * Returns the dot product of `vector1` and `vector2`.
+         * A dot product represents the amount one vector goes in the direction of the other.
+         * Imagine `vector2` runs along the ground and `vector1` represents a ball fired from a cannon.
+         * If `vector2` is multiplied by the dot product of the two vectors, it produces a vector that
+         * represents the amount of ground covered by the ball.
+         * @param vector1
+         * @param vector2
+         * @returns {number}
+         */
+        dotProduct: function (vector1, vector2) {
+            let dot = vector1.x * vector2.x + vector1.y * vector2.y;
+
+            return dot;
+        },
+        /**
+         * Returns the vector that runs between `startPoint` and `endPoint`.
+         * @param startPoint
+         * @param endPoint
+         * @returns {{x: number, y: number}}
+         */
+        vectorBetween: function (startPoint, endPoint) {
+            let vector = {
+                x: endPoint.x - startPoint.x,
+                y: endPoint.y - startPoint.y
+            };
+
+            return vector;
+        },
+        /**
+         * Returns an array containing the points at each end of `line`.
+         * @param line
+         * @returns {*[]}
+         */
+        lineEndPoints: function (line) {
+            var angleRadians = line.angle * 0.01745;
+
+            // Create a unit vector that represents the heading of `line`.
+            var lineUnitVector = trig.unitVector({
+                    x: Math.cos(angleRadians),
+                    y: Math.sin(angleRadians)
+                }),
+            // Multiply the unit vector by half the line length.
+            // This produces a vector that represents the offset of one of the
+            // ends of the line from the center.
+                endOffsetFromCenterVector = {
+                    x: lineUnitVector.x * line.length / 2,
+                    y: lineUnitVector.y * line.length / 2
+                };
+
+            // Return an array that contains the points at the two `line` ends.
+            let ends = [
+                {
+                    // Add the end offset to the center to get one end of 'line'.
+                    x: line.position.x + endOffsetFromCenterVector.x,
+                    y: line.position.y + endOffsetFromCenterVector.y
+                },
+                {
+                    // Subtract the end offset from the center to get the other end of `line`.
+                    x: line.position.x - endOffsetFromCenterVector.x,
+                    y: line.position.y - endOffsetFromCenterVector.y
+                }
+            ];
+
+            return ends;
+        },
+        /**
+         * Returns the point on `line` closest to `circle`.
+         * @param circle
+         * @param line
+         * @returns {*}
+         */
+        pointOnLineClosestToCircle: function (circle, line) {
+            // Create a vector that represents the line
+            var lineUnitVector = trig.unitVector(trig.vectorBetween(line.v1, line.v2)),
+            // Pick a line end and create a vector that represents the
+            // imaginary line between the end and the circle.
+                lineEndToCircleVector = trig.vectorBetween(line.v1, circle.position),
+            // Get a dot product of the vector between the line end and circle, and
+            // the line vector.  (See the `dotProduct()` function for a
+            // fuller explanation.)  This projects the line end and circle
+            // vector along the line vector.  Thus, it represents how far
+            // along the line to go from the end to get to the point on the
+            // line that is closest to the circle.
+                projection = trig.dotProduct(lineEndToCircleVector, lineUnitVector);
+
+            // If `projection` is less than or equal to 0, the closest point
+            // is at or past `lineEndPoint1`.  So, return `lineEndPoint1`.
+            if (projection <= 0) {
+                return line.v1;
+
+                // If `projection` is greater than or equal to the length of the
+                // line, the closest point is at or past `lineEndPoint2`.
+                // So return `lineEndPoint2`.
+            } else if (projection >= line.length) {
+                return line.v2;
+
+                // The projection indicates a point part way along the line.
+                // Return that point.
+            } else {
+                let projection = {
+                    x: line.v1.x + lineUnitVector.x * projection,
+                    y: line.v1.y + lineUnitVector.y * projection
+                };
+
+                return projection;
+            }
+        },
+        /**
+         * Returns true if `line` is intersecting `circle`.
+         * @param circle
+         * @param line
+         * @returns {boolean}
+         */
+        isLineIntersectingCircle: function (circle, line) {
+            // Get point on line closest to circle.
+            var closest = trig.pointOnLineClosestToCircle(circle, line),
+            // Get the distance between the closest point and the center of the circle.
+                circleToLineDistance = trig.distance(circle.position, closest);
+
+            // Return true if distance is less than the radius.
+            return circleToLineDistance < circle.radius;
+        }
+    };
+
+    // Physics functions for calculating circle movement
+    // -----------------------------------------------
+    var physics = {
+        /**
+         * Adds gravity to the velocity of `circle`.
+         * @param circle
+         */
+        applyGravity: function (circle) {
+            circle.position.vy += 0.06;
+        },
+        /**
+         * Adds the velocity of the circle to its center.
+         * @param circle
+         */
+        moveCircle: function (circle) {
+            circle.position.x += circle.position.vx;
+            circle.position.y += circle.position.vy;
+        },
+        /**
+         * Assumes `line` is intersecting `circle` and bounces `circle` off `line`.
+         * @param circle
+         * @param line
+         */
+        bounceCircle: function (circle, line) {
+            // Get the vector that points out from the surface the circle is bouncing on.
+            var bounceLineNormal = physics.bounceLineNormal(circle, line),
+            // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
+                dot = trig.dotProduct(circle.position, bounceLineNormal);
+            circle.position.vx -= 2 * dot * bounceLineNormal.x;
+            circle.position.vy -= 2 * dot * bounceLineNormal.y;
+
+            // Move the circle until it has cleared the line.
+            // This stops the circle getting stuck in the line.
+            while (trig.isLineIntersectingCircle(circle, line)) {
+                physics.moveCircle(circle);
+            }
+        },
+        /**
+         * Assumes `line` intersects `circle`.
+         * It returns the normal to the side of the line that the `circle` is hitting.
+         * @param circle
+         * @param line
+         * @returns {*|{x, y}}
+         */
+        bounceLineNormal: function (circle, line) {
+            // Get vector that starts at the closest point on the line and ends at the circle.
+            // If the circle is hitting the flat of the line this vector will point perpendicular to the line.
+            // If the circle is hitting the end of the line the vector will point from the end to the center
+            // of the circle.
+            var circleToClosestPointOnLineVector = trig.vectorBetween(
+                trig.pointOnLineClosestToCircle(circle, line),
+                circle.position
+            );
+
+            // Make the normal a unit vector and return it.
+            return trig.unitVector(circleToClosestPointOnLineVector);
+        }
+    };
+
     /**
      * Collision Detector wrapper
      * @name CollisionDetector
@@ -18,13 +247,171 @@
         }
 
         /**
-         * Check for collision of circular entities, and calculate collsion point
+         *
+         * @param {Point} point
+         * @param {Entity} circle
+         * @returns {boolean}
+         */
+        this.pointCircleCollide = function (point, circle) {
+            if (circle.radius === 0) {
+                return false;
+            }
+            var dx = circle.position.x - point.x,
+                dy = circle.position.y - point.y,
+                collided = dx * dx + dy * dy <= circle.radius * circle.radius;
+
+            return collided;
+        };
+
+        /**
+         *
+         * @param {Wall} line
+         * @param {Entity} circle
+         * @param {Object} nearest
+         * @returns {boolean}
+         */
+        this.circleLineCollide = function (line, circle, nearest) {
+            let tmp = {x: 0, y: 0},
+                collisionObj = {x: 0, y: 0, vx: 0, vy: 0};
+            //check to see if start or end points lie within circle
+            if (this.pointCircleCollide(line.v1, circle)) {
+                if (nearest) {
+                    nearest.x = line.v1.x;
+                    nearest.y = line.v1.y;
+                }
+                return true;
+            }
+            if (this.pointCircleCollide(line.v2, circle)) {
+                if (nearest) {
+                    nearest.x = line.v2.x;
+                    nearest.y = line.v2.y;
+                }
+                return true;
+            }
+
+            var x1 = line.v1.x,
+                y1 = line.v1.y,
+                x2 = line.v2.x,
+                y2 = line.v2.y,
+                cx = circle.position.x,
+                cy = circle.position.y,
+            // vector distance
+                dx = x2 - x1,
+                dy = y2 - y1,
+            // vector lc
+                lcx = cx - x1,
+                lcy = cy - y1,
+            // vector lc
+                lcx2 = cx - x2,
+                lcy2 = cy - y2,
+            // project lc onto d, resulting in vector p
+                dLen2 = dx * dx + dy * dy, //len2 of d
+                px = dx,
+                py = dy;
+            if (dLen2 > 0) {
+                let dp = (lcx * dx + lcy * dy) / dLen2,
+                    dp2 = (lcx2 * dx + lcy2 * dy) / dLen2;
+                px *= dp;
+                py *= dp;
+            }
+
+            if (!nearest) {
+                nearest = tmp;
+            }
+            nearest.x = x1 + px;
+            nearest.y = y1 + py;
+
+            //len2 of p
+            let pLen2 = px * px + py * py;
+            let cos = Math.cos(line.rotation),
+                sin = Math.sin(line.rotation),
+            //get position of ball, relative to line
+                gx1 = circle.position.x - line.v1.x,
+                gy1 = circle.position.y - line.v1.y,
+            //rotate coordinates
+                gy2 = cos * gy1 - sin * gx1,
+            //rotate velocity
+                vy1 = cos * circle.position.vy - sin * circle.position.vx;
+            //perform bounce with rotated values
+            if (gy2 > -circle.radius && gy2 < vy1) {
+                //rotate coordinates
+                let gx2 = cos * gx1 + sin * gy1,
+                //rotate velocity
+                    vx1 = cos * circle.position.vx + sin * circle.position.vy;
+                gy2 = -circle.radius;
+                vy1 *= -0.6;
+                //rotate everything back
+                gx1 = cos * gx2 - sin * gy2;
+                gy1 = cos * gy2 + sin * gx2;
+                collisionObj.vx = cos * vx1 - sin * vy1;
+                collisionObj.vy = cos * vy1 + sin * vx1;
+                collisionObj.x = line.v1.x + gx1;
+                collisionObj.y = line.v1.y + gy1;
+            }
+            //check collision
+            let collided = this.pointCircleCollide(nearest, circle) && (pLen2 <= dLen2) && ((px * dx + py * dy) >= 0);
+
+            if (collided) {
+                return collisionObj
+            }
+            return false;
+        };
+
+        var Manifold = {
+            //Object *A;
+            //Object *B;
+            //float penetration;
+            //Vec2 normal;
+        };
+
+        /**
+         * j = −(1+e)((VB−VA)⋅n)
+         *     -----------------
+         *         1       1
+         *        ----  + ----
+         *       massA   massB
+         */
+        function ResolveCollision(A, B) {
+            // Calculate relative velocity
+            let rv = B.velocity - A.velocity;
+
+            // Calculate relative velocity in terms of the normal direction
+            let velAlongNormal = DotProduct(rv, normal);
+
+            // Do not resolve if velocities are separating
+            if(velAlongNormal > 0) {
+                return;
+            }
+
+            // Calculate restitution
+            let e = min(A.restitution, B.restitution);
+
+            // Calculate impulse scalar
+            let j = -(1 + e) * velAlongNormal;
+            j /= 1 / A.mass + 1 / B.mass;
+
+            // Apply impulse
+            let impulse = j * normal;
+            A.velocity -= 1 / A.mass * impulse;
+            B.velocity += 1 / B.mass * impulse;
+        }
+
+        function PositionalCorrection(A, B) {
+            const percent = 0.2; // usually 20% to 80%
+            const slop = 0.01; // usually 0.01 to 0.1
+            let correction = max(penetration - k_slop, 0/**0.0f*/) / (A.inv_mass + B.inv_mass) * percent * n;
+            A.position -= A.inv_mass * correction;
+            B.position += B.inv_mass * correction;
+        }
+
+        /**
+         * Check for collision of circular entities, and calculate collision point
          * as well as velocity changes that should occur to them
          * @param {Entity} entity
          * @param {Entity} target
          * @returns {{collPtX: number, collPtY: number, distSquared: number, distFrom: (*|Number), target: {vx: *, vy: *}, entity: {vx: number, vy: number}}}
          */
-        this.circleCollision = function (entity, target) {
+        this.circleCircleCollide = function (entity, target) {
             if (entity.radius !== undefined && target.radius !== undefined) {
                 var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
                     collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
@@ -50,28 +437,29 @@
                         // thus it is the component of the speed difference needed for the collision.
                             combinedMass = (target.type === 5 ? target.radius * 2 : target.radius) + (entity.type === 5 ? entity.radius * 2 : entity.radius),
                             collisionWeightA = 2 * entity.radius / combinedMass,
-                            collisionWeightB = 2 * target.radius / combinedMass;
+                            collisionWeightB = 2 * target.radius / combinedMass,
+                            collisionObj = {
+                                collPtX: collPtX,
+                                collPtY: collPtY,
+                                distance: {
+                                    distanceSquared: distSquared,
+                                    radiusSquared: radiusSquared,
+                                    distanceFrom: distFrom,
+                                    radiusFrom: radiusDist
+                                },
+                                target: {
+                                    type: target.type,
+                                    vx: target.position.vx + collisionWeightA * xCollision,
+                                    vy: target.position.vy + collisionWeightA * yCollision
+                                },
+                                entity: {
+                                    type: entity.type,
+                                    vx: entity.position.vx - collisionWeightB * xCollision,
+                                    vy: entity.position.vy - collisionWeightB * yCollision
+                                }
+                            };
 
-                        return {
-                            collPtX: collPtX,
-                            collPtY: collPtY,
-                            distance: {
-                                distanceSquared: distSquared,
-                                radiusSquared: radiusSquared,
-                                distanceFrom: distFrom,
-                                radiusFrom: radiusDist
-                            },
-                            target: {
-                                type: target.type,
-                                vx: target.position.vx + collisionWeightA * xCollision,
-                                vy: target.position.vy + collisionWeightA * yCollision
-                            },
-                            entity: {
-                                type: entity.type,
-                                vx: entity.position.vx - collisionWeightB * xCollision,
-                                vy: entity.position.vy - collisionWeightB * yCollision
-                            }
-                        };
+                        return collisionObj;
                     }
                 } else {
                     return;
@@ -90,13 +478,13 @@
          */
         this.sightCheck = function (v1, v2, walls, entities, radius) {
             var minRes = false,
-                rad = radius ? radius : 0;
+                radius = radius || 0;
 
             // Collide with walls
             if (walls) {
                 for (var i = 0, wl = walls.length; i < wl; i++) {
                     var wall = walls[i],
-                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
+                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2, radius);
                     if (wResult) {
                         wResult.target = wall;
                         if (!minRes) {
@@ -116,7 +504,7 @@
             if (entities) {
                 for (var e = 0, el = entities.length; e < el; e++) {
                     var entity = entities[e],
-                        iResult = this.linePointIntersect(v1, v2, entity.position, entity.radius + rad);
+                        iResult = this.linePointIntersect(v1, v2, entity.position, entity.size);
                     if (iResult) {
                         iResult.target = entity;
                         if (!minRes) {
@@ -133,14 +521,14 @@
         };
 
         /**
-         * Find the position of intersect between a line and a point
+         * Find the position of intersect between a line and a point with a radius
          * @param {Vec} v1 From position
          * @param {Vec} v2 To position
          * @param {Vec} v0 Target position
-         * @param {Number} rad Target radius
+         * @param {Number} radius Target radius
          * @returns {Object|Boolean}
          */
-        this.linePointIntersect = function (v1, v2, v0, rad) {
+        this.linePointIntersect = function (v1, v2, v0, radius) {
             // Create a perpendicular vector
             var x = v2.y - v1.y,
                 y = v2.x - v1.x,
@@ -152,7 +540,7 @@
                 result = {};
 
             d = d / v.length();
-            if (d > rad) {
+            if (d > radius) {
                 return false;
             }
 
@@ -179,7 +567,7 @@
          * @param {Vec} v4 Wall or Line end
          * @returns {Object|Boolean}
          */
-        this.lineIntersect = function (v1, v2, v3, v4, rad) {
+        this.lineIntersect = function (v1, v2, v3, v4, radius) {
             var denom = (v4.y - v3.y) * (v2.x - v1.x) - (v4.x - v3.x) * (v2.y - v1.y),
                 result = {};
 
@@ -251,7 +639,7 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined && target.radius !== undefined) {
                     // Use the circle collision check
-                    collisionObj = _this.circleCollision(entity, target);
+                    collisionObj = _this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
                         if ((edibleTarget || entity.type === 5) && (edibleEntity || entity.type === 5)) {
@@ -271,24 +659,24 @@
                         return;
                     }
                     // Is it an entity versus a wall?
-                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
-                    collisionObj = this.lineIntersect(target.oldPos, target.position, entity.v1, entity.v2);
+                } else {
+                    collisionObj = _this.circleLineCollide(entity, target);
                     if (collisionObj) {
                         // Reset the position
                         target.position = target.oldPos.clone();
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
                         // If it's a consumable try and change the direction
                         if (target.type === 2 || target.type === 1) {
-                            target.position.vx *= -1;
-                            target.position.vy *= -1;
+                            target.position.vx = collisionObj.vx;
+                            target.position.vy = collisionObj.vy;
                             // If it's an Agent bounce it
                         } else if (target.type === 3 || target.type === 4) {
                             target.position.vx = 0;
                             target.position.vy = 0;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
                         }
                     } else {
                         // Nada so return
@@ -335,9 +723,9 @@
             this.tree.clear();
             this.nodes = [];
 
-            //for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
-            //    this.nodes.push(this.walls[wi]);
-            //}
+            for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
+                this.nodes.push(this.walls[wi]);
+            }
 
             for (let ii = 0, ni = this.entities.length; ii < ni; ii++) {
                 this.nodes.push(this.entities[ii]);
@@ -498,7 +886,7 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined && target.radius !== undefined) {
                     // Use the circle collision check
-                    var collisionObj = this.circleCollision(entity, target);
+                    var collisionObj = this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
                         if ((edibleEntity && edibleTarget) ||

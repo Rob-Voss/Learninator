@@ -23,6 +23,7 @@ var World = World || {},
 
         this.width = this.width || Utility.getOpt(worldOpts, 'width', 600);
         this.height = this.height || Utility.getOpt(worldOpts, 'height', 600);
+        this.resizable = this.resizable || Utility.getOpt(worldOpts, 'resizable', false);
 
         this.clock = 0;
         this.pause = false;
@@ -47,10 +48,8 @@ var World = World || {},
         function resize() {
             // Determine which screen dimension is most constrained
             var ratio = Math.min(window.innerWidth / _this.width, window.innerHeight / _this.height);
-
             // Scale the view appropriately to fill that dimension
             _this.stage.scale.x = _this.stage.scale.y = ratio;
-
             // Update the renderer dimensions
             _this.renderer.resize(Math.ceil(_this.width * ratio), Math.ceil(_this.height * ratio));
         }
@@ -71,18 +70,20 @@ var World = World || {},
         // for Pixi to render; it's used in resize(), so it must exist
         this.stage = new PIXI.Container();
 
-        // Size the renderer to fill the screen
-        resize();
-
         // Actually place the renderer onto the page for display
         document.body.querySelector('.game-container').appendChild(this.renderer.view);
 
-        // Listen for and adapt to changes to the screen size, e.g.,
-        // user changing the window or rotating their device
-        window.addEventListener("resize", resize);
+        if (this.resizable) {
+            // Listen for and adapt to changes to the screen size, e.g.,
+            // user changing the window or rotating their device
+            window.addEventListener("resize", resize);
 
-        this.populate(worldOpts);
+            // Size the renderer to fill the screen
+            resize();
+        }
+
         this.setCollisionDetection(this.collision);
+        this.populate(worldOpts);
         this.initFlot();
 
         function animate() {
@@ -121,11 +122,11 @@ var World = World || {},
         // Walls
         this.wallContainer = new PIXI.Container();
         this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
-                new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls),
-                new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls),
-                new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls),
-                new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls)
-            ]);
+            new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls),
+            new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls),
+            new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls),
+            new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls)
+        ]);
         this.addWalls();
         this.stage.addChild(this.wallContainer);
 
@@ -135,18 +136,18 @@ var World = World || {},
         this.entities = this.entities || Utility.getOpt(worldOpts, 'entities', []);
         // Entity options
         this.entityOpts = this.entityOpts || Utility.getOpt(worldOpts, 'entityOpts', {
-                radius: 10,
-                collision: true,
-                interactive: true,
-                useSprite: false,
-                movingEntities: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    name: false,
-                    id: false
-                }
-            });
+            radius: 10,
+            collision: true,
+            interactive: true,
+            useSprite: false,
+            movingEntities: false,
+            cheats: {
+                gridLocation: false,
+                position: false,
+                name: false,
+                id: false
+            }
+        });
         this.addEntities();
         this.stage.addChild(this.entityContainer);
 
@@ -245,6 +246,7 @@ var World = World || {},
                 entity = new Entity(type, position, this.entityOpts);
 
             // Insert the population
+            this.tree.insert(entity);
             this.entities.push(entity);
             this.entityContainer.addChild(entity.shape || entity.sprite);
         }
@@ -283,11 +285,6 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.draw = function () {
-        // draw walls in environment
-        for (let i = 0, n = this.walls.length; i < n; i++) {
-            this.walls[i].draw();
-        }
-
         // draw items
         for (let e = 0, ni = this.entities.length; e < ni; e++) {
             this.entities[e].draw();
@@ -497,52 +494,6 @@ var World = World || {},
         return res;
     };
 
-    /**
-     * Wall is made up of two Vectors
-     * @name Wall
-     * @constructor
-     *
-     * @param {Vec} v1
-     * @param {Vec} v2
-     * @param {Boolean} cheats
-     * @returns {Wall}
-     */
-    function Wall(v1, v2, cheats) {
-        this.type = 0;
-        this.v1 = v1;
-        this.v2 = v2;
-        this.position = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
-        // Is it wider than it is high or visaversa
-        var dist = v1.distFrom(v2);
-        this.width = (v1.x < v2.x) ? dist : 2;
-        this.height = (v1.y < v2.y) ? dist : 2;
-
-        this.shape = new PIXI.Graphics();
-        if (cheats) {
-            let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
-            wallText.position.set(this.v1.x + 10, this.v1.y);
-            this.shape.addChild(wallText);
-        }
-        this.draw();
-
-        return this;
-    }
-
-    /**
-     * Draws it
-     * @returns {Wall}
-     */
-    Wall.prototype.draw = function () {
-        this.shape.clear();
-        this.shape.lineStyle(1, 0x000000);
-        this.shape.moveTo(this.v1.x, this.v1.y);
-        this.shape.lineTo(this.v2.x, this.v2.y);
-        this.shape.endFill();
-
-        return this;
-    };
-
-    global.Wall = Wall;
     global.World = World;
 
 }(this));

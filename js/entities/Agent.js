@@ -257,7 +257,7 @@ var Agent = Agent || {},
             aEyeX = this.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
             aEyeY = this.position.y + this.maxRange * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);
-        result = agent.world.sightCheck(this.position, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities));
+        result = agent.world.sightCheck(this.position, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities), agent.radius);
         if (result) {
             // eye collided with an entity
             this.sensedProximity = result.vecI.distFrom(this.position);

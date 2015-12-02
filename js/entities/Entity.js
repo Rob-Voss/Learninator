@@ -62,6 +62,7 @@ var Entity = Entity || {};
         this.radius = Utility.getOpt(opts, 'radius', undefined);
         this.width = Utility.getOpt(opts, 'width', undefined);
         this.height = Utility.getOpt(opts, 'height', undefined);
+        this.size = this.radius || this.width;
         this.interactive = Utility.getOpt(opts, 'interactive', false);
         this.collision = Utility.getOpt(opts, 'collision', true);
         this.movingEntities = Utility.getOpt(opts, 'movingEntities', false);
@@ -282,21 +283,13 @@ var Entity = Entity || {};
 
         this.world.check(this);
 
-        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
-            if (result) {
-                this.collisions.unshift(wall);
-            }
-        }
-
         for (let i = 0; i < this.collisions.length; i++) {
             if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
                 // Agent
-                //console.log('Oh shit it\'s a ' + this.collisions[i].name);
+                console.log("Oh shit it's an " + this.collisions[i].name);
             } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 // Edible
-                //console.log('Watch it ' + this.collisions[i].name);
+                console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
                 this.position = this.oldPos.clone();

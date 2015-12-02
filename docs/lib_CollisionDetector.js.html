@@ -52,7 +52,7 @@
          * @param {Entity} target
          * @returns {{collPtX: number, collPtY: number, distSquared: number, distFrom: (*|Number), target: {vx: *, vy: *}, entity: {vx: number, vy: number}}}
          */
-        this.circleCollision = function (entity, target) {
+        this.circleCircleCollide = function (entity, target) {
             if (entity.radius !== undefined &amp;&amp; target.radius !== undefined) {
                 var collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
                     collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
@@ -276,7 +276,7 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined &amp;&amp; target.radius !== undefined) {
                     // Use the circle collision check
-                    collisionObj = _this.circleCollision(entity, target);
+                    collisionObj = _this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
                         if ((edibleTarget || entity.type === 5) &amp;&amp; (edibleEntity || entity.type === 5)) {
@@ -528,7 +528,7 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined &amp;&amp; target.radius !== undefined) {
                     // Use the circle collision check
-                    var collisionObj = this.circleCollision(entity, target);
+                    var collisionObj = this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
                         if ((edibleEntity &amp;&amp; edibleTarget) ||
