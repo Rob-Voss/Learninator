@@ -37,30 +37,58 @@ var Utility = Utility || {};
     "use strict";
 
     // Random number utilities
-    var retV = false,
+    let retV = false,
         vVal = 0.0;
 
+    /**
+     * Convert an RGB to Hex color value
+     * @param {number} R
+     * @param {number} G
+     * @param {number} B
+     * @returns {string}
+     */
     Utility.rgbToHex = function (R, G, B) {
         return '0x' + Utility.toHex(R) + Utility.toHex(G) + Utility.toHex(B);
     };
 
+    /**
+     * Convert to a hex color
+     * @param {string} n
+     * @returns {*}
+     */
     Utility.toHex = function (n) {
         n = parseInt(n, 10);
         if (isNaN(n)) {
             return '00';
         }
         n = Math.max(0, Math.min(n, 255));
+
         return '0123456789ABCDEF'.charAt((n - n % 16) / 16) + '0123456789ABCDEF'.charAt(n % 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToR = function (h) {
         return parseInt(h.substring(0, 2), 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToG = function (h) {
         return parseInt(h.substring(2, 4), 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToB = function (h) {
         return parseInt(h.substring(4, 6), 16);
     };
@@ -120,7 +148,7 @@ var Utility = Utility || {};
 
     /**
      * Gaussian random number
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.gaussRandom = function () {
         if (retV) {
@@ -129,7 +157,7 @@ var Utility = Utility || {};
             return vVal;
         }
 
-        var u = 2 * Math.random() - 1,
+        let u = 2 * Math.random() - 1,
             v = 2 * Math.random() - 1,
             r = u * u + v * v,
             c = Math.sqrt(-2 * Math.log(r) / r);
@@ -147,7 +175,7 @@ var Utility = Utility || {};
      * Return a random Float within the range of a-b
      * @param {Float} lo
      * @param {Float} hi
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.randf = function (lo, hi) {
         return Math.random() * (hi - lo) + lo;
@@ -155,9 +183,9 @@ var Utility = Utility || {};
 
     /**
      * Return a random Integer within the range of a-b
-     * @param {Number} lo
-     * @param {Number} hi
-     * @returns {Number}
+     * @param {number} lo
+     * @param {number} hi
+     * @returns {number}
      */
     Utility.randi = function (lo, hi) {
         return Math.floor(this.randf(lo, hi));
@@ -167,7 +195,7 @@ var Utility = Utility || {};
      * Return a random Number
      * @param {Float} mu
      * @param {Float} std
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.randn = function (mu, std) {
         return mu + Utility.gaussRandom() * std;
@@ -176,7 +204,7 @@ var Utility = Utility || {};
     /**
      * A helper function returns array of zeros of length n
      * and uses typed arrays if available
-     * @param {Number} n
+     * @param {number} n
      * @returns {Float64Array}
      */
     Utility.zeros = function (n) {
@@ -185,7 +213,7 @@ var Utility = Utility || {};
         }
         if (typeof ArrayBuffer === 'undefined') {
             // lacking browser support
-            var arr = new Array(n);
+            let arr = new Array(n);
             for (let i = 0; i &lt; n; i++) {
                 arr[i] = 0;
             }
@@ -229,7 +257,7 @@ var Utility = Utility || {};
      * @param callback
      */
     Utility.loadJSON = function (file, callback) {
-        var xObj = new XMLHttpRequest();
+        let xObj = new XMLHttpRequest();
         xObj.overrideMimeType("application/json");
         xObj.open('GET', file, true);
         xObj.onreadystatechange = function () {
@@ -246,20 +274,20 @@ var Utility = Utility || {};
      * @returns {string}
      */
     Utility.getDirection = function (angle) {
-        var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
+        let directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
             octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
         return directions[octant];
     };
 
     /**
      * Returns string representation of float but truncated to length of d digits
-     * @param {Number} x Float
-     * @param {Number} d Decimals
+     * @param {number} x Float
+     * @param {number} d Decimals
      * @returns {String}
      */
     Utility.flt2str = function (x, d) {
         d = (typeof(d) === undefined) ? 5 : d;
-        var dd = 1.0 * Math.pow(10, d);
+        let dd = 1.0 * Math.pow(10, d);
 
         return '' + Math.floor(x * dd) / dd;
     };
@@ -269,7 +297,7 @@ var Utility = Utility || {};
      * @param {Vec} v1
      * @param {Vec} v2
      * @param {Vec} v3
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.area = function (v1, v2, v3) {
         return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
@@ -277,7 +305,7 @@ var Utility = Utility || {};
 
     /**
      * Do stuff
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.S4 = function () {
         return (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1);
@@ -303,13 +331,13 @@ var Utility = Utility || {};
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Oct 27 2015 14:32:58 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>

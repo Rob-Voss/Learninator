@@ -1,5 +1,7 @@
 var Agent = Agent || {},
-    Eye = Eye || {};
+    Eye = Eye || {},
+    Entity = Entity || {},
+    Utility = Utility || {};
 
 (function (global) {
     "use strict";

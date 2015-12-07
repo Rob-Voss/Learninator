@@ -37,7 +37,7 @@ var Entity = Entity || {};
      * @returns {Entity}
      */
     function Entity(type, position, opts) {
-        let _this = this;
+        let self = this;
         this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
         this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
         this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
@@ -97,17 +97,17 @@ var Entity = Entity || {};
 
             if (this.sprite.interactive === true) {
                 this.sprite
-                    .on('mousedown', _this.onDragStart)
-                    .on('touchstart', _this.onDragStart)
-                    .on('mouseup', _this.onDragEnd)
-                    .on('mouseupoutside', _this.onDragEnd)
-                    .on('touchend', _this.onDragEnd)
-                    .on('touchendoutside', _this.onDragEnd)
-                    .on('mouseover', _this.onMouseOver)
-                    .on('mouseout', _this.onMouseOut)
-                    .on('mousemove', _this.onDragMove)
-                    .on('touchmove', _this.onDragMove);
-                this.sprite.entity = _this;
+                    .on('mousedown', self.onDragStart)
+                    .on('touchstart', self.onDragStart)
+                    .on('mouseup', self.onDragEnd)
+                    .on('mouseupoutside', self.onDragEnd)
+                    .on('touchend', self.onDragEnd)
+                    .on('touchendoutside', self.onDragEnd)
+                    .on('mouseover', self.onMouseOver)
+                    .on('mouseout', self.onMouseOut)
+                    .on('mousemove', self.onDragMove)
+                    .on('touchmove', self.onDragMove);
+                this.sprite.entity = self;
             }
             this.sprite.addChild(this.cheatsContainer);
         } else {
@@ -115,17 +115,17 @@ var Entity = Entity || {};
             this.shape.interactive = this.interactive;
             if (this.shape.interactive === true) {
                 this.shape
-                    .on('mousedown', _this.onDragStart)
-                    .on('touchstart', _this.onDragStart)
-                    .on('mouseup', _this.onDragEnd)
-                    .on('mouseupoutside', _this.onDragEnd)
-                    .on('touchend', _this.onDragEnd)
-                    .on('touchendoutside', _this.onDragEnd)
-                    .on('mouseover', _this.onMouseOver)
-                    .on('mouseout', _this.onMouseOut)
-                    .on('mousemove', _this.onDragMove)
-                    .on('touchmove', _this.onDragMove);
-                this.shape.entity = _this;
+                    .on('mousedown', self.onDragStart)
+                    .on('touchstart', self.onDragStart)
+                    .on('mouseup', self.onDragEnd)
+                    .on('mouseupoutside', self.onDragEnd)
+                    .on('touchend', self.onDragEnd)
+                    .on('touchendoutside', self.onDragEnd)
+                    .on('mouseover', self.onMouseOver)
+                    .on('mouseout', self.onMouseOut)
+                    .on('mousemove', self.onDragMove)
+                    .on('touchmove', self.onDragMove);
+                this.shape.entity = self;
             }
             this.shape.addChild(this.cheatsContainer);
         }
@@ -283,13 +283,23 @@ var Entity = Entity || {};
 
         this.world.check(this);
 
+        // Add any walls we hit
+        // @TODO I need to get these damn walls into the CollisionDetection call
+        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
+            let wall = this.world.walls[w],
+                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
+            if (result) {
+                this.collisions.push(wall);
+            }
+        }
+
         for (let i = 0; i < this.collisions.length; i++) {
             if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
                 // Agent
-                console.log("Oh shit it's an " + this.collisions[i].name);
+                //console.log("Oh shit it's an " + this.collisions[i].name);
             } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 // Edible
-                console.log('Watch it ' + this.collisions[i].name);
+                //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
                 this.position = this.oldPos.clone();

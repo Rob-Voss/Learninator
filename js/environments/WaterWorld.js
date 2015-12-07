@@ -1,14 +1,18 @@
-var WaterWorld = WaterWorld || {};
+var WaterWorld = WaterWorld || {},
+    Maze = Maze || {},
+    Vec = Vec || {},
+    World = World || {};
 
 (function (global) {
     "use strict";
 
     /**
      * World object contains many agents and walls and food and stuff
-     * @returns {WaterWorld}
      * @name WaterWorld
      * @extends World
      * @constructor
+     *
+     * @returns {WaterWorld}
      */
     function WaterWorld() {
         this.width = 800;
@@ -46,42 +50,44 @@ var WaterWorld = WaterWorld || {};
         };
 
         this.agents = [
-            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)), {
-                brainType: 'RLDQN',
-                numEyes: 30,
-                numTypes: 5,
-                range: 120,
-                proximity: 120,
-                radius: 10,
-                collision: true,
-                interactive: false,
-                useSprite: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    id: false,
-                    name: true
-                },
-                worker: true
-            }),
-            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)), {
-                brainType: 'RLDQN',
-                numEyes: 30,
-                numTypes: 5,
-                range: 120,
-                proximity: 120,
-                radius: 10,
-                collision: true,
-                interactive: false,
-                useSprite: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    id: false,
-                    name: true
-                },
-                worker: true
-            })
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    range: 120,
+                    proximity: 120,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    },
+                    worker: true
+                }),
+            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
+                {
+                    brainType: 'RLDQN',
+                    numEyes: 30,
+                    numTypes: 5,
+                    range: 120,
+                    proximity: 120,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        gridLocation: false,
+                        position: false,
+                        id: false,
+                        name: true
+                    },
+                    worker: true
+                })
         ];
         this.numAgents = this.agents.length;
 

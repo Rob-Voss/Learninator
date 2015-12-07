@@ -9,30 +9,58 @@ var Utility = Utility || {};
     "use strict";
 
     // Random number utilities
-    var retV = false,
+    let retV = false,
         vVal = 0.0;
 
+    /**
+     * Convert an RGB to Hex color value
+     * @param {number} R
+     * @param {number} G
+     * @param {number} B
+     * @returns {string}
+     */
     Utility.rgbToHex = function (R, G, B) {
         return '0x' + Utility.toHex(R) + Utility.toHex(G) + Utility.toHex(B);
     };
 
+    /**
+     * Convert to a hex color
+     * @param {string} n
+     * @returns {*}
+     */
     Utility.toHex = function (n) {
         n = parseInt(n, 10);
         if (isNaN(n)) {
             return '00';
         }
         n = Math.max(0, Math.min(n, 255));
+
         return '0123456789ABCDEF'.charAt((n - n % 16) / 16) + '0123456789ABCDEF'.charAt(n % 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToR = function (h) {
         return parseInt(h.substring(0, 2), 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToG = function (h) {
         return parseInt(h.substring(2, 4), 16);
     };
 
+    /**
+     *
+     * @param h
+     * @returns {Number}
+     */
     Utility.hexToB = function (h) {
         return parseInt(h.substring(4, 6), 16);
     };
@@ -92,7 +120,7 @@ var Utility = Utility || {};
 
     /**
      * Gaussian random number
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.gaussRandom = function () {
         if (retV) {
@@ -101,7 +129,7 @@ var Utility = Utility || {};
             return vVal;
         }
 
-        var u = 2 * Math.random() - 1,
+        let u = 2 * Math.random() - 1,
             v = 2 * Math.random() - 1,
             r = u * u + v * v,
             c = Math.sqrt(-2 * Math.log(r) / r);
@@ -119,7 +147,7 @@ var Utility = Utility || {};
      * Return a random Float within the range of a-b
      * @param {Float} lo
      * @param {Float} hi
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.randf = function (lo, hi) {
         return Math.random() * (hi - lo) + lo;
@@ -127,9 +155,9 @@ var Utility = Utility || {};
 
     /**
      * Return a random Integer within the range of a-b
-     * @param {Number} lo
-     * @param {Number} hi
-     * @returns {Number}
+     * @param {number} lo
+     * @param {number} hi
+     * @returns {number}
      */
     Utility.randi = function (lo, hi) {
         return Math.floor(this.randf(lo, hi));
@@ -139,7 +167,7 @@ var Utility = Utility || {};
      * Return a random Number
      * @param {Float} mu
      * @param {Float} std
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.randn = function (mu, std) {
         return mu + Utility.gaussRandom() * std;
@@ -148,7 +176,7 @@ var Utility = Utility || {};
     /**
      * A helper function returns array of zeros of length n
      * and uses typed arrays if available
-     * @param {Number} n
+     * @param {number} n
      * @returns {Float64Array}
      */
     Utility.zeros = function (n) {
@@ -157,7 +185,7 @@ var Utility = Utility || {};
         }
         if (typeof ArrayBuffer === 'undefined') {
             // lacking browser support
-            var arr = new Array(n);
+            let arr = new Array(n);
             for (let i = 0; i < n; i++) {
                 arr[i] = 0;
             }
@@ -201,7 +229,7 @@ var Utility = Utility || {};
      * @param callback
      */
     Utility.loadJSON = function (file, callback) {
-        var xObj = new XMLHttpRequest();
+        let xObj = new XMLHttpRequest();
         xObj.overrideMimeType("application/json");
         xObj.open('GET', file, true);
         xObj.onreadystatechange = function () {
@@ -218,20 +246,20 @@ var Utility = Utility || {};
      * @returns {string}
      */
     Utility.getDirection = function (angle) {
-        var directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
+        let directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
             octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
         return directions[octant];
     };
 
     /**
      * Returns string representation of float but truncated to length of d digits
-     * @param {Number} x Float
-     * @param {Number} d Decimals
+     * @param {number} x Float
+     * @param {number} d Decimals
      * @returns {String}
      */
     Utility.flt2str = function (x, d) {
         d = (typeof(d) === undefined) ? 5 : d;
-        var dd = 1.0 * Math.pow(10, d);
+        let dd = 1.0 * Math.pow(10, d);
 
         return '' + Math.floor(x * dd) / dd;
     };
@@ -241,7 +269,7 @@ var Utility = Utility || {};
      * @param {Vec} v1
      * @param {Vec} v2
      * @param {Vec} v3
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.area = function (v1, v2, v3) {
         return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
@@ -249,7 +277,7 @@ var Utility = Utility || {};
 
     /**
      * Do stuff
-     * @returns {Number}
+     * @returns {number}
      */
     Utility.S4 = function () {
         return (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1);

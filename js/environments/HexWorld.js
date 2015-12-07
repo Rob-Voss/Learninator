@@ -1,10 +1,16 @@
-var HexWorld = HexWorld || {};
+var HexWorld = HexWorld || {},
+    AgentRLDQN = AgentRLDQN || {},
+    Hex = Hex || {},
+    HexGrid = HexGrid || {},
+    Utility = Utility || {},
+    Vec = Vec || {},
+    World = World || {};
 
 (function (global) {
     "use strict";
 
     /**
-     *
+     * A Hexagonal world
      * @name HexWorld
      * @extends World
      * @constructor
@@ -62,12 +68,12 @@ var HexWorld = HexWorld || {};
         this.gridOptions = {
             width: this.width,
             height: this.height,
-            tileSize: 50,
-            tileSpacing: 40,
+            tileSize: 20,
+            tileSpacing: 50,
             pointyTiles: true
         };
         this.grid = new HexGrid(this.gridOptions);
-        this.grid.shapeRing(0, 0, 1);
+        this.grid.shapeRectangle(3, 3, Hex);
         for (let i = 0; i < this.grid.cells.length; i++) {
             let cell = this.grid.cells[i];
             for (let c = 0; c < cell.corners.length; c++) {
@@ -94,7 +100,7 @@ var HexWorld = HexWorld || {};
 
         World.call(this);
 
-        this.stage.addChild(this.grid.drawGrid(false));
+        this.stage.addChild(this.grid.getGrid(false));
 
         return this;
     }

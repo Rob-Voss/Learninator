@@ -14,7 +14,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @returns {EntityRLDQN}
      */
     function EntityRLDQN(position, opts) {
-        let _this = this;
+        let self = this;
 
         this.name = 'Entity RLDQN';
         this.action = null;
@@ -130,7 +130,7 @@ var EntityRLDQN = EntityRLDQN || {};
 
     /**
      * Return the number of states
-     * @returns {Number}
+     * @returns {number}
      */
     EntityRLDQN.prototype.getNumStates = function () {
         return 8; //this.numStates; // x,y,vx,vy, puck dx,dy
@@ -138,14 +138,14 @@ var EntityRLDQN = EntityRLDQN || {};
 
     /**
      * Return the number of actions
-     * @returns {Number}
+     * @returns {number}
      */
     EntityRLDQN.prototype.getMaxNumActions = function () {
         return this.actions.length; // left, right, up, down, nothing
     };
 
     /**
-     *
+     * Get the current state
      * @returns {Array}
      */
     EntityRLDQN.prototype.getState = function () {
@@ -163,7 +163,7 @@ var EntityRLDQN = EntityRLDQN || {};
     };
 
     /**
-     *
+     * Move around
      * @returns {EntityRLDQN}
      */
     EntityRLDQN.prototype.move = function () {
@@ -260,8 +260,7 @@ var EntityRLDQN = EntityRLDQN || {};
     };
 
     /**
-     * Move around
-     * @param {Object} smallWorld
+     * Sample the next state
      */
     EntityRLDQN.prototype.sampleNextState = function () {
         // Compute distances
@@ -303,8 +302,7 @@ var EntityRLDQN = EntityRLDQN || {};
 
     /**
      * Agent's chance to act on the world
-     *
-     * @param {Object} smallWorld
+     * @param {World} world
      */
     EntityRLDQN.prototype.tick = function (world) {
         this.world = world;

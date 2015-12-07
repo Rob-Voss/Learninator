@@ -1,4 +1,6 @@
-var AgentRLTD = AgentRLTD || {};
+var AgentRLTD = AgentRLTD || {},
+    Agent = Agent || {},
+    Utility = Utility || {};
 
 (function (global) {
     "use strict";
@@ -40,7 +42,7 @@ var AgentRLTD = AgentRLTD || {};
     AgentRLTD.prototype.constructor = Agent;
 
     AgentRLTD.prototype.reset = function () {
-        let _this = this;
+        let self = this;
         if (!this.worker) {
             this.brain = new TDAgent(this.env, this.brainOpts);
             this.state = this.env.startState();
@@ -53,8 +55,8 @@ var AgentRLTD = AgentRLTD || {};
                 this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
             };
 
-            let jEnv = Utility.stringify(_this.env),
-                jOpts = Utility.stringify(_this.brainOpts);
+            let jEnv = Utility.stringify(self.env),
+                jOpts = Utility.stringify(self.brainOpts);
 
             this.brain = new Worker('js/lib/external/rl.js');
             this.brain.onmessage = function (e) {
@@ -62,45 +64,45 @@ var AgentRLTD = AgentRLTD || {};
                 switch (data.cmd) {
                     case 'init':
                         if (data.msg === 'complete') {
-                            _this.state = _this.env.startState();
+                            self.state = self.env.startState();
 
-                            _this.env.reset();
+                            self.env.reset();
                         }
                         break;
                     case 'act':
                         if (data.msg === 'complete') {
                             // run it through environment dynamics
-                            var obs = _this.sampleNextState(_this.state, data.input);
+                            var obs = self.sampleNextState(self.state, data.input);
 
                             // allow opportunity for the agent to learn
-                            _this.brain.postMessage({cmd: 'learn', input: obs.r});
+                            self.brain.postMessage({cmd: 'learn', input: obs.r});
                         }
                         break;
                     case 'learn':
                         if (data.msg === 'complete') {
-                            _this.Rarr[_this.state] = obs.r;
+                            self.Rarr[self.state] = obs.r;
 
                             // evolve environment to next state
-                            _this.state = obs.ns;
-                            _this.gridLocation = _this.world.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
+                            self.state = obs.ns;
+                            self.gridLocation = self.world.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
 
-                            let x = _this.gridLocation.coords.bottom.right.x - (_this.world.grid.cellWidth / 2),
-                                y = _this.gridLocation.coords.bottom.right.y - (_this.world.grid.cellHeight / 2);
-                            _this.position.set(x, y);
+                            let x = self.gridLocation.coords.bottom.right.x - (self.world.grid.cellWidth / 2),
+                                y = self.gridLocation.coords.bottom.right.y - (self.world.grid.cellHeight / 2);
+                            self.position.set(x, y);
 
-                            _this.nStepsCounter += 1;
+                            self.nStepsCounter += 1;
                             if (typeof obs.resetEpisode !== 'undefined') {
-                                _this.score += 1;
-                                _this.brain.postMessage({cmd: 'resetEpisode'});
+                                self.score += 1;
+                                self.brain.postMessage({cmd: 'resetEpisode'});
                                 // record the reward achieved
-                                if (_this.nStepsHistory.length >= _this.nflot) {
-                                    _this.nStepsHistory = _this.nStepsHistory.slice(1);
+                                if (self.nStepsHistory.length >= self.nflot) {
+                                    self.nStepsHistory = self.nStepsHistory.slice(1);
                                 }
-                                _this.nStepsHistory.push(_this.nStepsCounter);
-                                _this.nStepsCounter = 0;
+                                self.nStepsHistory.push(self.nStepsCounter);
+                                self.nStepsCounter = 0;
 
-                                _this.gridLocation = _this.world.grid.getCellAt(0, 0);
-                                _this.position.set(_this.world.grid.cellWidth / 2, _this.world.grid.cellHeight / 2);
+                                self.gridLocation = self.world.grid.getCellAt(0, 0);
+                                self.position.set(self.world.grid.cellWidth / 2, self.world.grid.cellHeight / 2);
                             }
                         }
                         break;

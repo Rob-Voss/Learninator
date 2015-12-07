@@ -1,7 +1,8 @@
-var QuadTree = {}; // global var for the quadtree
+var QuadTree = QuadTree || {}; // global var for the quadtree
 
 (function (global) {
     "use strict";
+
     /**
      * Usage:
      * To create a new empty Quadtree, do this:
@@ -51,13 +52,13 @@ var QuadTree = {}; // global var for the quadtree
         /**
          * Node creator.
          * You should never create a node manually since the algorithm takes care of that for you.
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} width
-         * @param {Number} height
-         * @param {Number} depth
-         * @param {Number} maxChildren
-         * @param {Number} maxDepth
+         * @param {number} x
+         * @param {number} y
+         * @param {number} width
+         * @param {number} height
+         * @param {number} depth
+         * @param {number} maxChildren
+         * @param {number} maxDepth
          * @returns {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
          */
         node = function (x, y, width, height, depth, maxChildren, maxDepth) {
@@ -126,7 +127,7 @@ var QuadTree = {}; // global var for the quadtree
                 /**
                  * Find a node the item should be inserted in.
                  * @param {Array|Object} item
-                 * @returns {Number}
+                 * @returns {number}
                  */
                 findInsertNode: function (item) {
                     let wD = this.width / 2,

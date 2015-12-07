@@ -26,15 +26,23 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>(function (global) {
+            <pre class="prettyprint source linenums"><code>var GridWorld = GridWorld || {},
+    AgentRLTD = AgentRLTD || {},
+    Maze = Maze || {},
+    Vec = Vec || {},
+    World = World || {},
+    document = document || {};
+
+(function (global) {
     "use strict";
 
     /**
      * GridWorld Environment
-     * @returns {GridWorld}
      * @name GridWorld
      * @extends World
      * @constructor
+     *
+     * @returns {GridWorld}
      */
     function GridWorld() {
         this.rs = {};
@@ -76,6 +84,7 @@
                     collision: false,
                     interactive: false,
                     useSprite: false,
+                    worker: false,
                     cheats: {
                         gridLocation: false,
                         position: false,
@@ -88,7 +97,6 @@
         this.initGrid();
         this.drawGrid();
         this.initFlot();
-        this.tick();
 
         return this;
     }
@@ -100,7 +108,7 @@
      * Initialize the Flot class
      */
     GridWorld.prototype.initFlot = function () {
-        var _this = this;
+        let self = this;
         this.container = document.getElementById('flotreward');
         // flot stuff
         this.nflot = 1000;
@@ -109,7 +117,7 @@
         this.flott = [];
         this.series = [];
 
-        for (var a = 0; a &lt; this.agents.length; a++) {
+        for (let a = 0; a &lt; this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;
             this.flott[a] = 0;
@@ -124,7 +132,7 @@
             };
         }
 
-        this.plot = $.plot(_this.container, _this.series, {
+        this.plot = $.plot(self.container, self.series, {
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
@@ -149,20 +157,20 @@
         });
 
         setInterval(function(){
-            _this.series[0].data = _this.getFlotRewards();
-            _this.plot.setData(_this.series);
-            _this.plot.draw();
+            self.series[0].data = self.getFlotRewards();
+            self.plot.setData(self.series);
+            self.plot.draw();
         }, 100);
     };
 
     /**
      * zip rewards into flot data
-     * @param {Number} an
+     * @param {number} an
      * @returns {Array}
      */
     GridWorld.prototype.getFlotRewards = function () {
-        var res = [];
-        for(var i = 0, n = this.agents[0].nStepsHistory.length; i &lt; n; i++) {
+        let res = [];
+        for(let i = 0, n = this.agents[0].nStepsHistory.length; i &lt; n; i++) {
             res.push([i, this.agents[0].nStepsHistory[i]]);
         }
         return res;
@@ -172,12 +180,12 @@
      *
      */
     GridWorld.prototype.tick = function () {
-        var _this = this;
+        let _this = this;
         if (_this.sid === -1) {
             _this.sid = setInterval(function () {
-                for (var k = 0; k &lt; _this.stepsPerTick; k++) {
+                for (let k = 0; k &lt; _this.stepsPerTick; k++) {
                     // ask agent for an action
-                    var a = _this.agents[0].brain.act(_this.state),
+                    let a = _this.agents[0].brain.act(_this.state),
                     // run it through environment dynamics
                         obs = _this.sampleNextState(_this.state, a);
 
@@ -222,17 +230,17 @@
      */
     GridWorld.prototype.reset = function () {
         // specify some rewards
-        var Rarr = Utility.zeros(this.gS),
+        let Rarr = Utility.zeros(this.gS),
             Aarr = new Array(this.gS),
             lastState = 0;
 
-        for (var y = 0; y &lt; this.gH; y++) {
-            for (var x = 0; x &lt; this.gW; x++) {
-                var state = this.xyToS(x, y),
+        for (let y = 0; y &lt; this.gH; y++) {
+            for (let x = 0; x &lt; this.gW; x++) {
+                let state = this.xyToS(x, y),
                     actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y)),
                     actionsAvail = {0: null, 1: null, 2: null, 3: null};
-                for (var a = 0; a &lt; actions.length; a++) {
-                    var action = actions[a],
+                for (let a = 0; a &lt; actions.length; a++) {
+                    let action = actions[a],
                         actionState = this.xyToS(action.x, action.y);
                     if (action.x === x - 1 &amp;&amp; action.y === y) {
                         actionsAvail[0] = actionState;
@@ -246,8 +254,8 @@
                 }
                 Aarr[state] = actionsAvail;
                 Rarr[state] = (state === this.gS - 1) ? 1 : 0;
-                var nulled = 0
-                for (var key in actionsAvail) {
+                let nulled = 0
+                for (let key in actionsAvail) {
                     if (actionsAvail[key] === null) {
                         nulled++;
                     }
@@ -261,29 +269,31 @@
 
         this.Rarr = Rarr;
         this.Aarr = Aarr;
+
+        return this;
     };
 
     /**
      * Get the reward of being in s, taking action a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
-     * @param {Number} ns
-     * @returns {Number}
+     * @param {number} s
+     * @param {number} a
+     * @param {number} ns
+     * @returns {number}
      */
     GridWorld.prototype.reward = function (s, a, ns) {
-        var rew = this.Rarr[s];
+        let rew = this.Rarr[s];
 
         return rew;
     };
 
     /**
      *
-     * @param {Number} s
-     * @param {Number} a
-     * @returns {Number}
+     * @param {number} s
+     * @param {number} a
+     * @returns {number}
      */
     GridWorld.prototype.nextStateDistribution = function (s, a) {
-        var ns, nx, ny,
+        let ns, nx, ny,
             sx = this.sToX(s),
             sy = this.sToY(s);
 
@@ -332,17 +342,17 @@
 
     /**
      * Observe the raw reward of being in s, taking a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
+     * @param {number} s
+     * @param {number} a
      * @returns {{ns: (*|Number), r: (*|Number)}}
      */
     GridWorld.prototype.sampleNextState = function (s, a) {
-        var ns = this.nextStateDistribution(s, a),
+        let ns = this.nextStateDistribution(s, a),
             r = this.reward(s, a, ns);
 
         // every step takes a bit of negative reward
         r -= 0.01;
-        var out = {
+        let out = {
             ns: ns,
             r: r
         };
@@ -356,7 +366,7 @@
 
     /**
      * Return the number of states
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.getNumStates = function () {
         return this.gS;
@@ -364,7 +374,7 @@
 
     /**
      * Return the number of actions
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.getMaxNumActions = function () {
         return 4;
@@ -375,13 +385,13 @@
      * @returns {Array}
      */
     GridWorld.prototype.allowedActions = function (s) {
-        var x = this.sToX(s),
+        let x = this.sToX(s),
             y = this.sToY(s),
             as = [],
             c = this.grid.getCellAt(x, y),
             actions = this.grid.disconnectedNeighbors(c);
 
-        for (var a = 0; a &lt; actions.length; a++) {
+        for (let a = 0; a &lt; actions.length; a++) {
             if (actions[a].x === x - 1 &amp;&amp; actions[a].y === y) { // Left
                 as.push(0);
             } else if (actions[a].x === x &amp;&amp; actions[a].y === y + 1) { // Down
@@ -398,8 +408,8 @@
 
     /**
      * Convert the state to an x
-     * @param {Number} s
-     * @returns {Number}
+     * @param {number} s
+     * @returns {number}
      */
     GridWorld.prototype.sToX = function (s) {
         return Math.floor(s / this.gW);
@@ -407,8 +417,8 @@
 
     /**
      * Convert the state to a y
-     * @param {Number} s
-     * @returns {Number}
+     * @param {number} s
+     * @returns {number}
      */
     GridWorld.prototype.sToY = function (s) {
         return s % this.gH;
@@ -416,9 +426,9 @@
 
     /**
      * Convert an x, y to the state
-     * @param {Number} x
-     * @param {Number} y
-     * @returns {Number}
+     * @param {number} x
+     * @param {number} y
+     * @returns {number}
      */
     GridWorld.prototype.xyToS = function (x, y) {
         return x * this.gW + y;
@@ -426,7 +436,7 @@
 
     /**
      * Return a rand state
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.randomState = function () {
         return Math.floor(Math.random() * this.gS);
@@ -434,7 +444,7 @@
 
     /**
      * Return the starting state
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.startState = function () {
         return 0;
@@ -460,7 +470,7 @@
      *
      */
     GridWorld.prototype.drawGrid = function () {
-        var sx = this.sToX(this.state),
+        let sx = this.sToX(this.state),
             sy = this.sToY(this.state);
 
         d3.select('#cpos')
@@ -468,9 +478,9 @@
             .attr('cy', sy * this.cs + this.cs / 2);
 
         // updates the grid with current state of world/agent
-        for (var y = 0; y &lt; this.gH; y++) {
-            for (var x = 0; x &lt; this.gH; x++) {
-                var xcoord = x * this.cs,
+        for (let y = 0; y &lt; this.gH; y++) {
+            for (let x = 0; x &lt; this.gH; x++) {
+                let xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     r = 255,
                     g = 255,
@@ -482,17 +492,17 @@
                 if (typeof this.agents[0].brain.V !== 'undefined') {
                     vv = this.agents[0].brain.V[s];
                 } else if (typeof this.agents[0].brain.Q !== 'undefined') {
-                    var poss = this.allowedActions(s);
+                    let poss = this.allowedActions(s);
                     vv = -1;
-                    for (var i = 0, n = poss.length; i &lt; n; i++) {
-                        var qsa = this.agents[0].brain.Q[poss[i] * this.gS + s];
+                    for (let i = 0, n = poss.length; i &lt; n; i++) {
+                        let qsa = this.agents[0].brain.Q[poss[i] * this.gS + s];
                         if (i === 0 || qsa > vv) {
                             vv = qsa;
                         }
                     }
                 }
 
-                var ms = 100;
+                let ms = 100;
                 if (vv > 0) {
                     g = 255;
                     r = 255 - vv * ms;
@@ -504,7 +514,7 @@
                     b = 255 + vv * ms;
                 }
 
-                var vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
+                let vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
                     rcolor = "",
                     // update colors of rectangles based on value
                     r = this.rs[s];
@@ -517,7 +527,7 @@
                 }
 
                 // write reward texts
-                var rv = this.Rarr[s],
+                let rv = this.Rarr[s],
                     tr = this.trs[s];
                 if (rv !== 0) {
                     tr.text('R ' + rv.toFixed(1));
@@ -527,14 +537,14 @@
                 //if (this.T[s] === 1) {continue;}
 
                 // write value
-                var tv = this.tvs[s];
-                tv.text(vv.toFixed(2));
+                let tv = this.tvs[s];
+                tv.text(vv !== null ? vv.toFixed(2) : 0);
 
                 // update policy arrows
-                var paa = this.pas[s];
-                for (var a = 0; a &lt; 4; a++) {
-                    var pa = paa[a],
-                        prob = this.agents[0].brain.P[a * this.gS + s],
+                let paa = this.pas[s];
+                for (let a = 0; a &lt; 4; a++) {
+                    let pa = paa[a];
+                    let prob = this.agents[0].brain.P[a * this.gS + s],
                         nx = 0,
                         ny = 0,
                         actions = this.Aarr[s],
@@ -545,7 +555,7 @@
                         pa.attr('visibility', 'visible');
                     }
 
-                    var ss = this.cs / 2 * prob * 0.9;
+                    let ss = this.cs / 2 * prob * 0.9;
 
                     switch (a) {
                         case 0: // Left
@@ -579,23 +589,23 @@
      *
      */
     GridWorld.prototype.initGrid = function () {
-        var d3elt = d3.select('#draw');
+        let d3elt = d3.select('#draw');
         this.rs = {};
         this.trs = {};
         this.tvs = {};
         this.pas = {};
 
-        var gh = this.gH, // height in cells
+        let gh = this.gH, // height in cells
             gw = this.gW, // width in cells
             gs = this.gW * this.gH, // total number of cells
             w = 600,
             h = 600;
 
-        var _this = this;
+        let _this = this;
 
         d3elt.html('');
 
-        var svg = d3elt.append('svg')
+        let svg = d3elt.append('svg')
             .attr('width', w)
             .attr('height', h)
             .append('g')
@@ -612,9 +622,9 @@
             .append("path")
             .attr("d", "M 0,0 V 4 L3,2 Z");
 
-        for (var y = 0; y &lt; gh; y++) {
-            for (var x = 0; x &lt; gw; x++) {
-                var xcoord = x * this.cs,
+        for (let y = 0; y &lt; gh; y++) {
+            for (let x = 0; x &lt; gw; x++) {
+                let xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     s = this.xyToS(x, y),
                     g = svg.append('g');
@@ -627,7 +637,7 @@
                 }(s));
 
                 // set up cell rectangles
-                var r = g.append('rect')
+                let r = g.append('rect')
                     .attr('x', xcoord)
                     .attr('y', ycoord)
                     .attr('height', this.cs - 2)
@@ -638,7 +648,7 @@
                 this.rs[s] = r;
 
                 // reward text
-                var tr = g.append('text')
+                let tr = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 55)
                     .attr('font-size', 10)
@@ -646,7 +656,7 @@
                 this.trs[s] = tr;
 
                 // value text
-                var tv = g.append('text')
+                let tv = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 20)
                     .text('');
@@ -654,9 +664,9 @@
 
                 // policy arrows
                 this.pas[s] = [];
-                for (var a = 0; a &lt; 4; a++) {
+                for (let a = 0; a &lt; 4; a++) {
                     this.pas[s][a] = {};
-                    var x1, x2, y1, y2, lx1, lx2, ly1, ly2,
+                    let x1, x2, y1, y2, lx1, lx2, ly1, ly2,
                         action = this.Aarr[s][a],
                         buffer = this.cs / 2;
                     switch (a) {
@@ -710,7 +720,7 @@
                             break;
                     }
 
-                    var pa = g.append('line')
+                    let pa = g.append('line')
                         .attr('x1', x1)
                         .attr('y1', y1)
                         .attr('x2', x2)
@@ -757,13 +767,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Oct 27 2015 14:32:58 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>

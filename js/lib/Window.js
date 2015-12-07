@@ -9,14 +9,14 @@ var Window = Window || {};
      * @name Window
      * @constructor
      *
-     * @param {Number} size
-     * @param {Number} minSize
+     * @param {number} size
+     * @param {number} minSize
      * @returns {Window}
      */
-    var Window = function (size, minSize) {
+    let Window = function (size, minSize) {
         this.v = [];
-        this.size = size === undefined ? 100 : size;
-        this.minsize = minSize === undefined ? 20 : minSize;
+        this.size = size || 100;
+        this.minsize = minSize || 20;
         this.sum = 0;
 
         return this;
@@ -25,20 +25,19 @@ var Window = Window || {};
     Window.prototype = {
         /**
          * Add a value
-         * @param {type} x
-         * @returns {undefined}
+         * @param {number} x
          */
         add: function (x) {
             this.v.push(x);
             this.sum += x;
             if (this.v.length > this.size) {
-                var xold = this.v.shift();
+                let xold = this.v.shift();
                 this.sum -= xold;
             }
         },
         /**
          * Get the average of all
-         * @returns {Window_L3.Window.v.length|Number}
+         * @returns {Number}
          */
         getAverage: function () {
             if (this.v.length < this.minsize) {
@@ -48,7 +47,6 @@ var Window = Window || {};
         },
         /**
          * Reset the Window
-         * @returns {undefined}
          */
         reset: function () {
             this.v = [];

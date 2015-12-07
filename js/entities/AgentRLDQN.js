@@ -1,4 +1,5 @@
-var AgentRLDQN = AgentRLDQN || {};
+var AgentRLDQN = AgentRLDQN || {},
+    Agent = Agent || {};
 
 (function (global) {
     "use strict";

@@ -1,7 +1,16 @@
 (function (global) {
     "use strict";
 
-    var Point = function (x, y) {
+    /**
+     * Simple Point
+     * @name Point
+     * @constructor
+     *
+     * @param {number} x
+     * @param {number} y
+     * @returns {Point}
+     */
+    let Point = function (x, y) {
         this.x = x;
         this.y = y;
 
@@ -13,18 +22,18 @@
      * @name Vec
      * @constructor
      *
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} z
-     * @param {Number} vx
-     * @param {Number} vy
-     * @param {Number} vz
-     * @param {Number} ax
-     * @param {Number} ay
-     * @param {Number} az
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     * @param {number} vx
+     * @param {number} vy
+     * @param {number} vz
+     * @param {number} ax
+     * @param {number} ay
+     * @param {number} az
      * @returns {Vec}
      */
-    var Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {
+    let Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {
         this.x = x || 0;
         this.y = y || 0;
         this.z = z || 0;
@@ -61,7 +70,7 @@
         },
         /**
          * Adds a scalar value to the x and y components of this vector
-         * @param {Number} s The scalar value to add
+         * @param {number} s The scalar value to add
          * @return {Vec} Returns itself.
          */
         addScalar: function (s) {
@@ -86,7 +95,7 @@
          * Warning: creates two new Vec objects! EXPENSIVE
          * @param {Vec} v1 First vec
          * @param {Vec} v2 Second vec
-         * @return {Number} Angle between vectors.
+         * @return {number} Angle between vectors.
          */
         angleBetween: function (v1, v2) {
             v1 = v1.clone().normalize();
@@ -149,7 +158,7 @@
         /**
          * Calculate the cross product of this and another vector.
          * @param {Vec} v A vector
-         * @return {Number} The cross product
+         * @return {number} The cross product
          */
         crossProd: function (v) {
             return this.x * v.y - this.y * v.x;
@@ -157,10 +166,10 @@
         /**
          * Calculates the square distance to the passed vector
          * @param {Vec} v The vector to check distance to
-         * @return {Number} The square distance
+         * @return {number} The square distance
          */
         distanceToSquared: function (v) {
-            var dx = this.x - v.x,
+            let dx = this.x - v.x,
                 dy = this.y - v.y,
                 dz = this.z - v.z;
 
@@ -169,7 +178,7 @@
         /**
          * Calculates the distance to the passed vector
          * @param {Vec} v The vector to check distance to
-         * @return {Number} The distance
+         * @return {number} The distance
          */
         distanceTo: function (v) {
             return Math.sqrt(this.distanceToSquared(v));
@@ -177,16 +186,16 @@
         /**
          * Distance from the referenced Vector
          * @param {Vec} v
-         * @returns {Number}
+         * @returns {number}
          */
         distFrom: function (v) {
-            var dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+            let dist = Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
 
             return dist;
         },
         /**
          * Divides the x and y components of this vector by a scalar value
-         * @param {Number} s The value to divide by
+         * @param {number} s The value to divide by
          * @return {Vec} Returns itself.
          */
         divideScalar: function (s) {
@@ -205,7 +214,7 @@
         /**
          * Performs the dot product between this vector and the passed one and returns the result
          * @param {Vec} v
-         * @return {Number} Returns the dot product
+         * @return {number} Returns the dot product
          */
         dot: function (v) {
             return this.x * v.x + this.y * v.y;
@@ -239,7 +248,7 @@
         /**
          * Performs a linear interpolation between this vector and the passed vector
          * @param {Vec} v The vector to interpolate with
-         * @param {Number} alpha The amount to interpolate [0-1] or extrapolate (1-]
+         * @param {number} alpha The amount to interpolate [0-1] or extrapolate (1-]
          * @return {Vec} Returns itself.
          */
         lerp: function (v, alpha) {
@@ -251,17 +260,17 @@
         },
         /**
          * Calculates the square length of the vector
-         * @return {Number} Returns the square length of the vector
+         * @return {number} Returns the square length of the vector
          */
         lengthSq: function () {
             return this.dot(this);
         },
         /**
          * Calculates the length of the vector
-         * @return {Number} Returns the length of the vector
+         * @return {number} Returns the length of the vector
          */
         length: function () {
-            var length = Math.sqrt(this.dot(this));
+            let length = Math.sqrt(this.dot(this));
 
             return length;
         },
@@ -299,7 +308,7 @@
         },
         /**
          * Multiplies the x and y components of this vector by a scalar value
-         * @param {Number} s The value to multiply by
+         * @param {number} s The value to multiply by
          * @return {Vec} Returns itself.
          */
         multiplyScalar: function (s) {
@@ -327,7 +336,7 @@
          * @return {Vec} Returns itself.
          */
         perp: function () {
-            var x = this.x;
+            let x = this.x;
             this.x = this.y;
             this.y = -x;
 
@@ -349,7 +358,7 @@
          * @return {Vec} Returns itself.
          */
         project: function (v) {
-            var amt = this.dot(v) / v.lengthSq();
+            let amt = this.dot(v) / v.lengthSq();
             this.x = amt * v.x;
             this.y = amt * v.y;
 
@@ -361,7 +370,7 @@
          * @return {Vec} Returns itself.
          */
         projectN: function (v) {
-            var amt = this.dot(v);
+            let amt = this.dot(v);
             this.x = amt * v.x;
             this.y = amt * v.y;
 
@@ -373,7 +382,7 @@
          * @return {Vec} Returns itself.
          */
         reflect: function (axis) {
-            var x = this.x,
+            let x = this.x,
                 y = this.y;
             this.project(axis).multiplyScalar(2);
             this.x -= x;
@@ -387,7 +396,7 @@
          * @return {Vec} Returns itself.
          */
         reflectN: function (axis) {
-            var x = this.x,
+            let x = this.x,
                 y = this.y;
             this.projectN(axis).multiplyScalar(2);
             this.x -= x;
@@ -397,12 +406,12 @@
         },
         /**
          * Rotates the vector by an arbitrary angle around an arbitrary point in space
-         * @param {Number} angle The angle in radians to rotate by
+         * @param {number} angle The angle in radians to rotate by
          * @param {Vec} anchor The anchor point to rotate around
          * @return {Vec} Returns itself.
          */
         rotateAround: function (angle, anchor) {
-            var dist = anchor.distanceTo(this);
+            let dist = anchor.distanceTo(this);
             return this.set(
                 anchor.x + (dist * Math.cos(angle)),
                 anchor.y + (dist * Math.sin(angle))
@@ -410,11 +419,11 @@
         },
         /**
          * Rotate the Vec clockwise
-         * @param {Number} angle The angle in radians to rotate by
+         * @param {number} angle The angle in radians to rotate by
          * @returns {Vec}
          */
         rotate: function (angle) {
-            var X = this.x * Math.cos(angle) + this.y * Math.sin(angle),
+            let X = this.x * Math.cos(angle) + this.y * Math.sin(angle),
                 Y = -this.x * Math.sin(angle) + this.y * Math.cos(angle);
 
             return new Vec(X, Y);
@@ -431,7 +440,7 @@
         },
         /**
          * Scale the Vector
-         * @param {Number} scale
+         * @param {number} scale
          * @returns {undefined}
          */
         scale: function (scale) {
@@ -442,12 +451,12 @@
         },
         /**
          * Set the Vec's properties
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} vx
-         * @param {Number} vy
-         * @param {Number} ax
-         * @param {Number} ay
+         * @param {number} x
+         * @param {number} y
+         * @param {number} vx
+         * @param {number} vy
+         * @param {number} ax
+         * @param {number} ay
          */
         set: function (x, y, vx, vy, ax, ay) {
             this.x = x;
@@ -459,20 +468,20 @@
         },
         /**
          * Calculate the length of a the vector.
-         * @param {Number} value
+         * @param {number} value
          */
         setAngle: function (value) {
-            var len = this.getLength();
+            let len = this.length();
             this.x = Math.cos(value) * len;
             this.y = Math.sin(value) * len;
         },
         /**
          * Sets the length of the vector
-         * @param {Number} l The length to set this vector to
-         * @return {Vec} Returns itself.
+         * @param {number} l The length to set this vector to
+         * @return {Vec}
          */
         setLength: function (l) {
-            var oldLength = this.length();
+            let oldLength = this.length();
 
             if (oldLength !== 0 && l !== oldLength) {
                 this.multiplyScalar(l / oldLength);
@@ -483,7 +492,7 @@
         /**
          * Subtracts a vector from this one
          * @param {Vec} v The vector to subtract from this one
-         * @return {Vec} Returns itself.
+         * @return {Vec}
          */
         sub: function (v) {
             return new Vec(this.x - v.x, this.y - v.y);
@@ -502,10 +511,10 @@
         },
         /**
          * Returns an array with the components of this vector as the elements
-         * @return {Vec} Returns an array of [x,y] form
+         * @return {Array}
          */
         toArray: function () {
-            return [this.x, this.y, this.vx, this.vy, this.ax, this.ay];
+            return [this.x, this.y, this.z, this.vx, this.vy, this.vz, this.ax, this.ay, this.az];
         }
     };
 
@@ -516,11 +525,11 @@
      *
      * @param {Vec} v1
      * @param {Vec} v2
-     * @param {Boolean} cheats
+     * @param {boolean} cheats
      * @returns {Wall}
      */
     function Wall(v1, v2, cheats) {
-        var xDiff = v2.x - v1.x,
+        let xDiff = v2.x - v1.x,
             yDiff = v2.y - v1.y;
         this.type = 0;
         this.v1 = v1;

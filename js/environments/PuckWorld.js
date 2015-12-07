@@ -1,14 +1,18 @@
-var PuckWorld = PuckWorld || {};
+var PuckWorld = PuckWorld || {},
+    AgentRLDQN = AgentRLDQN || {},
+    Utility = Utility || {},
+    Vec = Vec || {};
 
 (function (global) {
     "use strict";
 
     /**
      * PuckWorld Environment
-     * @returns {PuckWorld}
      * @name PuckWorld
      * @extends World
      * @constructor
+     *
+     * @returns {PuckWorld}
      */
     function PuckWorld() {
         this.width = 600;
@@ -59,22 +63,22 @@ var PuckWorld = PuckWorld || {};
     }
 
     PuckWorld.prototype.tick = function () {
-        var _this = this,
+        let self = this,
             obs;
-        if (_this.sid === -1) {
-            _this.sid = setInterval(function () {
-                for (var k = 0; k < _this.stepsPerTick; k++) {
-                    _this.state = _this.getState();
-                    _this.action = _this.agents[0].brain.act(_this.state);
-                    obs = _this.sampleNextState();
-                    _this.agents[0].brain.learn(obs.r);
+        if (self.sid === -1) {
+            self.sid = setInterval(function () {
+                for (let k = 0; k < self.stepsPerTick; k++) {
+                    self.state = self.getState();
+                    self.action = self.agents[0].brain.act(self.state);
+                    obs = self.sampleNextState();
+                    self.agents[0].brain.learn(obs.r);
                 }
 
-                _this.updateDraw(_this.action, _this.state, obs.r);
+                self.updateDraw(self.action, self.state, obs.r);
             }, 20);
         } else {
-            clearInterval(_this.sid);
-            _this.sid = -1;
+            clearInterval(self.sid);
+            self.sid = -1;
         }
     };
 
@@ -99,7 +103,7 @@ var PuckWorld = PuckWorld || {};
     /**
      * Return the number of states
      *
-     * @returns {Number}
+     * @returns {number}
      */
     PuckWorld.prototype.getNumStates = function () {
         return 8; // x,y,vx,vy, puck dx,dy
@@ -108,7 +112,7 @@ var PuckWorld = PuckWorld || {};
     /**
      * Return the number of actions
      *
-     * @returns {Number}
+     * @returns {number}
      */
     PuckWorld.prototype.getMaxNumActions = function () {
         return 5; // left, right, up, down, nothing

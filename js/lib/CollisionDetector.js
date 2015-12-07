@@ -230,12 +230,67 @@
         }
     };
 
+    var Manifold = {
+        //Object *A;
+        //Object *B;
+        //float penetration;
+        //Vec2 normal;
+    };
+
+    /**
+     * j = −(1+e)((VB−VA)⋅n)
+     *     -----------------
+     *         1       1
+     *        ----  + ----
+     *       massA   massB
+     */
+    function ResolveCollision(A, B) {
+        // Calculate relative velocity
+        let rv = B.velocity - A.velocity;
+
+        // Calculate relative velocity in terms of the normal direction
+        let velAlongNormal = DotProduct(rv, normal);
+
+        // Do not resolve if velocities are separating
+        if(velAlongNormal > 0) {
+            return;
+        }
+
+        // Calculate restitution
+        let e = min(A.restitution, B.restitution);
+
+        // Calculate impulse scalar
+        let j = -(1 + e) * velAlongNormal;
+        j /= 1 / A.mass + 1 / B.mass;
+
+        // Apply impulse
+        let impulse = j * normal;
+        A.velocity -= 1 / A.mass * impulse;
+        B.velocity += 1 / B.mass * impulse;
+    }
+
+    function PositionalCorrection(A, B) {
+        const percent = 0.2; // usually 20% to 80%
+        const slop = 0.01; // usually 0.01 to 0.1
+        let correction = max(penetration - k_slop, 0/**0.0f*/) / (A.inv_mass + B.inv_mass) * percent * n;
+        A.position -= A.inv_mass * correction;
+        B.position += B.inv_mass * correction;
+    }
+
+    /**
+     * Collision detection options
+     * @typedef {Object} cdOpts
+     * @property {String} type - The collision type 'quad','grid','brute'
+     * @property {number} maxChildren - The max number of children: 'quad' only
+     * @property {number} maxDepth - The max depth of the nodes: 'quad' only
+     */
+
     /**
      * Collision Detector wrapper
      * @name CollisionDetector
      * @constructor
      *
-     * @param {Object} opts
+     * @param {cdOpts} opts
      */
     var CollisionDetector = function (opts) {
         if (opts.type === 'grid') {
@@ -357,53 +412,6 @@
             return false;
         };
 
-        var Manifold = {
-            //Object *A;
-            //Object *B;
-            //float penetration;
-            //Vec2 normal;
-        };
-
-        /**
-         * j = −(1+e)((VB−VA)⋅n)
-         *     -----------------
-         *         1       1
-         *        ----  + ----
-         *       massA   massB
-         */
-        function ResolveCollision(A, B) {
-            // Calculate relative velocity
-            let rv = B.velocity - A.velocity;
-
-            // Calculate relative velocity in terms of the normal direction
-            let velAlongNormal = DotProduct(rv, normal);
-
-            // Do not resolve if velocities are separating
-            if(velAlongNormal > 0) {
-                return;
-            }
-
-            // Calculate restitution
-            let e = min(A.restitution, B.restitution);
-
-            // Calculate impulse scalar
-            let j = -(1 + e) * velAlongNormal;
-            j /= 1 / A.mass + 1 / B.mass;
-
-            // Apply impulse
-            let impulse = j * normal;
-            A.velocity -= 1 / A.mass * impulse;
-            B.velocity += 1 / B.mass * impulse;
-        }
-
-        function PositionalCorrection(A, B) {
-            const percent = 0.2; // usually 20% to 80%
-            const slop = 0.01; // usually 0.01 to 0.1
-            let correction = max(penetration - k_slop, 0/**0.0f*/) / (A.inv_mass + B.inv_mass) * percent * n;
-            A.position -= A.inv_mass * correction;
-            B.position += B.inv_mass * correction;
-        }
-
         /**
          * Check for collision of circular entities, and calculate collision point
          * as well as velocity changes that should occur to them
@@ -473,8 +481,8 @@
          * @param {Vec} v2
          * @param {Array} walls
          * @param {Array} entities
-         * @param {Number} radius
-         * @returns {Boolean}
+         * @param {number} radius
+         * @returns {boolean}
          */
         this.sightCheck = function (v1, v2, walls, entities, radius) {
             var minRes = false,
@@ -525,7 +533,7 @@
          * @param {Vec} v1 From position
          * @param {Vec} v2 To position
          * @param {Vec} v0 Target position
-         * @param {Number} radius Target radius
+         * @param {number} radius Target radius
          * @returns {Object|Boolean}
          */
         this.linePointIntersect = function (v1, v2, v0, radius) {
@@ -627,14 +635,16 @@
 
             /**
              * Collision check
-             * @param entity
+             * @param {Entity} entity
              */
             function checkIt(entity) {
                 if (entity === target) {
                     return;
                 }
                 var edibleEntity = (entity.type === 2 || entity.type === 1),
-                    edibleTarget = (target.type === 2 || target.type === 1);
+                    edibleTarget = (target.type === 2 || target.type === 1),
+                    agentTarget = (target.type === 3 || target.type === 4 || target.type === 5),
+                    agentEntity = (entity.type === 3 || entity.type === 4 || entity.type === 5);
 
                 // If both entities have a radius
                 if (entity.radius !== undefined && target.radius !== undefined) {
@@ -642,7 +652,8 @@
                     collisionObj = _this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
-                        if ((edibleTarget || entity.type === 5) && (edibleEntity || entity.type === 5)) {
+                        if ((edibleTarget && edibleEntity) ||
+                            (agentTarget && edibleEntity)) {
                             // If there was a collision between edible entities
                             target.position.vx = collisionObj.target.vx;
                             target.position.vy = collisionObj.target.vy;
@@ -692,6 +703,7 @@
 
         /**
          * Draw the regions from a node
+         * @param {Node} aNode
          */
         this.drawRegions = function (aNode) {
             var nodes = aNode.getNodes(),
@@ -708,7 +720,7 @@
             rect.endFill();
 
             if (aNode.items !== undefined) {
-                var popText = new PIXI.Text(aNode.items.length, {font: "20px Arial", fill: "#006400", align: "center"});
+                let popText = new PIXI.Text(aNode.items.length, {font: "20px Arial", fill: "#006400", align: "center"});
                 popText.position.set(aNode.x + aNode.width / 2, aNode.y + aNode.height / 2);
                 rect.addChild(popText);
             }
@@ -723,9 +735,9 @@
             this.tree.clear();
             this.nodes = [];
 
-            for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
-                this.nodes.push(this.walls[wi]);
-            }
+            //for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
+            //    this.nodes.push(this.walls[wi]);
+            //}
 
             for (let ii = 0, ni = this.entities.length; ii < ni; ii++) {
                 this.nodes.push(this.entities[ii]);
@@ -767,7 +779,7 @@
 
         /**
          * Set up the CD function
-         * @param target
+         * @param {Entity} target
          */
         this.check = function (target) {
             target.collisions = [];
@@ -863,13 +875,13 @@
 
     /**
      * Brute Force CD
-     * @name BruteD
+     * @name BruteCD
      * @constructor
      */
     var BruteCD = function () {
         /**
          * Set up the CD function
-         * @param target
+         * @param {Entity} target
          */
         this.check = function (target) {
             let tmpEntities = this.agents.concat(this.entities);
@@ -886,7 +898,7 @@
                 // If both entities have a radius
                 if (entity.radius !== undefined && target.radius !== undefined) {
                     // Use the circle collision check
-                    var collisionObj = this.circleCircleCollide(entity, target);
+                    let collisionObj = this.circleCircleCollide(entity, target);
                     if (collisionObj) {
                         // If there was a collision between an agent and an edible entity
                         if ((edibleEntity && edibleTarget) ||
@@ -910,7 +922,7 @@
                     }
                     // Is it an entity versus a wall?
                 } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
-                    var result = this.lineIntersect(target.oldPos, target.position, entity.v1, entity.v2);
+                    let result = this.lineIntersect(target.oldPos, target.position, entity.v1, entity.v2);
                     if (result) {
                         // Reset the position
                         target.position = target.oldPos.clone();

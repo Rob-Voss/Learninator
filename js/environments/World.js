@@ -1,8 +1,34 @@
 var World = World || {},
-    Wall = Wall || {};
+    Utility = Utility || {},
+    window = window || {},
+    document = document || {},
+    PIXI = PIXI || {};
 
 (function (global) {
     "use strict";
+
+    /**
+     * Options for the World
+     * @typedef {Object} worldOpts
+     * @property {number} width - The width
+     * @property {number} height - The height
+     * @property {boolean} resizable - Should it be resizable
+     * @property {number} simSpeed - The speed of the simulation
+     * @property {cdOpts} collision - The collision definition
+     * @property {Object} cheats - The cheats definition
+     * @property {boolean} cheats.quad - Show the Quadtree overlay
+     * @property {boolean} cheats.grid - Show the Grid overlay
+     * @property {boolean} cheats.walls - Show the Wall numbers
+     */
+
+    /**
+     * Options for the World renderer
+     * @typedef {Object} renderOpts
+     * @property {boolean} antialiasing - Use Antialiasing
+     * @property {boolean} transparent - Transparent background
+     * @property {boolean} resolution - The canvas resolution
+     * @property {boolean} autoResize - Auto resize the canvas
+     */
 
     /**
      * Make a World
@@ -10,11 +36,12 @@ var World = World || {},
      * @constructor
      *
      * @param {worldOpts} worldOpts
+     * @param {renderOpts} renderOpts
      * @returns {World}
      */
-    function World(worldOpts) {
-        var _this = this,
-            rendererOptions = {
+    function World(worldOpts, renderOpts) {
+        var self = this,
+            rendererOptions = renderOpts || {
                 antialiasing: false,
                 transparent: false,
                 resolution: window.devicePixelRatio,
@@ -47,11 +74,11 @@ var World = World || {},
 
         function resize() {
             // Determine which screen dimension is most constrained
-            var ratio = Math.min(window.innerWidth / _this.width, window.innerHeight / _this.height);
+            let ratio = Math.min(window.innerWidth / self.width, window.innerHeight / self.height);
             // Scale the view appropriately to fill that dimension
-            _this.stage.scale.x = _this.stage.scale.y = ratio;
+            self.stage.scale.x = self.stage.scale.y = ratio;
             // Update the renderer dimensions
-            _this.renderer.resize(Math.ceil(_this.width * ratio), Math.ceil(_this.height * ratio));
+            self.renderer.resize(Math.ceil(self.width * ratio), Math.ceil(self.height * ratio));
         }
 
         // Create the canvas in which the game will show, and a
@@ -87,9 +114,9 @@ var World = World || {},
         this.initFlot();
 
         function animate() {
-            if (!_this.pause) {
+            if (!self.pause) {
                 let ticker = 0;
-                switch (parseFloat(_this.simSpeed)) {
+                switch (parseFloat(self.simSpeed)) {
                     case 1:
                         ticker = 1;
                         break;
@@ -101,10 +128,10 @@ var World = World || {},
                         break;
                 }
                 for (let k = 0; k < ticker; k++) {
-                    _this.tick();
+                    self.tick();
                 }
             }
-            _this.renderer.render(_this.stage);
+            self.renderer.render(self.stage);
             requestAnimationFrame(animate);
         }
 
@@ -115,7 +142,7 @@ var World = World || {},
 
     /**
      * Set up the population
-     * @param {Object} worldOpts
+     * @param {worldOpts} worldOpts
      * @returns {World}
      */
     World.prototype.populate = function (worldOpts) {
@@ -220,6 +247,7 @@ var World = World || {},
                 agentContainer.addChild(entity.eyes[ei].shape);
             }
             agentContainer.addChild(entity.shape || entity.sprite);
+            this.entityAgents.push(entity);
             this.entityAgentContainer.addChild(agentContainer);
         }
 
@@ -228,7 +256,7 @@ var World = World || {},
 
     /**
      * Add new entities
-     * @parameter {Number} number
+     * @parameter {number} number
      * @returns {World}
      */
     World.prototype.addEntities = function (number) {
@@ -334,7 +362,6 @@ var World = World || {},
 
         // Loop through entity agents
         for (let a = 0, na = this.entityAgents.length; a < na; a++) {
-            // draw agents body
             this.entityAgents[a].tick(this);
         }
 
@@ -478,7 +505,7 @@ var World = World || {},
 
     /**
      * zip rewards into flot data
-     * @param {Number} a
+     * @param {number} a
      * @returns {Array}
      */
     World.prototype.getFlotRewards = function (a) {

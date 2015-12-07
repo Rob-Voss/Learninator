@@ -7,7 +7,8 @@
 
     <title>Maze World</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/styles.css">
@@ -34,7 +35,7 @@
          */
         function start() {
             world = new MazeWorld();
-            datGUI(world);
+//            datGUI(world);
         }
 
     </script>
@@ -78,19 +79,15 @@
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 <script src="js/lib/Window.js"></script>
-<script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/ui/Display.js"></script>
 
-<script src="js/entities/TDBrain.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 <script src="js/entities/AgentRLTD.js"></script>
-<script src="js/entities/AgentTD.js"></script>
 
 <script src="js/environments/World.js"></script>
 <script src="js/environments/MazeWorld.js"></script>
 
-<script src="js/lib/external/convnet.js"></script>
+<script src="js/lib/external/rl.js"></script>
 
 <link rel="import" href="/templates/twitch-nav.html">
 <link rel="import" href="/templates/agent-brain-modal.html">

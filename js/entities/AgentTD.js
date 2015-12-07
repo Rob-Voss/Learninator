@@ -1,4 +1,5 @@
-var AgentTD = AgentTD || {};
+var AgentTD = AgentTD || {},
+    Agent = Agent || {};
 
 (function (global) {
     "use strict";

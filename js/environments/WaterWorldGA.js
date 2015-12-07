@@ -1,24 +1,13 @@
-var WaterWorldGA = WaterWorldGA || {};
+var WaterWorldGA = WaterWorldGA || {},
+    convnetjs = convnetjs || {},
+    GATrainer = GATrainer || {},
+    Maze = Maze || {},
+    Utility = Utility || {},
+    Vec = Vec || {},
+    World = World || {};
 
 (function (global) {
     "use strict";
-
-    /**
-     *
-     * @param chromosome1
-     * @param chromosome2
-     * @returns {number}
-     */
-    function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
-        var result = 0;
-        // put chromosomes into brains before getting them to duel it out.
-        _this.agents[0].brain.populate(chromosome1);
-        _this.agents[1].brain.populate(chromosome2);
-
-        result = _this.update(30 * 20);
-
-        return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
-    }
 
     /**
      *
@@ -67,7 +56,25 @@ var WaterWorldGA = WaterWorldGA || {};
      * @returns {WaterWorldGA}
      */
     function WaterWorldGA() {
-        var _this = this;
+        var self = this;
+
+        /**
+         *
+         * @param chromosome1
+         * @param chromosome2
+         * @returns {number}
+         */
+        function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
+            var result = 0;
+            // put chromosomes into brains before getting them to duel it out.
+            self.agents[0].brain.populate(chromosome1);
+            self.agents[1].brain.populate(chromosome2);
+
+            result = self.update(30 * 20);
+
+            return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
+        }
+
         this.width = 600;
         this.height = 600;
         this.mazeOptions = {
@@ -173,8 +180,8 @@ var WaterWorldGA = WaterWorldGA || {};
      */
     WaterWorldGA.prototype.tick = function () {
         this.update(1);
-        var genStep = 50;
-        for (var i = 0; i < genStep; i++) {
+        let genStep = 50;
+        for (let i = 0; i < genStep; i++) {
             this.trainer.train();
         }
 
@@ -188,8 +195,8 @@ var WaterWorldGA = WaterWorldGA || {};
      * @returns {number}
      */
     WaterWorldGA.prototype.update = function (nStep) {
-        var result = 0;
-        for (var step = 0; step < nStep; step++) {
+        let result = 0;
+        for (let step = 0; step < nStep; step++) {
             // ai here
             // update internal states
             this.agents[0].getState(this.entities[0]);

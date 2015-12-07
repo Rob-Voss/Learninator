@@ -1,4 +1,8 @@
 var AgentGA = AgentGA || {},
+    Agent = Agent || {},
+    Utility = Utility || {},
+    convnetjs = convnetjs || {},
+    Chromosome = Chromosome || {},
     Brain = Brain || {};
 
 (function (global) {
@@ -168,7 +172,6 @@ var AgentGA = AgentGA || {},
      * @returns {AgentGA}
      */
     AgentGA.prototype.act = function () {
-
         return this;
     };
 

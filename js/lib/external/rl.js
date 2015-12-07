@@ -1170,9 +1170,9 @@
         /**
          * Used in planning. Invoked when Q[sa] += update we should find all states
          * that lead to (s,a) and upgrade their priority of being update in the next planning step
-         * @param {Number} s
-         * @param {Number} a
-         * @param {Number} u
+         * @param {number} s
+         * @param {number} a
+         * @param {number} u
          */
         updatePriority: function (s, a, u) {
             u = Math.abs(u);
@@ -2288,7 +2288,7 @@
          * Has to pass in fitness function.
          * returns best fitness
          * @param {type} fitFunc
-         * @returns {Number}
+         * @returns {number}
          */
         train: function (fitFunc) {
             var bestFitFunc = function (nTrial, net) {
@@ -2380,9 +2380,9 @@
      * Outputs of each sub nn is also the input of all other sub nn's and itself.
      * inputs should be order of ~ -10 to +10, and expect output to be similar magnitude.
      * user can grab outputs of the the N sub networks and use them to accomplish some task for training
-     * @param {Number} nSp Number of sub populations (ie, 4)
-     * @param {Number} nInput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + nSp
-     * @param {Number} nHidden Number of hidden neurons in each sub population (ie, 16)
+     * @param {number} nSp Number of sub populations (ie, 4)
+     * @param {number} nInput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + nSp
+     * @param {number} nHidden Number of hidden neurons in each sub population (ie, 16)
      * @param {Array} genes (optional) array of nSp genes (floatArrays) to initialise the network (pretrained)
      * @returns {ESPNet}
      * @name ESPNet
@@ -2483,7 +2483,7 @@
         },
         /**
          * Return total number of weights and biases in a single sub nn.
-         * @returns {Number}
+         * @returns {number}
          */
         getNetworkSize: function () {
             return getNetworkSize(this.net[0]); // each network has identical architecture.
@@ -2606,7 +2606,7 @@
         /**
          * Has to pass in fitness function.  returns best fitness
          * @param {type} fitFunc
-         * @returns {Number}
+         * @returns {number}
          */
         train: function (fitFunc) {
             var i, j, k, m, N, nSp,

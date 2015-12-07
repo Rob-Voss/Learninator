@@ -19,7 +19,7 @@ var Phys = Phys || {};
 
     Phys.AABB = function (x, y, settings) {
         // internal
-        var _self = this;
+        var self = this;
 
         this.x = x;
         this.y = y;
@@ -36,26 +36,26 @@ var Phys = Phys || {};
 
         // this.scratchVec = new Vec();
         this.update = function () {
-            _self.x += _self.velocity.x * Phys.elapsed;
-            _self.y += _self.velocity.y * Phys.elapsed;
+            self.x += self.velocity.x * Phys.elapsed;
+            self.y += self.velocity.y * Phys.elapsed;
 
-            if (_self.x < 0) {
-                _self.x = 0;
-                _self.velocity.x = -_self.velocity.x;
-            } else if (_self.x + _self.width > Phys.worldWidth) {
-                _self.x = Phys.worldWidth - _self.width;
-                _self.velocity.x = -_self.velocity.x;
+            if (self.x < 0) {
+                self.x = 0;
+                self.velocity.x = -self.velocity.x;
+            } else if (self.x + self.width > Phys.worldWidth) {
+                self.x = Phys.worldWidth - self.width;
+                self.velocity.x = -self.velocity.x;
             }
-            if (_self.y < 0) {
-                _self.y = 0;
-                _self.velocity.y = -_self.velocity.y;
-            } else if (_self.y + _self.height > Phys.worldHeight) {
-                _self.y = Phys.worldHeight - _self.height;
-                _self.velocity.y = -_self.velocity.y;
+            if (self.y < 0) {
+                self.y = 0;
+                self.velocity.y = -self.velocity.y;
+            } else if (self.y + self.height > Phys.worldHeight) {
+                self.y = Phys.worldHeight - self.height;
+                self.velocity.y = -self.velocity.y;
             }
 
-            _self.min.reset(_self.x, _self.y);
-            _self.max.reset(_self.x + _self.width, _self.y + _self.height);
+            self.min.reset(self.x, self.y);
+            self.max.reset(self.x + self.width, self.y + self.height);
         };
 
         this.setMass = function (newMass) {
@@ -69,16 +69,16 @@ var Phys = Phys || {};
 
         this.draw = function () {
             Phys.ctx.fillStyle = 'rgba(0, 10, 150, 0.5)'; // DEBUG
-            Phys.ctx.fillRect(_self.x, _self.y, _self.width, _self.height); // DEBUG
+            Phys.ctx.fillRect(self.x, self.y, self.width, self.height); // DEBUG
         };
 
         if (typeof _settings !== 'undefined') {
             for (var attr in _settings) {
-                if (_self.hasOwnProperty(attr)) _self[attr] = _settings[attr];
+                if (self.hasOwnProperty(attr)) self[attr] = _settings[attr];
             }
         }
 
-        _self.setMass(_self.mass); // make sure invmass is set
+        self.setMass(self.mass); // make sure invmass is set
         // console.log(_self);
     };
 

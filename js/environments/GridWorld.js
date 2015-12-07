@@ -1,14 +1,20 @@
-var GridWorld = GridWorld || {};
+var GridWorld = GridWorld || {},
+    AgentRLTD = AgentRLTD || {},
+    Maze = Maze || {},
+    Vec = Vec || {},
+    World = World || {},
+    document = document || {};
 
 (function (global) {
     "use strict";
 
     /**
      * GridWorld Environment
-     * @returns {GridWorld}
      * @name GridWorld
      * @extends World
      * @constructor
+     *
+     * @returns {GridWorld}
      */
     function GridWorld() {
         this.rs = {};
@@ -74,7 +80,7 @@ var GridWorld = GridWorld || {};
      * Initialize the Flot class
      */
     GridWorld.prototype.initFlot = function () {
-        var _this = this;
+        let self = this;
         this.container = document.getElementById('flotreward');
         // flot stuff
         this.nflot = 1000;
@@ -83,7 +89,7 @@ var GridWorld = GridWorld || {};
         this.flott = [];
         this.series = [];
 
-        for (var a = 0; a < this.agents.length; a++) {
+        for (let a = 0; a < this.agents.length; a++) {
             this.smoothReward[a] = null;
             this.smoothRewardHistory[a] = null;
             this.flott[a] = 0;
@@ -98,7 +104,7 @@ var GridWorld = GridWorld || {};
             };
         }
 
-        this.plot = $.plot(_this.container, _this.series, {
+        this.plot = $.plot(self.container, self.series, {
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
@@ -123,20 +129,20 @@ var GridWorld = GridWorld || {};
         });
 
         setInterval(function(){
-            _this.series[0].data = _this.getFlotRewards();
-            _this.plot.setData(_this.series);
-            _this.plot.draw();
+            self.series[0].data = self.getFlotRewards();
+            self.plot.setData(self.series);
+            self.plot.draw();
         }, 100);
     };
 
     /**
      * zip rewards into flot data
-     * @param {Number} an
+     * @param {number} an
      * @returns {Array}
      */
     GridWorld.prototype.getFlotRewards = function () {
-        var res = [];
-        for(var i = 0, n = this.agents[0].nStepsHistory.length; i < n; i++) {
+        let res = [];
+        for(let i = 0, n = this.agents[0].nStepsHistory.length; i < n; i++) {
             res.push([i, this.agents[0].nStepsHistory[i]]);
         }
         return res;
@@ -146,48 +152,48 @@ var GridWorld = GridWorld || {};
      *
      */
     GridWorld.prototype.tick = function () {
-        var _this = this;
-        if (_this.sid === -1) {
-            _this.sid = setInterval(function () {
-                for (var k = 0; k < _this.stepsPerTick; k++) {
+        let self = this;
+        if (self.sid === -1) {
+            self.sid = setInterval(function () {
+                for (let k = 0; k < self.stepsPerTick; k++) {
                     // ask agent for an action
-                    var a = _this.agents[0].brain.act(_this.state),
+                    let a = self.agents[0].brain.act(self.state),
                     // run it through environment dynamics
-                        obs = _this.sampleNextState(_this.state, a);
+                        obs = self.sampleNextState(self.state, a);
 
                     // allow opportunity for the agent to learn
-                    _this.agents[0].brain.learn(obs.r);
+                    self.agents[0].brain.learn(obs.r);
                     // evolve environment to next state
-                    _this.state = obs.ns;
+                    self.state = obs.ns;
 
-                    _this.agents[0].nStepsCounter += 1;
+                    self.agents[0].nStepsCounter += 1;
                     if (typeof obs.resetEpisode !== 'undefined') {
-                        _this.agents[0].score += 1;
-                        _this.agents[0].brain.resetEpisode();
+                        self.agents[0].score += 1;
+                        self.agents[0].brain.resetEpisode();
 
-                        _this.agents[0].gridLocation = _this.grid.getCellAt(0, 0);
-                        _this.agents[0].position.set(_this.grid.cellWidth / 2, _this.grid.cellHeight / 2);
-                        _this.state = _this.startState();
+                        self.agents[0].gridLocation = self.grid.getCellAt(0, 0);
+                        self.agents[0].position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        self.state = self.startState();
 
                         // record the reward achieved
-                        if (_this.agents[0].nStepsHistory.length >= _this.agents[0].nflot) {
-                            _this.agents[0].nStepsHistory = _this.agents[0].nStepsHistory.slice(1);
+                        if (self.agents[0].nStepsHistory.length >= self.agents[0].nflot) {
+                            self.agents[0].nStepsHistory = self.agents[0].nStepsHistory.slice(1);
                         }
-                        _this.agents[0].nStepsHistory.push(_this.agents[0].nStepsCounter);
-                        _this.agents[0].nStepsCounter = 0;
+                        self.agents[0].nStepsHistory.push(self.agents[0].nStepsCounter);
+                        self.agents[0].nStepsCounter = 0;
                     } else {
-                        _this.agents[0].gridLocation = _this.grid.getCellAt(_this.sToX(_this.state), _this.sToY(_this.state));
-                        let x = _this.agents[0].gridLocation.coords.bottom.right.x - (_this.grid.cellWidth / 2),
-                            y = _this.agents[0].gridLocation.coords.bottom.right.y - (_this.grid.cellHeight / 2);
-                        _this.agents[0].position.set(x, y);
+                        self.agents[0].gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
+                        let x = self.agents[0].gridLocation.coords.bottom.right.x - (self.grid.cellWidth / 2),
+                            y = self.agents[0].gridLocation.coords.bottom.right.y - (self.grid.cellHeight / 2);
+                        self.agents[0].position.set(x, y);
                     }
                 }
 
-                _this.drawGrid();
+                self.drawGrid();
             }, 20);
         } else {
-            clearInterval(_this.sid);
-            _this.sid = -1;
+            clearInterval(self.sid);
+            self.sid = -1;
         }
     };
 
@@ -196,17 +202,17 @@ var GridWorld = GridWorld || {};
      */
     GridWorld.prototype.reset = function () {
         // specify some rewards
-        var Rarr = Utility.zeros(this.gS),
+        let Rarr = Utility.zeros(this.gS),
             Aarr = new Array(this.gS),
             lastState = 0;
 
-        for (var y = 0; y < this.gH; y++) {
-            for (var x = 0; x < this.gW; x++) {
-                var state = this.xyToS(x, y),
+        for (let y = 0; y < this.gH; y++) {
+            for (let x = 0; x < this.gW; x++) {
+                let state = this.xyToS(x, y),
                     actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y)),
                     actionsAvail = {0: null, 1: null, 2: null, 3: null};
-                for (var a = 0; a < actions.length; a++) {
-                    var action = actions[a],
+                for (let a = 0; a < actions.length; a++) {
+                    let action = actions[a],
                         actionState = this.xyToS(action.x, action.y);
                     if (action.x === x - 1 && action.y === y) {
                         actionsAvail[0] = actionState;
@@ -220,8 +226,8 @@ var GridWorld = GridWorld || {};
                 }
                 Aarr[state] = actionsAvail;
                 Rarr[state] = (state === this.gS - 1) ? 1 : 0;
-                var nulled = 0
-                for (var key in actionsAvail) {
+                let nulled = 0
+                for (let key in actionsAvail) {
                     if (actionsAvail[key] === null) {
                         nulled++;
                     }
@@ -241,25 +247,25 @@ var GridWorld = GridWorld || {};
 
     /**
      * Get the reward of being in s, taking action a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
-     * @param {Number} ns
-     * @returns {Number}
+     * @param {number} s
+     * @param {number} a
+     * @param {number} ns
+     * @returns {number}
      */
     GridWorld.prototype.reward = function (s, a, ns) {
-        var rew = this.Rarr[s];
+        let rew = this.Rarr[s];
 
         return rew;
     };
 
     /**
      *
-     * @param {Number} s
-     * @param {Number} a
-     * @returns {Number}
+     * @param {number} s
+     * @param {number} a
+     * @returns {number}
      */
     GridWorld.prototype.nextStateDistribution = function (s, a) {
-        var ns, nx, ny,
+        let ns, nx, ny,
             sx = this.sToX(s),
             sy = this.sToY(s);
 
@@ -308,17 +314,17 @@ var GridWorld = GridWorld || {};
 
     /**
      * Observe the raw reward of being in s, taking a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
+     * @param {number} s
+     * @param {number} a
      * @returns {{ns: (*|Number), r: (*|Number)}}
      */
     GridWorld.prototype.sampleNextState = function (s, a) {
-        var ns = this.nextStateDistribution(s, a),
+        let ns = this.nextStateDistribution(s, a),
             r = this.reward(s, a, ns);
 
         // every step takes a bit of negative reward
         r -= 0.01;
-        var out = {
+        let out = {
             ns: ns,
             r: r
         };
@@ -332,7 +338,7 @@ var GridWorld = GridWorld || {};
 
     /**
      * Return the number of states
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.getNumStates = function () {
         return this.gS;
@@ -340,7 +346,7 @@ var GridWorld = GridWorld || {};
 
     /**
      * Return the number of actions
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.getMaxNumActions = function () {
         return 4;
@@ -351,13 +357,13 @@ var GridWorld = GridWorld || {};
      * @returns {Array}
      */
     GridWorld.prototype.allowedActions = function (s) {
-        var x = this.sToX(s),
+        let x = this.sToX(s),
             y = this.sToY(s),
             as = [],
             c = this.grid.getCellAt(x, y),
             actions = this.grid.disconnectedNeighbors(c);
 
-        for (var a = 0; a < actions.length; a++) {
+        for (let a = 0; a < actions.length; a++) {
             if (actions[a].x === x - 1 && actions[a].y === y) { // Left
                 as.push(0);
             } else if (actions[a].x === x && actions[a].y === y + 1) { // Down
@@ -374,8 +380,8 @@ var GridWorld = GridWorld || {};
 
     /**
      * Convert the state to an x
-     * @param {Number} s
-     * @returns {Number}
+     * @param {number} s
+     * @returns {number}
      */
     GridWorld.prototype.sToX = function (s) {
         return Math.floor(s / this.gW);
@@ -383,8 +389,8 @@ var GridWorld = GridWorld || {};
 
     /**
      * Convert the state to a y
-     * @param {Number} s
-     * @returns {Number}
+     * @param {number} s
+     * @returns {number}
      */
     GridWorld.prototype.sToY = function (s) {
         return s % this.gH;
@@ -392,9 +398,9 @@ var GridWorld = GridWorld || {};
 
     /**
      * Convert an x, y to the state
-     * @param {Number} x
-     * @param {Number} y
-     * @returns {Number}
+     * @param {number} x
+     * @param {number} y
+     * @returns {number}
      */
     GridWorld.prototype.xyToS = function (x, y) {
         return x * this.gW + y;
@@ -402,7 +408,7 @@ var GridWorld = GridWorld || {};
 
     /**
      * Return a rand state
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.randomState = function () {
         return Math.floor(Math.random() * this.gS);
@@ -410,7 +416,7 @@ var GridWorld = GridWorld || {};
 
     /**
      * Return the starting state
-     * @returns {Number}
+     * @returns {number}
      */
     GridWorld.prototype.startState = function () {
         return 0;
@@ -436,7 +442,7 @@ var GridWorld = GridWorld || {};
      *
      */
     GridWorld.prototype.drawGrid = function () {
-        var sx = this.sToX(this.state),
+        let sx = this.sToX(this.state),
             sy = this.sToY(this.state);
 
         d3.select('#cpos')
@@ -444,9 +450,9 @@ var GridWorld = GridWorld || {};
             .attr('cy', sy * this.cs + this.cs / 2);
 
         // updates the grid with current state of world/agent
-        for (var y = 0; y < this.gH; y++) {
-            for (var x = 0; x < this.gH; x++) {
-                var xcoord = x * this.cs,
+        for (let y = 0; y < this.gH; y++) {
+            for (let x = 0; x < this.gH; x++) {
+                let xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     r = 255,
                     g = 255,
@@ -458,17 +464,17 @@ var GridWorld = GridWorld || {};
                 if (typeof this.agents[0].brain.V !== 'undefined') {
                     vv = this.agents[0].brain.V[s];
                 } else if (typeof this.agents[0].brain.Q !== 'undefined') {
-                    var poss = this.allowedActions(s);
+                    let poss = this.allowedActions(s);
                     vv = -1;
-                    for (var i = 0, n = poss.length; i < n; i++) {
-                        var qsa = this.agents[0].brain.Q[poss[i] * this.gS + s];
+                    for (let i = 0, n = poss.length; i < n; i++) {
+                        let qsa = this.agents[0].brain.Q[poss[i] * this.gS + s];
                         if (i === 0 || qsa > vv) {
                             vv = qsa;
                         }
                     }
                 }
 
-                var ms = 100;
+                let ms = 100;
                 if (vv > 0) {
                     g = 255;
                     r = 255 - vv * ms;
@@ -480,10 +486,10 @@ var GridWorld = GridWorld || {};
                     b = 255 + vv * ms;
                 }
 
-                var vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
-                    rcolor = "",
-                    // update colors of rectangles based on value
-                    r = this.rs[s];
+                let vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
+                    rcolor = "";
+                // update colors of rectangles based on value
+                r = this.rs[s];
 
                 if (s === this.selected) {
                     // highlight selected cell
@@ -493,7 +499,7 @@ var GridWorld = GridWorld || {};
                 }
 
                 // write reward texts
-                var rv = this.Rarr[s],
+                let rv = this.Rarr[s],
                     tr = this.trs[s];
                 if (rv !== 0) {
                     tr.text('R ' + rv.toFixed(1));
@@ -503,14 +509,14 @@ var GridWorld = GridWorld || {};
                 //if (this.T[s] === 1) {continue;}
 
                 // write value
-                var tv = this.tvs[s];
+                let tv = this.tvs[s];
                 tv.text(vv !== null ? vv.toFixed(2) : 0);
 
                 // update policy arrows
-                var paa = this.pas[s];
-                for (var a = 0; a < 4; a++) {
-                    var pa = paa[a];
-                    var prob = this.agents[0].brain.P[a * this.gS + s],
+                let paa = this.pas[s];
+                for (let a = 0; a < 4; a++) {
+                    let pa = paa[a];
+                    let prob = this.agents[0].brain.P[a * this.gS + s],
                         nx = 0,
                         ny = 0,
                         actions = this.Aarr[s],
@@ -521,7 +527,7 @@ var GridWorld = GridWorld || {};
                         pa.attr('visibility', 'visible');
                     }
 
-                    var ss = this.cs / 2 * prob * 0.9;
+                    let ss = this.cs / 2 * prob * 0.9;
 
                     switch (a) {
                         case 0: // Left
@@ -555,23 +561,23 @@ var GridWorld = GridWorld || {};
      *
      */
     GridWorld.prototype.initGrid = function () {
-        var d3elt = d3.select('#draw');
+        let d3elt = d3.select('#draw');
         this.rs = {};
         this.trs = {};
         this.tvs = {};
         this.pas = {};
 
-        var gh = this.gH, // height in cells
+        let gh = this.gH, // height in cells
             gw = this.gW, // width in cells
             gs = this.gW * this.gH, // total number of cells
             w = 600,
             h = 600;
 
-        var _this = this;
+        let _this = this;
 
         d3elt.html('');
 
-        var svg = d3elt.append('svg')
+        let svg = d3elt.append('svg')
             .attr('width', w)
             .attr('height', h)
             .append('g')
@@ -588,9 +594,9 @@ var GridWorld = GridWorld || {};
             .append("path")
             .attr("d", "M 0,0 V 4 L3,2 Z");
 
-        for (var y = 0; y < gh; y++) {
-            for (var x = 0; x < gw; x++) {
-                var xcoord = x * this.cs,
+        for (let y = 0; y < gh; y++) {
+            for (let x = 0; x < gw; x++) {
+                let xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     s = this.xyToS(x, y),
                     g = svg.append('g');
@@ -603,7 +609,7 @@ var GridWorld = GridWorld || {};
                 }(s));
 
                 // set up cell rectangles
-                var r = g.append('rect')
+                let r = g.append('rect')
                     .attr('x', xcoord)
                     .attr('y', ycoord)
                     .attr('height', this.cs - 2)
@@ -614,7 +620,7 @@ var GridWorld = GridWorld || {};
                 this.rs[s] = r;
 
                 // reward text
-                var tr = g.append('text')
+                let tr = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 55)
                     .attr('font-size', 10)
@@ -622,7 +628,7 @@ var GridWorld = GridWorld || {};
                 this.trs[s] = tr;
 
                 // value text
-                var tv = g.append('text')
+                let tv = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 20)
                     .text('');
@@ -630,9 +636,9 @@ var GridWorld = GridWorld || {};
 
                 // policy arrows
                 this.pas[s] = [];
-                for (var a = 0; a < 4; a++) {
+                for (let a = 0; a < 4; a++) {
                     this.pas[s][a] = {};
-                    var x1, x2, y1, y2, lx1, lx2, ly1, ly2,
+                    let x1, x2, y1, y2, lx1, lx2, ly1, ly2,
                         action = this.Aarr[s][a],
                         buffer = this.cs / 2;
                     switch (a) {
@@ -686,7 +692,7 @@ var GridWorld = GridWorld || {};
                             break;
                     }
 
-                    var pa = g.append('line')
+                    let pa = g.append('line')
                         .attr('x1', x1)
                         .attr('y1', y1)
                         .attr('x2', x2)

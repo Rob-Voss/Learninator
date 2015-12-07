@@ -1,5 +1,6 @@
 var Experience = Experience || {},
-    TDBrain = TDBrain || {};
+    TDBrain = TDBrain || {},
+    Utility = Utility || {};
 
 (function (global) {
     "use strict";
@@ -11,10 +12,10 @@ var Experience = Experience || {},
      * @name Experience
      * @constructor
      *
-     * @param {Number} state0
-     * @param {Number} action0
-     * @param {Number} reward0
-     * @param {Number} state1
+     * @param {number} state0
+     * @param {number} action0
+     * @param {number} reward0
+     * @param {number} state1
      * @returns {Experience}
      */
     function Experience(state0, action0, reward0, state1) {
@@ -300,7 +301,7 @@ var Experience = Experience || {},
         },
         /**
          * Learn
-         * @param {Number} reward
+         * @param {number} reward
          * @returns {TDBrain}
          */
         backward: function (reward) {

@@ -1,4 +1,6 @@
-var WaterWorldEX = WaterWorldEX || {};
+var WaterWorldEX = WaterWorldEX || {},
+    Vec = Vec || {},
+    World = World || {};
 
 (function (global) {
     "use strict";
@@ -15,7 +17,7 @@ var WaterWorldEX = WaterWorldEX || {};
         this.width = 600;
         this.height = 600;
         this.cheats = {
-            quad: true,
+            quad: false,
             grid: false,
             walls: false
         };
@@ -97,10 +99,10 @@ var WaterWorldEX = WaterWorldEX || {};
 
         World.call(this);
 
-        //this.agents[0].load('zoo/wateragent.json');
-        //this.agents[1].load('zoo/wateragent.json');
-        //this.entityAgents[0].load('zoo/puckagent.json');
-        //this.entityAgents[1].load('zoo/puckagent.json');
+        this.agents[0].load('zoo/wateragent.json');
+        this.agents[1].load('zoo/wateragent.json');
+        this.entityAgents[0].load('zoo/puckagent.json');
+        this.entityAgents[1].load('zoo/puckagent.json');
 
         return this;
     }

@@ -26,24 +26,90 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>(function (global) {
+            <pre class="prettyprint source linenums"><code>var WaterWorldGA = WaterWorldGA || {},
+    convnetjs = convnetjs || {},
+    GATrainer = GATrainer || {},
+    Maze = Maze || {},
+    Utility = Utility || {},
+    Vec = Vec || {},
+    World = World || {};
+
+(function (global) {
     "use strict";
 
     /**
+     *
+     * @param brain
+     * @param initialGene
+     * @constructor
+     */
+    function Trainer(brain, initialGene) {
+        this.net = new convnetjs.Net();
+        this.net.makeLayers(brain.layerDefs);
+        this.trainer = new GATrainer({
+            populationSize: 100 * 1,
+            mutationSize: 0.3,
+            mutationRate: 0.05,
+            numMatch: 4 * 2,
+            elitePercentage: 0.20
+        }, initialGene);
+
+        return this;
+    }
+
+    /**
+     *
+     */
+    Trainer.prototype.train = function () {
+        this.trainer.matchTrain(matchFunction);
+    };
+
+    /**
+     *
+     * @param n
+     * @returns {*}
+     */
+    Trainer.prototype.getChromosome = function (n) {
+        // returns a copy of the nth best chromosome (if not provided, returns first one, which is the best one)
+        n = n || 0;
+        return this.trainer.chromosomes[n].clone();
+    };
+
+    /**
      * World object contains many agents and walls and food and stuff
-     * @returns {WaterWorldGA}
      * @name WaterWorldGA
      * @extends World
      * @constructor
+     *
+     * @returns {WaterWorldGA}
      */
     function WaterWorldGA() {
-        var _this = this;
-        this.canvas = document.getElementById("world");
+        var self = this;
+
+        /**
+         *
+         * @param chromosome1
+         * @param chromosome2
+         * @returns {number}
+         */
+        function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
+            var result = 0;
+            // put chromosomes into brains before getting them to duel it out.
+            self.agents[0].brain.populate(chromosome1);
+            self.agents[1].brain.populate(chromosome2);
+
+            result = self.update(30 * 20);
+
+            return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
+        }
+
+        this.width = 600;
+        this.height = 600;
         this.mazeOptions = {
             xCount: 4,
             yCount: 4,
-            width: this.canvas.width,
-            height: this.canvas.height,
+            width: this.width,
+            height: this.height,
             closed: true
         };
         this.maze = new Maze(this.mazeOptions);
@@ -55,7 +121,6 @@
         this.cheats = {
             quad: true,
             grid: false,
-            population: false,
             walls: false
         };
 
@@ -87,61 +152,6 @@
                 id: false,
                 name: false
             }
-        };
-
-        /**
-         *
-         * @param chromosome1
-         * @param chromosome2
-         * @returns {number}
-         */
-        function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
-            var result = 0;
-            // put chromosomes into brains before getting them to duel it out.
-            _this.agents[0].brain.populate(chromosome1);
-            _this.agents[1].brain.populate(chromosome2);
-
-            result = _this.update(30 * 20);
-
-            return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
-        }
-
-        /**
-         *
-         * @param brain
-         * @param initialGene
-         * @constructor
-         */
-        function Trainer(brain, initialGene) {
-            this.net = new convnetjs.Net();
-            this.net.makeLayers(brain.layerDefs);
-            this.trainer = new GATrainer({
-                populationSize: 100 * 1,
-                mutationSize: 0.3,
-                mutationRate: 0.05,
-                numMatch: 4 * 2,
-                elitePercentage: 0.20
-            }, initialGene);
-
-            return this;
-        }
-
-        /**
-         *
-         */
-        Trainer.prototype.train = function () {
-            this.trainer.matchTrain(matchFunction);
-        };
-
-        /**
-         *
-         * @param n
-         * @returns {*}
-         */
-        Trainer.prototype.getChromosome = function (n) {
-            // returns a copy of the nth best chromosome (if not provided, returns first one, which is the best one)
-            n = n || 0;
-            return this.trainer.chromosomes[n].clone();
         };
 
         this.agents = [
@@ -198,8 +208,8 @@
      */
     WaterWorldGA.prototype.tick = function () {
         this.update(1);
-        var genStep = 50;
-        for (var i = 0; i &lt; genStep; i++) {
+        let genStep = 50;
+        for (let i = 0; i &lt; genStep; i++) {
             this.trainer.train();
         }
 
@@ -213,8 +223,8 @@
      * @returns {number}
      */
     WaterWorldGA.prototype.update = function (nStep) {
-        var result = 0;
-        for (var step = 0; step &lt; nStep; step++) {
+        let result = 0;
+        for (let step = 0; step &lt; nStep; step++) {
             // ai here
             // update internal states
             this.agents[0].getState(this.entities[0]);
@@ -251,13 +261,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="-_anonymous_-WaterWorldGA-Trainer.html">Trainer</a></li><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Experience.html">Experience</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="TDBrain.html">TDBrain</a></li><li><a href="UI.html">UI</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Oct 27 2015 14:32:58 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>
