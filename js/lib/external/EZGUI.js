@@ -1575,21 +1575,21 @@ var EZGUI;
                         this.textObj.setText(val);
                     }
                     if (this._settings.anchor) {
-                        this.textObj.position.x = 0;
-                        this.textObj.position.y = 0;
+                        this.textObj.pos.x = 0;
+                        this.textObj.pos.y = 0;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
                             //fake anchor for bitmap font
-                            this.textObj.position.x -= this.textObj.width / 2;
-                            this.textObj.position.y -= this.textObj.height / 2;
+                            this.textObj.pos.x -= this.textObj.width / 2;
+                            this.textObj.pos.y -= this.textObj.height / 2;
                         }
                     }
                     else {
-                        this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
-                        this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
+                        this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
+                        this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
@@ -1648,16 +1648,16 @@ var EZGUI;
                     if (p != NaN)
                         _settings.height = (this.height - padY) * p / 100;
                 }
-                if (typeof _settings.position == 'object') {
-                    if (typeof _settings.position.x == 'string') {
-                        var px = this.parsePercentageValue(_settings.position.x);
+                if (typeof _settings.pos == 'object') {
+                    if (typeof _settings.pos.x == 'string') {
+                        var px = this.parsePercentageValue(_settings.pos.x);
                         if (px != NaN)
-                            _settings.position.x = (this.width - padX) * px / 100;
+                            _settings.pos.x = (this.width - padX) * px / 100;
                     }
-                    if (typeof _settings.position.y == 'string') {
-                        var py = this.parsePercentageValue(_settings.position.y);
+                    if (typeof _settings.pos.y == 'string') {
+                        var py = this.parsePercentageValue(_settings.pos.y);
                         if (py != NaN)
-                            _settings.position.y = (this.height - padY) * py / 100;
+                            _settings.pos.y = (this.height - padY) * py / 100;
                     }
                 }
             }
@@ -1730,14 +1730,14 @@ var EZGUI;
                     var draggable = EZGUI.dragging.draggable;
                     var dpos = EZGUI.utils.getAbsPos(draggable);
                     if (dragObg.dragConstraint != 'y') {
-                        var nextPos = draggable.position.x + pos.x - EZGUI.dsx;
+                        var nextPos = draggable.pos.x + pos.x - EZGUI.dsx;
                         if (nextPos >= dragObg.dragXInterval[0] && nextPos <= dragObg.dragXInterval[1])
-                            draggable.position.x = nextPos;
+                            draggable.pos.x = nextPos;
                     }
                     if (dragObg.dragConstraint != 'x') {
-                        var nextPos = draggable.position.y + pos.y - EZGUI.dsy;
+                        var nextPos = draggable.pos.y + pos.y - EZGUI.dsy;
                         if (nextPos >= dragObg.dragYInterval[0] && nextPos <= dragObg.dragYInterval[1])
-                            draggable.position.y = nextPos;
+                            draggable.pos.y = nextPos;
                     }
                     EZGUI.dsx = pos.x;
                     EZGUI.dsy = pos.y;
@@ -1772,13 +1772,13 @@ var EZGUI;
                     }
                 }
                 var padding = settings.padding || 0;
-                if (settings.position) {
-                    this.position.x = settings.position.x;
-                    this.position.y = settings.position.y;
+                if (settings.pos) {
+                    this.pos.x = settings.pos.x;
+                    this.pos.y = settings.pos.y;
                 }
                 else {
-                    this.position.x = 0;
-                    this.position.y = 0;
+                    this.pos.x = 0;
+                    this.pos.y = 0;
                 }
                 //this.container = new Compatibility.GUIContainer();
                 //this.addChild(this.container);
@@ -1798,10 +1798,10 @@ var EZGUI;
                 if (this._settings.anchor) {
                     this.rootSprite.anchor.x = this._settings.anchor.x;
                     this.rootSprite.anchor.y = this._settings.anchor.y;
-                    this.container.position.x -= this.rootSprite.width * this._settings.anchor.x;
-                    this.container.position.y -= this.rootSprite.height * this._settings.anchor.y;
-                    this.position.x += this.rootSprite.width * this._settings.anchor.x;
-                    this.position.y += this.rootSprite.height * this._settings.anchor.y;
+                    this.container.pos.x -= this.rootSprite.width * this._settings.anchor.x;
+                    this.container.pos.y -= this.rootSprite.height * this._settings.anchor.y;
+                    this.pos.x += this.rootSprite.width * this._settings.anchor.x;
+                    this.pos.y += this.rootSprite.height * this._settings.anchor.y;
                 }
                 //tint color
                 if (this._settings.color) {
@@ -1854,24 +1854,24 @@ var EZGUI;
                     this.textObj = new PIXI.Text(this._settings.text, style);
                 }
                 //text.height = this.height;
-                this.textObj.position.x = 0; //(this._settings.width - this.textObj.width) / 2;
-                this.textObj.position.y = 0; //(this._settings.height - this.textObj.height) / 2;
+                this.textObj.pos.x = 0; //(this._settings.width - this.textObj.width) / 2;
+                this.textObj.pos.y = 0; //(this._settings.height - this.textObj.height) / 2;
                 if (this._settings.anchor) {
-                    this.textObj.position.x = 0;
-                    this.textObj.position.y = 0;
+                    this.textObj.pos.x = 0;
+                    this.textObj.pos.y = 0;
                     if (this.textObj.anchor) {
                         this.textObj.anchor.x = this._settings.anchor.x;
                         this.textObj.anchor.y = this._settings.anchor.y;
                     }
                     else {
                         //fake anchor for bitmap font
-                        this.textObj.position.x -= this.textObj.width / 2;
-                        this.textObj.position.y -= this.textObj.height / 2;
+                        this.textObj.pos.x -= this.textObj.width / 2;
+                        this.textObj.pos.y -= this.textObj.height / 2;
                     }
                 }
                 else {
-                    this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
-                    this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
+                    this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
+                    this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
                     if (this.textObj.anchor) {
                         this.textObj.anchor.x = 0;
                         this.textObj.anchor.y = 0;
@@ -1884,7 +1884,7 @@ var EZGUI;
             if (!childSettings)
                 return null;
             var i = order;
-            var pos = childSettings.position;
+            var pos = childSettings.pos;
             if (typeof pos == 'string') {
                 var parts = pos.split(' ');
                 var pos1 = parts[0];
@@ -1907,28 +1907,28 @@ var EZGUI;
                 }
                 var padTop = this._settings['padding-top'] || this._settings.padding || 0;
                 var padLeft = this._settings['padding-left'] || this._settings.padding || 0;
-                childSettings.position = {x: 0, y: 0};
+                childSettings.pos = {x: 0, y: 0};
                 if (pos1 == 'center') {
                     //childSettings.anchor = { x: 0.5, y: 0.5 };
-                    childSettings.position.x = (this._settings.width - childSettings.width) / 2;
-                    childSettings.position.y = (this._settings.height - childSettings.height + padTop) / 2;
+                    childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
+                    childSettings.pos.y = (this._settings.height - childSettings.height + padTop) / 2;
                 }
                 switch (pos1) {
                     case 'center':
-                        childSettings.position.y = (this._settings.height - childSettings.height + padTop) / 2;
+                        childSettings.pos.y = (this._settings.height - childSettings.height + padTop) / 2;
                         if (pos2 === undefined)
-                            childSettings.position.x = (this._settings.width - childSettings.width) / 2;
+                            childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
                         break;
                     case 'bottom':
-                        childSettings.position.y = this._settings.height - childSettings.height - this._settings.padding;
+                        childSettings.pos.y = this._settings.height - childSettings.height - this._settings.padding;
                         break;
                 }
                 switch (pos2) {
                     case 'center':
-                        childSettings.position.x = (this._settings.width - childSettings.width) / 2;
+                        childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
                         break;
                     case 'right':
-                        childSettings.position.x = this._settings.width - childSettings.width - this._settings.padding;
+                        childSettings.pos.x = this._settings.width - childSettings.width - this._settings.padding;
                         break;
                 }
             }
@@ -1958,10 +1958,10 @@ var EZGUI;
             }
             easing = easing || EZGUI.Easing.Linear.None;
             if (typeof callback == 'function') {
-                var tween = new EZGUI.Tween(this.position).to({x: x, y: y}, time).easing(easing).onComplete(callback);
+                var tween = new EZGUI.Tween(this.pos).to({x: x, y: y}, time).easing(easing).onComplete(callback);
             }
             else {
-                var tween = new EZGUI.Tween(this.position).to({x: x, y: y}, time).easing(easing);
+                var tween = new EZGUI.Tween(this.pos).to({x: x, y: y}, time).easing(easing);
             }
             tween.start();
             return tween;
@@ -2142,35 +2142,35 @@ var EZGUI;
             line.fixPhaser24();
             switch (side) {
                 case 't':
-                    line.position.x = cwidth;
-                    line.position.y = 0;
+                    line.pos.x = cwidth;
+                    line.pos.y = 0;
                     break;
                 case 'r':
-                    line.position.y = cwidth;
+                    line.pos.y = cwidth;
                     if (!hasSide) {
-                        line.position.x = settings.width - cwidth;
+                        line.pos.x = settings.width - cwidth;
                         line.anchor.x = 0;
                         line.anchor.y = 1;
                     }
                     else {
-                        line.position.x = settings.width;
+                        line.pos.x = settings.width;
                         line.anchor.x = 1;
                         line.anchor.y = 0;
                     }
                     break;
                 case 'b':
-                    line.position.x = cwidth;
+                    line.pos.x = cwidth;
                     if (!hasSide) {
-                        line.position.y = settings.height - cwidth;
+                        line.pos.y = settings.height - cwidth;
                         line.anchor.x = 1;
                         line.anchor.y = 1;
                     }
                     else {
-                        line.position.y = settings.height - cheight;
+                        line.pos.y = settings.height - cheight;
                     }
                     break;
                 case 'l':
-                    line.position.y = cwidth;
+                    line.pos.y = cwidth;
                     if (!hasSide) {
                         line.anchor.x = 1;
                         line.anchor.y = 0;
@@ -2197,8 +2197,8 @@ var EZGUI;
             //phaser 2.4 compatibility /////////////////////////////////
             bg.fixPhaser24();
             ////////////////////////////////////////////////////////////
-            bg.position.x = cfg.bgPadding;
-            bg.position.y = cfg.bgPadding;
+            bg.pos.x = cfg.bgPadding;
+            bg.pos.y = cfg.bgPadding;
             if (settings.bgTiling) {
                 if (settings.bgTiling == "x") {
                     bg.tileScale.y = (settings.height - cfg.bgPadding * 2) / cfg.texture.height;
@@ -2217,8 +2217,8 @@ var EZGUI;
             //cfg.bgPadding = 0;
             //var bg: any = new MultistateSprite(cfg.texture, cfg.textures);
             var bg = new PIXI.Sprite(cfg.texture);
-            bg.position.x = leftSide.width;
-            bg.position.y = 0;
+            bg.pos.x = leftSide.width;
+            bg.pos.y = 0;
             bg.scale.x = cfg.scale;
             bg.scale.y = cfg.scale;
             bg.width = settings.width - leftSide.width;
@@ -2354,21 +2354,21 @@ var EZGUI;
                         this.textObj.setText(val);
                     }
                     if (this._settings.anchor) {
-                        this.textObj.position.x = 0;
-                        this.textObj.position.y = 0;
+                        this.textObj.pos.x = 0;
+                        this.textObj.pos.y = 0;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
                             //fake anchor for bitmap font
-                            this.textObj.position.x -= this.textObj.width / 2;
-                            this.textObj.position.y -= this.textObj.height / 2;
+                            this.textObj.pos.x -= this.textObj.width / 2;
+                            this.textObj.pos.y -= this.textObj.height / 2;
                         }
                     }
                     else {
-                        this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
-                        this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
+                        this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
+                        this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
@@ -2378,7 +2378,7 @@ var EZGUI;
                 //var cpos = this.getCaretPosition();
                 //console.log('setting value ', val, cpos, val.substr(0, cpos - 1), val.substr(cpos));
                 //this.domInput.value = val.substr(0, cpos - 1) + val.substr(cpos);
-                this.textObj.position.x = 5;
+                this.textObj.pos.x = 5;
                 if (event)
                     this.emit('ezgui:change', event, this);
             };
@@ -2394,8 +2394,8 @@ var EZGUI;
                     myMask.endFill();
                     this.addChild(myMask);
                     if (this._settings.anchor) {
-                        myMask.position.x = this.container.position.x + padding;
-                        myMask.position.y = this.container.position.y + padding;
+                        myMask.pos.x = this.container.pos.x + padding;
+                        myMask.pos.y = this.container.pos.y + padding;
                     }
                     this.container.mask = myMask;
                     this.guiMask.x = padding;
@@ -2409,7 +2409,7 @@ var EZGUI;
             Input.prototype.drawText = function () {
                 this._settings.text = this._settings.text || '';
                 _super.prototype.drawText.call(this);
-                this.textObj.position.x = 5;
+                this.textObj.pos.x = 5;
                 this.container.addChild(this.textObj);
                 //this.textObj
             };
@@ -2418,7 +2418,7 @@ var EZGUI;
                 if (!EZGUI.Device.isMobile && document && document.createElement) {
                     this.domInput = document.createElement("input");
                     this.domInput.id = this.guiID + "_input";
-                    this.domInput.style.position = 'absolute';
+                    this.domInput.style.pos = 'absolute';
                     this.domInput.style.top = '-100px';
                     this.domInput.value = '';
                     document.body.appendChild(this.domInput);
@@ -2544,8 +2544,8 @@ var EZGUI;
                     this.guiID = settings.id;
                     if (this.guiID)
                         EZGUI.components[this.guiID] = this;
-                    this.position.x = settings.position.x;
-                    this.position.y = settings.position.y;
+                    this.pos.x = settings.pos.x;
+                    this.pos.y = settings.pos.y;
                     this.rootSprite = new EZGUI.Compatibility.GUIContainer();
                     this.addChild(this.rootSprite);
                 }
@@ -2572,20 +2572,20 @@ var EZGUI;
             Object.defineProperty(Slider.prototype, "value", {
                 get: function () {
                     if (this.horizontalSlide) {
-                        return this.slide.position.x / (this.width - this.slide.width);
+                        return this.slide.pos.x / (this.width - this.slide.width);
                     }
                     else {
-                        return 1 + this.slide.position.y / (this.slide.height - this.height);
+                        return 1 + this.slide.pos.y / (this.slide.height - this.height);
                     }
                 },
                 set: function (val) {
                     val = Math.max(0, val);
                     val = Math.min(val, 1);
                     if (this.horizontalSlide) {
-                        this.slide.position.x = val * (this.width - this.slide.width);
+                        this.slide.pos.x = val * (this.width - this.slide.width);
                     }
                     else {
-                        this.slide.position.y = (val - 1) * (this.slide.height - this.height);
+                        this.slide.pos.y = (val - 1) * (this.slide.height - this.height);
                     }
                 },
                 enumerable: true,
@@ -2632,7 +2632,7 @@ var EZGUI;
                 var cfg = this._settings.slide;
                 cfg.component = 'Button';
                 cfg.skin = 'Slide';
-                cfg.position = {x: 0, y: 0};
+                cfg.pos = {x: 0, y: 0};
                 cfg.draggable = true;
                 //{ id: 'slide1', component: 'Button', position: { x: 0, y: 0 }, width: 30, height: this.height, draggable: true };
                 var dir = this._settings.dir;
@@ -2945,8 +2945,8 @@ var EZGUI;
                         myMask.endFill();
                         this.addChild(myMask);
                         if (this._settings.anchor) {
-                            myMask.position.x = this.container.position.x + padding;
-                            myMask.position.y = this.container.position.y + padding;
+                            myMask.pos.x = this.container.pos.x + padding;
+                            myMask.pos.y = this.container.pos.y + padding;
                         }
                         this.container.mask = myMask;
                     }
@@ -3000,7 +3000,7 @@ var EZGUI;
                     dx += x * (swidth / lx);
                     dy += y * (sheight / ly);
                 }
-                var pos = childSettings.position;
+                var pos = childSettings.pos;
                 if (typeof pos == 'string') {
                     var parts = pos.split(' ');
                     var pos1 = parts[0];
@@ -3021,31 +3021,31 @@ var EZGUI;
                         pos2 = pos1;
                         pos1 = 'left';
                     }
-                    childSettings.position = {x: dx, y: dy};
+                    childSettings.pos = {x: dx, y: dy};
                     switch (pos1) {
                         case 'center':
-                            childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
+                            childSettings.pos.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
                             if (pos2 === undefined)
-                                childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                             break;
                         case 'bottom':
-                            childSettings.position.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
+                            childSettings.pos.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
                             break;
                     }
                     switch (pos2) {
                         case 'center':
-                            childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                            childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                             break;
                         case 'right':
-                            childSettings.position.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
+                            childSettings.pos.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
                             break;
                     }
                 }
                 else {
-                    childSettings.position.x = dx + childSettings.position.x;
-                    childSettings.position.y = dy + childSettings.position.y;
+                    childSettings.pos.x = dx + childSettings.pos.x;
+                    childSettings.pos.y = dy + childSettings.pos.y;
                 }
-                //console.log(' >> ', dx.toFixed(2), dy.toFixed(2), childSettings.position.x.toFixed(2), childSettings.position.y.toFixed(2));
+                //console.log(' >> ', dx.toFixed(2), dy.toFixed(2), childSettings.pos.x.toFixed(2), childSettings.pos.y.toFixed(2));
                 var child = EZGUI.create(childSettings, this.theme);
                 return child;
             };
@@ -3099,7 +3099,7 @@ var EZGUI;
                         dy += y * (sheight / ly);
                     }
                     var childSettings = child._settings;
-                    var pos = childSettings.position;
+                    var pos = childSettings.pos;
                     if (typeof pos == 'string') {
                         var parts = pos.split(' ');
                         var pos1 = parts[0];
@@ -3120,32 +3120,32 @@ var EZGUI;
                             pos2 = pos1;
                             pos1 = 'left';
                         }
-                        childSettings.position = {x: dx, y: dy};
+                        childSettings.pos = {x: dx, y: dy};
                         switch (pos1) {
                             case 'center':
-                                childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
+                                childSettings.pos.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
                                 if (pos2 === undefined)
-                                    childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                    childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                                 break;
                             case 'bottom':
-                                childSettings.position.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
+                                childSettings.pos.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
                                 break;
                         }
                         switch (pos2) {
                             case 'center':
-                                childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                                 break;
                             case 'right':
-                                childSettings.position.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
+                                childSettings.pos.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
                                 break;
                         }
                     }
                     else {
-                        childSettings.position.x = dx + childSettings.position.x;
-                        childSettings.position.y = dy + childSettings.position.y;
+                        childSettings.pos.x = dx + childSettings.pos.x;
+                        childSettings.pos.y = dy + childSettings.pos.y;
                     }
-                    child.position.x = childSettings.position.x;
-                    child.position.y = childSettings.position.y;
+                    child.pos.x = childSettings.pos.x;
+                    child.pos.y = childSettings.pos.y;
                     child.guiParent = this;
                     if (child.phaserGroup)
                         return this.container.addChild(child.phaserGroup);
@@ -3185,11 +3185,11 @@ var EZGUI;
                 }
                 _super.prototype.draw.call(this);
                 if (headerCfg) {
-                    //this.position.y += headerCfg.height;
+                    //this.pos.y += headerCfg.height;
                     if (headerCfg.width == undefined)
                         headerCfg.width = this._settings.width;
                     this.titleBar = new EZGUI.GUISprite(headerCfg, this.theme);
-                    //this.titleBar.position.y -= headerCfg.height - this.settings.padding*2;
+                    //this.titleBar.pos.y -= headerCfg.height - this.settings.padding*2;
                     this.originalAddChild(this.titleBar);
                 }
             };
@@ -3268,7 +3268,7 @@ var EZGUI;
                         if (btn) {
                             btn.component = 'Button';
                             btn.id = this._settings.id + '-btn-' + i;
-                            btn.position = btn.position || 'center';
+                            btn.pos = btn.pos || 'center';
                             if (maxHeight < btn.height)
                                 maxHeight = btn.height;
                             if (btn.event) {
@@ -3682,14 +3682,14 @@ var EZGUI;
                     if (this.textObj) {
                         this.textObj.text = val;
                         if (this._settings.anchor) {
-                            this.textObj.position.x = 0;
-                            this.textObj.position.y = 0;
+                            this.textObj.pos.x = 0;
+                            this.textObj.pos.y = 0;
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
-                            this.textObj.position.x = this._settings.width;
-                            this.textObj.position.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
+                            this.textObj.pos.x = this._settings.width;
+                            this.textObj.pos.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
                         }
@@ -3737,8 +3737,8 @@ var EZGUI;
             Checkbox.prototype.drawText = function () {
                 _super.prototype.drawText.call(this);
                 if (this.textObj) {
-                    this.textObj.position.x = this._settings.width;
-                    this.textObj.position.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
+                    this.textObj.pos.x = this._settings.width;
+                    this.textObj.pos.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
                 }
             };
             return Checkbox;
@@ -3909,8 +3909,8 @@ var EZGUI;
                 var timeConstant = 10;
                 var amplitude = sign * speed * 150;
                 var step = 0;
-                var initialPosX = _this.draggable.position.x;
-                var initialPosY = _this.draggable.position.y;
+                var initialPosX = _this.draggable.pos.x;
+                var initialPosY = _this.draggable.pos.y;
                 var posX = 0;
                 var posY = 0;
                 if (_this.decelerationItv)
@@ -3922,7 +3922,7 @@ var EZGUI;
                         posX += delta;
                         var nextPos = initialPosX + posX;
                         if (nextPos >= _this.dragXInterval[0] && nextPos <= _this.dragXInterval[1])
-                            _this.draggable.position.x = nextPos;
+                            _this.draggable.pos.x = nextPos;
                         else
                             clearInterval(_this.decelerationItv);
                     }
@@ -3930,7 +3930,7 @@ var EZGUI;
                         posY += delta;
                         var nextPos = initialPosY + posY;
                         if (nextPos >= _this.dragYInterval[0] && nextPos <= _this.dragYInterval[1])
-                            _this.draggable.position.y = nextPos;
+                            _this.draggable.pos.y = nextPos;
                         else
                             clearInterval(_this.decelerationItv);
                     }
@@ -3961,8 +3961,8 @@ var EZGUI;
                     this.dragXInterval[1] = this._settings.width * 0.2;
                     this.dragYInterval[0] = -ssize + this._settings.height * 0.9;
                     this.dragYInterval[1] = this._settings.height * 0.1;
-                    this.draggable.position.x = 0;
-                    this.draggable.position.y = 0;
+                    this.draggable.pos.x = 0;
+                    this.draggable.pos.y = 0;
                 }
                 return result;
             };
@@ -3970,21 +3970,21 @@ var EZGUI;
                 delay = delay || Math.abs(value) * 5;
                 var _this = this;
                 if (_this.dragConstraint != 'y') {
-                    var nextPos = _this.draggable.position.x + value;
+                    var nextPos = _this.draggable.pos.x + value;
                     nextPos = Math.max(nextPos, _this.dragXInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragXInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.position).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.pos).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
                 if (_this.dragConstraint != 'x') {
-                    var nextPos = _this.draggable.position.y + value;
+                    var nextPos = _this.draggable.pos.y + value;
                     nextPos = Math.max(nextPos, _this.dragYInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragYInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.position).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.pos).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
             };
@@ -3992,22 +3992,22 @@ var EZGUI;
                 var _this = this;
                 if (_this.dragConstraint != 'y') {
                     var nextPos = value;
-                    delay = delay || Math.abs(value - _this.draggable.position.x) * 5;
+                    delay = delay || Math.abs(value - _this.draggable.pos.x) * 5;
                     nextPos = Math.max(nextPos, _this.dragXInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragXInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.position).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.pos).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
                 if (_this.dragConstraint != 'x') {
                     var nextPos = value;
-                    delay = delay || Math.abs(value - _this.draggable.position.y) * 5;
+                    delay = delay || Math.abs(value - _this.draggable.pos.y) * 5;
                     nextPos = Math.max(nextPos, _this.dragYInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragYInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.position).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.pos).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
             };
@@ -4117,8 +4117,8 @@ var EZGUI;
             //if (EZGUI.Compatibility.PIXIVersion == 3) {
             if (from == null)
                 from = {x: 0, y: 0};
-            from.x += obj.position.x;
-            from.y += obj.position.y;
+            from.x += obj.pos.x;
+            from.y += obj.pos.y;
             if (obj.parent != null)
                 return getAbsPos(obj.parent, from);
             return from;

@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: entities/EntityRLDQN.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>var EntityRLDQN = EntityRLDQN || {};
@@ -77,7 +77,7 @@
         // The Agent's eyes
         this.eyes = [];
         for (let k = 0; k &lt; this.numEyes; k++) {
-            this.eyes.push(new Eye(k * Math.PI / 3, this.position, 75, 75));
+            this.eyes.push(new Eye(k * Math.PI / 3, this.pos, 75, 75));
         }
 
         this.brain = new DQNAgent(this, this.brainOpts);
@@ -146,12 +146,12 @@
         }
 
         // proprioception and orientation
-        inputArray[ne + 0] = this.position.vx;
-        inputArray[ne + 1] = this.position.vy;
-        inputArray[ne + 2] = (this.target.position.x / 1000) - (this.position.x / 1000);
-        inputArray[ne + 3] = (this.target.position.y / 1000) - (this.position.y / 1000);
-        inputArray[ne + 4] = (this.enemy.position.x / 1000) - (this.position.x / 1000);
-        inputArray[ne + 5] = (this.enemy.position.y / 1000) - (this.position.y / 1000);
+        inputArray[ne + 0] = this.pos.vx;
+        inputArray[ne + 1] = this.pos.vy;
+        inputArray[ne + 2] = (this.target.pos.x / 1000) - (this.pos.x / 1000);
+        inputArray[ne + 3] = (this.target.pos.y / 1000) - (this.pos.y / 1000);
+        inputArray[ne + 4] = (this.enemy.pos.x / 1000) - (this.pos.x / 1000);
+        inputArray[ne + 5] = (this.enemy.pos.y / 1000) - (this.pos.y / 1000);
 
         return inputArray;
     };
@@ -173,25 +173,25 @@
     };
 
     /**
-     *
+     * Get the current state
      * @returns {Array}
      */
     EntityRLDQN.prototype.getState = function () {
         let s = [
-            this.enemy.position.x / 1000,
-            this.enemy.position.y / 1000,
-            this.enemy.position.vx / 10,
-            this.enemy.position.vy / 10,
-            (this.target.position.x / 1000) - (this.position.x / 1000),
-            (this.target.position.y / 1000) - (this.position.y / 1000),
-            (this.enemy.position.x / 1000) - (this.position.x / 1000),
-            (this.enemy.position.y / 1000) - (this.position.y / 1000)
+            this.enemy.pos.x / 1000,
+            this.enemy.pos.y / 1000,
+            this.enemy.pos.vx / 10,
+            this.enemy.pos.vy / 10,
+            (this.target.pos.x / 1000) - (this.pos.x / 1000),
+            (this.target.pos.y / 1000) - (this.pos.y / 1000),
+            (this.enemy.pos.x / 1000) - (this.pos.x / 1000),
+            (this.enemy.pos.y / 1000) - (this.pos.y / 1000)
         ];
         return s;
     };
 
     /**
-     *
+     * Move around
      * @returns {EntityRLDQN}
      */
     EntityRLDQN.prototype.move = function () {
@@ -200,30 +200,30 @@
         // Execute agent's desired action
         switch (this.action) {
             case 0: // Right
-                this.position.vx -= speed;
+                this.pos.vx -= speed;
                 break;
             case 1: // Left
-                this.position.vx += speed;
+                this.pos.vx += speed;
                 break;
             case 2: // Up
-                this.position.vy -= speed;
+                this.pos.vy -= speed;
                 break;
             case 3: // Down
-                this.position.vy += speed;
+                this.pos.vy += speed;
                 break;
             case 4: // Hover
-                this.position.vx = 0;
-                this.position.vy = 0;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
                 break;
         }
 
         // Forward the agent by velocity
-        this.position.vx *= 0.95;
-        this.position.vy *= 0.95;
+        this.pos.vx *= 0.95;
+        this.pos.vy *= 0.95;
 
         // Forward the agent by velocity
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
+        this.pos.x += this.pos.vx;
+        this.pos.y += this.pos.vy;
 
         this.world.check(this);
 
@@ -231,7 +231,7 @@
         // @TODO I need to get these damn walls into the CollisionDetection call
         for (let w = 0, wl = this.world.walls.length; w &lt; wl; w++) {
             let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
+                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
             if (result) {
                 this.collisions.push(wall);
             }
@@ -249,9 +249,9 @@
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx *= -1;
-                this.position.vy *= -1;
+                this.pos = this.oldPos.clone();
+                this.pos.vx *= -1;
+                this.pos.vy *= -1;
             }
         }
 
@@ -260,43 +260,42 @@
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x &lt; left) {
-            this.position.x = left;
-            this.position.vx *= -1;
+        if (this.pos.x &lt; left) {
+            this.pos.x = left;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx *= -1;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.y &lt; top) {
-            this.position.y = top;
-            this.position.vy *= -1;
+        if (this.pos.y &lt; top) {
+            this.pos.y = top;
+            this.pos.vy *= -1;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vy *= -1;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vy *= -1;
         }
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.pos.set(this.pos.x, this.pos.y);
         }
 
         return this;
     };
 
     /**
-     * Move around
-     * @param {Object} smallWorld
+     * Sample the next state
      */
     EntityRLDQN.prototype.sampleNextState = function () {
         // Compute distances
-        let dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
-            dy1 = (this.position.y / 1000) - (this.target.position.y / 1000), // Distance from Noms
-            dx2 = (this.position.x / 1000) - (this.enemy.position.x / 1000), // Distance from Agent
-            dy2 = (this.position.y / 1000) - (this.enemy.position.y / 1000), // Distance from Agent
+        let dx1 = (this.pos.x / 1000) - (this.target.pos.x / 1000), // Distance from Noms
+            dy1 = (this.pos.y / 1000) - (this.target.pos.y / 1000), // Distance from Noms
+            dx2 = (this.pos.x / 1000) - (this.enemy.pos.x / 1000), // Distance from Agent
+            dy2 = (this.pos.y / 1000) - (this.enemy.pos.y / 1000), // Distance from Agent
             d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
             d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
             // Compute reward we want to go close to Agent we like
@@ -331,8 +330,7 @@
 
     /**
      * Agent's chance to act on the world
-     *
-     * @param {Object} smallWorld
+     * @param {World} world
      */
     EntityRLDQN.prototype.tick = function (world) {
         this.world = world;
@@ -368,13 +366,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="Cube.html">Cube</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Mon Dec 07 2015 11:58:41 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>

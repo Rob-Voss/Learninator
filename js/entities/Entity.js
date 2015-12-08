@@ -58,7 +58,7 @@ var Entity = Entity || {};
         }
 
         this.id = Utility.guid();
-        this.position = position || new Vec(5, 5);
+        this.pos = position || new Vec(5, 5);
         this.radius = Utility.getOpt(opts, 'radius', undefined);
         this.width = Utility.getOpt(opts, 'width', undefined);
         this.height = Utility.getOpt(opts, 'height', undefined);
@@ -79,7 +79,7 @@ var Entity = Entity || {};
         this.collisions = [];
 
         // Remember the old position and angle
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
         this.oldAngle = 0;
 
         // Add a container to hold our display cheats
@@ -92,7 +92,7 @@ var Entity = Entity || {};
             this.sprite.width = this.width;
             this.sprite.height = this.height;
             this.sprite.anchor.set(0.5, 0.5);
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
             this.sprite.interactive = this.interactive;
 
             if (this.sprite.interactive === true) {
@@ -144,31 +144,31 @@ var Entity = Entity || {};
             let textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
 
             this.gridText = new PIXI.Text(textG, fontOpts);
-            this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
+            this.gridText.position.set(this.pos.x + this.radius, this.pos.y - (this.radius * 2));
             this.cheatsContainer.addChild(this.gridText);
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position && this.posText === undefined) {
-            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+        if (this.cheats.pos && this.posText === undefined) {
+            let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
 
             this.posText = new PIXI.Text(textP + textV, fontOpts);
-            this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
+            this.posText.position.set(this.pos.x + this.radius, this.pos.y - this.radius);
             this.cheatsContainer.addChild(this.posText);
         }
 
         // If cheats are on then show the entities name
         if (this.cheats.name && this.nameText === undefined) {
             this.nameText = new PIXI.Text(this.name, fontOpts);
-            this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
+            this.nameText.position.set(this.pos.x + this.radius, this.pos.y + this.radius);
             this.cheatsContainer.addChild(this.nameText);
         }
 
         // If cheats are on then show the entities id
         if (this.cheats.id && this.idText === undefined) {
             this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
-            this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            this.idText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
             this.cheatsContainer.addChild(this.idText);
         }
 
@@ -186,7 +186,7 @@ var Entity = Entity || {};
             }
             gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
             gridText.text = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
-            gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+            gridText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius));
         } else {
             if (this.gridText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.gridText);
@@ -196,15 +196,15 @@ var Entity = Entity || {};
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position) {
+        if (this.cheats.pos) {
             if (this.posText === undefined) {
                 this.addCheats();
             }
-            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+            let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
             posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
             posText.text = textP + textV;
-            posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+            posText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 1));
         } else {
             if (this.posText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.posText);
@@ -219,7 +219,7 @@ var Entity = Entity || {};
                 this.addCheats();
             }
             nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-            nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            nameText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
         } else {
             if (this.nameText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.nameText);
@@ -234,7 +234,7 @@ var Entity = Entity || {};
                 this.addCheats();
             }
             idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-            idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+            idText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 3));
         } else {
             if (this.idText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.idText);
@@ -250,12 +250,12 @@ var Entity = Entity || {};
      */
     Entity.prototype.draw = function () {
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
         } else {
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000);
             this.shape.beginFill(this.color);
-            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+            this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
             this.shape.endFill();
         }
         // draw entities sight
@@ -276,10 +276,10 @@ var Entity = Entity || {};
      * @returns {Entity}
      */
     Entity.prototype.move = function () {
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
 
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
+        this.pos.x += this.pos.vx;
+        this.pos.y += this.pos.vy;
 
         this.world.check(this);
 
@@ -287,7 +287,7 @@ var Entity = Entity || {};
         // @TODO I need to get these damn walls into the CollisionDetection call
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
+                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
             if (result) {
                 this.collisions.push(wall);
             }
@@ -302,9 +302,9 @@ var Entity = Entity || {};
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx *= -1;
-                this.position.vy *= -1;
+                this.pos = this.oldPos.clone();
+                this.pos.vx *= -1;
+                this.pos.vy *= -1;
             }
         }
 
@@ -313,28 +313,28 @@ var Entity = Entity || {};
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x < left) {
-            this.position.x = left;
-            this.position.vx *= -1;
+        if (this.pos.x < left) {
+            this.pos.x = left;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx *= -1;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.y < top) {
-            this.position.y = top;
-            this.position.vy *= -1;
+        if (this.pos.y < top) {
+            this.pos.y = top;
+            this.pos.vy *= -1;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vy *= -1;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vy *= -1;
         }
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
         }
 
         return this;
@@ -378,8 +378,8 @@ var Entity = Entity || {};
     Entity.prototype.onDragMove = function () {
         if (this.dragging) {
             let newPosition = this.data.getLocalPosition(this.parent);
-            this.position.set(newPosition.x, newPosition.y);
-            this.entity.position.set(newPosition.x, newPosition.y);
+            this.pos.set(newPosition.x, newPosition.y);
+            this.entity.pos.set(newPosition.x, newPosition.y);
         }
 
         return this;
@@ -394,8 +394,8 @@ var Entity = Entity || {};
         this.alpha = 1;
         this.dragging = false;
         let newPosition = this.data.getLocalPosition(this.parent);
-        this.position.set(newPosition.x, newPosition.y);
-        this.entity.position.set(newPosition.x, newPosition.y);
+        this.pos.set(newPosition.x, newPosition.y);
+        this.entity.pos.set(newPosition.x, newPosition.y);
 
         // set the interaction data to null
         this.data = null;

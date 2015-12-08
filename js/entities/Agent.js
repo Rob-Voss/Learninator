@@ -11,13 +11,22 @@ var Agent = Agent || {},
      * @typedef {Object} agentOpts
      * @property {boolean} worker - Is the Agent a Web Worker
      * @property {string} brainType - The type of Brain to use
+     * @property {cheatOpts} cheats - The cheats to display
+     * @property {brainOpts} spec - The brain options
+     * @property {envObject} env - The environment
+     */
+
+    /**
+     * The env object is the representation of the environment
+     * @typedef {Object} envObject
      * @property {number} numTypes - The number of types the Agent can sense
      * @property {number} numEyes - The number of the Agent's eyes
      * @property {number} range - The range of the eyes
      * @property {number} proximity - The proximity range of the eyes
-     * @property {cheatOpts} cheats - The cheats to display
-     * @property {brainOpts} spec - The brain options
-     * @property {Object} env - The environment
+     * @property {number} numActions - The number of actions the agent can perform
+     * @property {number} numStates - The number of states
+     * @property {number} getMaxNumActions - function that returns the numActions value
+     * @property {number} getNumStates - function that returns the numStates value
      */
 
     /**
@@ -76,6 +85,10 @@ var Agent = Agent || {},
 
         // The Agent's environment
         this.env = Utility.getOpt(opts, 'env',  {
+            numTypes: this.numTypes,
+            numEyes: this.numEyes,
+            range: this.range,
+            proximity: this.proximity,
             numActions: this.numActions,
             numStates: this.numStates,
             getMaxNumActions: function () {
@@ -90,7 +103,7 @@ var Agent = Agent || {},
         if (this.eyes === undefined) {
             this.eyes = [];
             for (let k = 0; k < this.numEyes; k++) {
-                this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
+                this.eyes.push(new Eye(k * 0.21, this.pos, this.range, this.proximity));
             }
         }
 
@@ -196,7 +209,7 @@ var Agent = Agent || {},
         this.angle = angle;
         this.maxRange = range || 85;
         this.sensedProximity = proximity || 85;
-        this.position = position || new Vec(0, 0);
+        this.pos = position || new Vec(0, 0);
         this.maxPos = new Vec(0, 0);
         this.sensedType = -1;
         this.collisions = [];
@@ -212,7 +225,7 @@ var Agent = Agent || {},
      * @param agent
      */
     Eye.prototype.draw = function (agent) {
-        this.position = agent.position.clone();
+        this.pos = agent.pos.clone();
         this.shape.clear();
 
         switch (this.sensedType) {
@@ -240,12 +253,12 @@ var Agent = Agent || {},
                 break;
         }
 
-        let aEyeX = this.position.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
-            aEyeY = this.position.y + this.sensedProximity * Math.cos(agent.angle + this.angle);
+        let aEyeX = this.pos.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
+            aEyeY = this.pos.y + this.sensedProximity * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);
 
         // Draw the agent's line of sights
-        this.shape.moveTo(this.position.x, this.position.y);
+        this.shape.moveTo(this.pos.x, this.pos.y);
         this.shape.lineTo(aEyeX, aEyeY);
     };
 
@@ -254,15 +267,16 @@ var Agent = Agent || {},
      * @param agent
      */
     Eye.prototype.sense = function (agent) {
-        this.position = agent.position.clone();
+        this.pos = agent.pos.clone();
         let result,
-            aEyeX = this.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
-            aEyeY = this.position.y + this.maxRange * Math.cos(agent.angle + this.angle);
+            aEyeX = this.pos.x + this.maxRange * Math.sin(agent.angle + this.angle),
+            aEyeY = this.pos.y + this.maxRange * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);
-        result = agent.world.sightCheck(this.position, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities), agent.radius);
+
+        result = agent.world.sightCheck(this.pos, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities), agent.radius);
         if (result) {
             // eye collided with an entity
-            this.sensedProximity = result.vecI.distFrom(this.position);
+            this.sensedProximity = result.vecI.distFrom(this.pos);
             this.sensedType = result.target.type;
             if ('vx' in result.vecI) {
                 this.x = result.vecI.x;

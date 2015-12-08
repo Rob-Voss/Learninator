@@ -5,24 +5,23 @@
      * @name Display
      * @constructor
      *
-     * @param x
-     * @param y
-     * @param opts
-     * @param opts.title
-     * @param opts.width
-     * @param opts.height
-     * @param opts.rows
-     * @param opts.cols
-     * @param opts.render.width
-     * @param opts.render.height
+     * @param {Vec} pos
+     * @param {Object} opts
+     * @param {string} opts.title
+     * @param {number} opts.width
+     * @param {number} opts.height
+     * @param {number} opts.rows
+     * @param {number} opts.cols
+     * @param {number} opts.render.width
+     * @param {number} opts.render.height
      * @constructor
      */
-    var Display = function (x, y, opts) {
+    var Display = function (pos, opts) {
         PIXI.Container.call(this);
         this.interactive = true;
 
-        this.displayX = x || 0;
-        this.displayY = y || 0;
+        this.displayX = pos.x || 0;
+        this.displayY = pos.y || 0;
         this.displayTitle = Utility.getOpt(opts, 'title', "");
         this.displayWidth = Utility.getOpt(opts, 'width', 100);
         this.displayHeight = Utility.getOpt(opts, 'height', 100);
@@ -45,7 +44,7 @@
 
         // Title text
         this.titleText = new PIXI.Text(this.displayTitle, {font: "12px Arial", fill: "#FFFFFF", align: "left"});
-        this.titleText.position.set(this.displayX + contentMargin, this.displayY + contentMargin);
+        this.titleText.pos.set(this.displayX + contentMargin, this.displayY + contentMargin);
         this.addChild(this.titleText);
 
         for (var r = 0; r < this.displayRows; r++) {
@@ -55,7 +54,7 @@
                     colH = (this.displayHeight / this.displayRows) / 2,
                     x = margin + 6 + c * colW,
                     y = margin + 6 + titleMargin + r * colH;
-                textObj.position.set(x, y);
+                textObj.pos.set(x, y);
                 this.addChild(textObj);
             }
         }
@@ -65,23 +64,41 @@
     Display.prototype = new PIXI.Container();
     Display.prototype.constructor = Display;
 
+    /**
+     *
+     * @param x
+     * @param value
+     */
     Display.prototype.updateItem = function (x, value) {
         let row = this.getChildAt(2 + x);
         row.text = value;
-    }
+    };
 
+    /**
+     *
+     */
     Display.prototype.addRow = function () {
         var button = new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"});
 
         this.addChild(button);
     };
 
+    /**
+     *
+     */
     Display.prototype.addCol = function () {
         var button = new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"});
 
         this.addChild(button);
     };
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @param obj
+     * @param callback
+     */
     Display.prototype.addItem = function (x, y, obj, callback) {
         this.layout[x][y] = obj;
     };

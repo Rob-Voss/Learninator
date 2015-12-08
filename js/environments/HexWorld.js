@@ -31,10 +31,20 @@ var HexWorld = HexWorld || {},
         this.agents = [
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)), {
                 brainType: 'RLDQN',
-                numEyes: 30,
-                numTypes: 5,
-                range: 120,
-                proximity: 120,
+                env: {
+                    numActions: 4,
+                    numStates: 30 * 5,
+                    numEyes: 30,
+                    numTypes: 5,
+                    range: 120,
+                    proximity: 120,
+                    getMaxNumActions: function () {
+                        return this.numActions;
+                    },
+                    getNumStates: function () {
+                        return this.numStates;
+                    }
+                },
                 radius: 10,
                 collision: true,
                 interactive: true,

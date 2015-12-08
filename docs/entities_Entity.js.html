@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: entities/Entity.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>var Entity = Entity || {};
@@ -86,7 +86,7 @@
         }
 
         this.id = Utility.guid();
-        this.position = position || new Vec(5, 5);
+        this.pos = position || new Vec(5, 5);
         this.radius = Utility.getOpt(opts, 'radius', undefined);
         this.width = Utility.getOpt(opts, 'width', undefined);
         this.height = Utility.getOpt(opts, 'height', undefined);
@@ -107,7 +107,7 @@
         this.collisions = [];
 
         // Remember the old position and angle
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
         this.oldAngle = 0;
 
         // Add a container to hold our display cheats
@@ -120,7 +120,7 @@
             this.sprite.width = this.width;
             this.sprite.height = this.height;
             this.sprite.anchor.set(0.5, 0.5);
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.pos.set(this.pos.x, this.pos.y);
             this.sprite.interactive = this.interactive;
 
             if (this.sprite.interactive === true) {
@@ -172,31 +172,31 @@
             let textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
 
             this.gridText = new PIXI.Text(textG, fontOpts);
-            this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
+            this.gridText.pos.set(this.pos.x + this.radius, this.pos.y - (this.radius * 2));
             this.cheatsContainer.addChild(this.gridText);
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position &amp;&amp; this.posText === undefined) {
-            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+        if (this.cheats.pos &amp;&amp; this.posText === undefined) {
+            let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
 
             this.posText = new PIXI.Text(textP + textV, fontOpts);
-            this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
+            this.posText.pos.set(this.pos.x + this.radius, this.pos.y - this.radius);
             this.cheatsContainer.addChild(this.posText);
         }
 
         // If cheats are on then show the entities name
         if (this.cheats.name &amp;&amp; this.nameText === undefined) {
             this.nameText = new PIXI.Text(this.name, fontOpts);
-            this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
+            this.nameText.pos.set(this.pos.x + this.radius, this.pos.y + this.radius);
             this.cheatsContainer.addChild(this.nameText);
         }
 
         // If cheats are on then show the entities id
         if (this.cheats.id &amp;&amp; this.idText === undefined) {
             this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
-            this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            this.idText.pos.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
             this.cheatsContainer.addChild(this.idText);
         }
 
@@ -214,7 +214,7 @@
             }
             gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
             gridText.text = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
-            gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+            gridText.pos.set(this.pos.x + this.radius, this.pos.y + (this.radius));
         } else {
             if (this.gridText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.gridText);
@@ -224,15 +224,15 @@
         }
 
         // If cheats are on then show the entities position and velocity
-        if (this.cheats.position) {
+        if (this.cheats.pos) {
             if (this.posText === undefined) {
                 this.addCheats();
             }
-            let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+            let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
+                textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
             posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
             posText.text = textP + textV;
-            posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+            posText.pos.set(this.pos.x + this.radius, this.pos.y + (this.radius * 1));
         } else {
             if (this.posText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.posText);
@@ -247,7 +247,7 @@
                 this.addCheats();
             }
             nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-            nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            nameText.pos.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
         } else {
             if (this.nameText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.nameText);
@@ -262,7 +262,7 @@
                 this.addCheats();
             }
             idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-            idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+            idText.pos.set(this.pos.x + this.radius, this.pos.y + (this.radius * 3));
         } else {
             if (this.idText !== undefined) {
                 let index = this.cheatsContainer.getChildIndex(this.idText);
@@ -278,12 +278,12 @@
      */
     Entity.prototype.draw = function () {
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.pos.set(this.pos.x, this.pos.y);
         } else {
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000);
             this.shape.beginFill(this.color);
-            this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+            this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
             this.shape.endFill();
         }
         // draw entities sight
@@ -304,25 +304,35 @@
      * @returns {Entity}
      */
     Entity.prototype.move = function () {
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
 
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
+        this.pos.x += this.pos.vx;
+        this.pos.y += this.pos.vy;
 
         this.world.check(this);
+
+        // Add any walls we hit
+        // @TODO I need to get these damn walls into the CollisionDetection call
+        for (let w = 0, wl = this.world.walls.length; w &lt; wl; w++) {
+            let wall = this.world.walls[w],
+                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
+            if (result) {
+                this.collisions.push(wall);
+            }
+        }
 
         for (let i = 0; i &lt; this.collisions.length; i++) {
             if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
                 // Agent
-                console.log("Oh shit it's an " + this.collisions[i].name);
+                //console.log("Oh shit it's an " + this.collisions[i].name);
             } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 // Edible
-                console.log('Watch it ' + this.collisions[i].name);
+                //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx *= -1;
-                this.position.vy *= -1;
+                this.pos = this.oldPos.clone();
+                this.pos.vx *= -1;
+                this.pos.vy *= -1;
             }
         }
 
@@ -331,28 +341,28 @@
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x &lt; left) {
-            this.position.x = left;
-            this.position.vx *= -1;
+        if (this.pos.x &lt; left) {
+            this.pos.x = left;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx *= -1;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.y &lt; top) {
-            this.position.y = top;
-            this.position.vy *= -1;
+        if (this.pos.y &lt; top) {
+            this.pos.y = top;
+            this.pos.vy *= -1;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vy *= -1;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vy *= -1;
         }
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.pos.set(this.pos.x, this.pos.y);
         }
 
         return this;
@@ -396,8 +406,8 @@
     Entity.prototype.onDragMove = function () {
         if (this.dragging) {
             let newPosition = this.data.getLocalPosition(this.parent);
-            this.position.set(newPosition.x, newPosition.y);
-            this.entity.position.set(newPosition.x, newPosition.y);
+            this.pos.set(newPosition.x, newPosition.y);
+            this.entity.pos.set(newPosition.x, newPosition.y);
         }
 
         return this;
@@ -412,8 +422,8 @@
         this.alpha = 1;
         this.dragging = false;
         let newPosition = this.data.getLocalPosition(this.parent);
-        this.position.set(newPosition.x, newPosition.y);
-        this.entity.position.set(newPosition.x, newPosition.y);
+        this.pos.set(newPosition.x, newPosition.y);
+        this.entity.pos.set(newPosition.x, newPosition.y);
 
         // set the interaction data to null
         this.data = null;
@@ -485,13 +495,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="Cube.html">Cube</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Mon Dec 07 2015 11:58:41 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>

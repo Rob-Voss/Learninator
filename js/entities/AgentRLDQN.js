@@ -68,8 +68,8 @@ var AgentRLDQN = AgentRLDQN || {},
         }
 
         // proprioception and orientation
-        inputArray[ne + 0] = this.position.vx;
-        inputArray[ne + 1] = this.position.vy;
+        inputArray[ne + 0] = this.pos.vx;
+        inputArray[ne + 1] = this.pos.vy;
 
         if (!this.worker) {
             this.action = this.brain.act(inputArray);
@@ -105,30 +105,30 @@ var AgentRLDQN = AgentRLDQN || {},
     AgentRLDQN.prototype.move = function () {
         let speed = 1;
         this.oldAngle = this.angle;
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
         this.digestionSignal = 0;
 
         // Execute agent's desired action
         switch (this.action) {
             case 0:
-                this.position.vx += -speed;
+                this.pos.vx += -speed;
                 break;
             case 1:
-                this.position.vx += speed;
+                this.pos.vx += speed;
                 break;
             case 2:
-                this.position.vy += -speed;
+                this.pos.vy += -speed;
                 break;
             case 3:
-                this.position.vy += speed;
+                this.pos.vy += speed;
                 break;
         }
 
         // Forward the agent by velocity
-        this.position.vx *= 0.95;
-        this.position.vy *= 0.95;
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
+        this.pos.vx *= 0.95;
+        this.pos.vy *= 0.95;
+        this.pos.x += this.pos.vx;
+        this.pos.y += this.pos.vy;
 
         // Check the world for collisions
         this.world.check(this);
@@ -140,7 +140,7 @@ var AgentRLDQN = AgentRLDQN || {},
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
                     let wall = this.world.walls[w],
-                        result = this.world.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
+                        result = this.world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
                             minRes = result;
@@ -166,9 +166,9 @@ var AgentRLDQN = AgentRLDQN || {},
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx = 0;
-                this.position.vy = 0;
+                this.pos = this.oldPos.clone();
+                this.pos.vx = 0;
+                this.pos.vy = 0;
             }
         }
 
@@ -177,32 +177,32 @@ var AgentRLDQN = AgentRLDQN || {},
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x < left) {
-            this.position.x = left;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.x < left) {
+            this.pos.x = left;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.y < top) {
-            this.position.y = top;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.y < top) {
+            this.pos.y = top;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
         }
 
         return this;

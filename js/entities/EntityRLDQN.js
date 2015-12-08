@@ -49,7 +49,7 @@ var EntityRLDQN = EntityRLDQN || {};
         // The Agent's eyes
         this.eyes = [];
         for (let k = 0; k < this.numEyes; k++) {
-            this.eyes.push(new Eye(k * Math.PI / 3, this.position, 75, 75));
+            this.eyes.push(new Eye(k * Math.PI / 3, this.pos, 75, 75));
         }
 
         this.brain = new DQNAgent(this, this.brainOpts);
@@ -111,19 +111,15 @@ var EntityRLDQN = EntityRLDQN || {};
             inputArray[i * this.numTypes + 3] = eye.vx; // Agent?
             inputArray[i * this.numTypes + 4] = eye.vy; // Agent?
             if (eye.sensedType !== -1) {
-                // sensedType is 0 for wall, 1 for food and 2 for poison.
+                // sensedType is 0 wall, 1 food, 2 poison, 3->5 Agent.
                 // lets do a 1-of-k encoding into the input array
                 inputArray[i * this.numTypes + eye.sensedType] = eye.sensedProximity / eye.maxRange; // normalize to [0,1]
             }
         }
 
         // proprioception and orientation
-        inputArray[ne + 0] = this.position.vx;
-        inputArray[ne + 1] = this.position.vy;
-        inputArray[ne + 2] = (this.target.position.x / 1000) - (this.position.x / 1000);
-        inputArray[ne + 3] = (this.target.position.y / 1000) - (this.position.y / 1000);
-        inputArray[ne + 4] = (this.enemy.position.x / 1000) - (this.position.x / 1000);
-        inputArray[ne + 5] = (this.enemy.position.y / 1000) - (this.position.y / 1000);
+        inputArray[ne + 0] = this.pos.vx;
+        inputArray[ne + 1] = this.pos.vy;
 
         return inputArray;
     };
@@ -150,14 +146,14 @@ var EntityRLDQN = EntityRLDQN || {};
      */
     EntityRLDQN.prototype.getState = function () {
         let s = [
-            this.enemy.position.x / 1000,
-            this.enemy.position.y / 1000,
-            this.enemy.position.vx / 10,
-            this.enemy.position.vy / 10,
-            (this.target.position.x / 1000) - (this.position.x / 1000),
-            (this.target.position.y / 1000) - (this.position.y / 1000),
-            (this.enemy.position.x / 1000) - (this.position.x / 1000),
-            (this.enemy.position.y / 1000) - (this.position.y / 1000)
+            this.enemy.pos.x / 1000,
+            this.enemy.pos.y / 1000,
+            this.enemy.pos.vx / 10,
+            this.enemy.pos.vy / 10,
+            (this.target.pos.x / 1000) - (this.pos.x / 1000),
+            (this.target.pos.y / 1000) - (this.pos.y / 1000),
+            (this.enemy.pos.x / 1000) - (this.pos.x / 1000),
+            (this.enemy.pos.y / 1000) - (this.pos.y / 1000)
         ];
         return s;
     };
@@ -172,30 +168,30 @@ var EntityRLDQN = EntityRLDQN || {};
         // Execute agent's desired action
         switch (this.action) {
             case 0: // Right
-                this.position.vx -= speed;
+                this.pos.vx -= speed;
                 break;
             case 1: // Left
-                this.position.vx += speed;
+                this.pos.vx += speed;
                 break;
             case 2: // Up
-                this.position.vy -= speed;
+                this.pos.vy -= speed;
                 break;
             case 3: // Down
-                this.position.vy += speed;
+                this.pos.vy += speed;
                 break;
             case 4: // Hover
-                this.position.vx = 0;
-                this.position.vy = 0;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
                 break;
         }
 
         // Forward the agent by velocity
-        this.position.vx *= 0.95;
-        this.position.vy *= 0.95;
+        this.pos.vx *= 0.95;
+        this.pos.vy *= 0.95;
 
         // Forward the agent by velocity
-        this.position.x += this.position.vx;
-        this.position.y += this.position.vy;
+        this.pos.x += this.pos.vx;
+        this.pos.y += this.pos.vy;
 
         this.world.check(this);
 
@@ -203,7 +199,7 @@ var EntityRLDQN = EntityRLDQN || {};
         // @TODO I need to get these damn walls into the CollisionDetection call
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2);
+                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
             if (result) {
                 this.collisions.push(wall);
             }
@@ -221,9 +217,9 @@ var EntityRLDQN = EntityRLDQN || {};
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx *= -1;
-                this.position.vy *= -1;
+                this.pos = this.oldPos.clone();
+                this.pos.vx *= -1;
+                this.pos.vy *= -1;
             }
         }
 
@@ -232,28 +228,28 @@ var EntityRLDQN = EntityRLDQN || {};
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x < left) {
-            this.position.x = left;
-            this.position.vx *= -1;
+        if (this.pos.x < left) {
+            this.pos.x = left;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx *= -1;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx *= -1;
         }
 
-        if (this.position.y < top) {
-            this.position.y = top;
-            this.position.vy *= -1;
+        if (this.pos.y < top) {
+            this.pos.y = top;
+            this.pos.vy *= -1;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vy *= -1;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vy *= -1;
         }
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
         }
 
         return this;
@@ -264,10 +260,10 @@ var EntityRLDQN = EntityRLDQN || {};
      */
     EntityRLDQN.prototype.sampleNextState = function () {
         // Compute distances
-        let dx1 = (this.position.x / 1000) - (this.target.position.x / 1000), // Distance from Noms
-            dy1 = (this.position.y / 1000) - (this.target.position.y / 1000), // Distance from Noms
-            dx2 = (this.position.x / 1000) - (this.enemy.position.x / 1000), // Distance from Agent
-            dy2 = (this.position.y / 1000) - (this.enemy.position.y / 1000), // Distance from Agent
+        let dx1 = (this.pos.x / 1000) - (this.target.pos.x / 1000), // Distance from Noms
+            dy1 = (this.pos.y / 1000) - (this.target.pos.y / 1000), // Distance from Noms
+            dx2 = (this.pos.x / 1000) - (this.enemy.pos.x / 1000), // Distance from Agent
+            dy2 = (this.pos.y / 1000) - (this.enemy.pos.y / 1000), // Distance from Agent
             d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
             d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
             // Compute reward we want to go close to Agent we like

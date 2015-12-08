@@ -49,8 +49,12 @@ var MazeWorld = MazeWorld || {},
                 {
                     brainType: 'RLTD',
                     env: this,
+                    numActions: 4,
+                    numStates: 9 * 3,
                     numEyes: 9,
                     numTypes: 3,
+                    range: 80,
+                    proximity: 80,
                     radius: 10,
                     collision: false,
                     interactive: false,
@@ -76,6 +80,32 @@ var MazeWorld = MazeWorld || {},
     MazeWorld.prototype.constructor = World;
 
     /**
+     * Return the allowed actions based on s
+     * @returns {Array}
+     */
+    MazeWorld.prototype.allowedActions = function (s) {
+        let x = this.sToX(s),
+            y = this.sToY(s),
+            as = [],
+            c = this.grid.getCellAt(x, y),
+            actions = this.grid.disconnectedNeighbors(c);
+
+        for (let a = 0; a < actions.length; a++) {
+            if (actions[a].x === x - 1 && actions[a].y === y) { // Left
+                as.push(0);
+            } else if (actions[a].x === x && actions[a].y === y + 1) { // Down
+                as.push(1);
+            } else if (actions[a].x === x && actions[a].y === y - 1) { // Up
+                as.push(2);
+            } else if (actions[a].x === x + 1 && actions[a].y === y) { // Right
+                as.push(3);
+            }
+        }
+
+        return as;
+    };
+
+    /**
      *
      */
     MazeWorld.prototype.tick = function () {
@@ -99,7 +129,7 @@ var MazeWorld = MazeWorld || {},
                         self.agents[0].brain.resetEpisode();
 
                         self.agents[0].gridLocation = self.grid.getCellAt(0, 0);
-                        self.agents[0].position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        self.agents[0].pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
                         self.state = self.startState();
 
                         // record the reward achieved
@@ -112,7 +142,7 @@ var MazeWorld = MazeWorld || {},
                         self.agents[0].gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
                         let x = self.agents[0].gridLocation.coords.bottom.right.x - (self.grid.cellWidth / 2),
                             y = self.agents[0].gridLocation.coords.bottom.right.y - (self.grid.cellHeight / 2);
-                        self.agents[0].position.set(x, y);
+                        self.agents[0].pos.set(x, y);
                     }
                 }
                 self.draw();

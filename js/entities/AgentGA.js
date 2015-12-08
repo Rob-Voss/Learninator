@@ -117,10 +117,10 @@ var AgentGA = AgentGA || {},
         this.target = null;
         this.score = 0;
         this.state = { // complete game state for this agent.  used by neural network.
-            x: this.position.x,
-            y: this.position.y,
-            vx: this.position.vx,
-            vy: this.position.vy,
+            x: this.pos.x,
+            y: this.pos.y,
+            vx: this.pos.vx,
+            vy: this.pos.vy,
             ball: {
                 x: 0,
                 y: 0,
@@ -182,15 +182,15 @@ var AgentGA = AgentGA || {},
     AgentGA.prototype.getState = function (entity) {
         // complete game state for this agent.  used by neural network.
         this.state = {
-            x: this.position.x,
-            y: this.position.y,
-            vx: this.position.vx,
-            vy: this.position.vy,
+            x: this.pos.x,
+            y: this.pos.y,
+            vx: this.pos.vx,
+            vy: this.pos.vy,
             ball: {
-                x: entity.position.x,
-                y: entity.position.y,
-                vx: entity.position.vx,
-                vy: entity.position.vy
+                x: entity.pos.x,
+                y: entity.pos.y,
+                vx: entity.pos.vx,
+                vy: entity.pos.vy
             }
         };
 
@@ -224,16 +224,16 @@ var AgentGA = AgentGA || {},
             down = this.action.down;
 
         if (right && !left) {
-            this.position.vx = playerSpeedX;
+            this.pos.vx = playerSpeedX;
         }
         if (left && !right) {
-            this.position.vx = -playerSpeedX;
+            this.pos.vx = -playerSpeedX;
         }
         if (up) {
-            this.position.vy = -playerSpeedY;
+            this.pos.vy = -playerSpeedY;
         }
         if (down) {
-            this.position.vy = playerSpeedY;
+            this.pos.vy = playerSpeedY;
         }
 
         return this;

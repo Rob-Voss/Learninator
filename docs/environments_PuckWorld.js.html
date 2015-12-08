@@ -19,11 +19,11 @@
 
     <h1 class="page-title">Source: environments/PuckWorld.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>var PuckWorld = PuckWorld || {},
@@ -118,9 +118,9 @@
         this.puck = {};
         this.target = {};
         this.enemy = {};
-        this.puck.position = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
-        this.target.position = new Vec(Math.random(), Math.random()); // target
-        this.enemy.position = new Vec(Math.random(), Math.random()); // enemy
+        this.puck.pos = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
+        this.target.pos = new Vec(Math.random(), Math.random()); // target
+        this.enemy.pos = new Vec(Math.random(), Math.random()); // enemy
         this.radius = 0.05;
         this.t = 0;
 
@@ -148,14 +148,14 @@
 
     PuckWorld.prototype.getState = function () {
         var s = [
-            this.puck.position.x - 0.5,
-            this.puck.position.y - 0.5,
-            this.puck.position.vx * 10,
-            this.puck.position.vy * 10,
-            this.target.position.x - this.puck.position.x,
-            this.target.position.y - this.puck.position.y,
-            this.enemy.position.x - this.puck.position.x,
-            this.enemy.position.y - this.puck.position.y
+            this.puck.pos.x - 0.5,
+            this.puck.pos.y - 0.5,
+            this.puck.pos.vx * 10,
+            this.puck.pos.vy * 10,
+            this.target.pos.x - this.puck.pos.x,
+            this.target.pos.y - this.puck.pos.y,
+            this.enemy.pos.x - this.puck.pos.x,
+            this.enemy.pos.y - this.puck.pos.y
         ];
         return s;
     };
@@ -164,64 +164,64 @@
      */
     PuckWorld.prototype.sampleNextState = function () {
         // world dynamics
-        this.puck.position.x += this.puck.position.vx; // newton
-        this.puck.position.y += this.puck.position.vy;
-        this.puck.position.vx *= 0.95; // damping
-        this.puck.position.vy *= 0.95;
+        this.puck.pos.x += this.puck.pos.vx; // newton
+        this.puck.pos.y += this.puck.pos.vy;
+        this.puck.pos.vx *= 0.95; // damping
+        this.puck.pos.vy *= 0.95;
 
         // agent action influences puck velocity
         var accel = 0.002;
         switch (this.action) {
             case 0:
-                this.puck.position.vx -= accel;
+                this.puck.pos.vx -= accel;
                 break;
             case 1:
-                this.puck.position.vx += accel;
+                this.puck.pos.vx += accel;
                 break;
             case 2:
-                this.puck.position.vy -= accel;
+                this.puck.pos.vy -= accel;
                 break;
             case 3:
-                this.puck.position.vy += accel;
+                this.puck.pos.vy += accel;
                 break;
         }
 
         // handle boundary conditions and bounce
-        if (this.puck.position.x &lt; this.radius) {
-            this.puck.position.vx *= -0.5; // bounce!
-            this.puck.position.x = this.radius;
+        if (this.puck.pos.x &lt; this.radius) {
+            this.puck.pos.vx *= -0.5; // bounce!
+            this.puck.pos.x = this.radius;
         }
-        if (this.puck.position.x > 1 - this.radius) {
-            this.puck.position.vx *= -0.5;
-            this.puck.position.x = 1 - this.radius;
+        if (this.puck.pos.x > 1 - this.radius) {
+            this.puck.pos.vx *= -0.5;
+            this.puck.pos.x = 1 - this.radius;
         }
-        if (this.puck.position.y &lt; this.radius) {
-            this.puck.position.vy *= -0.5; // bounce!
-            this.puck.position.y = this.radius;
+        if (this.puck.pos.y &lt; this.radius) {
+            this.puck.pos.vy *= -0.5; // bounce!
+            this.puck.pos.y = this.radius;
         }
-        if (this.puck.position.y > 1 - this.radius) {
-            this.puck.position.vy *= -0.5;
-            this.puck.position.y = 1 - this.radius;
+        if (this.puck.pos.y > 1 - this.radius) {
+            this.puck.pos.vy *= -0.5;
+            this.puck.pos.y = 1 - this.radius;
         }
 
         this.t += 1;
         if (this.t % 73 === 0) {
-            this.enemy.position.x = Math.random(); // reset the target location
-            this.enemy.position.y = Math.random();
+            this.enemy.pos.x = Math.random(); // reset the target location
+            this.enemy.pos.y = Math.random();
         }
 
         // compute distances
-        var dx1 = this.puck.position.x - this.target.position.x, // Distance from gewdness
-            dy1 = this.puck.position.y - this.target.position.y, // Distance from gewdness
+        var dx1 = this.puck.pos.x - this.target.pos.x, // Distance from gewdness
+            dy1 = this.puck.pos.y - this.target.pos.y, // Distance from gewdness
             d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-            dx2 = this.puck.position.x - this.enemy.position.x, // Distance from badness
-            dy2 = this.puck.position.y - this.enemy.position.y, // Distance from badness
+            dx2 = this.puck.pos.x - this.enemy.pos.x, // Distance from badness
+            dy2 = this.puck.pos.y - this.enemy.pos.y, // Distance from badness
             d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
             dxnorm = dx2 / d2,
             dynorm = dy2 / d2,
             speed = 0.001;
-        this.enemy.position.x += speed * dxnorm;
-        this.enemy.position.y += speed * dynorm;
+        this.enemy.pos.x += speed * dxnorm;
+        this.enemy.pos.y += speed * dynorm;
 
         // compute reward
         // want to go close to green
@@ -318,12 +318,12 @@
 
     PuckWorld.prototype.updateDraw = function (a, s, r) {
         // reflect puck world state on screen
-        var ppx = this.puck.position.x,
-            ppy = this.puck.position.y,
-            tx = this.target.position.x,
-            ty = this.target.position.y,
-            tx2 = this.enemy.position.x,
-            ty2 = this.enemy.position.y,
+        var ppx = this.puck.pos.x,
+            ppy = this.puck.pos.y,
+            tx = this.target.pos.x,
+            ty = this.target.pos.y,
+            tx2 = this.enemy.pos.x,
+            ty2 = this.enemy.pos.y,
             g, b;
 
         d3agent.attr('cx', ppx * this.width).attr('cy', ppy * this.height);
@@ -378,13 +378,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="HeCubex.html">HeCubex</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Agent.html">Agent</a></li><li><a href="AgentGA.html">AgentGA</a></li><li><a href="AgentRLDQN.html">AgentRLDQN</a></li><li><a href="AgentRLTD.html">AgentRLTD</a></li><li><a href="AgentTD.html">AgentTD</a></li><li><a href="Bitmap.html">Bitmap</a></li><li><a href="BruteCD.html">BruteCD</a></li><li><a href="Button.html">Button</a></li><li><a href="Camera.html">Camera</a></li><li><a href="Cell.html">Cell</a></li><li><a href="Chromosome.html">Chromosome</a></li><li><a href="CollisionDetector.html">CollisionDetector</a></li><li><a href="Cube.html">Cube</a></li><li><a href="datGUI.html">datGUI</a></li><li><a href="DeterministPG.html">DeterministPG</a></li><li><a href="Display.html">Display</a></li><li><a href="DPAgent.html">DPAgent</a></li><li><a href="DQNAgent.html">DQNAgent</a></li><li><a href="Entity.html">Entity</a></li><li><a href="EntityRLDQN.html">EntityRLDQN</a></li><li><a href="ESPNet.html">ESPNet</a></li><li><a href="ESPTrainer.html">ESPTrainer</a></li><li><a href="Eye.html">Eye</a></li><li><a href="GATrainer.html">GATrainer</a></li><li><a href="Graph.html">Graph</a></li><li><a href="Grid.html">Grid</a></li><li><a href="GridCD.html">GridCD</a></li><li><a href="GridWorld.html">GridWorld</a></li><li><a href="Hex.html">Hex</a></li><li><a href="HexGrid.html">HexGrid</a></li><li><a href="HexWorld.html">HexWorld</a></li><li><a href="Interactions.html">Interactions</a></li><li><a href="Map.html">Map</a></li><li><a href="Mat.html">Mat</a></li><li><a href="Maze.html">Maze</a></li><li><a href="MazeWorld.html">MazeWorld</a></li><li><a href="Menu.html">Menu</a></li><li><a href="Player.html">Player</a></li><li><a href="Point.html">Point</a></li><li><a href="PuckWorld.html">PuckWorld</a></li><li><a href="QuadCD.html">QuadCD</a></li><li><a href="QuadTree.html">QuadTree</a></li><li><a href="RecurrentReinforceAgent.html">RecurrentReinforceAgent</a></li><li><a href="RewardGraph.html">RewardGraph</a></li><li><a href="SimpleReinforceAgent.html">SimpleReinforceAgent</a></li><li><a href="Solver.html">Solver</a></li><li><a href="TDAgent.html">TDAgent</a></li><li><a href="Vec.html">Vec</a></li><li><a href="Wall.html">Wall</a></li><li><a href="WaterWorld.html">WaterWorld</a></li><li><a href="WaterWorldEX.html">WaterWorldEX</a></li><li><a href="WaterWorldGA.html">WaterWorldGA</a></li><li><a href="Window.html">Window</a></li><li><a href="World.html">World</a></li><li><a href="%257Bobject%257D%2520input.html">{object} input</a></li></ul><h3>Global</h3><ul><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clone">clone</a></li><li><a href="global.html#divide">divide</a></li><li><a href="global.html#EZGUI">EZGUI</a></li><li><a href="global.html#findByAngle">findByAngle</a></li><li><a href="global.html#findByName">findByName</a></li><li><a href="global.html#findInsertNode">findInsertNode</a></li><li><a href="global.html#findOverlappingNodes">findOverlappingNodes</a></li><li><a href="global.html#initSensors">initSensors</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#isAndroid">isAndroid</a></li><li><a href="global.html#isChrome">isChrome</a></li><li><a href="global.html#isFirefox">isFirefox</a></li><li><a href="global.html#isGecko">isGecko</a></li><li><a href="global.html#isIE">isIE</a></li><li><a href="global.html#isIOS">isIOS</a></li><li><a href="global.html#isIPad">isIPad</a></li><li><a href="global.html#isIPhone">isIPhone</a></li><li><a href="global.html#isIPod">isIPod</a></li><li><a href="global.html#isKindle">isKindle</a></li><li><a href="global.html#isMobile">isMobile</a></li><li><a href="global.html#isOpera">isOpera</a></li><li><a href="global.html#isSafari">isSafari</a></li><li><a href="global.html#isTablet">isTablet</a></li><li><a href="global.html#isTV">isTV</a></li><li><a href="global.html#isWebKit">isWebKit</a></li><li><a href="global.html#resetSensors">resetSensors</a></li><li><a href="global.html#retrieve">retrieve</a></li><li><a href="global.html#Utility">Utility</a></li><li><a href="global.html#whoami">whoami</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Thu Dec 03 2015 10:30:02 GMT-0800 (PST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Mon Dec 07 2015 11:58:41 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>

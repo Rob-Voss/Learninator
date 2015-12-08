@@ -235,8 +235,8 @@
                 xCell = this.cells[x];
                 for (let y = 0; y < this.yCount; y++) {
                     yCell = xCell[y];
-                    if ((entity.position.x >= yCell.coords.top.left.x && entity.position.x <= yCell.coords.bottom.right.x) &&
-                        (entity.position.y >= yCell.coords.top.left.y && entity.position.y <= yCell.coords.bottom.right.y)) {
+                    if ((entity.pos.x >= yCell.coords.top.left.x && entity.pos.x <= yCell.coords.bottom.right.x) &&
+                        (entity.pos.y >= yCell.coords.top.left.y && entity.pos.y <= yCell.coords.bottom.right.y)) {
                         entity.gridLocation = this.cells[x][y];
 
                         return entity;

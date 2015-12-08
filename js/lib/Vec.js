@@ -534,14 +534,14 @@
         this.type = 0;
         this.v1 = v1;
         this.v2 = v2;
-        this.position = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+        this.pos = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
         this.rotation = Math.atan2(yDiff, xDiff); // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
         this.angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI; // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
 
         this.shape = new PIXI.Graphics();
         if (cheats) {
             let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
-            wallText.position.set(this.v1.x + 10, this.v1.y);
+            wallText.pos.set(this.v1.x + 10, this.v1.y);
             this.shape.addChild(wallText);
         }
         this.shape.clear();

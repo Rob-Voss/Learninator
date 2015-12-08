@@ -179,21 +179,21 @@ var AgentTD = AgentTD || {},
      * @param smallWorld
      */
     AgentTD.prototype.move = function () {
-        this.oldPos = this.position.clone();
+        this.oldPos = this.pos.clone();
         this.oldAngle = this.angle;
 
         //Steer the agent according to outputs of wheel velocities
         let v = new Vec(0, this.radius / 2.0);
         v = v.rotate(this.oldAngle + Math.PI / 2);
             // Positions of wheel 1
-        let w1pos = this.position.add(v),
+        let w1pos = this.pos.add(v),
             // Positions of wheel 2
-            w2pos = this.position.sub(v);
+            w2pos = this.pos.sub(v);
 
-        let vv = this.position.sub(w2pos);
+        let vv = this.pos.sub(w2pos);
         vv = vv.rotate(-this.rot1);
 
-        let vv2 = this.position.sub(w1pos);
+        let vv2 = this.pos.sub(w1pos);
         vv2 = vv2.rotate(this.rot2);
 
         let newPos = w2pos.add(vv),
@@ -203,7 +203,7 @@ var AgentTD = AgentTD || {},
         newPos2.scale(0.5);
         let position = newPos.add(newPos2);
 
-        this.position = position;
+        this.pos = position;
 
         this.angle -= this.rot1;
         if (this.angle < 0) {
@@ -220,7 +220,7 @@ var AgentTD = AgentTD || {},
 
         for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
             let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.position, wall.v1, wall.v2, this.radius);
+                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.unshift(wall);
             }
@@ -234,7 +234,7 @@ var AgentTD = AgentTD || {},
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
                 for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
                     let wall = this.world.walls[w];
-                    result = this.world.lineIntersect(this.position, this.collisions[i].position, wall.v1, wall.v2, this.radius);
+                    result = this.world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
                             minRes = result;
@@ -260,9 +260,9 @@ var AgentTD = AgentTD || {},
                 //console.log('Watch it ' + this.collisions[i].name);
             } else if (this.collisions[i].type === 0) {
                 // Wall
-                this.position = this.oldPos.clone();
-                this.position.vx = 0;
-                this.position.vy = 0;
+                this.pos = this.oldPos.clone();
+                this.pos.vx = 0;
+                this.pos.vy = 0;
             }
         }
 
@@ -271,34 +271,34 @@ var AgentTD = AgentTD || {},
             bottom = this.world.height - this.radius,
             left = this.world.width - (this.world.width - this.radius),
             right = this.world.width - this.radius;
-        if (this.position.x < left) {
-            this.position.x = left;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.x < left) {
+            this.pos.x = left;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.x > right) {
-            this.position.x = right;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.x > right) {
+            this.pos.x = right;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.y < top) {
-            this.position.y = top;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.y < top) {
+            this.pos.y = top;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
-        if (this.position.y > bottom) {
-            this.position.y = bottom;
-            this.position.vx = 0;
-            this.position.vy = 0;
+        if (this.pos.y > bottom) {
+            this.pos.y = bottom;
+            this.pos.vx = 0;
+            this.pos.vy = 0;
         }
 
         this.direction = Utility.getDirection(this.angle);
 
         if (this.useSprite) {
-            this.sprite.position.set(this.position.x, this.position.y);
+            this.sprite.position.set(this.pos.x, this.pos.y);
             this.sprite.rotation = this.angle * 0.01745329252;
         }
 

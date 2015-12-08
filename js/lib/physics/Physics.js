@@ -167,8 +167,8 @@ var Phys = Phys || {};
         var percent = 0.8; // usually 20% to 80%
         var slop = 0.01; // usually 0.01 to 0.1
         var c = Math.max(m.penetration - slop, 0) / (a.invmass + b.invmass) * percent * m.normal;
-        a.position -= a.invmass * c;
-        b.position += b.invmass * c;
+        a.pos -= a.invmass * c;
+        b.pos += b.invmass * c;
     };
 
     global.Phys = Phys;

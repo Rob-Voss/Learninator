@@ -49,9 +49,20 @@ var GridWorld = GridWorld || {},
             new AgentRLTD(new Vec(50, 50),
                 {
                     brainType: 'RLTD',
-                    env: this,
-                    numEyes: 0,
-                    numTypes: 0,
+                    env: {
+                        numActions: 4,
+                        numStates: 0,
+                        numEyes: 0,
+                        numTypes: 0,
+                        range: 0,
+                        proximity: 0,
+                        getMaxNumActions: function () {
+                            return this.numActions;
+                        },
+                        getNumStates: function () {
+                            return this.numStates;
+                        }
+                    },
                     radius: 10,
                     collision: false,
                     interactive: false,
@@ -172,7 +183,7 @@ var GridWorld = GridWorld || {},
                         self.agents[0].brain.resetEpisode();
 
                         self.agents[0].gridLocation = self.grid.getCellAt(0, 0);
-                        self.agents[0].position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        self.agents[0].pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
                         self.state = self.startState();
 
                         // record the reward achieved
@@ -185,7 +196,7 @@ var GridWorld = GridWorld || {},
                         self.agents[0].gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
                         let x = self.agents[0].gridLocation.coords.bottom.right.x - (self.grid.cellWidth / 2),
                             y = self.agents[0].gridLocation.coords.bottom.right.y - (self.grid.cellHeight / 2);
-                        self.agents[0].position.set(x, y);
+                        self.agents[0].pos.set(x, y);
                     }
                 }
 
