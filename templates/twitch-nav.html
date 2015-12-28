@@ -1,4 +1,4 @@
-<div class="container" id="twitch-nav">
+<template>
     <style>
         body {
             padding-top: 15px;
@@ -209,22 +209,11 @@
         <span class="glyphicon glyphicon-chevron-right nav-open"></span>
         <span class="glyphicon glyphicon-chevron-left nav-close"></span>
     </button>
-</div>
+</template>
 
 <script>
-    // This element will be registered to index.html
-    // Because `document` here means the one in index.html
-    var XComponent = document.registerElement('twitch-nav', {
-        prototype: Object.create(HTMLElement.prototype, {
-            createdCallback: {
-                value: function () {
-                    var doc = document.querySelector('link[rel="import"]').import,
-                        template = doc.querySelector('#twitch-nav');
-                    document.body.appendChild(template.cloneNode(true));
-                }
-            }
-        })
-    });
+    var shadow = document.querySelector('#navigation').createShadowRoot();
+    shadow.appendChild(document.querySelector('template').content);
 
     $('.navbar-nav [data-toggle="tooltip"]').tooltip();
     $('.navbar-twitch-toggle').on('click', function (event) {

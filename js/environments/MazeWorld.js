@@ -48,7 +48,7 @@ var MazeWorld = MazeWorld || {},
             new AgentRLTD(new Vec(50, 50),
                 {
                     brainType: 'RLTD',
-                    env: this,
+                    env: Utility.stringify(this),
                     numActions: 4,
                     numStates: 9 * 3,
                     numEyes: 9,

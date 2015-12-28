@@ -1,5 +1,4 @@
-<div class="container" id="js-includes">
-
+<template>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
@@ -8,61 +7,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.7/pixi.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 
-    <script src="js/lib/external/EZGUI.js"></script>
-    <script src="js/lib/external/convnet.js"></script>
-    <script src="js/lib/external/rl.js"></script>
+    <script src="../js/lib/external/EZGUI.js"></script>
+    <script src="../js/lib/external/convnet.js"></script>
+    <script src="../js/lib/external/rl.js"></script>
 
     <!-- markdown -->
-    <script type="text/javascript" src="js/lib/external/marked.js"></script>
-    <script type="text/javascript" src="js/lib/external/highlight.pack.js"></script>
-    <link rel="stylesheet" href="css/highlight_default.css">
+    <script src="../js/lib/external/marked.js" type="text/javascript"></script>
+    <script src="../js/lib/external/highlight.pack.js" type="text/javascript"></script>
+    <link href="../css/highlight_default.css" rel="stylesheet">
     <script>hljs.initHighlightingOnLoad();</script>
 
-    <script src="js/lib/Array.js"></script>
-    <script src="js/lib/CollisionDetector.js"></script>
-    <script src="js/lib/FlotGraph.js"></script>
-    <script src="js/lib/Grid.js"></script>
-    <script src="js/lib/HexGrid.js"></script>
-    <script src="js/lib/Interactions.js"></script>
-    <script src="js/lib/Maze.js"></script>
-    <script src="js/lib/QuadTree.js"></script>
-    <script src="js/lib/RewardGraph.js"></script>
-    <script src="js/lib/Utility.js"></script>
-    <script src="js/lib/Vec.js"></script>
-    <script src="js/lib/Window.js"></script>
+    <script src="../js/lib/Utility.js"></script>
+    <script src="../js/lib/Vec.js"></script>
+    <script src="../js/lib/Array.js"></script>
+    <script src="../js/lib/CollisionDetector.js"></script>
+    <script src="../js/lib/FlotGraph.js"></script>
+    <script src="../js/lib/Grid.js"></script>
+    <script src="../js/lib/Interactions.js"></script>
+    <script src="../js/lib/Maze.js"></script>
+    <script src="../js/lib/QuadTree.js"></script>
+    <script src="../js/lib/RewardGraph.js"></script>
+    <script src="../js/lib/HexGrid.js"></script>
+    <script src="../js/lib/Window.js"></script>
 
-    <script src="js/entities/Agent.js"></script>
-    <script src="js/entities/AgentGA.js"></script>
-    <script src="js/entities/AgentRLDQN.js"></script>
-    <script src="js/entities/AgentRLTD.js"></script>
-    <script src="js/entities/AgentTD.js"></script>
-    <script src="js/entities/Entity.js"></script>
-    <script src="js/entities/EntityRLDQN.js"></script>
-    <script src="js/entities/TDBrain.js"></script>
+    <script src="../js/entities/Entity.js"></script>
+    <script src="../js/entities/Agent.js"></script>
+    <script src="../js/entities/AgentGA.js"></script>
+    <script src="../js/entities/AgentRLDQN.js"></script>
+    <script src="../js/entities/AgentRLTD.js"></script>
+    <script src="../js/entities/AgentTD.js"></script>
+    <script src="../js/entities/EntityRLDQN.js"></script>
+    <script src="../js/entities/TDBrain.js"></script>
 
-    <script src="js/environments/World.js"></script>
-    <script src="js/environments/GridWorld.js"></script>
-    <script src="js/environments/HexWorld.js"></script>
-    <script src="js/environments/MazeWorld.js"></script>
-    <script src="js/environments/PuckWorld.js"></script>
-    <script src="js/environments/WaterWorld.js"></script>
-    <script src="js/environments/WaterWorldEX.js"></script>
-    <script src="js/environments/WaterWorldGA.js"></script>
-</div>
+    <script src="../js/environments/World.js"></script>
+    <script src="../js/environments/GridWorld.js"></script>
+    <script src="../js/environments/HexWorld.js"></script>
+    <script src="../js/environments/MazeWorld.js"></script>
+    <script src="../js/environments/PuckWorld.js"></script>
+    <script src="../js/environments/WaterWorld.js"></script>
+    <script src="../js/environments/WaterWorldEX.js"></script>
+    <script src="../js/environments/WaterWorldGA.js"></script>
+</template>
 
 <script>
-    // This element will be registered to index.html
-    // Because `document` here means the one in index.html
-    var XComponent = document.registerElement('js-includes', {
-        prototype: Object.create(HTMLElement.prototype, {
-            createdCallback: {
-                value: function () {
-                    var doc = document.querySelector('link[rel="import"]').import,
-                            template = doc.querySelector('#js-includes');
-                    document.body.appendChild(template.cloneNode(true));
-                }
-            }
-        })
-    });
-
+    var shadow = document.querySelector('#js-includes').createShadowRoot();
+    shadow.appendChild(document.querySelector('template').content);
 </script>

@@ -98,7 +98,17 @@ var WaterWorldGA = WaterWorldGA || {},
 
         this.agentOpts = {
             brainType: 'GA',
-            env: this,
+            env: Utility.stringify({
+                getNumStates: function () {
+                    return 30 * 5;
+                },
+                getMaxNumActions: function () {
+                    return 4;
+                },
+                startState: function () {
+                    return 0;
+                }
+            }),
             numActions: 4,
             numStates: 30 * 5,
             numEyes: 30,
@@ -135,7 +145,17 @@ var WaterWorldGA = WaterWorldGA || {},
             new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
                 {
                     brainType: 'GA',
-                    env: this,
+                    env: Utility.stringify({
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    }),
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -156,7 +176,17 @@ var WaterWorldGA = WaterWorldGA || {},
             new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
                 {
                     brainType: 'GA',
-                    env: this,
+                    env: Utility.stringify({
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    }),
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,

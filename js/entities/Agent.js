@@ -62,11 +62,11 @@ var Agent = Agent || {},
         // The number of item types the Agent's eyes can see
         this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
         // The number of Agent's eyes
-        this.numEyes = Utility.getOpt(opts, 'numEyes',  9);
+        this.numEyes = Utility.getOpt(opts, 'numEyes', 9);
         // The range of the Agent's eyes
-        this.range = Utility.getOpt(opts, 'range',  85);
+        this.range = Utility.getOpt(opts, 'range', 85);
         // The proximity of the Agent's eyes
-        this.proximity = Utility.getOpt(opts, 'proximity',  85);
+        this.proximity = Utility.getOpt(opts, 'proximity', 85);
         // The number of Agent's eyes times the number of known types
         this.numStates = this.numEyes * this.numTypes;
 
@@ -84,20 +84,13 @@ var Agent = Agent || {},
         });
 
         // The Agent's environment
-        this.env = Utility.getOpt(opts, 'env',  {
-            numTypes: this.numTypes,
-            numEyes: this.numEyes,
-            range: this.range,
-            proximity: this.proximity,
-            numActions: this.numActions,
-            numStates: this.numStates,
-            getMaxNumActions: function () {
-                return this.numActions;
-            },
-            getNumStates: function () {
-                return this.numStates;
+        var oEnv = JSON.parse(opts.env, function (key, value) {
+            if (typeof value !== 'string') {
+                return value;
             }
+            return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
         });
+        this.env = oEnv;
 
         // The Agent's eyes
         if (this.eyes === undefined) {
@@ -151,7 +144,7 @@ var Agent = Agent || {},
      */
     Agent.prototype.load = function (file) {
         let _this = this;
-        $.getJSON(file, function(data) {
+        $.getJSON(file, function (data) {
             if (!_this.worker) {
                 _this.brain.fromJSON(data);
                 _this.brain.epsilon = 0.05;

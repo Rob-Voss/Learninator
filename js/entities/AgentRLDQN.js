@@ -212,30 +212,30 @@ var AgentRLDQN = AgentRLDQN || {},
      * Reset or set up the Agent
      */
     AgentRLDQN.prototype.reset = function () {
-        let _this = this;
+        let self = this;
 
         // If it's a worker then we have to load it a bit different
-        if (!this.worker) {
-            this.brain = new DQNAgent(this.env, this.brainOpts);
+        if (!self.worker) {
+            self.brain = new DQNAgent(self.env, self.brainOpts);
 
-            return this;
+            return self;
         } else {
-            this.post = function (cmd, input) {
-                this.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
+            self.post = function (cmd, input) {
+                self.brain.postMessage({target: 'DQN', cmd: cmd, input: input});
             };
 
-            let jEnv = Utility.stringify(this.env),
-                jOpts = Utility.stringify(this.brainOpts);
+            let jEnv = Utility.stringify(self.env),
+                jOpts = Utility.stringify(self.brainOpts);
 
-            this.brain = new Worker('js/lib/external/rl.js');
-            this.brain.onmessage = function (e) {
+            self.brain = new Worker('js/lib/external/rl.js');
+            self.brain.onmessage = function (e) {
                 let data = e.data;
                 switch (data.cmd) {
                     case 'act':
                         if (data.msg === 'complete') {
-                            _this.action = data.input;
-                            _this.move();
-                            _this.learn();
+                            self.action = data.input;
+                            self.move();
+                            self.learn();
                         }
                         break;
                     case 'init':
@@ -245,17 +245,17 @@ var AgentRLDQN = AgentRLDQN || {},
                         break;
                     case 'learn':
                         if (data.msg === 'complete') {
-                            _this.brainState = JSON.stringify(data.input);
+                            self.brainState = JSON.stringify(data.input);
                         }
                         break;
                     case 'load':
                         if (data.msg === 'complete') {
-                            _this.brainState = JSON.stringify(data.input);
+                            self.brainState = JSON.stringify(data.input);
                         }
                         break;
                     case 'save':
                         if (data.msg === 'complete') {
-                            _this.brainState = JSON.stringify(data.input);
+                            self.brainState = JSON.stringify(data.input);
                         }
                         break;
                     default:
@@ -264,7 +264,7 @@ var AgentRLDQN = AgentRLDQN || {},
                 }
             };
 
-            this.post('init', {env: jEnv, opts: jOpts});
+            self.post('init', {env: jEnv, opts: jOpts});
         }
 
         return this;

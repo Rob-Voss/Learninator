@@ -13,7 +13,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * @param {agentOpts} opts - The Entity options
      * @returns {EntityRLDQN}
      */
-    function EntityRLDQN(position, opts) {
+    function EntityRLDQN(position, env, opts) {
         let self = this;
 
         this.name = 'Entity RLDQN';
@@ -41,7 +41,7 @@ var EntityRLDQN = EntityRLDQN || {};
         // The number of possible angles the Agent can turn
         this.numActions = this.actions.length;
 
-        Agent.call(this, position, opts);
+        Agent.call(this, position, env, opts);
 
         // The number of Agent's eyes, each one sees the number of knownTypes + stuff
         this.numStates = this.numEyes * this.numTypes + 6;

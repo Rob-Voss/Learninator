@@ -23,17 +23,4 @@
 </div>
 
 <script>
-    // This element will be registered to index.html
-    // Because `document` here means the one in index.html
-    var XComponent = document.registerElement('agent-brain-modal', {
-        prototype: Object.create(HTMLElement.prototype, {
-            createdCallback: {
-                value: function () {
-                    var doc = document.querySelector('link[rel="import"]').import,
-                        template = doc.querySelector('#agent-brain');
-                    document.body.appendChild(template.cloneNode(true));
-                }
-            }
-        })
-    });
 </script>

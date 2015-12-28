@@ -1,176 +1,257 @@
-var Phys = Phys || {};
+var Phys = Phys || {},
+    Trig = Trig || {};
 
 (function (global) {
     "use strict";
 
-// CLASSES
-    var Manifold = function () {
-        this.a = null; // AABB
-        this.b = null; // AABB
-        this.penetration = 0;
-        this.normal = null; // Vector2D
-    };
+    /**
+     * Trigonometry functions to help with calculating circle movement
+     * @type {{distance: Trig.distance, magnitude: Trig.magnitude, unitVector: Trig.unitVector, dotProduct: Trig.dotProduct, vectorBetween: Trig.vectorBetween, pointOnLineClosestToCircle: Trig.pointOnLineClosestToCircle, isLineIntersectingCircle: Trig.isLineIntersectingCircle}}
+     */
+    var Trig = {
+            /**
+             * Returns the distance between `point1` and `point2` as the crow flies.
+             * Uses Pythagoras's theorem.
+             * @param {Vec} point1
+             * @param {Vec} point2
+             * @returns {number}
+             */
+            distance: function (point1, point2) {
+                let x = point1.x - point2.x,
+                    y = point1.y - point2.y,
+                    sqrt = Math.sqrt(x * x + y * y);
 
-    var rv = new Vec(),
-        _impulse = new Vec(),
-        //trac = 0,
-        normal = new Vec(),
-        manifold = new Manifold();
+                return sqrt;
+            },
+            /**
+             * Returns the dot product of `vector1` and `vector2`.
+             * A dot product represents the amount one vector goes in the
+             * direction of the other.
+             * Imagine `vector2` runs along the ground and `vector1` represents
+             * a ball fired from a cannon.
+             * If `vector2` is multiplied by the dot product of the two vectors,
+             * it produces a vector that represents the amount of ground
+             * covered by the ball.
+             * @param {Vec} vector1
+             * @param {Vec} vector2
+             * @returns {number}
+             */
+            dotProduct: function (vector1, vector2) {
+                let dot = vector1.vx * vector2.x + vector1.vy * vector2.y;
 
-    Phys.AABB = function (x, y, settings) {
-        // internal
-        var self = this;
+                return dot;
+            },
+            /**
+             * Returns true if `line` is intersecting `circle`.
+             * @param {Entity} entity
+             * @param {Wall} wall
+             * @returns {boolean}
+             */
+            isLineIntersectingCircle: function (entity, wall) {
+                // Get point on line closest to circle.
+                let closest = Trig.pointOnLineClosestToCircle(entity, wall),
+                // Get the distance between the closest point and the center of
+                // the circle.
+                    circleToLineDistance = Trig.distance(entity.pos, closest),
+                    intersecting = circleToLineDistance < entity.radius;
+                if (intersecting) {
+                    console.log();
+                }
+                // Return true if distance is less than the radius.
+                return intersecting;
+            },
+            /**
+             * Returns the magnitude of the passed vector.
+             * Sort of like the vector's speed.
+             * A vector with a larger x or y will have a larger magnitude.
+             * @param {Vec} vector
+             * @returns {number}
+             */
+            magnitude: function (vector) {
+                let magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 
-        this.x = x;
-        this.y = y;
-        this.width = 50;
-        this.height = 50;
+                return magnitude;
+            },
+            /**
+             * Returns the unit vector for `vector`.
+             * A unit vector points in the same direction as the original, but has
+             * a magnitude of 1.
+             * It's like a direction with a speed that is the same as all other
+             * unit vectors.
+             * @param {Vec} vector
+             * @returns {{x: number, y: number}}
+             */
+            unitVector: function (vector) {
+                let x = vector.x / Trig.magnitude(vector),
+                    y = vector.y / Trig.magnitude(vector),
+                    vx = vector.vx,
+                    vy = vector.vy;
 
-        this.min = new Vec();
-        this.max = new Vec();
+                return {
+                    x: x,
+                    y: y,
+                    vx: vx,
+                    vy: vy
+                };
+            },
+            /**
+             * Returns the vector that runs between `startPoint` and `endPoint`.
+             * @param {Vec} startPoint
+             * @param {Vec} endPoint
+             * @returns {{x: number, y: number}}
+             */
+            vectorBetween: function (startPoint, endPoint) {
+                let x = endPoint.x - startPoint.x,
+                    y = endPoint.y - startPoint.y,
+                    vx = endPoint.vx - startPoint.vx,
+                    vy = endPoint.vy - startPoint.vy;
 
-        this.mass = 100; // 0 is immobile
-        this.invmass = 0;
-        this.restitution = 1; // bounciness
-        this.velocity = new Vec(Math.random() * 70 - 35, Math.random() * 70 - 35);
+                return {
+                    x: x,
+                    y: y,
+                    vx: vx,
+                    vy: vy
+                };
+            },
+            /**
+             * Returns the point on `line` closest to `circle`.
+             * @param {Entity} entity
+             * @param {Wall} wall
+             * @returns {*}
+             */
+            pointOnLineClosestToCircle: function (entity, wall) {
+                // Get the points at each end of `line`.
+                let lineEndPoint1 = wall.v1,
+                    lineEndPoint2 = wall.v2,
 
-        // this.scratchVec = new Vec();
-        this.update = function () {
-            self.x += self.velocity.x * Phys.elapsed;
-            self.y += self.velocity.y * Phys.elapsed;
+                // Create a vector that represents the line
+                    vectorBetween = Trig.vectorBetween(lineEndPoint1, lineEndPoint2),
+                    lineUnitVector = Trig.unitVector(vectorBetween),
 
-            if (self.x < 0) {
-                self.x = 0;
-                self.velocity.x = -self.velocity.x;
-            } else if (self.x + self.width > Phys.worldWidth) {
-                self.x = Phys.worldWidth - self.width;
-                self.velocity.x = -self.velocity.x;
-            }
-            if (self.y < 0) {
-                self.y = 0;
-                self.velocity.y = -self.velocity.y;
-            } else if (self.y + self.height > Phys.worldHeight) {
-                self.y = Phys.worldHeight - self.height;
-                self.velocity.y = -self.velocity.y;
-            }
+                // Pick a line end and create a vector that represents the
+                // imaginary line between the end and the circle.
+                    lineEndToCircleVector = Trig.vectorBetween(lineEndPoint1, entity.pos),
 
-            self.min.reset(self.x, self.y);
-            self.max.reset(self.x + self.width, self.y + self.height);
-        };
+                // Get a dot product of the vector between the line end and circle, and
+                // the line vector.  (See the `dotProduct()` function for a
+                // fuller explanation.)  This projects the line end and circle
+                // vector along the line vector.  Thus, it represents how far
+                // along the line to go from the end to get to the point on the
+                // line that is closest to the circle.
+                    projection = Trig.dotProduct(lineEndToCircleVector, lineUnitVector);
 
-        this.setMass = function (newMass) {
-            this.mass = newMass;
-            if (newMass <= 0) {
-                this.invmass = 0;
-            } else {
-                this.invmass = 1 / newMass;
-            }
-        };
-
-        this.draw = function () {
-            Phys.ctx.fillStyle = 'rgba(0, 10, 150, 0.5)'; // DEBUG
-            Phys.ctx.fillRect(self.x, self.y, self.width, self.height); // DEBUG
-        };
-
-        if (typeof _settings !== 'undefined') {
-            for (var attr in _settings) {
-                if (self.hasOwnProperty(attr)) self[attr] = _settings[attr];
-            }
-        }
-
-        self.setMass(self.mass); // make sure invmass is set
-        // console.log(_self);
-    };
-
-    Phys.AABBvsAABB = function (a, b) {
-        if (a.max.x < b.min.x || a.min.x > b.max.x) return false;
-        if (a.max.y < b.min.y || a.min.y > b.max.y) return false;
-        // if (a.max.z < b.min.z || a.min.z > b.max.z) return false;
-        return true;
-    };
-
-    Phys.overlapAABB = function (a, b) {
-        // Vector from A to B
-        normal.reset(b.x - a.x, b.y - a.y);
-
-        // Calculate half extents along x axis for each object
-        var a_extent = (a.max.x - a.min.x) / 2;
-        var b_extent = (b.max.x - b.min.x) / 2;
-
-        // Calculate overlap on x axis
-        var x_overlap = a_extent + b_extent - Math.abs(normal.x);
-
-        // SAT test on x axis
-        if (x_overlap > 0) {
-            a_extent = (a.max.y - a.min.y) / 2; // var
-            b_extent = (b.max.y - b.min.y) / 2;
-
-            // Calculate overlap on y axis
-            var y_overlap = a_extent + b_extent - Math.abs(normal.y);
-
-            // SAT test on y axis
-            if (y_overlap > 0) {
-                // Find out which axis is axis of least penetration
-                if (x_overlap < y_overlap) {
-                    // Point towards B knowing that dist points from A to B
-                    if (normal.x < 0) {
-                        manifold.normal = normal.reset(-1, 0);
-                    } else {
-                        manifold.normal = normal.reset(1, 0);
-                    }
-                    manifold.penetration = x_overlap;
-                    return manifold;
+                if (projection <= 0) {
+                    // If `projection` is less than or equal to 0, the closest point
+                    // is at or past `lineEndPoint1`.  So, return `lineEndPoint1`.
+                    return lineEndPoint1;
+                } else if (projection >= wall.len) {
+                    // If `projection` is greater than or equal to the length of the
+                    // line, the closest point is at or past `lineEndPoint2`.  So,
+                    // return `lineEndPoint2`.
+                    return lineEndPoint2;
                 } else {
-                    // Point toward B knowing that dist points from A to B
-                    if (normal.y < 0) {
-                        manifold.normal = normal.reset(0, -1);
-                    } else {
-                        manifold.normal = normal.reset(0, 1);
-                    }
-                    manifold.penetration = y_overlap;
-                    return manifold;
+                    // The projection indicates a point part way along the line.
+                    // Return that point.
+                    let x = lineEndPoint1.x + lineUnitVector.x * projection,
+                        y = lineEndPoint1.y + lineUnitVector.y * projection;
+
+                    return {
+                        x: x,
+                        y: y
+                    };
                 }
             }
-        }
-        return null;
-    };
+        },
+        /**
+         * Physics functions for calculating circle movement
+         * @type {{applyGravity: Phys.applyGravity, moveCircle: Phys.moveCircle, bounceCircle: Phys.bounceCircle, bounceLineNormal: Phys.bounceLineNormal}}
+         */
+        Phys = {
+            /**
+             * Adds gravity to the velocity of `circle`.
+             * @param {Entity} entity
+             */
+            applyGravity: function (entity) {
+                entity.pos.vy += 0.06;
+            },
+            /**
+             * Adds the velocity of the circle to its center.
+             * @param {Entity} entity
+             */
+            moveCircle: function (entity) {
+                entity.pos.x += entity.pos.vx;
+                entity.pos.y += entity.pos.vy;
+                //if (entity.shape) {
+                //    entity.shape.position.set(entity.pos.x, entity.pos.y);
+                //} else if (entity.sprite) {
+                //    entity.sprite.position.set(entity.pos.x, entity.pos.y);
+                //}
 
-    Phys.resolveCollision = function (a, b, m) {
-        // Calculate relative velocity
-        rv.reset(b.velocity.x - a.velocity.x, b.velocity.y - a.velocity.y);
+            },
+            /**
+             * Assumes `line` is intersecting `circle` and bounces `circle` off `line`.
+             * @param {Entity} entity
+             * @param {Wall} wall
+             */
+            bounceCircle: function (entity, wall) {
+                // Get the vector that points out from the surface the circle is bouncing on.
+                let bounceLineNormal = Phys.bounceLineNormal(entity, wall),
 
-        // Calculate relative velocity in terms of the normal direction
-        var velAlongNormal = rv.dotProduct(m.normal);
+                // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
+                    dot = Trig.dotProduct(entity.pos, bounceLineNormal);
+                entity.pos.vx -= 2 * dot * bounceLineNormal.x;
+                entity.pos.vy -= 2 * dot * bounceLineNormal.y;
 
-        // Do not resolve if velocities are separating
-        if (velAlongNormal > 0) {
-            console.log('separating velocity');
-            return;
-        }
+                // Move the circle until it has cleared the line.
+                // This stops the circle getting stuck in the line.
+                while (Trig.isLineIntersectingCircle(entity, wall)) {
+                    Phys.moveCircle(entity);
+                }
+            },
+            /**
+             * Assumes `line` intersects `circle`.
+             * It returns the normal to the side of the line that the `circle` is hitting.
+             * @param {Entity} entity
+             * @param {Wall} wall
+             * @returns {*|{x, y}|{x: number, y: number}}
+             */
+            bounceLineNormal: function (entity, wall) {
+                // Get vector that starts at the closest point on
+                // the line and ends at the circle.  If the circle is hitting
+                // the flat of the line, this vector will point perpenticular to
+                // the line.  If the circle is hitting the end of the line, the
+                // vector will point from the end to the center of the circle.
+                let pointClosest = Trig.pointOnLineClosestToCircle(entity, wall),
+                    circleToClosestPointOnLineVector = Trig.vectorBetween(pointClosest, entity.pos),
+                    unitVector = Trig.unitVector(circleToClosestPointOnLineVector);
 
-        // Calculate restitution
-        var e = Math.min(a.restitution, b.restitution);
+                // Make the normal a unit vector and return it.
+                return unitVector;
+            },
+            updateCircles: function (world) {
+                for (let i = world.entities.length - 1; i >= 0; i--) {
+                    let circle = world.entities[i];
 
-        // Calculate impulse scalar
-        var j = -(1 + e) * velAlongNormal;
-        j /= a.invmass + b.invmass;
+                    // Run through all lines.
+                    for (let j = 0; j < world.walls.length; j++) {
+                        let line = world.walls[j];
 
-        // Apply impulse
-        _impulse.reset(m.normal.x * j, m.normal.y * j);
+                        // If `line` is intersecting `circle`, bounce circle off line.
+                        if (Trig.isLineIntersectingCircle(circle, line)) {
+                            Phys.bounceCircle(circle, line);
+                        }
+                    }
 
-        a.velocity.x -= (a.invmass * _impulse.x);
-        a.velocity.y -= (a.invmass * _impulse.y);
+                    // Apply gravity to the velocity of `circle`.
+                    Phys.applyGravity(circle);
 
-        b.velocity.x += (b.invmass * _impulse.x);
-        b.velocity.y += (b.invmass * _impulse.y);
-
-        var percent = 0.8; // usually 20% to 80%
-        var slop = 0.01; // usually 0.01 to 0.1
-        var c = Math.max(m.penetration - slop, 0) / (a.invmass + b.invmass) * percent * m.normal;
-        a.pos -= a.invmass * c;
-        b.pos += b.invmass * c;
-    };
+                    // Move `circle` according to its velocity.
+                    Phys.moveCircle(circle);
+                }
+            }
+        };
 
     global.Phys = Phys;
+    global.Trig = Trig;
 
 }(this));

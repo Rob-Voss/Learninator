@@ -1,282 +1,6 @@
 (function (global) {
     "use strict";
 
-    // Trigonometry functions to help with calculating circle movement
-    // -------------------------------------------------------------
-    var trig = {
-        /**
-         * Returns the distance between `point1` and `point2` as the crow flies.
-         * Uses Pythagoras's theorem.
-         * @param point1
-         * @param point2
-         * @returns {number}
-         */
-        distance: function (point1, point2) {
-            var x = point1.x - point2.x,
-                y = point1.y - point2.y,
-                distance = Math.sqrt(x * x + y * y);
-
-            return distance;
-        },
-        /**
-         *  Returns the magnitude of the passed vector.
-         *  Sort of like the vector's speed.
-         *  A vector with a larger x or y will have a larger magnitude.
-         * @param vector
-         * @returns {number}
-         */
-        magnitude: function (vector) {
-            let magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-
-            return magnitude;
-        },
-
-        /**
-         * Returns the unit vector for `vector`.
-         * A unit vector points in the same direction as the original, but has a magnitude of 1.
-         * It's like a direction with a speed that is the same as all other unit vectors.
-         * @param vector
-         * @returns {{x: number, y: number}}
-         */
-        unitVector: function (vector) {
-            let unit = {
-                x: vector.x / trig.magnitude(vector),
-                y: vector.y / trig.magnitude(vector)
-            };
-
-            return unit;
-        },
-        /**
-         * Returns the dot product of `vector1` and `vector2`.
-         * A dot product represents the amount one vector goes in the direction of the other.
-         * Imagine `vector2` runs along the ground and `vector1` represents a ball fired from a cannon.
-         * If `vector2` is multiplied by the dot product of the two vectors, it produces a vector that
-         * represents the amount of ground covered by the ball.
-         * @param vector1
-         * @param vector2
-         * @returns {number}
-         */
-        dotProduct: function (vector1, vector2) {
-            let dot = vector1.x * vector2.x + vector1.y * vector2.y;
-
-            return dot;
-        },
-        /**
-         * Returns the vector that runs between `startPoint` and `endPoint`.
-         * @param startPoint
-         * @param endPoint
-         * @returns {{x: number, y: number}}
-         */
-        vectorBetween: function (startPoint, endPoint) {
-            let vector = {
-                x: endPoint.x - startPoint.x,
-                y: endPoint.y - startPoint.y
-            };
-
-            return vector;
-        },
-        /**
-         * Returns an array containing the points at each end of `line`.
-         * @param line
-         * @returns {*[]}
-         */
-        lineEndPoints: function (line) {
-            var angleRadians = line.angle * 0.01745;
-
-            // Create a unit vector that represents the heading of `line`.
-            var lineUnitVector = trig.unitVector({
-                    x: Math.cos(angleRadians),
-                    y: Math.sin(angleRadians)
-                }),
-            // Multiply the unit vector by half the line length.
-            // This produces a vector that represents the offset of one of the
-            // ends of the line from the center.
-                endOffsetFromCenterVector = {
-                    x: lineUnitVector.x * line.length / 2,
-                    y: lineUnitVector.y * line.length / 2
-                };
-
-            // Return an array that contains the points at the two `line` ends.
-            let ends = [
-                {
-                    // Add the end offset to the center to get one end of 'line'.
-                    x: line.pos.x + endOffsetFromCenterVector.x,
-                    y: line.pos.y + endOffsetFromCenterVector.y
-                },
-                {
-                    // Subtract the end offset from the center to get the other end of `line`.
-                    x: line.pos.x - endOffsetFromCenterVector.x,
-                    y: line.pos.y - endOffsetFromCenterVector.y
-                }
-            ];
-
-            return ends;
-        },
-        /**
-         * Returns the point on `line` closest to `circle`.
-         * @param circle
-         * @param line
-         * @returns {*}
-         */
-        pointOnLineClosestToCircle: function (circle, line) {
-            // Create a vector that represents the line
-            var lineUnitVector = trig.unitVector(trig.vectorBetween(line.v1, line.v2)),
-            // Pick a line end and create a vector that represents the
-            // imaginary line between the end and the circle.
-                lineEndToCircleVector = trig.vectorBetween(line.v1, circle.pos),
-            // Get a dot product of the vector between the line end and circle, and
-            // the line vector.  (See the `dotProduct()` function for a
-            // fuller explanation.)  This projects the line end and circle
-            // vector along the line vector.  Thus, it represents how far
-            // along the line to go from the end to get to the point on the
-            // line that is closest to the circle.
-                projection = trig.dotProduct(lineEndToCircleVector, lineUnitVector);
-
-            // If `projection` is less than or equal to 0, the closest point
-            // is at or past `lineEndPoint1`.  So, return `lineEndPoint1`.
-            if (projection <= 0) {
-                return line.v1;
-
-                // If `projection` is greater than or equal to the length of the
-                // line, the closest point is at or past `lineEndPoint2`.
-                // So return `lineEndPoint2`.
-            } else if (projection >= line.length) {
-                return line.v2;
-
-                // The projection indicates a point part way along the line.
-                // Return that point.
-            } else {
-                let projection = {
-                    x: line.v1.x + lineUnitVector.x * projection,
-                    y: line.v1.y + lineUnitVector.y * projection
-                };
-
-                return projection;
-            }
-        },
-        /**
-         * Returns true if `line` is intersecting `circle`.
-         * @param circle
-         * @param line
-         * @returns {boolean}
-         */
-        isLineIntersectingCircle: function (circle, line) {
-            // Get point on line closest to circle.
-            var closest = trig.pointOnLineClosestToCircle(circle, line),
-            // Get the distance between the closest point and the center of the circle.
-                circleToLineDistance = trig.distance(circle.pos, closest);
-
-            // Return true if distance is less than the radius.
-            return circleToLineDistance < circle.radius;
-        }
-    };
-
-    // Physics functions for calculating circle movement
-    // -----------------------------------------------
-    var physics = {
-        /**
-         * Adds gravity to the velocity of `circle`.
-         * @param circle
-         */
-        applyGravity: function (circle) {
-            circle.pos.vy += 0.06;
-        },
-        /**
-         * Adds the velocity of the circle to its center.
-         * @param circle
-         */
-        moveCircle: function (circle) {
-            circle.pos.x += circle.pos.vx;
-            circle.pos.y += circle.pos.vy;
-        },
-        /**
-         * Assumes `line` is intersecting `circle` and bounces `circle` off `line`.
-         * @param circle
-         * @param line
-         */
-        bounceCircle: function (circle, line) {
-            // Get the vector that points out from the surface the circle is bouncing on.
-            var bounceLineNormal = physics.bounceLineNormal(circle, line),
-            // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
-                dot = trig.dotProduct(circle.pos, bounceLineNormal);
-            circle.pos.vx -= 2 * dot * bounceLineNormal.x;
-            circle.pos.vy -= 2 * dot * bounceLineNormal.y;
-
-            // Move the circle until it has cleared the line.
-            // This stops the circle getting stuck in the line.
-            while (trig.isLineIntersectingCircle(circle, line)) {
-                physics.moveCircle(circle);
-            }
-        },
-        /**
-         * Assumes `line` intersects `circle`.
-         * It returns the normal to the side of the line that the `circle` is hitting.
-         * @param circle
-         * @param line
-         * @returns {*|{x, y}}
-         */
-        bounceLineNormal: function (circle, line) {
-            // Get vector that starts at the closest point on the line and ends at the circle.
-            // If the circle is hitting the flat of the line this vector will point perpendicular to the line.
-            // If the circle is hitting the end of the line the vector will point from the end to the center
-            // of the circle.
-            var circleToClosestPointOnLineVector = trig.vectorBetween(
-                trig.pointOnLineClosestToCircle(circle, line),
-                circle.pos
-            );
-
-            // Make the normal a unit vector and return it.
-            return trig.unitVector(circleToClosestPointOnLineVector);
-        }
-    };
-
-    var Manifold = {
-        //Object *A;
-        //Object *B;
-        //float penetration;
-        //Vec2 normal;
-    };
-
-    /**
-     * j = −(1+e)((VB−VA)⋅n)
-     *     -----------------
-     *         1       1
-     *        ----  + ----
-     *       massA   massB
-     */
-    function ResolveCollision(A, B) {
-        // Calculate relative velocity
-        let rv = B.velocity - A.velocity;
-
-        // Calculate relative velocity in terms of the normal direction
-        let velAlongNormal = DotProduct(rv, normal);
-
-        // Do not resolve if velocities are separating
-        if(velAlongNormal > 0) {
-            return;
-        }
-
-        // Calculate restitution
-        let e = min(A.restitution, B.restitution);
-
-        // Calculate impulse scalar
-        let j = -(1 + e) * velAlongNormal;
-        j /= 1 / A.mass + 1 / B.mass;
-
-        // Apply impulse
-        let impulse = j * normal;
-        A.velocity -= 1 / A.mass * impulse;
-        B.velocity += 1 / B.mass * impulse;
-    }
-
-    function PositionalCorrection(A, B) {
-        const percent = 0.2; // usually 20% to 80%
-        const slop = 0.01; // usually 0.01 to 0.1
-        let correction = max(penetration - k_slop, 0/**0.0f*/) / (A.inv_mass + B.inv_mass) * percent * n;
-        A.pos -= A.inv_mass * correction;
-        B.pos += B.inv_mass * correction;
-    }
-
     /**
      * Collision detection options
      * @typedef {Object} cdOpts
@@ -407,7 +131,7 @@
             let collided = this.pointCircleCollide(nearest, circle) && (pLen2 <= dLen2) && ((px * dx + py * dy) >= 0);
 
             if (collided) {
-                return collisionObj
+                return collisionObj;
             }
             return false;
         };
@@ -486,13 +210,13 @@
          */
         this.sightCheck = function (v1, v2, walls, entities, radius) {
             var minRes = false,
-                radius = radius || 0;
+                rad = radius || 0;
 
             // Collide with walls
             if (walls) {
                 for (var i = 0, wl = walls.length; i < wl; i++) {
                     var wall = walls[i],
-                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2, radius);
+                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2, rad);
                     if (wResult) {
                         wResult.target = wall;
                         if (!minRes) {
@@ -721,7 +445,7 @@
 
             if (aNode.items !== undefined) {
                 let popText = new PIXI.Text(aNode.items.length, {font: "20px Arial", fill: "#006400", align: "center"});
-                popText.pos.set(aNode.x + aNode.width / 2, aNode.y + aNode.height / 2);
+                popText.position.set(aNode.x + aNode.width / 2, aNode.y + aNode.height / 2);
                 rect.addChild(popText);
             }
 
@@ -735,9 +459,9 @@
             this.tree.clear();
             this.nodes = [];
 
-            //for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
-            //    this.nodes.push(this.walls[wi]);
-            //}
+            for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
+                this.nodes.push(this.walls[wi]);
+            }
 
             for (let ii = 0, ni = this.entities.length; ii < ni; ii++) {
                 this.nodes.push(this.entities[ii]);

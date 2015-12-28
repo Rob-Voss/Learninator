@@ -1,4 +1,4 @@
-var RewardGraph = RewardGraph || {},
+var FlotGraph = FlotGraph || {},
     Utility = Utility || {};
 
 (function (global) {
@@ -130,6 +130,6 @@ var RewardGraph = RewardGraph || {},
         }
     };
 
-    global.RewardGraph = RewardGraph;
+    global.FlotGraph = FlotGraph;
 
 }(this));

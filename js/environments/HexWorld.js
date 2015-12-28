@@ -23,44 +23,12 @@ var HexWorld = HexWorld || {},
         this.walls = [];
 
         this.cheats = {
-            quad: true,
+            quad: false,
             grid: false,
             walls: false
         };
 
-        this.agents = [
-            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)), {
-                brainType: 'RLDQN',
-                env: {
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    numEyes: 30,
-                    numTypes: 5,
-                    range: 120,
-                    proximity: 120,
-                    getMaxNumActions: function () {
-                        return this.numActions;
-                    },
-                    getNumStates: function () {
-                        return this.numStates;
-                    }
-                },
-                radius: 10,
-                collision: true,
-                interactive: true,
-                useSprite: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    id: false,
-                    name: true
-                },
-                worker: true
-            })
-        ];
-        this.numAgents = this.agents.length;
-
-        this.numEntities = 3;
+        this.numEntities = 10;
         this.entityOpts = {
             radius: 10,
             collision: true,
@@ -70,7 +38,7 @@ var HexWorld = HexWorld || {},
             cheats: {
                 gridLocation: false,
                 position: false,
-                id: true,
+                id: false,
                 name: false
             }
         };
@@ -78,12 +46,19 @@ var HexWorld = HexWorld || {},
         this.gridOptions = {
             width: this.width,
             height: this.height,
-            tileSize: 20,
-            tileSpacing: 50,
+            tileSize: 40,
+            tileSpacing: 55,
             pointyTiles: true
         };
+
+        this.walls.push(new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls));
+
         this.grid = new HexGrid(this.gridOptions);
-        this.grid.shapeRectangle(3, 3, Hex);
+        this.grid.shapeRectangle(2, 2, Hex);
+
         for (let i = 0; i < this.grid.cells.length; i++) {
             let cell = this.grid.cells[i];
             for (let c = 0; c < cell.corners.length; c++) {
@@ -103,20 +78,34 @@ var HexWorld = HexWorld || {},
             }
         }
 
-        this.walls.push(new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls));
-
         World.call(this);
-
         this.stage.addChild(this.grid.getGrid(false));
+        this.agents[0].load('zoo/wateragent.json');
 
         return this;
     }
 
     HexWorld.prototype = Object.create(World.prototype);
     HexWorld.prototype.constructor = World;
+
+    /**
+     * Tick the environment
+     * @returns {World}
+     */
+    HexWorld.prototype.tick = function () {
+        this.updatePopulation();
+
+        // Loop through the entities of the world and make them do work son!
+        for (let e = 0; e < this.entities.length; e++) {
+            this.entities[e].tick(this);
+        }
+
+        this.updatePopulation();
+        Phys.updateCircles(this);
+        this.draw();
+
+        return this;
+    };
 
     global.HexWorld = HexWorld;
 

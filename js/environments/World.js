@@ -117,7 +117,10 @@ var World = World || {},
 
         this.setCollisionDetection(this.collision);
         this.populate(worldOpts);
-        this.rewards = new FlotGraph(this.agents);
+
+        if (document.getElementById('flotreward')) {
+            this.rewards = new FlotGraph(this.agents);
+        }
 
         function animate() {
             if (!self.pause) {
@@ -271,13 +274,19 @@ var World = World || {},
         }
         // Populating the world
         for (let k = 0; k < number; k++) {
-            let type = Utility.randi(1, 3),
-                x = Utility.randi(2, this.width - 2),
+            let x = Utility.randi(2, this.width - 2),
                 y = Utility.randi(2, this.height - 2),
+                type = Utility.randi(1, 3),
                 vx = Utility.randf(-2, 2),
                 vy = Utility.randf(-2, 2),
                 position = new Vec(x, y, 0, vx, vy),
                 entity = new Entity(type, position, this.entityOpts);
+            for (let i = 0; i < this.walls.length; i++) {
+                while (this.circleLineCollide(this.walls[i], entity)) {
+                    entity.pos.x = Utility.randi(2, this.width - 2);
+                    entity.pos.y = Utility.randi(2, this.height - 2);
+                }
+            }
 
             // Insert the population
             this.tree.insert(entity);
@@ -336,7 +345,9 @@ var World = World || {},
             this.entityAgents[a].draw();
         }
 
-        this.rewards.graphRewards();
+        if (this.rewards) {
+            this.rewards.graphRewards();
+        }
 
         return this;
     };

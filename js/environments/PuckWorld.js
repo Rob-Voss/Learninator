@@ -38,35 +38,35 @@ var PuckWorld = PuckWorld || {},
             walls: false
         };
 
-        this.agentOpts = {
-            brainType: 'RLDQN',
-            env: {
-                numActions: 4,
-                numStates: 0,
-                numEyes: 0,
-                numTypes: 0,
-                range: 0,
-                proximity: 0,
-                getMaxNumActions: function () {
-                    return this.numActions;
-                },
-                getNumStates: function () {
-                    return this.numStates;
-                }
-            },
-            numEyes: 0,
-            numTypes: 0,
-            width: 20,
-            height: 20,
-            radius: 10,
-            collision: false,
-            interactive: false,
-            useSprite: false,
-            movingEntities: false
-        };
 
         this.agents = [
-            new AgentRLDQN(new Vec(300, 300), this, this.agentOpts)
+            new AgentRLDQN(new Vec(300, 300), {
+                brainType: 'RLDQN',
+                env: Utility.stringify({
+                    getNumStates: function () {
+                        return 0;
+                    },
+                    getMaxNumActions: function () {
+                        return 4;
+                    },
+                    startState: function () {
+                        return 0;
+                    }
+                }),
+                numActions: 4,
+                numStates: 0,
+                range: 0,
+                proximity: 0,
+                numEyes: 0,
+                numTypes: 0,
+                width: 20,
+                height: 20,
+                radius: 10,
+                collision: false,
+                interactive: false,
+                useSprite: false,
+                movingEntities: false
+            })
         ];
 
         //World.call(this, this.worldOpts, this.entityOpts);

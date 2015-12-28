@@ -281,32 +281,32 @@ var Entity = Entity || {};
         this.pos.x += this.pos.vx;
         this.pos.y += this.pos.vy;
 
-        this.world.check(this);
+        //this.world.check(this);
 
-        // Add any walls we hit
-        // @TODO I need to get these damn walls into the CollisionDetection call
-        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
-            if (result) {
-                this.collisions.push(wall);
-            }
-        }
+        //// Add any walls we hit
+        //// @TODO I need to get these damn walls into the CollisionDetection call
+        //for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
+        //    let wall = this.world.walls[w],
+        //        result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
+        //    if (result) {
+        //        this.collisions.push(wall);
+        //    }
+        //}
 
-        for (let i = 0; i < this.collisions.length; i++) {
-            if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
-                // Agent
-                //console.log("Oh shit it's an " + this.collisions[i].name);
-            } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                // Edible
-                //console.log('Watch it ' + this.collisions[i].name);
-            } else if (this.collisions[i].type === 0) {
-                // Wall
-                this.pos = this.oldPos.clone();
-                this.pos.vx *= -1;
-                this.pos.vy *= -1;
-            }
-        }
+        //for (let i = 0; i < this.collisions.length; i++) {
+        //    if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
+        //        // Agent
+        //        //console.log("Oh shit it's an " + this.collisions[i].name);
+        //    } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
+        //        // Edible
+        //        //console.log('Watch it ' + this.collisions[i].name);
+        //    } else if (this.collisions[i].type === 0) {
+        //        // Wall
+        //        this.pos = this.oldPos.clone();
+        //        this.pos.vx *= -1;
+        //        this.pos.vy *= -1;
+        //    }
+        //}
 
         // Handle boundary conditions.. bounce Agent
         let top = this.world.height - (this.world.height - this.radius),

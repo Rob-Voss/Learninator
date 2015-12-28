@@ -53,7 +53,17 @@ var WaterWorld = WaterWorld || {},
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: this,
+                    env: Utility.stringify({
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    }),
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -75,7 +85,17 @@ var WaterWorld = WaterWorld || {},
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: this,
+                    env: Utility.stringify({
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    }),
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,

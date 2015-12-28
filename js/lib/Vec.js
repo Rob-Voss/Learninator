@@ -352,6 +352,10 @@
 
             return this;
         },
+        plusEq: function(v) {
+            this.x += v.x;
+            this.y += v.y;
+        },
         /**
          * Project this vector on to another vector.
          * @param {Vec} v The vector to project onto.
@@ -535,6 +539,7 @@
         this.v1 = v1;
         this.v2 = v2;
         this.pos = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+        this.len = this.v1.distFrom(this.v2);
         this.rotation = Math.atan2(yDiff, xDiff); // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
         this.angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI; // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
 

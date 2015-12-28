@@ -34,7 +34,6 @@ var AgentRLTD = AgentRLTD || {},
             smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
             beta: 0.1 // learning rate for smooth policy update
         });
-
         this.reset();
     }
 
@@ -43,23 +42,23 @@ var AgentRLTD = AgentRLTD || {},
 
     AgentRLTD.prototype.reset = function () {
         let self = this;
-        if (!this.worker) {
-            this.brain = new TDAgent(this.env, this.brainOpts);
-            this.state = this.env.startState();
+        if (!self.worker) {
+            self.brain = new TDAgent(self.env, self.brainOpts);
+            self.state = self.env.startState();
 
-            this.env.reset();
+            self.env.reset();
 
-            return this;
+            return self;
         } else {
-            this.post = function (cmd, input) {
-                this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
+            self.post = function (cmd, input) {
+                self.brain.postMessage({target: 'TD', cmd: cmd, input: input});
             };
 
             let jEnv = Utility.stringify(self.env),
                 jOpts = Utility.stringify(self.brainOpts);
 
-            this.brain = new Worker('js/lib/external/rl.js');
-            this.brain.onmessage = function (e) {
+            self.brain = new Worker('js/lib/external/rl.js');
+            self.brain.onmessage = function (e) {
                 let data = e.data;
                 switch (data.cmd) {
                     case 'init':
@@ -112,7 +111,7 @@ var AgentRLTD = AgentRLTD || {},
                 }
             };
 
-            this.brain.post('init', {env: jEnv, opts: jOpts});
+            self.brain.post('init', {env: jEnv, opts: jOpts});
         }
     };
 

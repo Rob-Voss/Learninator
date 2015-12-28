@@ -11,10 +11,11 @@ var AgentTD = AgentTD || {},
      * @constructor
      *
      * @param {Vec} position - The x, y location
+     * @param {Object} env - The environment
      * @param {agentOpts} opts - The Agent options
      * @returns {AgentTD}
      */
-    function AgentTD(position, opts) {
+    function AgentTD(position, env, opts) {
         // Reward and Punishment
         this.carrot = +5;
         this.stick = -6;
@@ -33,7 +34,7 @@ var AgentTD = AgentTD || {},
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
 
-        Agent.call(this, position, opts);
+        Agent.call(this, position, env, opts);
 
         // Amount of temporal memory. 0 = agent lives in-the-moment :)
         this.temporalWindow = 1;
