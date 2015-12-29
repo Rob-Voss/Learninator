@@ -17,11 +17,12 @@
      * @param {cdOpts} opts
      */
     var CollisionDetector = function (opts) {
-        if (opts.type === 'grid') {
+        this.cdType = opts.type;
+        if (this.cdType === 'grid') {
             GridCD.apply(this);
-        } else if (opts.type === 'quad') {
+        } else if (this.cdType === 'quad') {
             QuadCD.apply(this);
-        } else if (opts.type === 'brute') {
+        } else if (this.cdType === 'brute') {
             BruteCD.apply(this);
         }
 
@@ -326,6 +327,101 @@
             return false;
         };
 
+        /**
+         * Set up the CD function
+         * @param target
+         */
+        this.check = function (target) {
+            var region, collisionObj,
+                self = this;
+            target.collisions = [];
+
+            /**
+             * Collision check
+             * @param {Entity} entity
+             */
+            function checkIt(entity) {
+                if (entity === target) {
+                    return;
+                }
+                var edibleEntity = (entity.type === 2 || entity.type === 1),
+                    edibleTarget = (target.type === 2 || target.type === 1),
+                    agentTarget = (target.type === 3 || target.type === 4 || target.type === 5),
+                    agentEntity = (entity.type === 3 || entity.type === 4 || entity.type === 5);
+
+                // If both entities have a radius
+                if (entity.radius !== undefined && target.radius !== undefined) {
+                    // Use the circle collision check
+                    collisionObj = self.circleCircleCollide(entity, target);
+                    if (collisionObj) {
+                        // If there was a collision between an agent and an edible entity
+                        if ((edibleTarget && edibleEntity) ||
+                            (agentTarget && edibleEntity)) {
+                            // If there was a collision between edible entities
+                            target.pos.vx = collisionObj.target.vx;
+                            target.pos.vy = collisionObj.target.vy;
+                            entity.pos.vx = collisionObj.entity.vx;
+                            entity.pos.vy = collisionObj.entity.vy;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                            return collisionObj;
+                        }
+                    } else {
+                        // Nada so return
+                        return;
+                    }
+                    // Is it an entity versus a wall?
+                } else {
+                    collisionObj = self.circleLineCollide(entity, target);
+                    if (collisionObj) {
+                        // Reset the position
+                        target.pos = target.oldPos.clone();
+                        // If it's a consumable try and change the direction
+                        if (target.type === 2 || target.type === 1) {
+                            target.pos.vx = collisionObj.vx;
+                            target.pos.vy = collisionObj.vy;
+                            // If it's an Agent bounce it
+                        } else if (target.type === 3 || target.type === 4) {
+                            target.pos.vx = 0;
+                            target.pos.vy = 0;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                            return collisionObj;
+                        }
+                    } else {
+                        // Nada so return
+                        return;
+                    }
+                }
+            }
+
+            switch (this.cdType) {
+                case 'quad':
+                    region = this.tree.retrieve(target, checkIt);
+                    break;
+                case 'grid':
+                    // Loop through all the entities in the current cell and check distances
+                    target.gridLocation.population.forEach(function (entity) {
+                        collisionObj = checkIt(entity);
+                    });
+                    break;
+                case 'brute':
+                    let tmpAll = this.walls.concat(this.agents.concat(this.entities.concat(this.entityAgents)));
+                    tmpAll.forEach(function (entity) {
+                        collisionObj = checkIt(entity);
+                    });
+                    break;
+            }
+
+            return collisionObj;
+        };
+
     };
     global.CollisionDetector = CollisionDetector;
 
@@ -347,83 +443,6 @@
         };
         this.tree = new QuadTree(args);
         this.tree.insert(this.nodes);
-
-        /**
-         * Set up the CD function
-         * @param target
-         */
-        this.check = function (target) {
-            var region, collisionObj,
-                _this = this;
-            target.collisions = [];
-
-            /**
-             * Collision check
-             * @param {Entity} entity
-             */
-            function checkIt(entity) {
-                if (entity === target) {
-                    return;
-                }
-                var edibleEntity = (entity.type === 2 || entity.type === 1),
-                    edibleTarget = (target.type === 2 || target.type === 1),
-                    agentTarget = (target.type === 3 || target.type === 4 || target.type === 5),
-                    agentEntity = (entity.type === 3 || entity.type === 4 || entity.type === 5);
-
-                // If both entities have a radius
-                if (entity.radius !== undefined && target.radius !== undefined) {
-                    // Use the circle collision check
-                    collisionObj = _this.circleCircleCollide(entity, target);
-                    if (collisionObj) {
-                        // If there was a collision between an agent and an edible entity
-                        if ((edibleTarget && edibleEntity) ||
-                            (agentTarget && edibleEntity)) {
-                            // If there was a collision between edible entities
-                            target.pos.vx = collisionObj.target.vx;
-                            target.pos.vy = collisionObj.target.vy;
-                            entity.pos.vx = collisionObj.entity.vx;
-                            entity.pos.vy = collisionObj.entity.vy;
-                        }
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-                    } else {
-                        // Nada so return
-                        return;
-                    }
-                    // Is it an entity versus a wall?
-                } else {
-                    collisionObj = _this.circleLineCollide(entity, target);
-                    if (collisionObj) {
-                        // Reset the position
-                        target.pos = target.oldPos.clone();
-                        // If it's a consumable try and change the direction
-                        if (target.type === 2 || target.type === 1) {
-                            target.pos.vx = collisionObj.vx;
-                            target.pos.vy = collisionObj.vy;
-                            // If it's an Agent bounce it
-                        } else if (target.type === 3 || target.type === 4) {
-                            target.pos.vx = 0;
-                            target.pos.vy = 0;
-                        }
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-                    } else {
-                        // Nada so return
-                        return;
-                    }
-                }
-            }
-
-            region = this.tree.retrieve(target, checkIt);
-
-            return collisionObj;
-        };
 
         /**
          * Draw the regions from a node
@@ -456,20 +475,25 @@
          * Update the population
          */
         this.updatePopulation = function () {
+            let self = this;
             this.tree.clear();
             this.nodes = [];
 
-            for (let wi = 0, ni = this.walls.length; wi < ni; wi++) {
-                this.nodes.push(this.walls[wi]);
-            }
+            this.walls.forEach(function (wall) {
+                self.nodes.push(wall);
+            });
 
-            for (let ii = 0, ni = this.entities.length; ii < ni; ii++) {
-                this.nodes.push(this.entities[ii]);
-            }
+            this.entities.forEach(function (entity) {
+                self.nodes.push(entity);
+            });
 
-            for (let ai = 0, na = this.agents.length; ai < na; ai++) {
-                this.nodes.push(this.agents[ai]);
-            }
+            this.agents.forEach(function (agent) {
+                self.nodes.push(agent);
+            });
+
+            this.entityAgents.forEach(function (entityAgent) {
+                self.nodes.push(entityAgent);
+            });
 
             this.tree.insert(this.nodes);
 
@@ -502,30 +526,10 @@
         this.cellHeight = this.height / this.grid.yCount;
 
         /**
-         * Set up the CD function
-         * @param {Entity} target
-         */
-        this.check = function (target) {
-            target.collisions = [];
-            // Loop through all the entities in the current cell and check distances
-            let cell = this.grid.getCellAt(target.gridLocation.x, target.gridLocation.y);
-            for (let p = 0; p < cell.population.length; p++) {
-                let entities = this.entities,
-                    entity = entities.find(Utility.getId, cell.population[p]);
-                if (entity) {
-                    let dist = target.pos.distanceTo(entity.pos),
-                        distFrom = target.pos.distFrom(entity.pos);
-                    if (dist < entity.radius + target.radius) {
-                        target.collisions.push(entity);
-                    }
-                }
-            }
-        };
-
-        /**
-         *
+         * Draw the regions of the grid
          */
         this.drawRegions = function () {
+            let self = this;
             // Draw the grid
             if (this.cheats.grid) {
                 // Clear the collision detection holder
@@ -535,30 +539,11 @@
                 this.collisionOverlay = new PIXI.Container();
 
                 // If we are using grid based collision set up an overlay
-                for (let x = 0; x < this.grid.cells.length; x++) {
-                    let xCell = this.grid.cells[x];
-                    for (let y = 0; y < this.grid.cells[x].length; y++) {
-                        // Draw population counts text
-                        let yCell = xCell[y],
-                            coords = yCell.coords,
-                        // Draw the grid
-                            grid = new PIXI.Graphics();
-                        grid.lineStyle(0.09, 0x000000);
-                        grid.moveTo(coords.bottom.left.x, coords.bottom.left.y);
-                        grid.lineTo(coords.bottom.right.x, coords.bottom.right.y);
-                        grid.moveTo(coords.bottom.right.x, coords.bottom.right.y);
-                        grid.lineTo(coords.top.right.x, coords.top.right.y);
-                        grid.endFill();
+                this.grid.cells.forEach(function (cell) {
+                    self.collisionOverlay.addChild(cell.shape);
+                    cell.draw();
+                });
 
-                        // Draw population counts text
-                        let fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
-                            popText = new PIXI.Text(yCell.population.length, fontOpts);
-                        popText.pos.set(coords.bottom.left.x + (this.cellWidth / 2), coords.bottom.left.y - (this.cellHeight / 2));
-                        grid.addChild(popText);
-
-                        this.collisionOverlay.addChild(grid);
-                    }
-                }
                 this.stage.addChild(this.collisionOverlay);
             } else {
                 // Clear the collision detection holder
@@ -573,26 +558,26 @@
          * Update populations counts and grids
          */
         this.updatePopulation = function () {
+            let self = this;
+
             // Reset the cell's population's
-            for (let x = 0; x < this.grid.cells.length; x++) {
-                for (let y = 0; y < this.grid.cells[x].length; y++) {
-                    this.grid.cells[x][y].population = [];
-                }
-            }
+            self.grid.cells.forEach(function (hex) {
+                hex.population = [];
+                self.entities.forEach(function (entity) {
+                    self.grid.getGridLocation(entity);
+                    entity.gridLocation.population.push(entity);
+                });
+                self.entityAgents.forEach(function (entityAgent) {
+                    self.grid.getGridLocation(entityAgent);
+                    entityAgent.gridLocation.population.push(entityAgent);
+                });
+                self.agents.forEach(function (agent) {
+                    self.grid.getGridLocation(agent);
+                    agent.gridLocation.population.push(agent);
+                });
+            });
 
-            // Loop through the entities of the world and make them do work son!
-            for (let e = 0; e < this.entities.length; e++) {
-                this.grid.getGridLocation(this.entities[e]);
-                this.entities[e].gridLocation.population.push(this.entities[e].id);
-            }
-
-            // Loop through the agents of the world and make them do work!
-            for (let a = 0; a < this.agents.length; a++) {
-                this.grid.getGridLocation(this.agents[a]);
-                this.agents[a].gridLocation.population.push(this.agents[a].id);
-            }
-
-            this.drawRegions(this.tree.root);
+            this.drawRegions();
         };
     };
     global.GridCD = GridCD;
@@ -604,89 +589,9 @@
      */
     var BruteCD = function () {
         /**
-         * Set up the CD function
-         * @param {Entity} target
-         */
-        this.check = function (target) {
-            let tmpEntities = this.agents.concat(this.entities);
-            target.collisions = [];
-            // Loop through all the entities in the world and check distances
-            for (let j = 0; j < tmpEntities.length; j++) {
-                let entity = tmpEntities[j];
-
-                if (entity === target) {
-                    continue;
-                }
-                let edibleEntity = (entity.type === 2 || entity.type === 1),
-                    edibleTarget = (target.type === 2 || target.type === 1);
-                // If both entities have a radius
-                if (entity.radius !== undefined && target.radius !== undefined) {
-                    // Use the circle collision check
-                    let collisionObj = this.circleCircleCollide(entity, target);
-                    if (collisionObj) {
-                        // If there was a collision between an agent and an edible entity
-                        if ((edibleEntity && edibleTarget) ||
-                            (edibleTarget && entity.type === 5) ||
-                            (entity.type === 5 && target.type === 5) ||
-                            (entity.type === 5 && (target.type === 3 || target.type === 4))) {
-                            // If there was a collision between edible entities
-                            target.pos.vx = collisionObj.target.vx;
-                            target.pos.vy = collisionObj.target.vy;
-                            entity.pos.vx = collisionObj.entity.vx;
-                            entity.pos.vy = collisionObj.entity.vy;
-                        }
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-                    } else {
-                        // Nada so return
-                        continue;
-                    }
-                    // Is it an entity versus a wall?
-                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
-                    let result = this.lineIntersect(target.oldPos, target.pos, entity.v1, entity.v2);
-                    if (result) {
-                        // Reset the position
-                        target.pos = target.oldPos.clone();
-                        // If it's a consumable try and change the direction
-                        if (target.type === 2 || target.type === 1) {
-                            target.pos.vx *= -1;
-                            target.pos.vy *= -1;
-                            // If it's an Agent bounce it
-                        } else if (target.type === 3 || target.type === 4) {
-                            target.pos.vx = 0;
-                            target.pos.vy = 0;
-                        }
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-                    } else {
-                        // Nada so return
-                        continue;
-                    }
-                }
-            }
-        };
-
-        /**
          *
          */
         this.drawRegions = function () {
-            // Clear the collision detection holder
-            if (this.collisionOverlay !== undefined) {
-                this.stage.removeChild(this.collisionOverlay);
-            }
-            this.collisionOverlay = new PIXI.Container();
-
-            let fontOpts = {font: "20px Arial", fill: "#006400", align: "center"},
-                popText = new PIXI.Text(this.entities.length, fontOpts);
-            popText.pos.set(this.width / 2, this.height / 2);
-            this.collisionOverlay.addChild(popText);
-            this.stage.addChild(this.collisionOverlay);
 
         };
 

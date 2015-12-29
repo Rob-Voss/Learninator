@@ -67,7 +67,7 @@ var World = World || {},
         // The collision detection type
         this.collision = this.collision || Utility.getOpt(worldOpts, 'collision', {
             type: 'quad',
-            maxChildren: 1,
+            maxChildren: 3,
             maxDepth: 20
         });
 
@@ -158,10 +158,10 @@ var World = World || {},
         // Walls
         this.wallContainer = new PIXI.Container();
         this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
-            new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls),
-            new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls),
-            new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls),
-            new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls)
+            new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
+            new Wall(new Vec(this.width, 0), new Vec(this.width, 0 + this.height), this.cheats.walls),
+            new Wall(new Vec(this.width, 0 + this.height), new Vec(0, this.height), this.cheats.walls),
+            new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
         ]);
         this.addWalls();
         this.stage.addChild(this.wallContainer);
@@ -174,7 +174,7 @@ var World = World || {},
         this.entityOpts = this.entityOpts || Utility.getOpt(worldOpts, 'entityOpts', {
             radius: 10,
             collision: true,
-            interactive: true,
+            interactive: false,
             useSprite: false,
             movingEntities: false,
             cheats: {
@@ -195,7 +195,7 @@ var World = World || {},
         this.entityAgentOpts = this.entityAgentOpts || Utility.getOpt(worldOpts, 'entityAgentOpts', {
                 radius: 10,
                 collision: true,
-                interactive: true,
+                interactive: false,
                 useSprite: false,
                 movingEntities: false,
                 cheats: {
@@ -269,6 +269,7 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.addEntities = function (number) {
+        let self = this;
         if (number === undefined) {
             number = this.numEntities - this.entities.length;
         }
@@ -281,15 +282,17 @@ var World = World || {},
                 vy = Utility.randf(-2, 2),
                 position = new Vec(x, y, 0, vx, vy),
                 entity = new Entity(type, position, this.entityOpts);
-            for (let i = 0; i < this.walls.length; i++) {
-                while (this.circleLineCollide(this.walls[i], entity)) {
-                    entity.pos.x = Utility.randi(2, this.width - 2);
-                    entity.pos.y = Utility.randi(2, this.height - 2);
+            this.walls.forEach(function (wall) {
+                while (self.circleLineCollide(wall, entity)) {
+                    entity.pos.x = Utility.randi(2, self.width - 2);
+                    entity.pos.y = Utility.randi(2, self.height - 2);
                 }
-            }
+            });
 
             // Insert the population
-            this.tree.insert(entity);
+            if (this.cdType == 'quad') {
+                this.tree.insert(entity);
+            }
             this.entities.push(entity);
             this.entityContainer.addChild(entity.shape || entity.sprite);
         }
@@ -302,10 +305,11 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.addWalls = function () {
+        let self = this;
         // Add the walls to the world
-        for (let w = 0; w < this.walls.length; w++) {
-            this.wallContainer.addChild(this.walls[w].shape);
-        }
+        this.walls.forEach(function (wall) {
+            self.wallContainer.addChild(wall.shape);
+        });
 
         return this;
     };
@@ -329,21 +333,17 @@ var World = World || {},
      */
     World.prototype.draw = function () {
         // draw items
-        for (let e = 0, ni = this.entities.length; e < ni; e++) {
-            this.entities[e].draw();
-        }
-
+        this.entities.forEach(function (entity) {
+            entity.draw();
+        });
         // draw agents
-        for (let a = 0, na = this.agents.length; a < na; a++) {
-            // draw agents body
-            this.agents[a].draw();
-        }
-
+        this.agents.forEach(function (agent) {
+            agent.draw();
+        });
         // draw entity agents
-        for (let a = 0, na = this.entityAgents.length; a < na; a++) {
-            // draw agents body
-            this.entityAgents[a].draw();
-        }
+        this.entityAgents.forEach(function (entityAgent) {
+            entityAgent.draw();
+        });
 
         if (this.rewards) {
             this.rewards.graphRewards();
@@ -368,46 +368,37 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.tick = function () {
+        let self = this;
         this.updatePopulation();
-        this.lastTime = this.clock;
         this.clock++;
 
         // Loop through the agents of the world and make them do work!
-        for (let a = 0; a < this.agents.length; a++) {
-            this.agents[a].tick(this);
-        }
+        this.agents.forEach(function (agent) {
+            agent.tick(self);
+        });
 
         // Loop through entity agents
-        for (let a = 0, na = this.entityAgents.length; a < na; a++) {
-            this.entityAgents[a].tick(this);
-        }
+        this.entityAgents.forEach(function (entityAgent) {
+            entityAgent.tick(self);
+        });
 
         // Loop through the entities of the world and make them do work son!
-        for (let e = 0; e < this.entities.length; e++) {
-            this.entities[e].tick(this);
-        }
+        this.entities.forEach(function (entity) {
+            entity.tick(self);
+        });
 
         // Loop through and destroy old items
-        for (let e = 0; e < this.entities.length; e++) {
-            let entity = this.entities[e],
-                edibleEntity = (entity.type === 2 || entity.type === 1);
-            if ((entity.type === 2 && entity.age > 2500 ) || (edibleEntity && entity.age > 5000) || entity.cleanUp === true) {
-                this.deleteEntity(this.entities[e]);
+        this.entities.forEach(function (entity) {
+            let edibleEntity = (entity.type === 2 || entity.type === 1);
+            if ((edibleEntity && entity.age > 5000) || entity.cleanUp === true) {
+                self.deleteEntity(entity);
             }
-        }
+        });
 
         // If we have less then the number of Items allowed throw a random one in
         if (this.entities.length < this.numEntities) {
             this.addEntities();
         }
-
-        // If we have less then the number of Agents allowed throw a random one in
-        //if (this.agents.length < this.numAgents && this.clock % 10 === 0 && Utility.randf(0, 1) < 0.25) {
-        //var missing = this.numAgents - this.agents.length;
-        //for (let na = 0; na < missing; na++) {
-        //    this.addAgent();
-        //}
-        //}
 
         this.updatePopulation();
         this.draw();

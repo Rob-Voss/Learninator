@@ -21,14 +21,17 @@ var HexWorld = HexWorld || {},
         this.width = 600;
         this.height = 600;
         this.walls = [];
+        this.collision = {
+            type: 'grid'
+        };
 
         this.cheats = {
-            quad: false,
-            grid: false,
+            quad: true,
+            grid: true,
             walls: false
         };
 
-        this.numEntities = 10;
+        this.numEntities = 100;
         this.entityOpts = {
             radius: 10,
             collision: true,
@@ -36,7 +39,7 @@ var HexWorld = HexWorld || {},
             useSprite: false,
             movingEntities: true,
             cheats: {
-                gridLocation: false,
+                gridLocation: true,
                 position: false,
                 id: false,
                 name: false
@@ -47,65 +50,28 @@ var HexWorld = HexWorld || {},
             width: this.width,
             height: this.height,
             tileSize: 40,
-            tileSpacing: 55,
-            pointyTiles: true
+            tileSpacing: 0,
+            pointyTiles: false
         };
-
-        this.walls.push(new Wall(new Vec(0, 0), new Vec(0 + this.width, 0), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0 + this.width, 0), new Vec(0 + this.width, 0 + this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0 + this.width, 0 + this.height), new Vec(0, 0 + this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0, 0 + this.height), new Vec(0, 0), this.cheats.walls));
-
         this.grid = new HexGrid(this.gridOptions);
-        this.grid.shapeRectangle(2, 2, Hex);
+        this.grid.shapeRectangle(5, 5, Hex);
+        let gridContainer = this.grid.getGrid(false, true);
+        this.walls = this.grid.walls;
 
-        for (let i = 0; i < this.grid.cells.length; i++) {
-            let cell = this.grid.cells[i];
-            for (let c = 0; c < cell.corners.length; c++) {
-                let x1 = cell.corners[c].x,
-                    y1 = cell.corners[c].y,
-                    x2, y2;
-                if (c !== cell.corners.length - 1) {
-                    x2 = cell.corners[c + 1].x;
-                    y2 = cell.corners[c + 1].y;
-                } else {
-                    x2 = cell.corners[0].x;
-                    y2 = cell.corners[0].y;
-                }
-                let v1 = new Vec(x1, y1),
-                    v2 = new Vec(x2, y2);
-                this.walls.push(new Wall(v1, v2));
-            }
-        }
+        this.walls.push(new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls));
+        this.walls.push(new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls));
 
         World.call(this);
-        this.stage.addChild(this.grid.getGrid(false));
-        this.agents[0].load('zoo/wateragent.json');
+        this.stage.addChild(gridContainer);
+        //this.agents[0].load('zoo/wateragent.json');
 
         return this;
     }
 
     HexWorld.prototype = Object.create(World.prototype);
     HexWorld.prototype.constructor = World;
-
-    /**
-     * Tick the environment
-     * @returns {World}
-     */
-    HexWorld.prototype.tick = function () {
-        this.updatePopulation();
-
-        // Loop through the entities of the world and make them do work son!
-        for (let e = 0; e < this.entities.length; e++) {
-            this.entities[e].tick(this);
-        }
-
-        this.updatePopulation();
-        Phys.updateCircles(this);
-        this.draw();
-
-        return this;
-    };
 
     global.HexWorld = HexWorld;
 

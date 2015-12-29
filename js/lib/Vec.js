@@ -535,6 +535,7 @@
     function Wall(v1, v2, cheats) {
         let xDiff = v2.x - v1.x,
             yDiff = v2.y - v1.y;
+        this.id = Utility.guid();
         this.type = 0;
         this.v1 = v1;
         this.v2 = v2;
@@ -545,8 +546,8 @@
 
         this.shape = new PIXI.Graphics();
         if (cheats) {
-            let wallText = new PIXI.Text(w, {font: "10px Arial", fill: "#640000", align: "center"});
-            wallText.pos.set(this.v1.x + 10, this.v1.y);
+            let wallText = new PIXI.Text(this.id.substring(0, 10), {font: "10px Arial", fill: "#640000", align: "center"});
+            wallText.position.set(this.v1.x + 10, this.v1.y - 10);
             this.shape.addChild(wallText);
         }
         this.shape.clear();

@@ -26,6 +26,7 @@
      * @returns {Cell}
      */
     var Cell = function (x, y, width, height) {
+        let self = this;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -35,7 +36,8 @@
         this.heuristic = 0;
         this.reward = 0;
         this.population = [];
-        this.populationCounts = {};
+        this.corners = [];
+        this.hitCoords = [];
 
         this.coords = {
             top: {
@@ -59,11 +61,31 @@
                 }
             }
         };
+        this.coords.forEach(function (row) {
+            row.forEach(function (column) {
+                self.corners.push(new Point(column.x, column.y));
+                self.hitCoords.push(column.x, column.y);
+            });
+        });
+
+        this.shape = new PIXI.Graphics();
+        this.shape.hitArea = new PIXI.Polygon(this.hitCoords);
 
         return this;
     };
 
     Cell.prototype = {
+        draw: function () {
+            let coords = this.coords,
+            // Draw the grid
+                grid = new PIXI.Graphics();
+            grid.lineStyle(0.09, 0x000000);
+            grid.moveTo(coords.bottom.left.x, coords.bottom.left.y);
+            grid.lineTo(coords.bottom.right.x, coords.bottom.right.y);
+            grid.moveTo(coords.bottom.right.x, coords.bottom.right.y);
+            grid.lineTo(coords.top.right.x, coords.top.right.y);
+            grid.endFill();
+        },
         /**
          * Calculate the path to the origin
          * @returns {Array}
@@ -214,17 +236,6 @@
             return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
         },
         /**
-         * Return the centered location of the entity within a grid
-         * @param {Cell} c
-         * @returns {Object}
-         */
-        getPositionFromGridLocation: function (c) {
-            let x = c.coords.bottom.right.x - (this.cellWidth / 2),
-                y = c.coords.bottom.right.y - (this.cellHeight / 2);
-
-            return new Vec(x, y);
-        },
-        /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
          * @returns {Object}
@@ -243,6 +254,17 @@
                     }
                 }
             }
+        },
+        /**
+         * Return the centered location of the entity within a grid
+         * @param {Cell} c
+         * @returns {Object}
+         */
+        getPositionFromGridLocation: function (c) {
+            let x = c.coords.bottom.right.x - (this.cellWidth / 2),
+                y = c.coords.bottom.right.y - (this.cellHeight / 2);
+
+            return new Vec(x, y);
         },
         /**
          * Returns all neighbors of this cell, regardless if they are connected or not.
