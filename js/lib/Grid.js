@@ -31,60 +31,97 @@
         this.y = y;
         this.width = width;
         this.height = height;
+        this.pos = new Point(x, y);
+        this.color = 0xFFFFFF;
         this.visited = false;
         this.parent = null;
         this.heuristic = 0;
         this.reward = 0;
         this.population = [];
+        this.walls = [];
         this.corners = [];
-        this.hitCoords = [];
 
-        this.coords = {
-            top: {
-                left: {
-                    x: this.x * this.width,
-                    y: this.y * this.height
-                },
-                right: {
-                    x: this.x * this.width + this.width,
-                    y: this.y * this.height
-                }
-            },
-            bottom: {
-                left: {
-                    x: this.x * this.width,
-                    y: this.y * this.height + this.height
-                },
-                right: {
-                    x: this.x * this.width + this.width,
-                    y: this.y * this.height + this.height
-                }
+        for (let i = 0; i < 4; i++) {
+            let point;
+            switch (i) {
+                case 0:
+                    point = new Point(this.x * this.width, this.y * this.height);
+                    break;
+                case 1:
+                    point = new Point(this.x * this.width + this.width, this.y * this.height);
+                    break;
+                case 2:
+                    point = new Point(this.x * this.width + this.width, this.y * this.height + this.height);
+                    break;
+                case 3:
+                    point = new Point(this.x * this.width, this.y * this.height + this.height);
+                    break;
             }
-        };
-        this.coords.forEach(function (row) {
-            row.forEach(function (column) {
-                self.corners.push(new Point(column.x, column.y));
-                self.hitCoords.push(column.x, column.y);
-            });
-        });
+            this.corners.push(point);
+        }
+
+        for (let c = 0; c < this.corners.length; c++) {
+            let x1 = this.corners[c].x,
+                y1 = this.corners[c].y,
+                x2, y2;
+            if (c !== this.corners.length - 1) {
+                x2 = this.corners[c + 1].x;
+                y2 = this.corners[c + 1].y;
+            } else {
+                x2 = this.corners[0].x;
+                y2 = this.corners[0].y;
+            }
+            let v1 = new Vec(x1, y1),
+                v2 = new Vec(x2, y2);
+            this.walls.push(new Wall(v1, v2));
+        }
 
         this.shape = new PIXI.Graphics();
-        this.shape.hitArea = new PIXI.Polygon(this.hitCoords);
+        this.shape.interactive = true;
+        this.shape
+            .on('mousedown', function (event) {
+                this.data = event.data;
+                self.color = 0x00FF00;
+            })
+            .on('mouseup', function (event) {
+                self.color = 0xFFFFFF;
+            })
+            .on('mouseover', function (event) {
+                self.color = 0xFF0000;
+            })
+            .on('mouseout', function (event) {
+                self.color = 0xFFFFFF;
+            });
+        this.shape.entity = self;
+        this.shape.alpha = 0.09;
+        this.shape.color = this.color;
 
         return this;
     };
 
     Cell.prototype = {
         draw: function () {
-            let coords = this.coords,
-            // Draw the grid
-                grid = new PIXI.Graphics();
-            grid.lineStyle(0.09, 0x000000);
-            grid.moveTo(coords.bottom.left.x, coords.bottom.left.y);
-            grid.lineTo(coords.bottom.right.x, coords.bottom.right.y);
-            grid.moveTo(coords.bottom.right.x, coords.bottom.right.y);
-            grid.lineTo(coords.top.right.x, coords.top.right.y);
-            grid.endFill();
+            this.shape.clear();
+            this.shape.lineStyle(1, 0x000000);
+            this.shape.beginFill(this.color);
+            this.shape.moveTo(this.corners[0].x, this.corners[0].y);
+            this.shape.lineTo(this.corners[1].x, this.corners[1].y);
+            this.shape.lineTo(this.corners[2].x, this.corners[2].y);
+            this.shape.lineTo(this.corners[3].x, this.corners[3].y);
+            this.shape.lineTo(this.corners[0].x, this.corners[0].y);
+            this.shape.endFill();
+
+            if (this.cheatOverlay !== undefined) {
+                this.shape.removeChild(this.cheatOverlay);
+            }
+            this.cheatOverlay = new PIXI.Container();
+
+            let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
+                posText = new PIXI.Text(this.toString(), txtOpts);
+            posText.position.set(this.corners[0].x + this.width/2, this.corners[0].y + this.height/2 + 13);
+            this.cheatOverlay.addChild(posText);
+
+            this.shape.addChild(this.cheatOverlay);
         },
         /**
          * Calculate the path to the origin
@@ -118,6 +155,13 @@
             return total;
         },
         /**
+         * Convert coords to string
+         * @returns {string}
+         */
+        toString: function () {
+            return this.v().join(",");
+        },
+        /**
          * Mark it as visited
          * @return {Cell}
          */
@@ -125,6 +169,13 @@
             this.visited = true;
 
             return this;
+        },
+        /**
+         * Get an array of coords
+         * @returns {*[]}
+         */
+        v: function () {
+            return [this.x, this.y];
         }
     };
 
@@ -236,6 +287,28 @@
             return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
         },
         /**
+         * Return a PIXI container with the grid
+         * @returns {PIXI.Container|*}
+         */
+        getGrid: function () {
+            let self = this,
+                c = new PIXI.Container();
+
+            this.cells.forEach(function (row) {
+                if (Array.isArray(row)) {
+                    row.forEach(function (cell) {
+                        cell.population = [];
+                        c.addChild(cell.shape);
+                    })
+                } else {
+                    row.population = [];
+                    c.addChild(row.shape);
+                }
+            });
+
+            return c;
+        },
+        /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
          * @returns {Object}
@@ -246,8 +319,8 @@
                 xCell = this.cells[x];
                 for (let y = 0; y < this.yCount; y++) {
                     yCell = xCell[y];
-                    if ((entity.pos.x >= yCell.coords.top.left.x && entity.pos.x <= yCell.coords.bottom.right.x) &&
-                        (entity.pos.y >= yCell.coords.top.left.y && entity.pos.y <= yCell.coords.bottom.right.y)) {
+                    if ((entity.pos.x >= yCell.corners[0].x && entity.pos.x <= yCell.corners[2].x) &&
+                        (entity.pos.y >= yCell.corners[0].y && entity.pos.y <= yCell.corners[2].y)) {
                         entity.gridLocation = this.cells[x][y];
 
                         return entity;

@@ -127,6 +127,7 @@ var Entity = Entity || {};
                     .on('touchmove', self.onDragMove);
                 this.shape.entity = self;
             }
+
             this.shape.addChild(this.cheatsContainer);
         }
 
@@ -185,7 +186,7 @@ var Entity = Entity || {};
                 this.addCheats();
             }
             gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-            gridText.text = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
+            gridText.text = ' Grid(' + this.gridLocation.toString() + ')';
             gridText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius));
         } else {
             if (this.gridText !== undefined) {
@@ -258,6 +259,7 @@ var Entity = Entity || {};
             this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
             this.shape.endFill();
         }
+
         // draw entities sight
         if (this.eyes !== undefined) {
             for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
@@ -284,20 +286,20 @@ var Entity = Entity || {};
 
         this.world.check(this);
 
-        //this.collisions.forEach(function (collision) {
-        //    if (collision.type === 3 || collision.type === 4) {
-        //        // Agent
-        //        //console.log("Oh shit it's an " + this.collisions[i].name);
-        //    } else if (collision.type === 1 || collision.type === 2) {
-        //        // Edible
-        //        //console.log('Watch it ' + this.collisions[i].name);
-        //    } else if (collision.type === 0) {
-        //        // Wall
-        //        //self.pos = self.oldPos.clone();
-        //        self.pos.vx *= -1;
-        //        self.pos.vy *= -1;
-        //    }
-        //});
+        this.collisions.forEach(function (collision) {
+            if (collision.type === 3 || collision.type === 4) {
+                // Agent
+                //console.log("Oh shit it's an " + this.collisions[i].name);
+            } else if (collision.type === 1 || collision.type === 2) {
+                // Edible
+                //console.log('Watch it ' + this.collisions[i].name);
+            } else if (collision.type === 0) {
+                // Wall
+                self.pos = self.oldPos.clone();
+                self.pos.vx *= -1;
+                self.pos.vy *= -1;
+            }
+        });
 
         // Handle boundary conditions.. bounce Agent
         let top = this.world.height - (this.world.height - this.radius),

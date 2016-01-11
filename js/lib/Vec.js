@@ -517,8 +517,15 @@
          * Returns an array with the components of this vector as the elements
          * @return {Array}
          */
-        toArray: function () {
-            return [this.x, this.y, this.z, this.vx, this.vy, this.vz, this.ax, this.ay, this.az];
+        v: function () {
+            return [this.x, this.y, this.z];
+        },
+        /**
+         * Convert coords to string
+         * @returns {string}
+         */
+        toString: function () {
+            return this.v().join(",");
         }
     };
 

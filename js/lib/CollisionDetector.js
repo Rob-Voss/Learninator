@@ -406,13 +406,15 @@
                     region = this.tree.retrieve(target, checkIt);
                     break;
                 case 'grid':
-                    // Loop through all the entities in the current cell and check distances
-                    target.gridLocation.population.forEach(function (entity) {
-                        collisionObj = checkIt(entity);
-                    });
+                    if (target.gridLocation.population) {
+                        // Loop through all the entities in the current cell and check distances
+                        target.gridLocation.population.forEach(function (entity) {
+                            collisionObj = checkIt(entity);
+                        });
+                    }
                     break;
                 case 'brute':
-                    let tmpAll = this.walls.concat(this.agents.concat(this.entities.concat(this.entityAgents)));
+                    let tmpAll = this.walls.concat(this.agents, this.entities, this.entityAgents);
                     tmpAll.forEach(function (entity) {
                         collisionObj = checkIt(entity);
                     });
@@ -522,8 +524,8 @@
      */
     var GridCD = function () {
         this.path = this.grid.path;
-        this.cellWidth = this.width / this.grid.xCount;
-        this.cellHeight = this.height / this.grid.yCount;
+        this.cellWidth = this.grid.cellWidth;
+        this.cellHeight = this.grid.cellHeight;
 
         /**
          * Draw the regions of the grid
@@ -539,9 +541,20 @@
                 this.collisionOverlay = new PIXI.Container();
 
                 // If we are using grid based collision set up an overlay
-                this.grid.cells.forEach(function (cell) {
-                    self.collisionOverlay.addChild(cell.shape);
-                    cell.draw();
+                this.grid.cells.forEach(function (row) {
+                    if (!Array.isArray(row)) {
+                        let txtOpts = {font: "10px Arial", fill: "#00FF00", align: "center"},
+                            popText = new PIXI.Text(row.population.length, txtOpts);
+                        popText.position.set(row.corners[0].x + row.width/2, row.corners[0].y + row.height/2);
+                        self.collisionOverlay.addChild(popText);
+                    } else {
+                        row.forEach(function (cell) {
+                            let txtOpts = {font: "10px Arial", fill: "#00FF00", align: "center"},
+                                popText = new PIXI.Text(cell.population.length, txtOpts);
+                            popText.position.set(cell.corners[0].x + cell.width/2, cell.corners[0].y + cell.height/2);
+                            self.collisionOverlay.addChild(popText);
+                        })
+                    }
                 });
 
                 this.stage.addChild(this.collisionOverlay);
@@ -561,22 +574,39 @@
             let self = this;
 
             // Reset the cell's population's
-            self.grid.cells.forEach(function (hex) {
-                hex.population = [];
-                self.entities.forEach(function (entity) {
-                    self.grid.getGridLocation(entity);
-                    entity.gridLocation.population.push(entity);
-                });
-                self.entityAgents.forEach(function (entityAgent) {
-                    self.grid.getGridLocation(entityAgent);
-                    entityAgent.gridLocation.population.push(entityAgent);
-                });
-                self.agents.forEach(function (agent) {
-                    self.grid.getGridLocation(agent);
-                    agent.gridLocation.population.push(agent);
-                });
+            self.grid.cells.forEach(function (row) {
+                if (!Array.isArray(row)) {
+                    row.population = [];
+                } else {
+                    row.forEach(function (cell) {
+                        cell.population = [];
+                    })
+                }
             });
 
+            self.entities.forEach(function (entity) {
+                self.grid.getGridLocation(entity);
+                let idx = entity.gridLocation.population.findIndex(Utility.getId, entity.id);
+                if (idx === -1) {
+                    entity.gridLocation.population.push(entity);
+                }
+            });
+
+            self.entityAgents.forEach(function (entityAgent) {
+                self.grid.getGridLocation(entityAgent);
+                let idx = entityAgent.gridLocation.population.findIndex(Utility.getId, entityAgent.id);
+                if (idx === -1) {
+                    entityAgent.gridLocation.population.push(entityAgent);
+                }
+            });
+
+            self.agents.forEach(function (agent) {
+                self.grid.getGridLocation(agent);
+                let idx = agent.gridLocation.population.findIndex(Utility.getId, agent.id);
+                if (idx === -1) {
+                    agent.gridLocation.population.push(agent);
+                }
+            });
             this.drawRegions();
         };
     };

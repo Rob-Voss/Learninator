@@ -17,9 +17,12 @@ var WaterWorld = WaterWorld || {},
     function WaterWorld() {
         this.width = 800;
         this.height = 800;
+        //this.collision = {
+        //    type: 'grid'
+        //};
         this.mazeOptions = {
-            xCount: 2,
-            yCount: 2,
+            xCount: 4,
+            yCount: 3,
             width: this.width,
             height: this.height,
             closed: true
@@ -116,8 +119,9 @@ var WaterWorld = WaterWorld || {},
                 })
         ];
         this.numAgents = this.agents.length;
-
         this.simSpeed = 1;
+
+        this.cellsContainer = this.grid.getGrid();
 
         World.call(this);
 

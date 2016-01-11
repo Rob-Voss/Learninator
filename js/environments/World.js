@@ -118,6 +118,10 @@ var World = World || {},
         this.setCollisionDetection(this.collision);
         this.populate(worldOpts);
 
+        if (this.cellsContainer !== undefined) {
+            this.stage.addChild(this.cellsContainer);
+        }
+
         if (document.getElementById('flotreward')) {
             this.rewards = new FlotGraph(this.agents);
         }
@@ -332,6 +336,15 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.draw = function () {
+        this.grid.cells.forEach(function (row) {
+            if (Array.isArray(row)) {
+                row.forEach(function (cell) {
+                    cell.draw();
+                })
+            } else {
+                row.draw();
+            }
+        });
         // draw items
         this.entities.forEach(function (entity) {
             entity.draw();
@@ -400,7 +413,6 @@ var World = World || {},
             this.addEntities();
         }
 
-        this.updatePopulation();
         this.draw();
 
         return this;

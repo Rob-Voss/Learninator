@@ -32,8 +32,7 @@
         this.walls = [];
         this.cellStack = [];
         this.path = [];
-
-        this.grid = new Grid(opts);
+        this.grid = Utility.getOpt(opts, 'grid', new Grid(opts));
 
         this.draw(opts.closed);
 

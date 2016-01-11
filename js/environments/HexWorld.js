@@ -26,14 +26,14 @@ var HexWorld = HexWorld || {},
         };
 
         this.cheats = {
-            quad: true,
-            grid: true,
+            quad: false,
+            grid: false,
             walls: false
         };
 
-        this.numEntities = 100;
+        this.numEntities = 0;
         this.entityOpts = {
-            radius: 10,
+            radius: 5,
             collision: true,
             interactive: true,
             useSprite: false,
@@ -46,25 +46,25 @@ var HexWorld = HexWorld || {},
             }
         };
 
-        this.gridOptions = {
-            width: this.width,
-            height: this.height,
-            tileSize: 40,
-            tileSpacing: 0,
-            pointyTiles: false
-        };
-        this.grid = new HexGrid(this.gridOptions);
-        this.grid.shapeRectangle(5, 5, Hex);
-        let gridContainer = this.grid.getGrid(false, true);
-        this.walls = this.grid.walls;
-
         this.walls.push(new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls));
         this.walls.push(new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls));
         this.walls.push(new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls));
         this.walls.push(new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls));
 
+        this.gridOptions = {
+            width: this.width,
+            height: this.height,
+            tileSize: 30,
+            tileSpacing: 0,
+            pointyTiles: false
+        };
+        this.grid = new HexGrid(this.gridOptions);
+        //this.grid.shapeRectangle(10, 10, Hex);
+        this.grid.shapeHexagon(0, 0, 5, true);
+        this.cellsContainer = this.grid.getGrid();
+
         World.call(this);
-        this.stage.addChild(gridContainer);
+
         //this.agents[0].load('zoo/wateragent.json');
 
         return this;
