@@ -336,15 +336,17 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.draw = function () {
-        this.grid.cells.forEach(function (row) {
-            if (Array.isArray(row)) {
-                row.forEach(function (cell) {
-                    cell.draw();
-                })
-            } else {
-                row.draw();
-            }
-        });
+        if (this.grid.cells !== undefined) {
+            this.grid.cells.forEach(function (row) {
+                if (Array.isArray(row)) {
+                    row.forEach(function (cell) {
+                        cell.draw();
+                    })
+                } else {
+                    row.draw();
+                }
+            });
+        }
         // draw items
         this.entities.forEach(function (entity) {
             entity.draw();

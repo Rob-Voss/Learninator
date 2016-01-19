@@ -39,7 +39,7 @@ var HexWorld = HexWorld || {},
             useSprite: false,
             movingEntities: true,
             cheats: {
-                gridLocation: true,
+                gridLocation: false,
                 position: false,
                 id: false,
                 name: false
@@ -51,17 +51,15 @@ var HexWorld = HexWorld || {},
         this.walls.push(new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls));
         this.walls.push(new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls));
 
-        this.gridOptions = {
-            width: this.width,
-            height: this.height,
-            tileSize: 30,
-            tileSpacing: 0,
-            pointyTiles: false
-        };
-        this.grid = new HexGrid(this.gridOptions);
-        //this.grid.shapeRectangle(10, 10, Hex);
-        this.grid.shapeHexagon(0, 0, 5, true);
-        this.cellsContainer = this.grid.getGrid();
+        let gridOptions = {
+                width: this.width,
+                height: this.height,
+                tileSize: 30,
+                tileSpacing: 0,
+                fill: false
+            };
+        this.grid = new HexGrid(gridOptions, HexGrid.shapeHexagon(5));
+        this.cellsContainer = this.grid.cellsContainer;
 
         World.call(this);
 
