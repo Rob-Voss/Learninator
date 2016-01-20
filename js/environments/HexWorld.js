@@ -33,7 +33,7 @@ var HexWorld = HexWorld || {},
 
         this.numEntities = 0;
         this.entityOpts = {
-            radius: 5,
+            radius: 15,
             collision: true,
             interactive: true,
             useSprite: false,
@@ -41,7 +41,7 @@ var HexWorld = HexWorld || {},
             cheats: {
                 gridLocation: false,
                 position: false,
-                id: false,
+                id: true,
                 name: false
             }
         };
@@ -52,16 +52,16 @@ var HexWorld = HexWorld || {},
         this.walls.push(new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls));
 
         let gridOptions = {
-                width: this.width,
-                height: this.height,
-                tileSize: 30,
-                tileSpacing: 0,
-                fill: false
-            };
+            width: this.width,
+            height: this.height,
+            tileSize: 40,
+            tileSpacing: 0,
+            fill: false
+        };
         this.grid = new HexGrid(gridOptions, HexGrid.shapeHexagon(5));
-        this.cellsContainer = this.grid.cellsContainer;
 
         World.call(this);
+        this.stage.addChild(this.grid.cellsContainer);
 
         //this.agents[0].load('zoo/wateragent.json');
 

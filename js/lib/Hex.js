@@ -113,6 +113,7 @@ var Hex = Hex || {},
         this.color = colorForHex(self.q, self.r, self.s);
 
         if (this.layout) {
+            this.corners = this.layout.polygonCorners(self);
             this.pos = this.layout.hexToPixel(self);
         }
         this.shape = new PIXI.Graphics();

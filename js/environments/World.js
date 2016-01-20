@@ -118,33 +118,15 @@ var World = World || {},
         this.setCollisionDetection(this.collision);
         this.populate(worldOpts);
 
-        if (this.cellsContainer !== undefined) {
-            this.stage.addChild(this.cellsContainer);
-        }
-
         if (document.getElementById('flotreward')) {
             this.rewards = new FlotGraph(this.agents);
         }
 
         function animate() {
             if (!self.pause) {
-                let ticker = 0;
-                switch (parseFloat(self.simSpeed)) {
-                    case 1:
-                        ticker = 1;
-                        break;
-                    case 2:
-                        ticker = 30;
-                        break;
-                    case 3:
-                        ticker = 60;
-                        break;
-                }
-                for (let k = 0; k < ticker; k++) {
-                    self.tick();
-                }
+                self.tick();
+                self.renderer.render(self.stage);
             }
-            self.renderer.render(self.stage);
             requestAnimationFrame(animate);
         }
 
@@ -163,8 +145,8 @@ var World = World || {},
         this.wallContainer = new PIXI.Container();
         this.walls = this.walls || Utility.getOpt(worldOpts, 'walls', [
             new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
-            new Wall(new Vec(this.width, 0), new Vec(this.width, 0 + this.height), this.cheats.walls),
-            new Wall(new Vec(this.width, 0 + this.height), new Vec(0, this.height), this.cheats.walls),
+            new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
+            new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
             new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
         ]);
         this.addWalls();

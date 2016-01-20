@@ -345,25 +345,26 @@
          * @returns {Array}
          */
         neighbors: function (c) {
-            var neighbors = [],
-                topCell = this.getCellAt(c.x, c.y - 1),
-                rightCell = this.getCellAt(c.x + 1, c.y),
-                bottomCell = this.getCellAt(c.x, c.y + 1),
-                leftCell = this.getCellAt(c.x - 1, c.y);
+            let neighbors = [];
+            if (c !== null) {
+                let topCell = this.getCellAt(c.x, c.y - 1),
+                    rightCell = this.getCellAt(c.x + 1, c.y),
+                    bottomCell = this.getCellAt(c.x, c.y + 1),
+                    leftCell = this.getCellAt(c.x - 1, c.y);
 
-            if (c.y > 0 && topCell) {
-                neighbors.push(topCell);
+                if (topCell) {
+                    neighbors.push(topCell);
+                }
+                if (rightCell) {
+                    neighbors.push(rightCell);
+                }
+                if (bottomCell) {
+                    neighbors.push(bottomCell);
+                }
+                if (leftCell) {
+                    neighbors.push(leftCell);
+                }
             }
-            if (c.x < this.xCount && rightCell) {
-                neighbors.push(rightCell);
-            }
-            if (c.y < this.yCount && bottomCell) {
-                neighbors.push(bottomCell);
-            }
-            if (c.x > 0 && leftCell) {
-                neighbors.push(leftCell);
-            }
-
             return neighbors;
         },
         /**

@@ -84,13 +84,16 @@ var Agent = Agent || {},
         });
 
         // The Agent's environment
-        var oEnv = JSON.parse(opts.env, function (key, value) {
-            if (typeof value !== 'string') {
-                return value;
+        this.env = Utility.getOpt(opts, 'env', {
+            numActions: this.numActions,
+            numStates: this.numStates,
+            getMaxNumActions: function () {
+                return this.numActions;
+            },
+            getNumStates: function () {
+                return this.numStates;
             }
-            return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
         });
-        this.env = oEnv;
 
         // The Agent's eyes
         if (this.eyes === undefined) {

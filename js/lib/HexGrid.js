@@ -262,15 +262,15 @@ var Hex = Hex || {},
         this.fill = Utility.getOpt(opts, 'fill', false);
         this.xCount = this.width / this.tileSize;
         this.yCount = this.height / this.tileSize;
-        this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.xCount, this.yCount), new Point(this.width / 2, this.height / 2));
+        this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.tileSize, this.tileSize), new Point(this.width / 2, this.height / 2));
         this.cells = cells || shapeHexagon(5, this.layout);
         this.map = new HashTable({});
         this.walls = [];
+        this.mapCells();
 
         this.cellsContainer = new PIXI.Container();
         this.cells.forEach(function (cell) {
             cell.population = [];
-            cell.corners = self.layout.polygonCorners(cell);
             HexShape.call(cell, self.layout, self.tileSize, self.fill);
             self.cellsContainer.addChild(cell.shape);
         });
@@ -321,12 +321,11 @@ var Hex = Hex || {},
         },
         /**
          * Get the center x,y coords for a Hex
-         * @param {number} q
-         * @param {number} r
+         * @param {Hex} hex
          * @returns {Point}
          */
-        getCenterXY: function (q, r) {
-            return this.layout.hexToPixel(new Hex(q, r, -q - r));
+        getCenterXY: function (hex) {
+            return this.layout.hexToPixel(hex);
         },
         /**
          * Return the location of the entity within a grid
@@ -335,7 +334,9 @@ var Hex = Hex || {},
          */
         getGridLocation: function (entity) {
             let hex = this.pixelToHex(entity.pos.x, entity.pos.y),
-                cell = this.getCellAt(hex.q, hex.r);
+                q = Math.round(hex.q),
+                r = Math.round(hex.r);
+            let cell = this.getCellAt(q, r);
             if (cell) {
                 entity.gridLocation = cell;
             } else {
@@ -350,9 +351,7 @@ var Hex = Hex || {},
         mapCells: function () {
             let column, row, hex, self = this;
             this.cells.forEach(function (cell) {
-                let center = self.getCenterXY(cell.q, cell.r);
-                cell.pos.x = center.x;
-                cell.pos.y = center.y;
+                let center = self.getCenterXY(cell);
 
                 // check q
                 column = self.map.hasItem(cell.q);
