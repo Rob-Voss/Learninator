@@ -25,42 +25,34 @@ var HexWorld = HexWorld || {},
             type: 'grid'
         };
 
-        this.cheats = {
-            quad: false,
-            grid: false,
-            walls: false
-        };
-
-        this.numEntities = 0;
+        this.numEntities = 10;//350;
         this.entityOpts = {
-            radius: 15,
+            radius: 5,
             collision: true,
-            interactive: true,
+            interactive: false,
             useSprite: false,
             movingEntities: true,
             cheats: {
                 gridLocation: false,
                 position: false,
-                id: true,
+                id: false,
                 name: false
             }
         };
 
-        this.walls.push(new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls));
-        this.walls.push(new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls));
-
         let gridOptions = {
             width: this.width,
             height: this.height,
-            tileSize: 40,
+            size: 2,
+            tileSize: 60,
             tileSpacing: 0,
             fill: false
         };
-        this.grid = new HexGrid(gridOptions, HexGrid.shapeHexagon(5));
+        this.grid = new HexGrid(gridOptions);
+        this.walls = this.grid.walls;
 
         World.call(this);
+
         this.stage.addChild(this.grid.cellsContainer);
 
         //this.agents[0].load('zoo/wateragent.json');

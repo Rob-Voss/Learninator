@@ -1,6 +1,5 @@
 var World = World || {},
     Utility = Utility || {},
-    window = window || {},
     document = document || {},
     PIXI = PIXI || {};
 
@@ -234,7 +233,7 @@ var World = World || {},
                 y = Utility.randi(5, this.height - 10),
                 vx = Math.random() * 5 - 2.5,
                 vy = Math.random() * 5 - 2.5,
-                position = new Vec(x, y, 0, vx, vy),
+                position = new Vec(x, y, vx, vy),
                 entity = new EntityRLDQN(position, this.entityAgentOpts);
             entity.enemy = this.agents[k];
             entity.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
@@ -264,16 +263,10 @@ var World = World || {},
             let x = Utility.randi(2, this.width - 2),
                 y = Utility.randi(2, this.height - 2),
                 type = Utility.randi(1, 3),
-                vx = Utility.randf(-2, 2),
-                vy = Utility.randf(-2, 2),
-                position = new Vec(x, y, 0, vx, vy),
+                vx = Utility.randf(-3, 3),
+                vy = Utility.randf(-3, 3),
+                position = new Vec(x, y, vx, vy),
                 entity = new Entity(type, position, this.entityOpts);
-            this.walls.forEach(function (wall) {
-                while (self.circleLineCollide(wall, entity)) {
-                    entity.pos.x = Utility.randi(2, self.width - 2);
-                    entity.pos.y = Utility.randi(2, self.height - 2);
-                }
-            });
 
             // Insert the population
             if (this.cdType == 'quad') {
@@ -318,17 +311,6 @@ var World = World || {},
      * @returns {World}
      */
     World.prototype.draw = function () {
-        if (this.grid.cells !== undefined) {
-            this.grid.cells.forEach(function (row) {
-                if (Array.isArray(row)) {
-                    row.forEach(function (cell) {
-                        cell.draw();
-                    })
-                } else {
-                    row.draw();
-                }
-            });
-        }
         // draw items
         this.entities.forEach(function (entity) {
             entity.draw();

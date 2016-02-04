@@ -84,16 +84,7 @@ var Agent = Agent || {},
         });
 
         // The Agent's environment
-        this.env = Utility.getOpt(opts, 'env', {
-            numActions: this.numActions,
-            numStates: this.numStates,
-            getMaxNumActions: function () {
-                return this.numActions;
-            },
-            getNumStates: function () {
-                return this.numStates;
-            }
-        });
+        this.env = Utility.getOpt(opts, 'env', {});
 
         // The Agent's eyes
         if (this.eyes === undefined) {
@@ -115,7 +106,6 @@ var Agent = Agent || {},
         this.direction = 'N';
         this.brain = {};
         this.brainState = {};
-        this.world = {};
 
         return this;
     }
@@ -176,14 +166,13 @@ var Agent = Agent || {},
      * @param {Object} world
      */
     Agent.prototype.tick = function (world) {
-        this.world = world;
         // Let the agents behave in the world based on their input
-        this.act();
+        this.act(world);
 
         // If it's not a worker we need to run the rest of the steps
         if (!this.worker) {
             // Move eet!
-            this.move();
+            this.move(world);
             // This is where the agents learns based on the feedback of their
             // actions on the environment
             this.learn();
@@ -262,14 +251,14 @@ var Agent = Agent || {},
      * Sense the surroundings
      * @param agent
      */
-    Eye.prototype.sense = function (agent) {
+    Eye.prototype.sense = function (agent, world) {
         this.pos = agent.pos.clone();
         let result,
             aEyeX = this.pos.x + this.maxRange * Math.sin(agent.angle + this.angle),
             aEyeY = this.pos.y + this.maxRange * Math.cos(agent.angle + this.angle);
         this.maxPos.set(aEyeX, aEyeY);
 
-        result = agent.world.sightCheck(this.pos, this.maxPos, agent.world.walls, agent.world.agents.concat(agent.world.entities), agent.radius);
+        result = world.sightCheck(this.pos, this.maxPos, world.walls, world.agents.concat(world.entities), agent.radius);
         if (result) {
             // eye collided with an entity
             this.sensedProximity = result.vecI.distFrom(this.pos);

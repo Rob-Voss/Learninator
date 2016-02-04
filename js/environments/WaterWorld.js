@@ -1,5 +1,6 @@
 var WaterWorld = WaterWorld || {},
     Maze = Maze || {},
+    Utility = Utility || {},
     Vec = Vec || {},
     World = World || {};
 
@@ -17,9 +18,7 @@ var WaterWorld = WaterWorld || {},
     function WaterWorld() {
         this.width = 800;
         this.height = 800;
-        //this.collision = {
-        //    type: 'grid'
-        //};
+
         this.mazeOptions = {
             xCount: 4,
             yCount: 3,
@@ -56,7 +55,7 @@ var WaterWorld = WaterWorld || {},
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -66,7 +65,7 @@ var WaterWorld = WaterWorld || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -81,14 +80,14 @@ var WaterWorld = WaterWorld || {},
                         gridLocation: false,
                         position: false,
                         id: false,
-                        name: true
+                        name: false
                     },
-                    worker: true
+                    worker: false
                 }),
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -98,7 +97,7 @@ var WaterWorld = WaterWorld || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -113,9 +112,9 @@ var WaterWorld = WaterWorld || {},
                         gridLocation: false,
                         position: false,
                         id: false,
-                        name: true
+                        name: false
                     },
-                    worker: true
+                    worker: false
                 })
         ];
         this.numAgents = this.agents.length;

@@ -107,7 +107,7 @@ var Entity = Entity || {};
                     .on('mouseout', self.onMouseOut)
                     .on('mousemove', self.onDragMove)
                     .on('touchmove', self.onDragMove);
-                this.sprite.entity = self;
+                //this.sprite.entity = self;
             }
             this.sprite.addChild(this.cheatsContainer);
         } else {
@@ -125,7 +125,7 @@ var Entity = Entity || {};
                     .on('mouseout', self.onMouseOut)
                     .on('mousemove', self.onDragMove)
                     .on('touchmove', self.onDragMove);
-                this.shape.entity = self;
+                //this.shape.entity = self;
             }
 
             this.shape.addChild(this.cheatsContainer);
@@ -277,35 +277,20 @@ var Entity = Entity || {};
      * Move around
      * @returns {Entity}
      */
-    Entity.prototype.move = function () {
-        let self = this;
+    Entity.prototype.move = function (world) {
         this.oldPos = this.pos.clone();
 
-        this.pos.x += this.pos.vx;
-        this.pos.y += this.pos.vy;
-
-        this.world.check(this);
-
-        this.collisions.forEach(function (collision) {
-            if (collision.type === 3 || collision.type === 4) {
-                // Agent
-                //console.log("Oh shit it's an " + this.collisions[i].name);
-            } else if (collision.type === 1 || collision.type === 2) {
-                // Edible
-                //console.log('Watch it ' + this.collisions[i].name);
-            } else if (collision.type === 0) {
-                // Wall
-                self.pos = self.oldPos.clone();
-                self.pos.vx *= -1;
-                self.pos.vy *= -1;
-            }
-        });
+        this.pos.advance();
+        let collObj = world.check(this);
+        if (collObj) {
+            this.pos = this.oldPos;
+        }
 
         // Handle boundary conditions.. bounce Agent
-        let top = this.world.height - (this.world.height - this.radius),
-            bottom = this.world.height - this.radius,
-            left = this.world.width - (this.world.width - this.radius),
-            right = this.world.width - this.radius;
+        let top = world.height - (world.height - this.radius),
+            bottom = world.height - this.radius,
+            left = world.width - (world.width - this.radius),
+            right = world.width - this.radius;
         if (this.pos.x < left) {
             this.pos.x = left;
             this.pos.vx *= -1;
@@ -339,11 +324,10 @@ var Entity = Entity || {};
      * @returns {Entity}
      */
     Entity.prototype.tick = function (world) {
-        this.world = world;
         this.age += 1;
 
         if (this.movingEntities) {
-            this.move();
+            this.move(world);
         }
 
         return this;

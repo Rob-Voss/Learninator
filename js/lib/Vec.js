@@ -24,25 +24,20 @@
      *
      * @param {number} x
      * @param {number} y
-     * @param {number} z
      * @param {number} vx
      * @param {number} vy
-     * @param {number} vz
      * @param {number} ax
      * @param {number} ay
-     * @param {number} az
      * @returns {Vec}
      */
-    let Vec = function (x, y, z, vx, vy, vz, ax, ay, az) {
+    let Vec = function (x, y, vx, vy, ax, ay) {
         this.x = x || 0;
         this.y = y || 0;
-        this.z = z || 0;
         this.vx = vx || 0;
         this.vy = vy || 0;
-        this.vz = vz || 0;
         this.ax = ax || 0;
         this.ay = ay || 0;
-        this.az = az || 0;
+        this.angle = 0;
 
         return this;
     };
@@ -84,24 +79,42 @@
          * @returns {Vec}
          */
         advance: function () {
+            let oldV = this.clone();
             this.x += this.vx;
             this.y += this.vy;
-            this.z += this.vz;
+
+            this.setAngle(Math.atan2(this.sub(oldV).y, this.sub(oldV).x) * (180 / Math.PI));
+
+            return this;
+        },
+        /**
+         * This will add the velocity x,y to the position x,y
+         * @param {number} angle
+         * @param {number} speed
+         * @returns {Vec}
+         */
+        advanceAtAngle: function (angle, speed) {
+            let oldV = this.clone(),
+                radians = angle * Math.PI / 180;
+            this.vx = Math.cos(radians) * speed;
+            this.vy = Math.sin(radians) * speed;
+            this.x += this.vx;
+            this.y += this.vy;
+
+            this.setAngle(Math.atan2(this.sub(oldV).y, this.sub(oldV).x) * (180 / Math.PI));
 
             return this;
         },
         /**
          * Calculate angle between any two vectors.
-         * Warning: creates two new Vec objects! EXPENSIVE
-         * @param {Vec} v1 First vec
-         * @param {Vec} v2 Second vec
+         * @param {Vec} v First vec
          * @return {number} Angle between vectors.
          */
-        angleBetween: function (v1, v2) {
-            v1 = v1.clone().normalize();
-            v2 = v2.clone().normalize();
+        angleBetween: function (v) {
+            let v1 = this.clone().normalize(),
+                v2 = v.clone().normalize();
 
-            return Math.acos(v1.dot(v2));
+            return Math.atan2(v2.sub(v1).y, v2.sub(v1).x) * (180 / Math.PI);
         },
         /**
          * Ceils the vector components
@@ -142,7 +155,7 @@
          * @return {Vec} Returns a new Vector with the same values
          */
         clone: function () {
-            return new Vec(this.x, this.y, this.z, this.vx, this.vy, this.vz, this.ax, this.ay, this.az);
+            return new Vec(this.x, this.y, this.vx, this.vy, this.ax, this.ay);
         },
         /**
          * Copies the passed vector's components to this vector
@@ -170,8 +183,7 @@
          */
         distanceToSquared: function (v) {
             let dx = this.x - v.x,
-                dy = this.y - v.y,
-                dz = this.z - v.z;
+                dy = this.y - v.y;
 
             return dx * dx + dy * dy;
         },
@@ -202,17 +214,16 @@
             if (s !== 0) {
                 this.x /= s;
                 this.y /= s;
-                this.z /= s;
             } else {
                 this.x = 0;
                 this.y = 0;
-                this.z = 0;
             }
 
             return this;
         },
         /**
-         * Performs the dot product between this vector and the passed one and returns the result
+         * Performs the dot product between this vector and
+         * the passed one and returns the result
          * @param {Vec} v
          * @return {number} Returns the dot product
          */
@@ -222,7 +233,7 @@
         /**
          * Checks if this vector is equal to another
          * @param {Vec} v The vector to compare with
-         * @return {Vec} Returns itself.
+         * @return {boolean}
          */
         equals: function (v) {
             return ((v.x === this.x) && (v.y === this.y));
@@ -234,16 +245,27 @@
         floor: function () {
             this.x = Math.floor(this.x);
             this.y = Math.floor(this.y);
-            this.z = Math.floor(this.z);
 
             return this;
         },
         /**
-         *
+         * Get the angle of this Vec
          * @returns {number}
          */
         getAngle: function () {
-            return Math.atan2(this.y, this.x);
+            return Math.atan2(this.y, this.x) * (180 / Math.PI);
+        },
+        /**
+         * Get a point at a % point between this Vec and another
+         * @param {Vec} v
+         * @param {number} perc
+         */
+        getPointBetween: function(v, perc) {
+            let blend = perc / 100,
+                x = this.x + blend * (v.x - this.x),
+                y = this.y + blend * (v.y - this.y);
+
+            return new Vec(x, y);
         },
         /**
          * Performs a linear interpolation between this vector and the passed vector
@@ -254,7 +276,6 @@
         lerp: function (v, alpha) {
             this.x += (v.x - this.x) * alpha;
             this.y += (v.y - this.y) * alpha;
-            this.z += (v.z - this.z) * alpha;
 
             return this;
         },
@@ -270,9 +291,7 @@
          * @return {number} Returns the length of the vector
          */
         length: function () {
-            let length = Math.sqrt(this.dot(this));
-
-            return length;
+            return Math.sqrt(this.dot(this));
         },
         /**
          * Sets this vector components to the maximum value when compared to the passed vector's components
@@ -471,13 +490,13 @@
             this.ay = ay || this.ay;
         },
         /**
-         * Calculate the length of a the vector.
-         * @param {number} value
+         * Set the angle.
+         * @param {number} angle The angle in radians
          */
-        setAngle: function (value) {
+        setAngle: function (angle) {
             let len = this.length();
-            this.x = Math.cos(value) * len;
-            this.y = Math.sin(value) * len;
+            this.x = Math.cos(angle) * len;
+            this.y = Math.sin(angle) * len;
         },
         /**
          * Sets the length of the vector
@@ -548,8 +567,9 @@
         this.v2 = v2;
         this.pos = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
         this.len = this.v1.distFrom(this.v2);
-        this.rotation = Math.atan2(yDiff, xDiff); // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
-        this.angle = Math.atan2(yDiff, xDiff) * 180 / Math.PI; // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
+        // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
+        this.rotation = Math.atan2(v2.sub(v1).y, v2.sub(v1).x);
+        this.angle = this.rotation * 180 / Math.PI;
 
         this.shape = new PIXI.Graphics();
         if (cheats) {

@@ -11,11 +11,10 @@ var AgentTD = AgentTD || {},
      * @constructor
      *
      * @param {Vec} position - The x, y location
-     * @param {Object} env - The environment
      * @param {agentOpts} opts - The Agent options
      * @returns {AgentTD}
      */
-    function AgentTD(position, env, opts) {
+    function AgentTD(position, opts) {
         // Reward and Punishment
         this.carrot = +5;
         this.stick = -6;
@@ -34,7 +33,7 @@ var AgentTD = AgentTD || {},
         // The number of Agent's eyes, each one sees the number of knownTypes
         this.numStates = this.numEyes * this.numTypes;
 
-        Agent.call(this, position, env, opts);
+        Agent.call(this, position, opts);
 
         // Amount of temporal memory. 0 = agent lives in-the-moment :)
         this.temporalWindow = 1;
@@ -98,10 +97,10 @@ var AgentTD = AgentTD || {},
     /**
      * Agent's chance to act on the world
      */
-    AgentTD.prototype.act = function () {
+    AgentTD.prototype.act = function (world) {
         // Loop through the eyes and check the walls and nearby entities
         for (let e = 0; e < this.numEyes; e++) {
-            this.eyes[e].sense(this);
+            this.eyes[e].sense(this, world);
         }
 
         // Create input to brain
@@ -179,7 +178,7 @@ var AgentTD = AgentTD || {},
      * Agent's chance to move in the world
      * @param smallWorld
      */
-    AgentTD.prototype.move = function () {
+    AgentTD.prototype.move = function (world) {
         this.oldPos = this.pos.clone();
         this.oldAngle = this.angle;
 
@@ -217,15 +216,7 @@ var AgentTD = AgentTD || {},
         }
 
         // Check the world for collisions
-        this.world.check(this, false);
-
-        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
-            if (result) {
-                this.collisions.unshift(wall);
-            }
-        }
+        world.check(this);
 
         // Go through and process what we ate/hit
         let minRes = false,
@@ -233,9 +224,9 @@ var AgentTD = AgentTD || {},
         for (let i = 0; i < this.collisions.length; i++) {
             // Nom or Gnar
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-                    let wall = this.world.walls[w];
-                    result = this.world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
+                for (let w = 0, wl = world.walls.length; w < wl; w++) {
+                    let wall = world.walls[w];
+                    result = world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
                             minRes = result;
@@ -250,9 +241,6 @@ var AgentTD = AgentTD || {},
                 }
 
                 if (!minRes) {
-                    //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
-                    //    stickBySize = this.stick - (this.collisions[i].radius / 100);
-                    //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
                     this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
                     this.collisions[i].cleanUp = true;
                 }
@@ -268,10 +256,10 @@ var AgentTD = AgentTD || {},
         }
 
         // Handle boundary conditions.. bounce Agent
-        let top = this.world.height - (this.world.height - this.radius),
-            bottom = this.world.height - this.radius,
-            left = this.world.width - (this.world.width - this.radius),
-            right = this.world.width - this.radius;
+        let top = world.height - (world.height - this.radius),
+            bottom = world.height - this.radius,
+            left = world.width - (world.width - this.radius),
+            right = world.width - this.radius;
         if (this.pos.x < left) {
             this.pos.x = left;
             this.pos.vx = 0;

@@ -278,11 +278,11 @@ var EZGUI;
             this._onCompleteCallback = null;
             this._onStopCallback = null;
             this._object = object;
+            // Set all starting values present on the target object
             for (var field in object) {
                 this._valuesStart[field] = parseFloat(object[field], 10);
             }
         }
-
         Tween.getAll = function () {
             return this._tweens;
         };
@@ -439,6 +439,7 @@ var EZGUI;
                     if (isFinite(this._repeat)) {
                         this._repeat--;
                     }
+                    // reassign starting values, restart by making startTime = now
                     for (property in this._valuesStartRepeat) {
                         if (typeof (this._valuesEnd[property]) === "string") {
                             this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property], 10);
@@ -481,7 +482,6 @@ var EZGUI;
         var EventHandler = (function () {
             function EventHandler() {
             }
-
             EventHandler.prototype.bind = function (event, fct) {
                 this._events = this._events || {};
                 this._events[event] = this._events[event] || [];
@@ -540,9 +540,9 @@ var EZGUI;
     })(utils = EZGUI.utils || (EZGUI.utils = {}));
 })(EZGUI || (EZGUI = {}));
 /**
- * Hack in support for Function.name for browsers that don't support it.
- * IE, I'm looking at you.
- **/
+* Hack in support for Function.name for browsers that don't support it.
+* IE, I'm looking at you.
+**/
 if (Function.prototype['name'] === undefined && Object.defineProperty !== undefined) {
     Object.defineProperty(Function.prototype, 'name', {
         get: function () {
@@ -550,20 +550,15 @@ if (Function.prototype['name'] === undefined && Object.defineProperty !== undefi
             var results = (funcNameRegex).exec((this).toString());
             return (results && results.length > 1) ? results[1].trim() : "";
         },
-        set: function (value) {
-        }
+        set: function (value) { }
     });
 }
 /// <reference path="polyfills/ie.ts" />
-var __extends = this.__extends || function (d, b) {
-        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-        function __() {
-            this.constructor = d;
-        }
-
-        __.prototype = b.prototype;
-        d.prototype = new __();
-    };
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 //declare var __extends;
 var EZGUI;
 (function (EZGUI) {
@@ -576,7 +571,6 @@ var EZGUI;
         var TilingSprite = (function () {
             function TilingSprite(texture, width, height) {
             }
-
             return TilingSprite;
         })();
         Compatibility.TilingSprite = TilingSprite;
@@ -585,7 +579,6 @@ var EZGUI;
             function GUIContainer() {
                 _super.apply(this, arguments);
             }
-
             return GUIContainer;
         })(PIXI.DisplayObjectContainer);
         Compatibility.GUIContainer = GUIContainer;
@@ -593,7 +586,7 @@ var EZGUI;
             Compatibility['GUIContainer'] = PIXI['Container'];
         }
         else {
-            Compatibility['GUIContainer'] = PIXI['Container'];
+            Compatibility['GUIContainer'] = PIXI['DisplayObjectContainer'];
         }
         var GUIDisplayObjectContainer = (function (_super) {
             __extends(GUIDisplayObjectContainer, _super);
@@ -608,7 +601,6 @@ var EZGUI;
                     this.phaserGroup.guiSprite = this;
                 }
             }
-
             return GUIDisplayObjectContainer;
         })(GUIContainer);
         Compatibility.GUIDisplayObjectContainer = GUIDisplayObjectContainer;
@@ -621,6 +613,15 @@ var EZGUI;
         //})(Phaser.Group);
         //Compatibility['GUIDisplayObjectContainer'] = dummy;
         function createRenderTexture(width, height) {
+            if (!EZGUI.tilingRenderer) {
+                if (EZGUI.Compatibility.PIXIVersion == 3) {
+                    EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
+                }
+                else {
+                    if (!Compatibility.isPhaser)
+                        EZGUI.tilingRenderer = new PIXI.CanvasRenderer(EZGUI.game);
+                }
+            }
             var texture;
             if (EZGUI.Compatibility.PIXIVersion == 3) {
                 texture = new PIXI.RenderTexture(EZGUI.tilingRenderer, width, height);
@@ -630,7 +631,6 @@ var EZGUI;
             }
             return texture;
         }
-
         Compatibility.createRenderTexture = createRenderTexture;
         /*
          *
@@ -647,19 +647,18 @@ var EZGUI;
                 }
             }
         }
-
         Compatibility.fixCache = fixCache;
     })(Compatibility = EZGUI.Compatibility || (EZGUI.Compatibility = {}));
 })(EZGUI || (EZGUI = {}));
 if (EZGUI.Compatibility.PIXIVersion == 3) {
     PIXI['utils']._saidHello = true;
     //EZGUI.tilingRenderer = new PIXI.WebGLRenderer();
-    EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
+    //EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
     EZGUI.Compatibility.TilingSprite = (PIXI.extras).TilingSprite;
     PIXI['utils']._saidHello = false;
 }
 else {
-    EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
+    //EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
     EZGUI.Compatibility.TilingSprite = PIXI.TilingSprite;
 }
 EZGUI.Compatibility.TilingSprite.prototype['fixPhaser24'] = function () {
@@ -743,7 +742,6 @@ var EZGUI;
                 this.initThemeConfig(themeConfig);
             }
         }
-
         Theme.prototype.override = function (themeConfig) {
             var _theme = JSON.parse(JSON.stringify(themeConfig));
             for (var t in _theme) {
@@ -783,10 +781,10 @@ var EZGUI;
                     continue;
                 var skin = this._theme[t];
                 /*
-                 for (var i in this._default) {
-                 if (!skin[i]) skin[i] = JSON.parse(JSON.stringify(this._default[i]));
-                 }
-                 */
+                for (var i in this._default) {
+                    if (!skin[i]) skin[i] = JSON.parse(JSON.stringify(this._default[i]));
+                }
+                */
                 EZGUI.utils.extendJSON(skin, this._default);
             }
             this.path = this.url.substring(0, this.url.lastIndexOf('/') + 1);
@@ -851,9 +849,7 @@ var EZGUI;
             return this.path + str;
         };
         Theme.load = function (themes, cb) {
-            if (cb === void 0) {
-                cb = null;
-            }
+            if (cb === void 0) { cb = null; }
             var remaining = 0;
             for (var i = 0; i < themes.length; i++) {
                 remaining++;
@@ -967,7 +963,7 @@ var EZGUI;
                 }
                 if (PIXI.loader) {
                     for (var i = 0; i < images.length; i++) {
-                        PIXI.loader.add({url: images[i], crossOrigin: crossOrigin});
+                        PIXI.loader.add({ url: images[i], crossOrigin: crossOrigin });
                     }
                     //(<any>PIXI).loader.add(images);
                     PIXI.loader.load(cacheAtlas);
@@ -1020,8 +1016,7 @@ var EZGUI;
                             images.push(src);
                             resToLoad--;
                             fontData[atlasUrl] = {
-                                data: xmlfont,
-                                textureId: src
+                                data: xmlfont, textureId: src
                             };
                             if (resToLoad <= 0) {
                                 //console.log('Fonts loaded ', images);
@@ -1103,15 +1098,8 @@ var EZGUI;
 /// <reference path="theme.ts" />
 var EZGUI;
 (function (EZGUI) {
-    EZGUI.VERSION = '0.3.1 beta';
-    //export var states = ['default', 'hover', 'down', 'checked'];
-    EZGUI.tilingRenderer;
-    EZGUI.dragging;
-    EZGUI.dsx;
-    EZGUI.dsy;
-    EZGUI.startDrag = {x: null, y: null, t: null};
-    EZGUI.focused;
-    EZGUI.game;
+    EZGUI.VERSION = '0.3.11 beta';
+    EZGUI.startDrag = { x: null, y: null, t: null };
     EZGUI.themes = {};
     EZGUI.components = {};
     EZGUI.radioGroups = [];
@@ -1125,12 +1113,10 @@ var EZGUI;
         crossOrigin: false
     };
     var _components = {};
-
     function registerComponents(cpt, id) {
         id = id || cpt.name;
         _components[id] = cpt;
     }
-
     EZGUI.registerComponents = registerComponents;
     function create(settings, theme) {
         var t = settings.component || 'default';
@@ -1141,13 +1127,11 @@ var EZGUI;
         }
         return component;
     }
-
     EZGUI.create = create;
     function tween_animate() {
         requestAnimationFrame(tween_animate);
         EZGUI.Tween.update();
     }
-
     tween_animate();
     function showHeader() {
         //use https://github.com/daniellmb/console.style ?
@@ -1167,7 +1151,6 @@ var EZGUI;
             console.log(' EZGUI v' + EZGUI.VERSION + '   [We <3 HTML5] | http://ezgui.ezelia.com');
         }
     }
-
     showHeader();
 })(EZGUI || (EZGUI = {}));
 /// <reference path="ezgui.ts" />
@@ -1188,14 +1171,11 @@ var EZGUI;
                 }
             }
         }
-
         MultistateSprite.prototype.addState = function (id, texture) {
             this.stateTextures[id] = texture;
         };
         MultistateSprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             var sprite = this;
             if (!sprite.stateTextures[state])
                 return;
@@ -1226,7 +1206,6 @@ var EZGUI;
             this.container = new EZGUI.Compatibility.GUIContainer();
             this.addChild(this.container);
         }
-
         Object.defineProperty(GUIObject.prototype, "Id", {
             get: function () {
                 return this.guiID;
@@ -1337,7 +1316,7 @@ var EZGUI;
                     if (!_this.draggable && _this.guiParent && _this.guiParent.draggable) {
                         _this.guiParent.emit('ezgui:mousedown', event, _this);
                     }
-                    //
+                    //    
                     //console.log('ezgui:mousedown', event);
                 }, this);
                 _this.phaserGroup.events.onInputUp.add(function (target, event) {
@@ -1506,12 +1485,9 @@ var EZGUI;
                     child.off(event, fn);
             }
         };
-        GUIObject.prototype.preUpdate = function () {
-        };
-        GUIObject.prototype.update = function () {
-        };
-        GUIObject.prototype.postUpdate = function () {
-        };
+        GUIObject.prototype.preUpdate = function () { };
+        GUIObject.prototype.update = function () { };
+        GUIObject.prototype.postUpdate = function () { };
         GUIObject.prototype.destroy = function () {
             if (this.phaserGroup) {
                 this.phaserGroup.destroy();
@@ -1557,7 +1533,6 @@ var EZGUI;
             //this.handleEvents();
             this.rebuild();
         }
-
         Object.defineProperty(GUISprite.prototype, "text", {
             //get settings(): string {
             //    return this._settings;
@@ -1575,21 +1550,21 @@ var EZGUI;
                         this.textObj.setText(val);
                     }
                     if (this._settings.anchor) {
-                        this.textObj.pos.x = 0;
-                        this.textObj.pos.y = 0;
+                        this.textObj.position.x = 0;
+                        this.textObj.position.y = 0;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
                             //fake anchor for bitmap font
-                            this.textObj.pos.x -= this.textObj.width / 2;
-                            this.textObj.pos.y -= this.textObj.height / 2;
+                            this.textObj.position.x -= this.textObj.width / 2;
+                            this.textObj.position.y -= this.textObj.height / 2;
                         }
                     }
                     else {
-                        this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
-                        this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
+                        this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
+                        this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
@@ -1648,25 +1623,23 @@ var EZGUI;
                     if (p != NaN)
                         _settings.height = (this.height - padY) * p / 100;
                 }
-                if (typeof _settings.pos == 'object') {
-                    if (typeof _settings.pos.x == 'string') {
-                        var px = this.parsePercentageValue(_settings.pos.x);
+                if (typeof _settings.position == 'object') {
+                    if (typeof _settings.position.x == 'string') {
+                        var px = this.parsePercentageValue(_settings.position.x);
                         if (px != NaN)
-                            _settings.pos.x = (this.width - padX) * px / 100;
+                            _settings.position.x = (this.width - padX) * px / 100;
                     }
-                    if (typeof _settings.pos.y == 'string') {
-                        var py = this.parsePercentageValue(_settings.pos.y);
+                    if (typeof _settings.position.y == 'string') {
+                        var py = this.parsePercentageValue(_settings.position.y);
                         if (py != NaN)
-                            _settings.pos.y = (this.height - padY) * py / 100;
+                            _settings.position.y = (this.height - padY) * py / 100;
                     }
                 }
             }
             return _settings;
         };
         GUISprite.prototype.setDraggable = function (val) {
-            if (val === void 0) {
-                val = true;
-            }
+            if (val === void 0) { val = true; }
             if (val)
                 this.draggable = this;
             else
@@ -1730,14 +1703,14 @@ var EZGUI;
                     var draggable = EZGUI.dragging.draggable;
                     var dpos = EZGUI.utils.getAbsPos(draggable);
                     if (dragObg.dragConstraint != 'y') {
-                        var nextPos = draggable.pos.x + pos.x - EZGUI.dsx;
+                        var nextPos = draggable.position.x + pos.x - EZGUI.dsx;
                         if (nextPos >= dragObg.dragXInterval[0] && nextPos <= dragObg.dragXInterval[1])
-                            draggable.pos.x = nextPos;
+                            draggable.position.x = nextPos;
                     }
                     if (dragObg.dragConstraint != 'x') {
-                        var nextPos = draggable.pos.y + pos.y - EZGUI.dsy;
+                        var nextPos = draggable.position.y + pos.y - EZGUI.dsy;
                         if (nextPos >= dragObg.dragYInterval[0] && nextPos <= dragObg.dragYInterval[1])
-                            draggable.pos.y = nextPos;
+                            draggable.position.y = nextPos;
                     }
                     EZGUI.dsx = pos.x;
                     EZGUI.dsy = pos.y;
@@ -1772,13 +1745,13 @@ var EZGUI;
                     }
                 }
                 var padding = settings.padding || 0;
-                if (settings.pos) {
-                    this.pos.x = settings.pos.x;
-                    this.pos.y = settings.pos.y;
+                if (settings.position) {
+                    this.position.x = settings.position.x;
+                    this.position.y = settings.position.y;
                 }
                 else {
-                    this.pos.x = 0;
-                    this.pos.y = 0;
+                    this.position.x = 0;
+                    this.position.y = 0;
                 }
                 //this.container = new Compatibility.GUIContainer();
                 //this.addChild(this.container);
@@ -1798,10 +1771,10 @@ var EZGUI;
                 if (this._settings.anchor) {
                     this.rootSprite.anchor.x = this._settings.anchor.x;
                     this.rootSprite.anchor.y = this._settings.anchor.y;
-                    this.container.pos.x -= this.rootSprite.width * this._settings.anchor.x;
-                    this.container.pos.y -= this.rootSprite.height * this._settings.anchor.y;
-                    this.pos.x += this.rootSprite.width * this._settings.anchor.x;
-                    this.pos.y += this.rootSprite.height * this._settings.anchor.y;
+                    this.container.position.x -= this.rootSprite.width * this._settings.anchor.x;
+                    this.container.position.y -= this.rootSprite.height * this._settings.anchor.y;
+                    this.position.x += this.rootSprite.width * this._settings.anchor.x;
+                    this.position.y += this.rootSprite.height * this._settings.anchor.y;
                 }
                 //tint color
                 if (this._settings.color) {
@@ -1838,7 +1811,7 @@ var EZGUI;
                 //var settings = this.theme.applySkin(this._settings);
                 var settings = this._settings;
                 if (EZGUI.Compatibility.BitmapText.fonts && EZGUI.Compatibility.BitmapText.fonts[settings.font.family]) {
-                    this.textObj = new EZGUI.Compatibility.BitmapText(this._settings.text, {font: settings.font.size + ' ' + settings.font.family});
+                    this.textObj = new EZGUI.Compatibility.BitmapText(this._settings.text, { font: settings.font.size + ' ' + settings.font.family });
                     var pixiColor = EZGUI.utils.ColorParser.parseToPixiColor(settings.font.color);
                     if (pixiColor >= 0) {
                         this.textObj.tint = pixiColor;
@@ -1846,7 +1819,7 @@ var EZGUI;
                     }
                 }
                 else {
-                    var style = {font: settings.font.size + ' ' + settings.font.family, fill: settings.font.color};
+                    var style = { font: settings.font.size + ' ' + settings.font.family, fill: settings.font.color };
                     for (var s in settings.font) {
                         if (!style[s])
                             style[s] = settings.font[s];
@@ -1854,24 +1827,24 @@ var EZGUI;
                     this.textObj = new PIXI.Text(this._settings.text, style);
                 }
                 //text.height = this.height;
-                this.textObj.pos.x = 0; //(this._settings.width - this.textObj.width) / 2;
-                this.textObj.pos.y = 0; //(this._settings.height - this.textObj.height) / 2;
+                this.textObj.position.x = 0; //(this._settings.width - this.textObj.width) / 2;
+                this.textObj.position.y = 0; //(this._settings.height - this.textObj.height) / 2;
                 if (this._settings.anchor) {
-                    this.textObj.pos.x = 0;
-                    this.textObj.pos.y = 0;
+                    this.textObj.position.x = 0;
+                    this.textObj.position.y = 0;
                     if (this.textObj.anchor) {
                         this.textObj.anchor.x = this._settings.anchor.x;
                         this.textObj.anchor.y = this._settings.anchor.y;
                     }
                     else {
                         //fake anchor for bitmap font
-                        this.textObj.pos.x -= this.textObj.width / 2;
-                        this.textObj.pos.y -= this.textObj.height / 2;
+                        this.textObj.position.x -= this.textObj.width / 2;
+                        this.textObj.position.y -= this.textObj.height / 2;
                     }
                 }
                 else {
-                    this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
-                    this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
+                    this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
+                    this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
                     if (this.textObj.anchor) {
                         this.textObj.anchor.x = 0;
                         this.textObj.anchor.y = 0;
@@ -1884,7 +1857,7 @@ var EZGUI;
             if (!childSettings)
                 return null;
             var i = order;
-            var pos = childSettings.pos;
+            var pos = childSettings.position;
             if (typeof pos == 'string') {
                 var parts = pos.split(' ');
                 var pos1 = parts[0];
@@ -1893,7 +1866,10 @@ var EZGUI;
                 if (parts[0] == parts[1]) {
                     pos2 = undefined;
                 }
-                if ((parts[0] == 'top' && parts[2] == 'bottom') || (parts[0] == 'bottom' && parts[2] == 'top') || (parts[0] == 'left' && parts[2] == 'right') || (parts[0] == 'right' && parts[2] == 'left')) {
+                if ((parts[0] == 'top' && parts[2] == 'bottom') ||
+                    (parts[0] == 'bottom' && parts[2] == 'top') ||
+                    (parts[0] == 'left' && parts[2] == 'right') ||
+                    (parts[0] == 'right' && parts[2] == 'left')) {
                     pos1 = 'center';
                     pos2 = 'undefined';
                 }
@@ -1907,28 +1883,28 @@ var EZGUI;
                 }
                 var padTop = this._settings['padding-top'] || this._settings.padding || 0;
                 var padLeft = this._settings['padding-left'] || this._settings.padding || 0;
-                childSettings.pos = {x: 0, y: 0};
+                childSettings.position = { x: 0, y: 0 };
                 if (pos1 == 'center') {
                     //childSettings.anchor = { x: 0.5, y: 0.5 };
-                    childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
-                    childSettings.pos.y = (this._settings.height - childSettings.height + padTop) / 2;
+                    childSettings.position.x = (this._settings.width - childSettings.width) / 2;
+                    childSettings.position.y = (this._settings.height - childSettings.height + padTop) / 2;
                 }
                 switch (pos1) {
                     case 'center':
-                        childSettings.pos.y = (this._settings.height - childSettings.height + padTop) / 2;
+                        childSettings.position.y = (this._settings.height - childSettings.height + padTop) / 2;
                         if (pos2 === undefined)
-                            childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
+                            childSettings.position.x = (this._settings.width - childSettings.width) / 2;
                         break;
                     case 'bottom':
-                        childSettings.pos.y = this._settings.height - childSettings.height - this._settings.padding;
+                        childSettings.position.y = this._settings.height - childSettings.height - this._settings.padding;
                         break;
                 }
                 switch (pos2) {
                     case 'center':
-                        childSettings.pos.x = (this._settings.width - childSettings.width) / 2;
+                        childSettings.position.x = (this._settings.width - childSettings.width) / 2;
                         break;
                     case 'right':
-                        childSettings.pos.x = this._settings.width - childSettings.width - this._settings.padding;
+                        childSettings.position.x = this._settings.width - childSettings.width - this._settings.padding;
                         break;
                 }
             }
@@ -1939,46 +1915,46 @@ var EZGUI;
          *
          */
         GUISprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             for (var i = 0; i < this.children.length; i++) {
                 var child = this.children[i];
-                if (child instanceof EZGUI.MultistateSprite) {
+                if (child instanceof EZGUI.MultistateSprite /*|| child instanceof MultistateTilingSprite*/) {
                     child.setState(state);
                 }
             }
         };
         GUISprite.prototype.animatePosTo = function (x, y, time, easing, callback) {
-            if (time === void 0) {
-                time = 1000;
-            }
-            if (easing === void 0) {
-                easing = EZGUI.Easing.Linear.None;
-            }
+            if (time === void 0) { time = 1000; }
+            if (easing === void 0) { easing = EZGUI.Easing.Linear.None; }
             easing = easing || EZGUI.Easing.Linear.None;
             if (typeof callback == 'function') {
-                var tween = new EZGUI.Tween(this.pos).to({x: x, y: y}, time).easing(easing).onComplete(callback);
+                var tween = new EZGUI.Tween(this.position)
+                    .to({ x: x, y: y }, time)
+                    .easing(easing)
+                    .onComplete(callback);
             }
             else {
-                var tween = new EZGUI.Tween(this.pos).to({x: x, y: y}, time).easing(easing);
+                var tween = new EZGUI.Tween(this.position)
+                    .to({ x: x, y: y }, time)
+                    .easing(easing);
             }
             tween.start();
             return tween;
         };
         GUISprite.prototype.animateSizeTo = function (w, h, time, easing, callback) {
-            if (time === void 0) {
-                time = 1000;
-            }
-            if (easing === void 0) {
-                easing = EZGUI.Easing.Linear.None;
-            }
+            if (time === void 0) { time = 1000; }
+            if (easing === void 0) { easing = EZGUI.Easing.Linear.None; }
             easing = easing || EZGUI.Easing.Linear.None;
             if (typeof callback == 'function') {
-                var tween = new EZGUI.Tween(this).to({width: w, height: h}, time).easing(easing).onComplete(callback);
+                var tween = new EZGUI.Tween(this)
+                    .to({ width: w, height: h }, time)
+                    .easing(easing)
+                    .onComplete(callback);
             }
             else {
-                var tween = new EZGUI.Tween(this).to({width: w, height: h}, time).easing(easing);
+                var tween = new EZGUI.Tween(this)
+                    .to({ width: w, height: h }, time)
+                    .easing(easing);
             }
             tween.start();
             return tween;
@@ -1989,7 +1965,7 @@ var EZGUI;
         GUISprite.prototype.getFrameConfig = function (config, state) {
             var cfg = JSON.parse(JSON.stringify(config)); //if (cfg.texture instanceof PIXI.Texture) return cfg;
             if (typeof cfg == 'string') {
-                cfg = {default: cfg};
+                cfg = { default: cfg };
             }
             var src = cfg[state] == null ? cfg['default'] : cfg[state];
             var texture;
@@ -2140,37 +2116,38 @@ var EZGUI;
             var line = new EZGUI.Compatibility.TilingSprite(cfg.texture, twidth, theight);
             //phaser 2.4 compatibility /////////////////////////////////
             line.fixPhaser24();
+            ////////////////////////////////////////////////////////////
             switch (side) {
                 case 't':
-                    line.pos.x = cwidth;
-                    line.pos.y = 0;
+                    line.position.x = cwidth;
+                    line.position.y = 0;
                     break;
                 case 'r':
-                    line.pos.y = cwidth;
+                    line.position.y = cwidth;
                     if (!hasSide) {
-                        line.pos.x = settings.width - cwidth;
+                        line.position.x = settings.width - cwidth;
                         line.anchor.x = 0;
                         line.anchor.y = 1;
                     }
                     else {
-                        line.pos.x = settings.width;
+                        line.position.x = settings.width;
                         line.anchor.x = 1;
                         line.anchor.y = 0;
                     }
                     break;
                 case 'b':
-                    line.pos.x = cwidth;
+                    line.position.x = cwidth;
                     if (!hasSide) {
-                        line.pos.y = settings.height - cwidth;
+                        line.position.y = settings.height - cwidth;
                         line.anchor.x = 1;
                         line.anchor.y = 1;
                     }
                     else {
-                        line.pos.y = settings.height - cheight;
+                        line.position.y = settings.height - cheight;
                     }
                     break;
                 case 'l':
-                    line.pos.y = cwidth;
+                    line.position.y = cwidth;
                     if (!hasSide) {
                         line.anchor.x = 1;
                         line.anchor.y = 0;
@@ -2197,8 +2174,8 @@ var EZGUI;
             //phaser 2.4 compatibility /////////////////////////////////
             bg.fixPhaser24();
             ////////////////////////////////////////////////////////////
-            bg.pos.x = cfg.bgPadding;
-            bg.pos.y = cfg.bgPadding;
+            bg.position.x = cfg.bgPadding;
+            bg.position.y = cfg.bgPadding;
             if (settings.bgTiling) {
                 if (settings.bgTiling == "x") {
                     bg.tileScale.y = (settings.height - cfg.bgPadding * 2) / cfg.texture.height;
@@ -2217,8 +2194,8 @@ var EZGUI;
             //cfg.bgPadding = 0;
             //var bg: any = new MultistateSprite(cfg.texture, cfg.textures);
             var bg = new PIXI.Sprite(cfg.texture);
-            bg.pos.x = leftSide.width;
-            bg.pos.y = 0;
+            bg.position.x = leftSide.width;
+            bg.position.y = 0;
             bg.scale.x = cfg.scale;
             bg.scale.y = cfg.scale;
             bg.width = settings.width - leftSide.width;
@@ -2226,9 +2203,7 @@ var EZGUI;
             return bg;
         };
         GUISprite.prototype.createThemeImage = function (settings, state, imagefield) {
-            if (imagefield === void 0) {
-                imagefield = 'image';
-            }
+            if (imagefield === void 0) { imagefield = 'image'; }
             var component = settings.skin || settings.component || 'default';
             //var ctype = this.theme[type] || this.theme['default'];
             var ctype = settings; //this.theme.getSkin(component);
@@ -2320,7 +2295,6 @@ var EZGUI;
                 if (settings.text)
                     this.text = settings.text;
             }
-
             Object.defineProperty(Input.prototype, "text", {
                 get: function () {
                     if (this.domInput)
@@ -2343,9 +2317,7 @@ var EZGUI;
                 configurable: true
             });
             Input.prototype.setTextWithCaret = function (val, event) {
-                if (event === void 0) {
-                    event = null;
-                }
+                if (event === void 0) { event = null; }
                 if (this.textObj) {
                     if (EZGUI.Compatibility.PIXIVersion == 3) {
                         this.textObj.text = val;
@@ -2354,21 +2326,21 @@ var EZGUI;
                         this.textObj.setText(val);
                     }
                     if (this._settings.anchor) {
-                        this.textObj.pos.x = 0;
-                        this.textObj.pos.y = 0;
+                        this.textObj.position.x = 0;
+                        this.textObj.position.y = 0;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
                             //fake anchor for bitmap font
-                            this.textObj.pos.x -= this.textObj.width / 2;
-                            this.textObj.pos.y -= this.textObj.height / 2;
+                            this.textObj.position.x -= this.textObj.width / 2;
+                            this.textObj.position.y -= this.textObj.height / 2;
                         }
                     }
                     else {
-                        this.textObj.pos.x = (this._settings.width - this.textObj.width) / 2;
-                        this.textObj.pos.y = (this._settings.height - this.textObj.height) / 2;
+                        this.textObj.position.x = (this._settings.width - this.textObj.width) / 2;
+                        this.textObj.position.y = (this._settings.height - this.textObj.height) / 2;
                         if (this.textObj.anchor) {
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
@@ -2378,13 +2350,13 @@ var EZGUI;
                 //var cpos = this.getCaretPosition();
                 //console.log('setting value ', val, cpos, val.substr(0, cpos - 1), val.substr(cpos));
                 //this.domInput.value = val.substr(0, cpos - 1) + val.substr(cpos);
-                this.textObj.pos.x = 5;
+                this.textObj.position.x = 5;
                 if (event)
                     this.emit('ezgui:change', event, this);
             };
             Input.prototype.draw = function () {
                 _super.prototype.draw.call(this);
-                this.guiMask = {width: 0, height: 0};
+                this.guiMask = { width: 0, height: 0 };
                 var settings = this._settings;
                 if (settings) {
                     var padding = settings.padding || 0;
@@ -2394,8 +2366,8 @@ var EZGUI;
                     myMask.endFill();
                     this.addChild(myMask);
                     if (this._settings.anchor) {
-                        myMask.pos.x = this.container.pos.x + padding;
-                        myMask.pos.y = this.container.pos.y + padding;
+                        myMask.position.x = this.container.position.x + padding;
+                        myMask.position.y = this.container.position.y + padding;
                     }
                     this.container.mask = myMask;
                     this.guiMask.x = padding;
@@ -2409,7 +2381,7 @@ var EZGUI;
             Input.prototype.drawText = function () {
                 this._settings.text = this._settings.text || '';
                 _super.prototype.drawText.call(this);
-                this.textObj.pos.x = 5;
+                this.textObj.position.x = 5;
                 this.container.addChild(this.textObj);
                 //this.textObj
             };
@@ -2418,7 +2390,7 @@ var EZGUI;
                 if (!EZGUI.Device.isMobile && document && document.createElement) {
                     this.domInput = document.createElement("input");
                     this.domInput.id = this.guiID + "_input";
-                    this.domInput.style.pos = 'absolute';
+                    this.domInput.style.position = 'absolute';
                     this.domInput.style.top = '-100px';
                     this.domInput.value = '';
                     document.body.appendChild(this.domInput);
@@ -2527,7 +2499,6 @@ var EZGUI;
                 if (settings.text)
                     this.text = settings.text;
             }
-
             Label.prototype.setupEvents = function () {
                 //clear events
             };
@@ -2544,8 +2515,8 @@ var EZGUI;
                     this.guiID = settings.id;
                     if (this.guiID)
                         EZGUI.components[this.guiID] = this;
-                    this.pos.x = settings.pos.x;
-                    this.pos.y = settings.pos.y;
+                    this.position.x = settings.position.x;
+                    this.position.y = settings.position.y;
                     this.rootSprite = new EZGUI.Compatibility.GUIContainer();
                     this.addChild(this.rootSprite);
                 }
@@ -2568,24 +2539,23 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Object.defineProperty(Slider.prototype, "value", {
                 get: function () {
                     if (this.horizontalSlide) {
-                        return this.slide.pos.x / (this.width - this.slide.width);
+                        return this.slide.position.x / (this.width - this.slide.width);
                     }
                     else {
-                        return 1 + this.slide.pos.y / (this.slide.height - this.height);
+                        return 1 + this.slide.position.y / (this.slide.height - this.height);
                     }
                 },
                 set: function (val) {
                     val = Math.max(0, val);
                     val = Math.min(val, 1);
                     if (this.horizontalSlide) {
-                        this.slide.pos.x = val * (this.width - this.slide.width);
+                        this.slide.position.x = val * (this.width - this.slide.width);
                     }
                     else {
-                        this.slide.pos.y = (val - 1) * (this.slide.height - this.height);
+                        this.slide.position.y = (val - 1) * (this.slide.height - this.height);
                     }
                 },
                 enumerable: true,
@@ -2632,7 +2602,7 @@ var EZGUI;
                 var cfg = this._settings.slide;
                 cfg.component = 'Button';
                 cfg.skin = 'Slide';
-                cfg.pos = {x: 0, y: 0};
+                cfg.position = { x: 0, y: 0 };
                 cfg.draggable = true;
                 //{ id: 'slide1', component: 'Button', position: { x: 0, y: 0 }, width: 30, height: this.height, draggable: true };
                 var dir = this._settings.dir;
@@ -2672,7 +2642,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Tabs.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
                 var _this = this;
@@ -2700,22 +2669,14 @@ var EZGUI;
                     component: 'Window',
                     transparent: true,
                     padding: 0,
-                    position: {x: 0, y: 0},
+                    position: { x: 0, y: 0 },
                     width: this._settings.width,
                     height: tabsH,
                     layout: [this._settings.children.length, 1],
                     children: []
                 };
                 for (var i = 0; i < this._settings.children.length; i++) {
-                    var child = {
-                        text: this._settings.children[i].title || '',
-                        userData: {id: i},
-                        component: 'Sprite',
-                        skin: 'Button',
-                        position: {x: 0, y: 0},
-                        width: ~~(this._settings.width / this._settings.children.length),
-                        height: tabsH
-                    };
+                    var child = { text: this._settings.children[i].title || '', userData: { id: i }, component: 'Sprite', skin: 'Button', position: { x: 0, y: 0 }, width: ~~(this._settings.width / this._settings.children.length), height: tabsH };
                     tabsCfg.children.push(child);
                 }
                 this.tabsBar = EZGUI.create(tabsCfg, this.themeId);
@@ -2784,13 +2745,11 @@ var EZGUI;
 (function (EZGUI) {
     var Device;
     (function (Device) {
-        //Code taken from https://github.com/g13n/ua.js
+        //Code taken from https://github.com/g13n/ua.js 
         var userAgent = (window.navigator && navigator.userAgent) || "";
-
         function detect(pattern) {
             return (pattern).test(userAgent);
         }
-
         /**
          * Return true if the browser is Chrome or compatible.
          *
@@ -2928,13 +2887,12 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Layout.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
             };
             Layout.prototype.draw = function () {
                 _super.prototype.draw.call(this);
-                this.guiMask = {width: 0, height: 0};
+                this.guiMask = { width: 0, height: 0 };
                 var settings = this._settings;
                 if (settings) {
                     var padding = settings.padding || 0;
@@ -2945,8 +2903,8 @@ var EZGUI;
                         myMask.endFill();
                         this.addChild(myMask);
                         if (this._settings.anchor) {
-                            myMask.pos.x = this.container.pos.x + padding;
-                            myMask.pos.y = this.container.pos.y + padding;
+                            myMask.position.x = this.container.position.x + padding;
+                            myMask.position.y = this.container.position.y + padding;
                         }
                         this.container.mask = myMask;
                     }
@@ -2975,7 +2933,7 @@ var EZGUI;
                     lx = this._settings.layout[0];
                     ly = this._settings.layout[1];
                     var x, y;
-                    //horizontal layout
+                    //horizontal layout 
                     if (ly == null) {
                         x = i;
                         y = 0;
@@ -3000,7 +2958,7 @@ var EZGUI;
                     dx += x * (swidth / lx);
                     dy += y * (sheight / ly);
                 }
-                var pos = childSettings.pos;
+                var pos = childSettings.position;
                 if (typeof pos == 'string') {
                     var parts = pos.split(' ');
                     var pos1 = parts[0];
@@ -3009,7 +2967,10 @@ var EZGUI;
                     if (parts[0] == parts[1]) {
                         pos2 = undefined;
                     }
-                    if ((parts[0] == 'top' && parts[2] == 'bottom') || (parts[0] == 'bottom' && parts[2] == 'top') || (parts[0] == 'left' && parts[2] == 'right') || (parts[0] == 'right' && parts[2] == 'left')) {
+                    if ((parts[0] == 'top' && parts[2] == 'bottom') ||
+                        (parts[0] == 'bottom' && parts[2] == 'top') ||
+                        (parts[0] == 'left' && parts[2] == 'right') ||
+                        (parts[0] == 'right' && parts[2] == 'left')) {
                         pos1 = 'center';
                         pos2 = 'undefined';
                     }
@@ -3021,31 +2982,31 @@ var EZGUI;
                         pos2 = pos1;
                         pos1 = 'left';
                     }
-                    childSettings.pos = {x: dx, y: dy};
+                    childSettings.position = { x: dx, y: dy };
                     switch (pos1) {
                         case 'center':
-                            childSettings.pos.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
+                            childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
                             if (pos2 === undefined)
-                                childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                             break;
                         case 'bottom':
-                            childSettings.pos.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
+                            childSettings.position.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
                             break;
                     }
                     switch (pos2) {
                         case 'center':
-                            childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                            childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                             break;
                         case 'right':
-                            childSettings.pos.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
+                            childSettings.position.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
                             break;
                     }
                 }
                 else {
-                    childSettings.pos.x = dx + childSettings.pos.x;
-                    childSettings.pos.y = dy + childSettings.pos.y;
+                    childSettings.position.x = dx + childSettings.position.x;
+                    childSettings.position.y = dy + childSettings.position.y;
                 }
-                //console.log(' >> ', dx.toFixed(2), dy.toFixed(2), childSettings.pos.x.toFixed(2), childSettings.pos.y.toFixed(2));
+                //console.log(' >> ', dx.toFixed(2), dy.toFixed(2), childSettings.position.x.toFixed(2), childSettings.position.y.toFixed(2));
                 var child = EZGUI.create(childSettings, this.theme);
                 return child;
             };
@@ -3073,7 +3034,7 @@ var EZGUI;
                         lx = this._settings.layout[0];
                         ly = this._settings.layout[1];
                         var x, y;
-                        //horizontal layout
+                        //horizontal layout 
                         if (ly == null) {
                             x = i;
                             y = 0;
@@ -3099,7 +3060,7 @@ var EZGUI;
                         dy += y * (sheight / ly);
                     }
                     var childSettings = child._settings;
-                    var pos = childSettings.pos;
+                    var pos = childSettings.position;
                     if (typeof pos == 'string') {
                         var parts = pos.split(' ');
                         var pos1 = parts[0];
@@ -3108,7 +3069,10 @@ var EZGUI;
                         if (parts[0] == parts[1]) {
                             pos2 = undefined;
                         }
-                        if ((parts[0] == 'top' && parts[2] == 'bottom') || (parts[0] == 'bottom' && parts[2] == 'top') || (parts[0] == 'left' && parts[2] == 'right') || (parts[0] == 'right' && parts[2] == 'left')) {
+                        if ((parts[0] == 'top' && parts[2] == 'bottom') ||
+                            (parts[0] == 'bottom' && parts[2] == 'top') ||
+                            (parts[0] == 'left' && parts[2] == 'right') ||
+                            (parts[0] == 'right' && parts[2] == 'left')) {
                             pos1 = 'center';
                             pos2 = 'undefined';
                         }
@@ -3120,32 +3084,32 @@ var EZGUI;
                             pos2 = pos1;
                             pos1 = 'left';
                         }
-                        childSettings.pos = {x: dx, y: dy};
+                        childSettings.position = { x: dx, y: dy };
                         switch (pos1) {
                             case 'center':
-                                childSettings.pos.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
+                                childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
                                 if (pos2 === undefined)
-                                    childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                    childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                                 break;
                             case 'bottom':
-                                childSettings.pos.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
+                                childSettings.position.y = dy + (this._settings.height / ly) - childSettings.height - this._settings.padding;
                                 break;
                         }
                         switch (pos2) {
                             case 'center':
-                                childSettings.pos.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
+                                childSettings.position.x = dx + (this._settings.width / lx) / 2 - childSettings.width / 2;
                                 break;
                             case 'right':
-                                childSettings.pos.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
+                                childSettings.position.x = dx + (this._settings.width / lx) - childSettings.width - this._settings.padding;
                                 break;
                         }
                     }
                     else {
-                        childSettings.pos.x = dx + childSettings.pos.x;
-                        childSettings.pos.y = dy + childSettings.pos.y;
+                        childSettings.position.x = dx + childSettings.position.x;
+                        childSettings.position.y = dy + childSettings.position.y;
                     }
-                    child.pos.x = childSettings.pos.x;
-                    child.pos.y = childSettings.pos.y;
+                    child.position.x = childSettings.position.x;
+                    child.position.y = childSettings.position.y;
                     child.guiParent = this;
                     if (child.phaserGroup)
                         return this.container.addChild(child.phaserGroup);
@@ -3175,7 +3139,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Window.prototype.draw = function () {
                 var headerCfg = this._settings.header;
                 if (headerCfg) {
@@ -3185,11 +3148,11 @@ var EZGUI;
                 }
                 _super.prototype.draw.call(this);
                 if (headerCfg) {
-                    //this.pos.y += headerCfg.height;
+                    //this.position.y += headerCfg.height;
                     if (headerCfg.width == undefined)
                         headerCfg.width = this._settings.width;
                     this.titleBar = new EZGUI.GUISprite(headerCfg, this.theme);
-                    //this.titleBar.pos.y -= headerCfg.height - this.settings.padding*2;
+                    //this.titleBar.position.y -= headerCfg.height - this.settings.padding*2;
                     this.originalAddChild(this.titleBar);
                 }
             };
@@ -3203,9 +3166,7 @@ var EZGUI;
                 }
             };
             Window.prototype.setDraggable = function (val) {
-                if (val === void 0) {
-                    val = true;
-                }
+                if (val === void 0) { val = true; }
                 if (val) {
                     this.draggable = this;
                     if (this.titleBar)
@@ -3237,7 +3198,6 @@ var EZGUI;
                 this.themeId = themeId;
                 //this.parseSettings();
             }
-
             MainScreen.prototype.parseSettings = function () {
                 var txCache = EZGUI.Compatibility.PIXIVersion >= 3 ? PIXI.utils.TextureCache : PIXI.TextureCache;
                 //parse logo
@@ -3246,12 +3206,7 @@ var EZGUI;
                         if (txCache[this._settings.logo]) {
                             var tx = txCache[this._settings.logo];
                             var px = (this._settings.width - tx.width) / 2;
-                            this._settings.header = {
-                                position: {x: px, y: 0},
-                                image: this._settings.logo,
-                                height: tx.height,
-                                width: tx.width
-                            };
+                            this._settings.header = { position: { x: px, y: 0 }, image: this._settings.logo, height: tx.height, width: tx.width };
                         }
                     }
                     else {
@@ -3268,7 +3223,7 @@ var EZGUI;
                         if (btn) {
                             btn.component = 'Button';
                             btn.id = this._settings.id + '-btn-' + i;
-                            btn.pos = btn.pos || 'center';
+                            btn.position = btn.position || 'center';
                             if (maxHeight < btn.height)
                                 maxHeight = btn.height;
                             if (btn.event) {
@@ -3327,177 +3282,98 @@ var EZGUI;
         var ColorParser;
         (function (ColorParser) {
             var kCSSColorTable = {
-                "transparent": [0, 0, 0, 0],
-                "aliceblue": [240, 248, 255, 1],
-                "antiquewhite": [250, 235, 215, 1],
-                "aqua": [0, 255, 255, 1],
-                "aquamarine": [127, 255, 212, 1],
-                "azure": [240, 255, 255, 1],
-                "beige": [245, 245, 220, 1],
-                "bisque": [255, 228, 196, 1],
-                "black": [0, 0, 0, 1],
-                "blanchedalmond": [255, 235, 205, 1],
-                "blue": [0, 0, 255, 1],
-                "blueviolet": [138, 43, 226, 1],
-                "brown": [165, 42, 42, 1],
-                "burlywood": [222, 184, 135, 1],
-                "cadetblue": [95, 158, 160, 1],
-                "chartreuse": [127, 255, 0, 1],
-                "chocolate": [210, 105, 30, 1],
-                "coral": [255, 127, 80, 1],
-                "cornflowerblue": [100, 149, 237, 1],
-                "cornsilk": [255, 248, 220, 1],
-                "crimson": [220, 20, 60, 1],
-                "cyan": [0, 255, 255, 1],
-                "darkblue": [0, 0, 139, 1],
-                "darkcyan": [0, 139, 139, 1],
-                "darkgoldenrod": [184, 134, 11, 1],
-                "darkgray": [169, 169, 169, 1],
-                "darkgreen": [0, 100, 0, 1],
-                "darkgrey": [169, 169, 169, 1],
-                "darkkhaki": [189, 183, 107, 1],
-                "darkmagenta": [139, 0, 139, 1],
-                "darkolivegreen": [85, 107, 47, 1],
-                "darkorange": [255, 140, 0, 1],
-                "darkorchid": [153, 50, 204, 1],
-                "darkred": [139, 0, 0, 1],
-                "darksalmon": [233, 150, 122, 1],
-                "darkseagreen": [143, 188, 143, 1],
-                "darkslateblue": [72, 61, 139, 1],
-                "darkslategray": [47, 79, 79, 1],
-                "darkslategrey": [47, 79, 79, 1],
-                "darkturquoise": [0, 206, 209, 1],
-                "darkviolet": [148, 0, 211, 1],
-                "deeppink": [255, 20, 147, 1],
-                "deepskyblue": [0, 191, 255, 1],
-                "dimgray": [105, 105, 105, 1],
-                "dimgrey": [105, 105, 105, 1],
-                "dodgerblue": [30, 144, 255, 1],
-                "firebrick": [178, 34, 34, 1],
-                "floralwhite": [255, 250, 240, 1],
-                "forestgreen": [34, 139, 34, 1],
-                "fuchsia": [255, 0, 255, 1],
-                "gainsboro": [220, 220, 220, 1],
-                "ghostwhite": [248, 248, 255, 1],
-                "gold": [255, 215, 0, 1],
-                "goldenrod": [218, 165, 32, 1],
-                "gray": [128, 128, 128, 1],
-                "green": [0, 128, 0, 1],
-                "greenyellow": [173, 255, 47, 1],
-                "grey": [128, 128, 128, 1],
-                "honeydew": [240, 255, 240, 1],
-                "hotpink": [255, 105, 180, 1],
-                "indianred": [205, 92, 92, 1],
-                "indigo": [75, 0, 130, 1],
-                "ivory": [255, 255, 240, 1],
-                "khaki": [240, 230, 140, 1],
-                "lavender": [230, 230, 250, 1],
-                "lavenderblush": [255, 240, 245, 1],
-                "lawngreen": [124, 252, 0, 1],
-                "lemonchiffon": [255, 250, 205, 1],
-                "lightblue": [173, 216, 230, 1],
-                "lightcoral": [240, 128, 128, 1],
-                "lightcyan": [224, 255, 255, 1],
-                "lightgoldenrodyellow": [250, 250, 210, 1],
-                "lightgray": [211, 211, 211, 1],
-                "lightgreen": [144, 238, 144, 1],
-                "lightgrey": [211, 211, 211, 1],
-                "lightpink": [255, 182, 193, 1],
-                "lightsalmon": [255, 160, 122, 1],
-                "lightseagreen": [32, 178, 170, 1],
-                "lightskyblue": [135, 206, 250, 1],
-                "lightslategray": [119, 136, 153, 1],
-                "lightslategrey": [119, 136, 153, 1],
-                "lightsteelblue": [176, 196, 222, 1],
-                "lightyellow": [255, 255, 224, 1],
-                "lime": [0, 255, 0, 1],
-                "limegreen": [50, 205, 50, 1],
-                "linen": [250, 240, 230, 1],
-                "magenta": [255, 0, 255, 1],
-                "maroon": [128, 0, 0, 1],
-                "mediumaquamarine": [102, 205, 170, 1],
-                "mediumblue": [0, 0, 205, 1],
-                "mediumorchid": [186, 85, 211, 1],
-                "mediumpurple": [147, 112, 219, 1],
-                "mediumseagreen": [60, 179, 113, 1],
-                "mediumslateblue": [123, 104, 238, 1],
-                "mediumspringgreen": [0, 250, 154, 1],
-                "mediumturquoise": [72, 209, 204, 1],
-                "mediumvioletred": [199, 21, 133, 1],
-                "midnightblue": [25, 25, 112, 1],
-                "mintcream": [245, 255, 250, 1],
-                "mistyrose": [255, 228, 225, 1],
-                "moccasin": [255, 228, 181, 1],
-                "navajowhite": [255, 222, 173, 1],
-                "navy": [0, 0, 128, 1],
-                "oldlace": [253, 245, 230, 1],
-                "olive": [128, 128, 0, 1],
-                "olivedrab": [107, 142, 35, 1],
-                "orange": [255, 165, 0, 1],
-                "orangered": [255, 69, 0, 1],
-                "orchid": [218, 112, 214, 1],
-                "palegoldenrod": [238, 232, 170, 1],
-                "palegreen": [152, 251, 152, 1],
-                "paleturquoise": [175, 238, 238, 1],
-                "palevioletred": [219, 112, 147, 1],
-                "papayawhip": [255, 239, 213, 1],
-                "peachpuff": [255, 218, 185, 1],
-                "peru": [205, 133, 63, 1],
-                "pink": [255, 192, 203, 1],
-                "plum": [221, 160, 221, 1],
-                "powderblue": [176, 224, 230, 1],
-                "purple": [128, 0, 128, 1],
-                "red": [255, 0, 0, 1],
-                "rosybrown": [188, 143, 143, 1],
-                "royalblue": [65, 105, 225, 1],
-                "saddlebrown": [139, 69, 19, 1],
-                "salmon": [250, 128, 114, 1],
-                "sandybrown": [244, 164, 96, 1],
-                "seagreen": [46, 139, 87, 1],
-                "seashell": [255, 245, 238, 1],
-                "sienna": [160, 82, 45, 1],
-                "silver": [192, 192, 192, 1],
-                "skyblue": [135, 206, 235, 1],
-                "slateblue": [106, 90, 205, 1],
-                "slategray": [112, 128, 144, 1],
-                "slategrey": [112, 128, 144, 1],
-                "snow": [255, 250, 250, 1],
-                "springgreen": [0, 255, 127, 1],
-                "steelblue": [70, 130, 180, 1],
-                "tan": [210, 180, 140, 1],
-                "teal": [0, 128, 128, 1],
-                "thistle": [216, 191, 216, 1],
-                "tomato": [255, 99, 71, 1],
-                "turquoise": [64, 224, 208, 1],
-                "violet": [238, 130, 238, 1],
-                "wheat": [245, 222, 179, 1],
-                "white": [255, 255, 255, 1],
-                "whitesmoke": [245, 245, 245, 1],
-                "yellow": [255, 255, 0, 1],
-                "yellowgreen": [154, 205, 50, 1]
+                "transparent": [0, 0, 0, 0], "aliceblue": [240, 248, 255, 1],
+                "antiquewhite": [250, 235, 215, 1], "aqua": [0, 255, 255, 1],
+                "aquamarine": [127, 255, 212, 1], "azure": [240, 255, 255, 1],
+                "beige": [245, 245, 220, 1], "bisque": [255, 228, 196, 1],
+                "black": [0, 0, 0, 1], "blanchedalmond": [255, 235, 205, 1],
+                "blue": [0, 0, 255, 1], "blueviolet": [138, 43, 226, 1],
+                "brown": [165, 42, 42, 1], "burlywood": [222, 184, 135, 1],
+                "cadetblue": [95, 158, 160, 1], "chartreuse": [127, 255, 0, 1],
+                "chocolate": [210, 105, 30, 1], "coral": [255, 127, 80, 1],
+                "cornflowerblue": [100, 149, 237, 1], "cornsilk": [255, 248, 220, 1],
+                "crimson": [220, 20, 60, 1], "cyan": [0, 255, 255, 1],
+                "darkblue": [0, 0, 139, 1], "darkcyan": [0, 139, 139, 1],
+                "darkgoldenrod": [184, 134, 11, 1], "darkgray": [169, 169, 169, 1],
+                "darkgreen": [0, 100, 0, 1], "darkgrey": [169, 169, 169, 1],
+                "darkkhaki": [189, 183, 107, 1], "darkmagenta": [139, 0, 139, 1],
+                "darkolivegreen": [85, 107, 47, 1], "darkorange": [255, 140, 0, 1],
+                "darkorchid": [153, 50, 204, 1], "darkred": [139, 0, 0, 1],
+                "darksalmon": [233, 150, 122, 1], "darkseagreen": [143, 188, 143, 1],
+                "darkslateblue": [72, 61, 139, 1], "darkslategray": [47, 79, 79, 1],
+                "darkslategrey": [47, 79, 79, 1], "darkturquoise": [0, 206, 209, 1],
+                "darkviolet": [148, 0, 211, 1], "deeppink": [255, 20, 147, 1],
+                "deepskyblue": [0, 191, 255, 1], "dimgray": [105, 105, 105, 1],
+                "dimgrey": [105, 105, 105, 1], "dodgerblue": [30, 144, 255, 1],
+                "firebrick": [178, 34, 34, 1], "floralwhite": [255, 250, 240, 1],
+                "forestgreen": [34, 139, 34, 1], "fuchsia": [255, 0, 255, 1],
+                "gainsboro": [220, 220, 220, 1], "ghostwhite": [248, 248, 255, 1],
+                "gold": [255, 215, 0, 1], "goldenrod": [218, 165, 32, 1],
+                "gray": [128, 128, 128, 1], "green": [0, 128, 0, 1],
+                "greenyellow": [173, 255, 47, 1], "grey": [128, 128, 128, 1],
+                "honeydew": [240, 255, 240, 1], "hotpink": [255, 105, 180, 1],
+                "indianred": [205, 92, 92, 1], "indigo": [75, 0, 130, 1],
+                "ivory": [255, 255, 240, 1], "khaki": [240, 230, 140, 1],
+                "lavender": [230, 230, 250, 1], "lavenderblush": [255, 240, 245, 1],
+                "lawngreen": [124, 252, 0, 1], "lemonchiffon": [255, 250, 205, 1],
+                "lightblue": [173, 216, 230, 1], "lightcoral": [240, 128, 128, 1],
+                "lightcyan": [224, 255, 255, 1], "lightgoldenrodyellow": [250, 250, 210, 1],
+                "lightgray": [211, 211, 211, 1], "lightgreen": [144, 238, 144, 1],
+                "lightgrey": [211, 211, 211, 1], "lightpink": [255, 182, 193, 1],
+                "lightsalmon": [255, 160, 122, 1], "lightseagreen": [32, 178, 170, 1],
+                "lightskyblue": [135, 206, 250, 1], "lightslategray": [119, 136, 153, 1],
+                "lightslategrey": [119, 136, 153, 1], "lightsteelblue": [176, 196, 222, 1],
+                "lightyellow": [255, 255, 224, 1], "lime": [0, 255, 0, 1],
+                "limegreen": [50, 205, 50, 1], "linen": [250, 240, 230, 1],
+                "magenta": [255, 0, 255, 1], "maroon": [128, 0, 0, 1],
+                "mediumaquamarine": [102, 205, 170, 1], "mediumblue": [0, 0, 205, 1],
+                "mediumorchid": [186, 85, 211, 1], "mediumpurple": [147, 112, 219, 1],
+                "mediumseagreen": [60, 179, 113, 1], "mediumslateblue": [123, 104, 238, 1],
+                "mediumspringgreen": [0, 250, 154, 1], "mediumturquoise": [72, 209, 204, 1],
+                "mediumvioletred": [199, 21, 133, 1], "midnightblue": [25, 25, 112, 1],
+                "mintcream": [245, 255, 250, 1], "mistyrose": [255, 228, 225, 1],
+                "moccasin": [255, 228, 181, 1], "navajowhite": [255, 222, 173, 1],
+                "navy": [0, 0, 128, 1], "oldlace": [253, 245, 230, 1],
+                "olive": [128, 128, 0, 1], "olivedrab": [107, 142, 35, 1],
+                "orange": [255, 165, 0, 1], "orangered": [255, 69, 0, 1],
+                "orchid": [218, 112, 214, 1], "palegoldenrod": [238, 232, 170, 1],
+                "palegreen": [152, 251, 152, 1], "paleturquoise": [175, 238, 238, 1],
+                "palevioletred": [219, 112, 147, 1], "papayawhip": [255, 239, 213, 1],
+                "peachpuff": [255, 218, 185, 1], "peru": [205, 133, 63, 1],
+                "pink": [255, 192, 203, 1], "plum": [221, 160, 221, 1],
+                "powderblue": [176, 224, 230, 1], "purple": [128, 0, 128, 1],
+                "red": [255, 0, 0, 1], "rosybrown": [188, 143, 143, 1],
+                "royalblue": [65, 105, 225, 1], "saddlebrown": [139, 69, 19, 1],
+                "salmon": [250, 128, 114, 1], "sandybrown": [244, 164, 96, 1],
+                "seagreen": [46, 139, 87, 1], "seashell": [255, 245, 238, 1],
+                "sienna": [160, 82, 45, 1], "silver": [192, 192, 192, 1],
+                "skyblue": [135, 206, 235, 1], "slateblue": [106, 90, 205, 1],
+                "slategray": [112, 128, 144, 1], "slategrey": [112, 128, 144, 1],
+                "snow": [255, 250, 250, 1], "springgreen": [0, 255, 127, 1],
+                "steelblue": [70, 130, 180, 1], "tan": [210, 180, 140, 1],
+                "teal": [0, 128, 128, 1], "thistle": [216, 191, 216, 1],
+                "tomato": [255, 99, 71, 1], "turquoise": [64, 224, 208, 1],
+                "violet": [238, 130, 238, 1], "wheat": [245, 222, 179, 1],
+                "white": [255, 255, 255, 1], "whitesmoke": [245, 245, 245, 1],
+                "yellow": [255, 255, 0, 1], "yellowgreen": [154, 205, 50, 1]
             };
-
             function clamp_css_byte(i) {
                 i = Math.round(i); // Seems to be what Chrome does (vs truncation).
                 return i < 0 ? 0 : i > 255 ? 255 : i;
             }
-
             function clamp_css_float(f) {
                 return f < 0 ? 0 : f > 1 ? 1 : f;
             }
-
             function parse_css_int(str) {
                 if (str[str.length - 1] === '%')
                     return clamp_css_byte(parseFloat(str) / 100 * 255);
                 return clamp_css_byte(parseInt(str));
             }
-
             function parse_css_float(str) {
                 if (str[str.length - 1] === '%')
                     return clamp_css_float(parseFloat(str) / 100);
                 return clamp_css_float(parseFloat(str));
             }
-
             function css_hue_to_rgb(m1, m2, h) {
                 if (h < 0)
                     h += 1;
@@ -3511,7 +3387,6 @@ var EZGUI;
                     return m1 + (m2 - m1) * (2 / 3 - h) * 6;
                 return m1;
             }
-
             function parseToPixiColor(str) {
                 var rgb = parseToRGB(str);
                 if (!rgb)
@@ -3521,7 +3396,6 @@ var EZGUI;
                 intRGB = (intRGB << 8) + rgb[2];
                 return intRGB;
             }
-
             ColorParser.parseToPixiColor = parseToPixiColor;
             function parseToRGB(str) {
                 // Remove all whitespace, not compliant, but should just be more accepting.
@@ -3535,13 +3409,19 @@ var EZGUI;
                         var iv = parseInt(str.substr(1), 16); // TODO(deanm): Stricter parsing.
                         if (!(iv >= 0 && iv <= 0xfff))
                             return null; // Covers NaN.
-                        return [((iv & 0xf00) >> 4) | ((iv & 0xf00) >> 8), (iv & 0xf0) | ((iv & 0xf0) >> 4), (iv & 0xf) | ((iv & 0xf) << 4), 1];
+                        return [((iv & 0xf00) >> 4) | ((iv & 0xf00) >> 8),
+                            (iv & 0xf0) | ((iv & 0xf0) >> 4),
+                            (iv & 0xf) | ((iv & 0xf) << 4),
+                            1];
                     }
                     else if (str.length === 7) {
                         var iv = parseInt(str.substr(1), 16); // TODO(deanm): Stricter parsing.
                         if (!(iv >= 0 && iv <= 0xffffff))
                             return null; // Covers NaN.
-                        return [(iv & 0xff0000) >> 16, (iv & 0xff00) >> 8, iv & 0xff, 1];
+                        return [(iv & 0xff0000) >> 16,
+                            (iv & 0xff00) >> 8,
+                            iv & 0xff,
+                            1];
                     }
                     return null;
                 }
@@ -3555,14 +3435,19 @@ var EZGUI;
                             if (params.length !== 4)
                                 return null;
                             alpha = parse_css_float(params.pop());
+                        // Fall through.
                         case 'rgb':
                             if (params.length !== 3)
                                 return null;
-                            return [parse_css_int(params[0]), parse_css_int(params[1]), parse_css_int(params[2]), alpha];
+                            return [parse_css_int(params[0]),
+                                parse_css_int(params[1]),
+                                parse_css_int(params[2]),
+                                alpha];
                         case 'hsla':
                             if (params.length !== 4)
                                 return null;
                             alpha = parse_css_float(params.pop());
+                        // Fall through.
                         case 'hsl':
                             if (params.length !== 3)
                                 return null;
@@ -3573,14 +3458,16 @@ var EZGUI;
                             var l = parse_css_float(params[2]);
                             var m2 = l <= 0.5 ? l * (s + 1) : l + s - l * s;
                             var m1 = l * 2 - m2;
-                            return [clamp_css_byte(css_hue_to_rgb(m1, m2, h + 1 / 3) * 255), clamp_css_byte(css_hue_to_rgb(m1, m2, h) * 255), clamp_css_byte(css_hue_to_rgb(m1, m2, h - 1 / 3) * 255), alpha];
+                            return [clamp_css_byte(css_hue_to_rgb(m1, m2, h + 1 / 3) * 255),
+                                clamp_css_byte(css_hue_to_rgb(m1, m2, h) * 255),
+                                clamp_css_byte(css_hue_to_rgb(m1, m2, h - 1 / 3) * 255),
+                                alpha];
                         default:
                             return null;
                     }
                 }
                 return null;
             }
-
             ColorParser.parseToRGB = parseToRGB;
         })(ColorParser = utils.ColorParser || (utils.ColorParser = {}));
     })(utils = EZGUI.utils || (EZGUI.utils = {}));
@@ -3599,7 +3486,6 @@ var EZGUI;
                 if (settings.text)
                     this.text = settings.text;
             }
-
             Button.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
                 var guiObj = this;
@@ -3650,7 +3536,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Object.defineProperty(Checkbox.prototype, "checked", {
                 //Getter & setter for check state
                 get: function () {
@@ -3682,14 +3567,14 @@ var EZGUI;
                     if (this.textObj) {
                         this.textObj.text = val;
                         if (this._settings.anchor) {
-                            this.textObj.pos.x = 0;
-                            this.textObj.pos.y = 0;
+                            this.textObj.position.x = 0;
+                            this.textObj.position.y = 0;
                             this.textObj.anchor.x = this._settings.anchor.x;
                             this.textObj.anchor.y = this._settings.anchor.y;
                         }
                         else {
-                            this.textObj.pos.x = this._settings.width;
-                            this.textObj.pos.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
+                            this.textObj.position.x = this._settings.width;
+                            this.textObj.position.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
                             this.textObj.anchor.x = 0;
                             this.textObj.anchor.y = 0;
                         }
@@ -3737,8 +3622,8 @@ var EZGUI;
             Checkbox.prototype.drawText = function () {
                 _super.prototype.drawText.call(this);
                 if (this.textObj) {
-                    this.textObj.pos.x = this._settings.width;
-                    this.textObj.pos.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
+                    this.textObj.position.x = this._settings.width;
+                    this.textObj.position.y = (this._settings.height) / 2 - this.textObj.height / 2.5;
                 }
             };
             return Checkbox;
@@ -3766,7 +3651,6 @@ var EZGUI;
                 if (this._settings.checked === true)
                     this.checked = true;
             }
-
             Object.defineProperty(Radio, "groups", {
                 //static groups: any = {};
                 //static selectedFrom: any = {};
@@ -3836,7 +3720,6 @@ var EZGUI;
                 this.themeId = themeId;
                 //this.draghandle = this.uichildren['sbtn1'];
             }
-
             List.prototype.handleEvents = function () {
                 var _this = this;
                 var ssize;
@@ -3909,8 +3792,8 @@ var EZGUI;
                 var timeConstant = 10;
                 var amplitude = sign * speed * 150;
                 var step = 0;
-                var initialPosX = _this.draggable.pos.x;
-                var initialPosY = _this.draggable.pos.y;
+                var initialPosX = _this.draggable.position.x;
+                var initialPosY = _this.draggable.position.y;
                 var posX = 0;
                 var posY = 0;
                 if (_this.decelerationItv)
@@ -3922,7 +3805,7 @@ var EZGUI;
                         posX += delta;
                         var nextPos = initialPosX + posX;
                         if (nextPos >= _this.dragXInterval[0] && nextPos <= _this.dragXInterval[1])
-                            _this.draggable.pos.x = nextPos;
+                            _this.draggable.position.x = nextPos;
                         else
                             clearInterval(_this.decelerationItv);
                     }
@@ -3930,7 +3813,7 @@ var EZGUI;
                         posY += delta;
                         var nextPos = initialPosY + posY;
                         if (nextPos >= _this.dragYInterval[0] && nextPos <= _this.dragYInterval[1])
-                            _this.draggable.pos.y = nextPos;
+                            _this.draggable.position.y = nextPos;
                         else
                             clearInterval(_this.decelerationItv);
                     }
@@ -3961,8 +3844,8 @@ var EZGUI;
                     this.dragXInterval[1] = this._settings.width * 0.2;
                     this.dragYInterval[0] = -ssize + this._settings.height * 0.9;
                     this.dragYInterval[1] = this._settings.height * 0.1;
-                    this.draggable.pos.x = 0;
-                    this.draggable.pos.y = 0;
+                    this.draggable.position.x = 0;
+                    this.draggable.position.y = 0;
                 }
                 return result;
             };
@@ -3970,21 +3853,25 @@ var EZGUI;
                 delay = delay || Math.abs(value) * 5;
                 var _this = this;
                 if (_this.dragConstraint != 'y') {
-                    var nextPos = _this.draggable.pos.x + value;
+                    var nextPos = _this.draggable.position.x + value;
                     nextPos = Math.max(nextPos, _this.dragXInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragXInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.pos).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.position)
+                        .to({ x: nextPos }, delay)
+                        .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
                 if (_this.dragConstraint != 'x') {
-                    var nextPos = _this.draggable.pos.y + value;
+                    var nextPos = _this.draggable.position.y + value;
                     nextPos = Math.max(nextPos, _this.dragYInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragYInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.pos).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.position)
+                        .to({ y: nextPos }, delay)
+                        .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
             };
@@ -3992,22 +3879,26 @@ var EZGUI;
                 var _this = this;
                 if (_this.dragConstraint != 'y') {
                     var nextPos = value;
-                    delay = delay || Math.abs(value - _this.draggable.pos.x) * 5;
+                    delay = delay || Math.abs(value - _this.draggable.position.x) * 5;
                     nextPos = Math.max(nextPos, _this.dragXInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragXInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.pos).to({x: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.position)
+                        .to({ x: nextPos }, delay)
+                        .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
                 if (_this.dragConstraint != 'x') {
                     var nextPos = value;
-                    delay = delay || Math.abs(value - _this.draggable.pos.y) * 5;
+                    delay = delay || Math.abs(value - _this.draggable.position.y) * 5;
                     nextPos = Math.max(nextPos, _this.dragYInterval[0]);
                     nextPos = Math.min(nextPos, _this.dragYInterval[1]);
                     if (_this.tween)
                         _this.tween.stop();
-                    _this.tween = new EZGUI.Tween(_this.container.pos).to({y: nextPos}, delay).easing(EZGUI.Easing.Cubic.Out);
+                    _this.tween = new EZGUI.Tween(_this.container.position)
+                        .to({ y: nextPos }, delay)
+                        .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
             };
@@ -4037,11 +3928,8 @@ var EZGUI;
                 }
             }
         }
-
         MultistateTilingSprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             var sprite = this;
             if (!sprite.stateTextures[state] || state == this.currentState)
                 return;
@@ -4074,7 +3962,8 @@ var EZGUI;
         return new Date().getTime();
     });
     if ('now' in root.performance === false) {
-        var offset = root.performance.timing && root.performance.timing.navigationStart ? performance.timing.navigationStart : Date.now();
+        var offset = root.performance.timing && root.performance.timing.navigationStart ? performance.timing.navigationStart
+            : Date.now();
         root.performance.now = function () {
             return Date.now() - offset;
         };
@@ -4108,17 +3997,14 @@ var EZGUI;
                 return true;
             return isMasked(x, y, parent);
         }
-
         utils.isMasked = isMasked;
         function getAbsPos(obj, from) {
-            if (from === void 0) {
-                from = null;
-            }
+            if (from === void 0) { from = null; }
             //if (EZGUI.Compatibility.PIXIVersion == 3) {
             if (from == null)
-                from = {x: 0, y: 0};
-            from.x += obj.pos.x;
-            from.y += obj.pos.y;
+                from = { x: 0, y: 0 };
+            from.x += obj.position.x;
+            from.y += obj.position.y;
             if (obj.parent != null)
                 return getAbsPos(obj.parent, from);
             return from;
@@ -4127,7 +4013,6 @@ var EZGUI;
             //return { x: obj.worldTransform.tx, y: obj.worldTransform.ty };
             //}
         }
-
         utils.getAbsPos = getAbsPos;
         function getClientXY(event) {
             var data = event.data || event;
@@ -4142,9 +4027,8 @@ var EZGUI;
                 if (data.originalEvent)
                     origEvt = data.originalEvent;
             }
-            return {x: origEvt.clientX, y: origEvt.clientY};
+            return { x: origEvt.clientX, y: origEvt.clientY };
         }
-
         utils.getClientXY = getClientXY;
         function getRealPos(event) {
             var data = event.data || event;
@@ -4162,16 +4046,14 @@ var EZGUI;
             var bcr = origEvt.target.getBoundingClientRect();
             var px = origEvt.clientX - bcr.left;
             var py = origEvt.clientY - bcr.top;
-            return {x: px, y: py};
+            return { x: px, y: py };
         }
-
         utils.getRealPos = getRealPos;
         function distance(x, y, x0, y0) {
             return Math.sqrt((x -= x0) * x + (y -= y0) * y);
         }
-
         utils.distance = distance;
-
+        ;
         function extendJSON(target, source) {
             if (typeof source == 'object') {
                 for (var i in source) {
@@ -4188,12 +4070,9 @@ var EZGUI;
                 }
             }
         }
-
         utils.extendJSON = extendJSON;
         function loadJSON(url, cb, crossOrigin) {
-            if (crossOrigin === void 0) {
-                crossOrigin = true;
-            }
+            if (crossOrigin === void 0) { crossOrigin = true; }
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -4204,12 +4083,9 @@ var EZGUI;
             xmlhttp.open("GET", url, crossOrigin);
             xmlhttp.send();
         }
-
         utils.loadJSON = loadJSON;
         function loadXML(url, cb, crossOrigin) {
-            if (crossOrigin === void 0) {
-                crossOrigin = true;
-            }
+            if (crossOrigin === void 0) { crossOrigin = true; }
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -4229,7 +4105,6 @@ var EZGUI;
             xmlhttp.open("GET", url, crossOrigin);
             xmlhttp.send();
         }
-
         utils.loadXML = loadXML;
     })(utils = EZGUI.utils || (EZGUI.utils = {}));
 })(EZGUI || (EZGUI = {}));

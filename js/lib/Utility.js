@@ -265,14 +265,19 @@ var Utility = Utility || {};
     };
 
     /**
-     * Find the area of a triangle
-     * @param {Vec} v1
-     * @param {Vec} v2
-     * @param {Vec} v3
-     * @returns {number}
+     *
+     * @param arr
+     * @returns {Array}
      */
-    Utility.area = function (v1, v2, v3) {
-        return Math.abs((v1.x * (v2.y - v3.y) + v2.x * (v3.y - v1.y) + v3.x * (v1.y - v2.y)) / 2.0);
+    Utility.arrUnique = function (arr) {
+        var h = {}, output = [];
+        for (var i = 0, n = arr.length; i < n; i++) {
+            if (!h[arr[i]]) {
+                h[arr[i]] = true;
+                output.push(arr[i]);
+            }
+        }
+        return output;
     };
 
     /**

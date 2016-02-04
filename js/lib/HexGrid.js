@@ -13,10 +13,9 @@ var Hex = Hex || {},
     /**
      * Create a Hexagon of Hexes
      * @param {number} size
-     * @param {Layout} layout
      * @returns {Array}
      */
-    function shapeHexagon(size, layout) {
+    function shapeHexagon(size) {
         let cells = [];
         for (let q = -size; q <= size; q++) {
             let r1 = Math.max(-size, -q - size),
@@ -133,116 +132,6 @@ var Hex = Hex || {},
         return cells;
     }
 
-    var HashTable = function (obj) {
-        this.length = 0;
-        this.items = {};
-        for (let p in obj) {
-            if (obj.hasOwnProperty(p)) {
-                this.items[p] = obj[p];
-                this.length++;
-            }
-        }
-        /**
-         *
-         * @param key
-         * @param value
-         * @returns {undefined}
-         */
-        this.setItem = function (key, value) {
-            let previous = undefined;
-            if (this.hasItem(key)) {
-                previous = this.items[key];
-            } else {
-                this.length++;
-            }
-            this.items[key] = value;
-
-            return previous;
-        };
-
-        /**
-         *
-         * @param key
-         */
-        this.getItem = function (key) {
-            return this.hasItem(key);
-        };
-
-        /**
-         *
-         * @param key
-         * @returns {boolean}
-         */
-        this.hasItem = function (key) {
-            return this.items.hasOwnProperty(key) ? this.items[key] : false;
-        };
-
-        /**
-         *
-         * @param key
-         * @returns {*}
-         */
-        this.removeItem = function (key) {
-            if (this.hasItem(key)) {
-                let previous = this.items[key];
-                this.length--;
-                delete this.items[key];
-                return previous;
-            } else {
-                return undefined;
-            }
-        };
-
-        /**
-         *
-         * @returns {Array}
-         */
-        this.keys = function () {
-            let keys = [];
-            for (let k in this.items) {
-                if (this.hasItem(k)) {
-                    keys.push(k);
-                }
-            }
-            return keys;
-        };
-
-        /**
-         *
-         * @returns {Array}
-         */
-        this.values = function () {
-            var values = [];
-            for (var k in this.items) {
-                if (this.hasItem(k)) {
-                    values.push(this.items[k]);
-                }
-            }
-            return values;
-        };
-
-        /**
-         *
-         * @param fn
-         */
-        this.each = function (fn) {
-            for (let k in this.items) {
-                if (this.hasItem(k)) {
-                    fn(k, this.items[k]);
-                }
-            }
-        };
-
-        /**
-         *
-         */
-        this.clear = function () {
-            this.items = {};
-            this.length = 0;
-        }
-    };
-
-
     /**
      * A library for creating Hexagonal grids
      * @name HexGrid
@@ -257,23 +146,27 @@ var Hex = Hex || {},
         let self = this;
         this.width = Utility.getOpt(opts, 'width', 600);
         this.height = Utility.getOpt(opts, 'height', 600);
+        this.size = Utility.getOpt(opts, 'size', 5);
         this.tileSize = Utility.getOpt(opts, 'tileSize', 20);
         this.tileSpacing = Utility.getOpt(opts, 'tileSpacing', 0);
         this.fill = Utility.getOpt(opts, 'fill', false);
+        this.cells = cells || shapeHexagon(this.size);
+        this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.tileSize, this.tileSize), new Point(this.width / 2, this.height / 2));
         this.xCount = this.width / this.tileSize;
         this.yCount = this.height / this.tileSize;
-        this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.tileSize, this.tileSize), new Point(this.width / 2, this.height / 2));
-        this.cells = cells || shapeHexagon(5, this.layout);
-        this.map = new HashTable({});
+        this.map = new Map();
         this.walls = [];
-        this.mapCells();
 
         this.cellsContainer = new PIXI.Container();
         this.cells.forEach(function (cell) {
-            cell.population = [];
             HexShape.call(cell, self.layout, self.tileSize, self.fill);
+            cell.population = [];
             self.cellsContainer.addChild(cell.shape);
+            cell.walls.forEach(function (wall) {
+                self.walls.push(wall);
+            });
         });
+        this.mapCells();
 
         return this;
     };
@@ -313,9 +206,9 @@ var Hex = Hex || {},
          * @returns {Hex}
          */
         getCellAt: function (q, r) {
-            let column = this.map.hasItem(q),
-                row = column ? column.hasItem(r) : false,
-                cell = row ? row.hasItem(-q - r) : false;
+            let column = this.map.get(q),
+                row = column ? column.get(r) : false,
+                cell = row ? row.get(-q - r) : false;
 
             return cell;
         },
@@ -354,22 +247,22 @@ var Hex = Hex || {},
                 let center = self.getCenterXY(cell);
 
                 // check q
-                column = self.map.hasItem(cell.q);
+                column = self.map.get(cell.q);
                 if (!column) {
-                    self.map.setItem(cell.q, new HashTable({}));
-                    column = self.map.getItem(cell.q);
+                    self.map.set(cell.q, new Map());
+                    column = self.map.get(cell.q);
                 }
                 // check r
-                row = column.hasItem(cell.r);
+                row = column.get(cell.r);
                 if (!row) {
-                    column.setItem(cell.r, new HashTable({}));
-                    row = column.getItem(cell.r);
+                    column.set(cell.r, new Map());
+                    row = column.get(cell.r);
                 }
                 // check s
-                hex = row.hasItem(cell.s);
+                hex = row.get(cell.s);
                 if (!hex) {
-                    row.setItem(cell.s, cell);
-                    hex = row.getItem(cell.s);
+                    row.set(cell.s, cell);
+                    hex = row.get(cell.s);
                 }
             });
         },
@@ -408,7 +301,7 @@ var Hex = Hex || {},
          * @returns {Vec}
          */
         roundCube: function (coords) {
-            let dx, dy, dz, rx, ry, rz, cube;
+            let dx, dy, dz, rx, ry, rz;
             rx = Math.round(coords.x);
             ry = Math.round(coords.y);
             rz = Math.round(coords.z);
@@ -422,9 +315,8 @@ var Hex = Hex || {},
             } else {
                 rz = -rx - ry;
             }
-            cube = new Cube(rx, ry, rz);
 
-            return cube;
+            return new Cube(rx, ry, rz);
         }
     };
 

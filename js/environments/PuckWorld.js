@@ -15,6 +15,7 @@ var PuckWorld = PuckWorld || {},
      * @returns {PuckWorld}
      */
     function PuckWorld() {
+        let self = this;
         this.width = 600;
         this.height = 600;
         this.radius = 0.05;
@@ -23,49 +24,41 @@ var PuckWorld = PuckWorld || {},
         this.state = null;
         this.stepsPerTick = 1;
         this.pause = false;
-        this.useFlot = true;
-        this.useGraph = false;
-        this.numItems = 0;
-
-        // Collision type
-        this.cdType = 'quad';
-        this.maxChildren = 2;
-        this.maxDepth = 10;
-
-        this.cheats = {
-            quad: true,
-            grid: false,
-            walls: false
-        };
-
 
         this.agents = [
             new AgentRLDQN(new Vec(300, 300), {
                 brainType: 'RLDQN',
-                env: Utility.stringify({
-                    getNumStates: function () {
-                        return 0;
-                    },
+                env: {
                     getMaxNumActions: function () {
-                        return 4;
+                        return self.getMaxNumActions();
                     },
-                    startState: function () {
-                        return 0;
+                    getNumStates: function () {
+                        return self.getNumStates();
+                    },
+                    getState: function () {
+                        return self.getState();
+                    },
+                    reset: function () {
+                        return self.reset();
                     }
-                }),
+                },
                 numActions: 4,
                 numStates: 0,
-                range: 0,
-                proximity: 0,
                 numEyes: 0,
                 numTypes: 0,
-                width: 20,
-                height: 20,
+                range: 0,
+                proximity: 0,
                 radius: 10,
                 collision: false,
                 interactive: false,
                 useSprite: false,
-                movingEntities: false
+                worker: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    id: false,
+                    name: true
+                }
             })
         ];
 

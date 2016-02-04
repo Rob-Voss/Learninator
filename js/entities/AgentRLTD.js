@@ -34,6 +34,7 @@ var AgentRLTD = AgentRLTD || {},
             smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
             beta: 0.1 // learning rate for smooth policy update
         });
+
         this.reset();
     }
 

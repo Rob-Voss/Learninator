@@ -162,7 +162,7 @@ var EntityRLDQN = EntityRLDQN || {};
      * Move around
      * @returns {EntityRLDQN}
      */
-    EntityRLDQN.prototype.move = function () {
+    EntityRLDQN.prototype.move = function(world) {
         let speed = 0.50;
 
         // Execute agent's desired action
@@ -193,13 +193,13 @@ var EntityRLDQN = EntityRLDQN || {};
         this.pos.x += this.pos.vx;
         this.pos.y += this.pos.vy;
 
-        this.world.check(this);
+        world.check(this);
 
         // Add any walls we hit
         // @TODO I need to get these damn walls into the CollisionDetection call
-        for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-            let wall = this.world.walls[w],
-                result = this.world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2);
+        for (let w = 0, wl = world.walls.length; w < wl; w++) {
+            let wall = world.walls[w],
+                result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
             if (result) {
                 this.collisions.push(wall);
             }
@@ -224,10 +224,10 @@ var EntityRLDQN = EntityRLDQN || {};
         }
 
         // Handle boundary conditions.. bounce Agent
-        let top = this.world.height - (this.world.height - this.radius),
-            bottom = this.world.height - this.radius,
-            left = this.world.width - (this.world.width - this.radius),
-            right = this.world.width - this.radius;
+        let top = world.height - (world.height - this.radius),
+            bottom = world.height - this.radius,
+            left = world.width - (world.width - this.radius),
+            right = world.width - this.radius;
         if (this.pos.x < left) {
             this.pos.x = left;
             this.pos.vx *= -1;
@@ -301,17 +301,15 @@ var EntityRLDQN = EntityRLDQN || {};
      * @param {World} world
      */
     EntityRLDQN.prototype.tick = function (world) {
-        this.world = world;
-
         for (let k = 0; k < this.stepsPerTick; k++) {
             // Loop through the eyes and check the walls and nearby entities
             for (let e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this);
+                this.eyes[e].sense(this, world);
             }
             //this.state = this.act();
             this.state = this.getState();
             this.action = this.brain.act(this.state);
-            this.move();
+            this.move(world);
             this.lastReward = this.sampleNextState();
             this.pts.push(this.lastReward);
             this.brain.learn(this.lastReward);

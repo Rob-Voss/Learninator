@@ -44,10 +44,10 @@ var AgentRLDQN = AgentRLDQN || {},
      * Agent's chance to act on the world
      * @returns {AgentRLDQN}
      */
-    AgentRLDQN.prototype.act = function () {
+    AgentRLDQN.prototype.act = function (world) {
         // Loop through the eyes and check the walls and nearby entities
         for (let e = 0; e < this.numEyes; e++) {
-            this.eyes[e].sense(this);
+            this.eyes[e].sense(this, world);
         }
 
         // in forward pass the agent simply behaves in the environment
@@ -102,7 +102,7 @@ var AgentRLDQN = AgentRLDQN || {},
      * Move around
      * @returns {AgentRLDQN}
      */
-    AgentRLDQN.prototype.move = function () {
+    AgentRLDQN.prototype.move = function(world) {
         let speed = 1;
         this.oldAngle = this.angle;
         this.oldPos = this.pos.clone();
@@ -131,16 +131,16 @@ var AgentRLDQN = AgentRLDQN || {},
         this.pos.y += this.pos.vy;
 
         // Check the world for collisions
-        this.world.check(this);
+        world.check(this);
 
         // Go through and process what we ate/hit
         let minRes = false;
         for (let i = 0; i < this.collisions.length; i++) {
             // Nom or Gnar
             if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                for (let w = 0, wl = this.world.walls.length; w < wl; w++) {
-                    let wall = this.world.walls[w],
-                        result = this.world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
+                for (let w = 0, wl = world.walls.length; w < wl; w++) {
+                    let wall = world.walls[w],
+                        result = world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
                     if (result) {
                         if (!minRes) {
                             minRes = result;
@@ -173,10 +173,10 @@ var AgentRLDQN = AgentRLDQN || {},
         }
 
         // Handle boundary conditions.. bounce Agent
-        let top = this.world.height - (this.world.height - this.radius),
-            bottom = this.world.height - this.radius,
-            left = this.world.width - (this.world.width - this.radius),
-            right = this.world.width - this.radius;
+        let top = world.height - (world.height - this.radius),
+            bottom = world.height - this.radius,
+            left = world.width - (world.width - this.radius),
+            right = world.width - this.radius;
         if (this.pos.x < left) {
             this.pos.x = left;
             this.pos.vx = 0;
@@ -213,7 +213,6 @@ var AgentRLDQN = AgentRLDQN || {},
      */
     AgentRLDQN.prototype.reset = function () {
         let self = this;
-
         // If it's a worker then we have to load it a bit different
         if (!self.worker) {
             self.brain = new DQNAgent(self.env, self.brainOpts);

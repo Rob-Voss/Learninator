@@ -11,6 +11,21 @@ var WaterWorldGA = WaterWorldGA || {},
 
     /**
      *
+     * @param chromosome
+     * @returns {number}
+     */
+    function matchFunction(chromosome) { // this function is passed to trainer.
+        var result = 0;
+        // put chromosomes into brains before getting them to duel it out.
+        world.agents[0].brain.populate(chromosome);
+
+        result = world.update(30 * 20);
+
+        return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
+    }
+
+    /**
+     *
      * @param brain
      * @param initialGene
      * @constructor
@@ -33,7 +48,7 @@ var WaterWorldGA = WaterWorldGA || {},
      *
      */
     Trainer.prototype.train = function () {
-        this.trainer.matchTrain(matchFunction);
+        this.trainer.train(matchFunction);
     };
 
     /**
@@ -58,23 +73,6 @@ var WaterWorldGA = WaterWorldGA || {},
     function WaterWorldGA() {
         var self = this;
 
-        /**
-         *
-         * @param chromosome1
-         * @param chromosome2
-         * @returns {number}
-         */
-        function matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
-            var result = 0;
-            // put chromosomes into brains before getting them to duel it out.
-            self.agents[0].brain.populate(chromosome1);
-            self.agents[1].brain.populate(chromosome2);
-
-            result = self.update(30 * 20);
-
-            return result; // -1 means chromosome1 beat chromosome2, 1 means vice versa, 0 means tie.
-        }
-
         this.width = 600;
         this.height = 600;
         this.mazeOptions = {
@@ -96,37 +94,6 @@ var WaterWorldGA = WaterWorldGA || {},
             walls: false
         };
 
-        this.agentOpts = {
-            brainType: 'GA',
-            env: Utility.stringify({
-                getNumStates: function () {
-                    return 30 * 5;
-                },
-                getMaxNumActions: function () {
-                    return 4;
-                },
-                startState: function () {
-                    return 0;
-                }
-            }),
-            numActions: 4,
-            numStates: 30 * 5,
-            numEyes: 30,
-            numTypes: 5,
-            range: 120,
-            proximity: 120,
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: true
-            }
-        };
-
         this.entityOpts = {
             radius: Utility.randi(5, 10),
             collision: true,
@@ -142,10 +109,10 @@ var WaterWorldGA = WaterWorldGA || {},
         };
 
         this.agents = [
-            new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentGA(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'GA',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -155,7 +122,7 @@ var WaterWorldGA = WaterWorldGA || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -173,10 +140,10 @@ var WaterWorldGA = WaterWorldGA || {},
                         name: true
                     }
                 }),
-            new AgentGA(new Vec(Utility.randi(3, this.canvas.width - 2), Utility.randi(3, this.canvas.height - 2)),
+            new AgentGA(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'GA',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -186,7 +153,7 @@ var WaterWorldGA = WaterWorldGA || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -258,8 +225,8 @@ var WaterWorldGA = WaterWorldGA || {},
             // process actions
             this.agents[0].processAction();
             this.agents[1].processAction();
-            this.agents[0].update();
-            this.agents[1].update();
+            this.agents[0].update(this);
+            this.agents[1].update(this);
         }
 
         return result; // 0 means tie, -1 means landed on left side, 1 means landed on right side.

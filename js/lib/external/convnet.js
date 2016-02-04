@@ -54,13 +54,14 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
     }
 
     var arrUnique = function (arr) {
-        var b = [];
+        var h = {}, output = [];
         for (var i = 0, n = arr.length; i < n; i++) {
-            if (!arrContains(b, arr[i])) {
-                b.push(arr[i]);
+            if (!h[arr[i]]) {
+                h[arr[i]] = true;
+                output.push(arr[i]);
             }
         }
-        return b;
+        return output;
     }
 
     // return max and min of a given non-empty array.
@@ -139,7 +140,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
     // it is essentially just a 3D volume of numbers, with a
     // width (sx), height (sy), and depth (depth).
     // it is used to hold data for all filters, all volumes,
-    // all weights, and also stores all gradients w.r.t. 
+    // all weights, and also stores all gradients w.r.t.
     // the data. c is optionally a value to initialize the volume
     // with. If c is missing, fills the Vol with random numbers.
     var Vol = function (sx, sy, depth, c) {
@@ -373,8 +374,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
     // This file contains all layers that do dot products with input,
     // but usually in a different connectivity pattern and weight sharing
-    // schemes: 
-    // - FullyConn is fully connected dot products 
+    // schemes:
+    // - FullyConn is fully connected dot products
     // - ConvLayer does convolutions (so weight sharing spatially)
     // putting them together in one file because they are very similar
     var ConvLayer = function (opt) {
@@ -459,7 +460,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                 for (var ax = 0; ax < this.out_sx; x += this.stride, ax++) {
                     y = -this.pad;
                     for (var ay = 0; ay < this.out_sy; y += this.stride, ay++) {
-                        // convolve and add up the gradients. 
+                        // convolve and add up the gradients.
                         // could be more efficient, going for correctness first
                         var chain_grad = this.out_act.get_grad(ax, ay, d); // gradient from above, from chain rule
                         for (var fx = 0; fx < f.sx; fx++) {
@@ -549,7 +550,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         // ok fine we will allow 'filters' as the word as well
         this.out_depth = typeof opt.num_neurons !== 'undefined' ? opt.num_neurons : opt.filters;
 
-        // optional 
+        // optional
         this.l1_decay_mul = typeof opt.l1_decay_mul !== 'undefined' ? opt.l1_decay_mul : 0.0;
         this.l2_decay_mul = typeof opt.l2_decay_mul !== 'undefined' ? opt.l2_decay_mul : 1.0;
 
@@ -705,7 +706,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                                 if (oy >= 0 && oy < V.sy && ox >= 0 && ox < V.sx) {
                                     var v = V.get(ox, oy, d);
                                     // perform max pooling and store pointers to where
-                                    // the max came from. This will speed up backprop 
+                                    // the max came from. This will speed up backprop
                                     // and can help make nice visualizations in future
                                     if (v > a) {
                                         a = v;
@@ -726,11 +727,11 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             return this.out_act;
         },
         backward: function () {
-            // pooling layers have no parameters, so simply compute 
+            // pooling layers have no parameters, so simply compute
             // gradient wrt data here
             var V = this.in_act;
             V.dw = global.zeros(V.w.length); // zero out gradient wrt data
-            var A = this.out_act; // computed in forward pass 
+            var A = this.out_act; // computed in forward pass
 
             var n = 0;
             for (var d = 0; d < this.out_depth; d++) {
@@ -829,8 +830,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
     "use strict";
     var Vol = global.Vol; // convenience
 
-    // Layers that implement a loss. Currently these are the layers that 
-    // can initiate a backward() pass. In future we probably want a more 
+    // Layers that implement a loss. Currently these are the layers that
+    // can initiate a backward() pass. In future we probably want a more
     // flexible system that can accomodate multiple losses to do multi-task
     // learning, and stuff like that. But for now, one of the layers in this
     // file must be the final layer in a Net.
@@ -1284,7 +1285,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
     }
 
     // Implements Tanh nnonlinearity elementwise
-    // x -> tanh(x) 
+    // x -> tanh(x)
     // so the output is between -1 and 1.
     var TanhLayer = function (opt) {
         var opt = opt || {};
@@ -1385,7 +1386,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             } else {
                 // scale the activations during prediction
                 for (var i = 0; i < N; i++) {
-                    V2.w[i] *= this.drop_prob;
+                    V2.w[i] *= (1 - this.drop_prob);
                 }
             }
             this.out_act = V2;
@@ -1488,7 +1489,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             // evaluate gradient wrt data
             var V = this.in_act; // we need to set dw of this
             V.dw = global.zeros(V.w.length); // zero out gradient wrt data
-            var A = this.out_act; // computed in forward pass 
+            var A = this.out_act; // computed in forward pass
 
             var n2 = Math.floor(this.n / 2);
             for (var x = 0; x < V.sx; x++) {
@@ -1985,7 +1986,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                             p[j] += dx;
                         } else if (this.method === 'windowgrad') {
                             // this is adagrad but with a moving window weighted average
-                            // so the gradient is not accumulated over the entire history of the run. 
+                            // so the gradient is not accumulated over the entire history of the run.
                             // it's also referred to as Idea #1 in Zeiler paper on Adadelta. Seems reasonable to me!
                             gsumi[j] = this.ro * gsumi[j] + (1 - this.ro) * gij * gij;
                             var dx = -this.learning_rate / Math.sqrt(gsumi[j] + this.eps) * gij; // eps added for better conditioning
@@ -2014,9 +2015,9 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             }
 
             // appending softmax_loss for backwards compatibility, but from now on we will always use cost_loss
-            // in future, TODO: have to completely redo the way loss is done around the network as currently 
+            // in future, TODO: have to completely redo the way loss is done around the network as currently
             // loss is a bit of a hack. Ideally, user should specify arbitrary number of loss functions on any layer
-            // and it should all be computed correctly and automatically. 
+            // and it should all be computed correctly and automatically.
             return {
                 fwd_time: fwd_time, bwd_time: bwd_time,
                 l2_decay_loss: l2_decay_loss, l1_decay_loss: l1_decay_loss,
@@ -2223,7 +2224,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                             ? -1 : 1;
                     });
                     // and clip only to the top few ones (lets place limit at 3*ensemble_size)
-                    // otherwise there are concerns with keeping these all in memory 
+                    // otherwise there are concerns with keeping these all in memory
                     // if MagicNet is being evaluated for a very long time
                     if (this.evaluated_candidates.length > 3 * this.ensemble_size) {
                         this.evaluated_candidates = this.evaluated_candidates.slice(0, 3 * this.ensemble_size);

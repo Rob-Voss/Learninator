@@ -108,12 +108,11 @@ var AgentGA = AgentGA || {},
      * @constructor
      *
      * @param {Vec} position - The x, y location
-     * @param {Object} env - The environment
      * @param {agentOpts} opts - The Agent options
      * @returns {AgentGA}
      */
-    function AgentGA(position, env, opts) {
-        Agent.call(this, position, env, opts);
+    function AgentGA(position, opts) {
+        Agent.call(this, position, opts);
 
         this.target = null;
         this.score = 0;
@@ -303,7 +302,8 @@ var AgentGA = AgentGA || {},
     /**
      *
      */
-    AgentGA.prototype.update = function () {
+    AgentGA.prototype.update = function (world) {
+        this.world = world;
         this.move();
 
         return this;

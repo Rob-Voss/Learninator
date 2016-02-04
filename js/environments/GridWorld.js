@@ -115,291 +115,16 @@ var GridWorld = GridWorld || {},
     GridWorld.prototype.constructor = World;
 
     /**
-     * Initialize the Flot class
-     */
-    GridWorld.prototype.initFlot = function () {
-        var _this = this;
-        this.container = document.getElementById('flotreward');
-        // flot stuff
-        this.nflot = 1000;
-        this.smoothRewardHistory = [];
-        this.smoothReward = [];
-        this.flott = [];
-        this.series = [];
-
-        for (var a = 0; a < this.agents.length; a++) {
-            this.smoothReward[a] = null;
-            this.smoothRewardHistory[a] = null;
-            this.flott[a] = 0;
-            this.smoothRewardHistory[a] = [];
-            this.series[a] = {
-                data: this.getFlotRewards(a),
-                lines: {
-                    fill: true
-                },
-                color: a,
-                label: this.agents[a].name
-            };
-        }
-
-        this.plot = $.plot(_this.container, _this.series, {
-            grid: {
-                borderWidth: 1,
-                minBorderMargin: 20,
-                labelMargin: 10,
-                backgroundColor: {
-                    colors: ["#FFF", "#e4f4f4"]
-                },
-                margin: {
-                    top: 10,
-                    bottom: 10,
-                    left: 10
-                }
-            },
-            xaxis: {
-                min: 0,
-                max: this.nflot
-            },
-            yaxis: {
-                min: 0,
-                max: 1000
-            }
-        });
-
-        setInterval(function () {
-            _this.series[0].data = _this.getFlotRewards();
-            _this.plot.setData(_this.series);
-            _this.plot.draw();
-        }, 100);
-    };
-
-    /**
-     * zip rewards into flot data
-     * @param {Number} an
-     * @returns {Array}
-     */
-    GridWorld.prototype.getFlotRewards = function () {
-        var res = [];
-        for (var i = 0, n = this.agents[0].nStepsHistory.length; i < n; i++) {
-            res.push([i, this.agents[0].nStepsHistory[i]]);
-        }
-        return res;
-    };
-
-    /**
-     *
-     */
-    GridWorld.prototype.tick = function () {
-        let self = this;
-        if (self.sid === -1) {
-            self.sid = setInterval(function () {
-                for (let k = 0; k < self.stepsPerTick; k++) {
-                    // ask agent for an action
-                    let agent = self.agents[0],
-                        a = agent.brain.act(self.state),
-                    // run it through environment dynamics
-                        obs = self.sampleNextState(self.state, a);
-
-                    // allow opportunity for the agent to learn
-                    agent.brain.learn(obs.r);
-                    // evolve environment to next state
-                    self.state = obs.ns;
-
-                    agent.nStepsCounter += 1;
-                    if (typeof obs.resetEpisode !== 'undefined') {
-                        agent.score += 1;
-                        agent.brain.resetEpisode();
-
-                        agent.gridLocation = self.grid.getCellAt(0, 0);
-                        agent.pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
-                        self.state = self.startState();
-
-                        // record the reward achieved
-                        if (agent.nStepsHistory.length >= agent.nflot) {
-                            agent.nStepsHistory = agent.nStepsHistory.slice(1);
-                        }
-                        agent.nStepsHistory.push(agent.nStepsCounter);
-                        agent.nStepsCounter = 0;
-                    } else {
-                        agent.gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
-                        let x = agent.gridLocation.corners[2].x - (self.grid.cellWidth / 2),
-                            y = agent.gridLocation.corners[2].y - (self.grid.cellHeight / 2);
-                        agent.pos.set(x, y);
-                    }
-                }
-
-                self.drawGrid();
-            }, 20);
-        } else {
-            clearInterval(self.sid);
-            self.sid = -1;
-        }
-    };
-
-    /**
-     * Set up the grid world and the actions avail
-     */
-    GridWorld.prototype.reset = function () {
-        // specify some rewards
-        var Rarr = Utility.zeros(this.gS),
-            Aarr = new Array(this.gS),
-            lastState = 0;
-
-        for (var y = 0; y < this.gH; y++) {
-            for (var x = 0; x < this.gW; x++) {
-                var state = this.xyToS(x, y),
-                    actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y)),
-                    actionsAvail = {0: null, 1: null, 2: null, 3: null};
-                for (var a = 0; a < actions.length; a++) {
-                    var action = actions[a],
-                        actionState = this.xyToS(action.x, action.y);
-                    if (action.x === x - 1 && action.y === y) {
-                        actionsAvail[0] = actionState;
-                    } else if (action.x === x && action.y === y + 1) {
-                        actionsAvail[1] = actionState;
-                    } else if (action.x === x && action.y === y - 1) {
-                        actionsAvail[2] = actionState;
-                    } else if (action.x === x + 1 && action.y === y) {
-                        actionsAvail[3] = actionState;
-                    }
-                }
-                Aarr[state] = actionsAvail;
-                Rarr[state] = (state === this.gS - 1) ? 1 : 0;
-                var nulled = 0;
-                for (var key in actionsAvail) {
-                    if (actionsAvail[key] === null) {
-                        nulled++;
-                    }
-                }
-                if (nulled === 3 && lastState !== 0 && state !== this.gS - 1) {
-                    Rarr[state] = -1;
-                }
-                lastState = state;
-            }
-        }
-
-        this.Rarr = Rarr;
-        this.Aarr = Aarr;
-
-        return this;
-    };
-
-    /**
-     * Get the reward of being in s, taking action a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
-     * @param {Number} ns
-     * @returns {Number}
-     */
-    GridWorld.prototype.reward = function (s, a, ns) {
-        return this.Rarr[s];
-    };
-
-    /**
-     *
-     * @param {Number} s
-     * @param {Number} a
-     * @returns {Number}
-     */
-    GridWorld.prototype.nextStateDistribution = function (s, a) {
-        var ns, nx, ny,
-            sx = this.sToX(s),
-            sy = this.sToY(s);
-
-        if (s === this.gS - 1) {
-            ns = this.startState();
-            while (this.Aarr[ns][a] === null) {
-                ns = this.randomState();
-            }
-        } else {
-            switch (a) {
-                case 0: // Left
-                    nx = sx - 1;
-                    ny = sy;
-                    break;
-                case 1: // Down
-                    nx = sx;
-                    ny = sy + 1;
-                    break;
-                case 2: // Up
-                    nx = sx;
-                    ny = sy - 1;
-                    break;
-                case 3: // Right
-                    nx = sx + 1;
-                    ny = sy;
-                    break;
-            }
-
-            if (nx < 0) {
-                nx = 0;
-            }
-
-            if (ny < 0) {
-                ny = 0;
-            }
-
-            ns = this.xyToS(nx, ny);
-            if (this.Aarr[s][a] !== ns) {
-                // Not a valid option so go back to s
-                ns = s;
-            }
-        }
-
-        return ns;
-    };
-
-    /**
-     * Observe the raw reward of being in s, taking a, and ending up in ns
-     * @param {Number} s
-     * @param {Number} a
-     * @returns {{ns: (*|Number), r: (*|Number)}}
-     */
-    GridWorld.prototype.sampleNextState = function (s, a) {
-        var ns = this.nextStateDistribution(s, a),
-            r = this.reward(s, a, ns);
-
-        // every step takes a bit of negative reward
-        r -= 0.01;
-        var out = {
-            ns: ns,
-            r: r
-        };
-        if (s === (this.gS - 1)) {
-            // episode is over
-            out.resetEpisode = true;
-        }
-
-        return out;
-    };
-
-    /**
-     * Return the number of states
-     * @returns {Number}
-     */
-    GridWorld.prototype.getNumStates = function () {
-        return this.gS;
-    };
-
-    /**
-     * Return the number of actions
-     * @returns {Number}
-     */
-    GridWorld.prototype.getMaxNumActions = function () {
-        return 4;
-    };
-
-    /**
      * Return the allowed actions based on s
      * @returns {Array}
      */
     GridWorld.prototype.allowedActions = function (s) {
-        var x = this.sToX(s),
+        let x = this.sToX(s),
             y = this.sToY(s),
-            as = [];
-        let actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y));
+            as = [],
+            actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y));
 
-        for (var a = 0; a < actions.length; a++) {
+        for (let a = 0; a < actions.length; a++) {
             if (actions[a].x === x - 1 && actions[a].y === y) { // Left
                 as.push(0);
             } else if (actions[a].x === x && actions[a].y === y + 1) { // Down
@@ -412,50 +137,6 @@ var GridWorld = GridWorld || {},
         }
 
         return as;
-    };
-
-    /**
-     * Convert the state to an x
-     * @param {Number} s
-     * @returns {Number}
-     */
-    GridWorld.prototype.sToX = function (s) {
-        return Math.floor(s / this.gW);
-    };
-
-    /**
-     * Convert the state to a y
-     * @param {Number} s
-     * @returns {Number}
-     */
-    GridWorld.prototype.sToY = function (s) {
-        return s % this.gH;
-    };
-
-    /**
-     * Convert an x, y to the state
-     * @param {Number} x
-     * @param {Number} y
-     * @returns {Number}
-     */
-    GridWorld.prototype.xyToS = function (x, y) {
-        return x * this.gW + y;
-    };
-
-    /**
-     * Return a rand state
-     * @returns {Number}
-     */
-    GridWorld.prototype.randomState = function () {
-        return Math.floor(Math.random() * this.gS);
-    };
-
-    /**
-     * Return the starting state
-     * @returns {Number}
-     */
-    GridWorld.prototype.startState = function () {
-        return 0;
     };
 
     /**
@@ -594,30 +275,115 @@ var GridWorld = GridWorld || {},
     };
 
     /**
+     * Return the number of actions
+     * @returns {Number}
+     */
+    GridWorld.prototype.getMaxNumActions = function () {
+        return 4;
+    };
+
+    /**
+     * Return the number of states
+     * @returns {Number}
+     */
+    GridWorld.prototype.getNumStates = function () {
+        return this.gS;
+    };
+
+    /**
+     * zip rewards into flot data
+     * @param {Number} an
+     * @returns {Array}
+     */
+    GridWorld.prototype.getFlotRewards = function () {
+        let res = [];
+        for (let i = 0, n = this.agents[0].nStepsHistory.length; i < n; i++) {
+            res.push([i, this.agents[0].nStepsHistory[i]]);
+        }
+        return res;
+    };
+
+    /**
+     * Initialize the Flot class
+     */
+    GridWorld.prototype.initFlot = function () {
+        let self = this;
+        this.container = document.getElementById('flotreward');
+        // flot stuff
+        this.nflot = 1000;
+        this.smoothRewardHistory = [];
+        this.smoothReward = [];
+        this.flott = [];
+        this.series = [];
+
+        for (var a = 0; a < this.agents.length; a++) {
+            this.smoothReward[a] = null;
+            this.smoothRewardHistory[a] = null;
+            this.flott[a] = 0;
+            this.smoothRewardHistory[a] = [];
+            this.series[a] = {
+                data: this.getFlotRewards(a),
+                lines: {
+                    fill: true
+                },
+                color: a,
+                label: this.agents[a].name
+            };
+        }
+
+        this.plot = $.plot(self.container, self.series, {
+            grid: {
+                borderWidth: 1,
+                minBorderMargin: 20,
+                labelMargin: 10,
+                backgroundColor: {
+                    colors: ["#FFF", "#e4f4f4"]
+                },
+                margin: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            },
+            xaxis: {
+                min: 0,
+                max: this.nflot
+            },
+            yaxis: {
+                min: 0,
+                max: 1000
+            }
+        });
+
+        setInterval(function () {
+            self.series[0].data = self.getFlotRewards();
+            self.plot.setData(self.series);
+            self.plot.draw();
+        }, 100);
+    };
+
+    /**
      *
      */
     GridWorld.prototype.initGrid = function () {
-        var d3elt = d3.select('#draw');
+        let d3elt = d3.select('#draw');
+        d3elt.html('');
         this.rs = {};
         this.trs = {};
         this.tvs = {};
         this.pas = {};
 
-        var gh = this.gH, // height in cells
+        let self = this,
+            gh = this.gH, // height in cells
             gw = this.gW, // width in cells
             gs = this.gW * this.gH, // total number of cells
             w = 600,
-            h = 600;
-
-        var _this = this;
-
-        d3elt.html('');
-
-        var svg = d3elt.append('svg')
-            .attr('width', w)
-            .attr('height', h)
-            .append('g')
-            .attr('transform', 'scale(1)');
+            h = 600,
+            svg = d3elt.append('svg')
+                .attr('width', w)
+                .attr('height', h)
+                .append('g')
+                .attr('transform', 'scale(1)');
 
         // define a marker for drawing arrowheads
         svg.append("defs").append("marker")
@@ -630,9 +396,9 @@ var GridWorld = GridWorld || {},
             .append("path")
             .attr("d", "M 0,0 V 4 L3,2 Z");
 
-        for (var y = 0; y < gh; y++) {
-            for (var x = 0; x < gw; x++) {
-                var xcoord = x * this.cs,
+        for (let y = 0; y < gh; y++) {
+            for (let x = 0; x < gw; x++) {
+                let xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     s = this.xyToS(x, y),
                     g = svg.append('g');
@@ -640,12 +406,12 @@ var GridWorld = GridWorld || {},
                 // click callback for group
                 g.on('click', function (ss) {
                     return function () {
-                        _this.cellClicked(ss);
+                        self.cellClicked(ss);
                     }; // close over s
                 }(s));
 
                 // set up cell rectangles
-                var r = g.append('rect')
+                let r = g.append('rect')
                     .attr('x', xcoord)
                     .attr('y', ycoord)
                     .attr('height', this.cs - 2)
@@ -656,7 +422,7 @@ var GridWorld = GridWorld || {},
                 this.rs[s] = r;
 
                 // reward text
-                var tr = g.append('text')
+                let tr = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 55)
                     .attr('font-size', 10)
@@ -664,7 +430,7 @@ var GridWorld = GridWorld || {},
                 this.trs[s] = tr;
 
                 // value text
-                var tv = g.append('text')
+                let tv = g.append('text')
                     .attr('x', xcoord + 5)
                     .attr('y', ycoord + 20)
                     .text('');
@@ -672,9 +438,9 @@ var GridWorld = GridWorld || {},
 
                 // policy arrows
                 this.pas[s] = [];
-                for (var a = 0; a < 4; a++) {
+                for (let a = 0; a < 4; a++) {
                     this.pas[s][a] = {};
-                    var x1, x2, y1, y2, lx1, lx2, ly1, ly2,
+                    let x1, x2, y1, y2, lx1, lx2, ly1, ly2,
                         action = this.Aarr[s][a],
                         buffer = this.cs / 2;
                     switch (a) {
@@ -728,7 +494,7 @@ var GridWorld = GridWorld || {},
                             break;
                     }
 
-                    var pa = g.append('line')
+                    let pa = g.append('line')
                         .attr('x1', x1)
                         .attr('y1', y1)
                         .attr('x2', x2)
@@ -760,6 +526,235 @@ var GridWorld = GridWorld || {},
             .attr('stroke', '#000')
             .attr('id', 'cpos');
 
+    };
+
+    /**
+     *
+     * @param {Number} s
+     * @param {Number} a
+     * @returns {Number}
+     */
+    GridWorld.prototype.nextStateDistribution = function (s, a) {
+        let ns, nx, ny,
+            sx = this.sToX(s),
+            sy = this.sToY(s);
+
+        if (s === this.gS - 1) {
+            ns = this.startState();
+            while (this.Aarr[ns][a] === null) {
+                ns = this.randomState();
+            }
+        } else {
+            switch (a) {
+                case 0: // Left
+                    nx = sx - 1;
+                    ny = sy;
+                    break;
+                case 1: // Down
+                    nx = sx;
+                    ny = sy + 1;
+                    break;
+                case 2: // Up
+                    nx = sx;
+                    ny = sy - 1;
+                    break;
+                case 3: // Right
+                    nx = sx + 1;
+                    ny = sy;
+                    break;
+            }
+
+            if (nx < 0) {
+                nx = 0;
+            }
+
+            if (ny < 0) {
+                ny = 0;
+            }
+
+            ns = this.xyToS(nx, ny);
+            if (this.Aarr[s][a] !== ns) {
+                // Not a valid option so go back to s
+                ns = s;
+            }
+        }
+
+        return ns;
+    };
+
+    /**
+     * Return a rand state
+     * @returns {Number}
+     */
+    GridWorld.prototype.randomState = function () {
+        return Math.floor(Math.random() * this.gS);
+    };
+
+    /**
+     * Set up the grid world and the actions avail
+     */
+    GridWorld.prototype.reset = function () {
+        let lastState = 0;
+        // specify some rewards
+        this.Rarr = Utility.zeros(this.gS);
+        this.Aarr = new Array(this.gS);
+
+        for (let y = 0; y < this.gH; y++) {
+            for (let x = 0; x < this.gW; x++) {
+                let state = this.xyToS(x, y),
+                    actions = this.grid.disconnectedNeighbors(this.grid.getCellAt(x, y)),
+                    actionsAvail = {0: null, 1: null, 2: null, 3: null},
+                    nulled = 0;
+                for (let a = 0; a < actions.length; a++) {
+                    let action = actions[a],
+                        actionState = this.xyToS(action.x, action.y);
+                    if (action.x === x - 1 && action.y === y) {
+                        actionsAvail[0] = actionState;
+                    } else if (action.x === x && action.y === y + 1) {
+                        actionsAvail[1] = actionState;
+                    } else if (action.x === x && action.y === y - 1) {
+                        actionsAvail[2] = actionState;
+                    } else if (action.x === x + 1 && action.y === y) {
+                        actionsAvail[3] = actionState;
+                    }
+                }
+                this.Aarr[state] = actionsAvail;
+                this.Rarr[state] = (state === this.gS - 1) ? 1 : 0;
+
+                for (let key in actionsAvail) {
+                    if (actionsAvail[key] === null) {
+                        nulled++;
+                    }
+                }
+                if (nulled === 3 && lastState !== 0 && state !== this.gS - 1) {
+                    this.Rarr[state] = -1;
+                }
+                lastState = state;
+            }
+        }
+
+        return this;
+    };
+
+    /**
+     * Get the reward of being in s, taking action a, and ending up in ns
+     * @param {Number} s
+     * @param {Number} a
+     * @param {Number} ns
+     * @returns {Number}
+     */
+    GridWorld.prototype.reward = function (s, a, ns) {
+        return this.Rarr[s];
+    };
+
+    /**
+     * Convert the state to an x
+     * @param {Number} s
+     * @returns {Number}
+     */
+    GridWorld.prototype.sToX = function (s) {
+        return Math.floor(s / this.gW);
+    };
+
+    /**
+     * Convert the state to a y
+     * @param {Number} s
+     * @returns {Number}
+     */
+    GridWorld.prototype.sToY = function (s) {
+        return s % this.gH;
+    };
+
+    /**
+     * Convert an x, y to the state
+     * @param {Number} x
+     * @param {Number} y
+     * @returns {Number}
+     */
+    GridWorld.prototype.xyToS = function (x, y) {
+        return x * this.gW + y;
+    };
+
+    /**
+     * Observe the raw reward of being in s, taking a, and ending up in ns
+     * @param {Number} s
+     * @param {Number} a
+     * @returns {{ns: (*|Number), r: (*|Number)}}
+     */
+    GridWorld.prototype.sampleNextState = function (s, a) {
+        let ns = this.nextStateDistribution(s, a),
+            r = this.reward(s, a, ns);
+
+        // every step takes a bit of negative reward
+        r -= 0.01;
+        let out = {
+            ns: ns,
+            r: r
+        };
+        if (s === (this.gS - 1)) {
+            // episode is over
+            out.resetEpisode = true;
+        }
+
+        return out;
+    };
+
+    /**
+     * Return the starting state
+     * @returns {Number}
+     */
+    GridWorld.prototype.startState = function () {
+        return 0;
+    };
+
+    /**
+     *
+     */
+    GridWorld.prototype.tick = function () {
+        let self = this;
+        if (self.sid === -1) {
+            self.sid = setInterval(function () {
+                for (let k = 0; k < self.stepsPerTick; k++) {
+                    // ask agent for an action
+                    let agent = self.agents[0],
+                        a = agent.brain.act(self.state),
+                    // run it through environment dynamics
+                        obs = self.sampleNextState(self.state, a);
+
+                    // allow opportunity for the agent to learn
+                    agent.brain.learn(obs.r);
+                    // evolve environment to next state
+                    self.state = obs.ns;
+
+                    agent.nStepsCounter += 1;
+                    if (typeof obs.resetEpisode !== 'undefined') {
+                        agent.score += 1;
+                        agent.brain.resetEpisode();
+
+                        agent.gridLocation = self.grid.getCellAt(0, 0);
+                        agent.pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        self.state = self.startState();
+
+                        // record the reward achieved
+                        if (agent.nStepsHistory.length >= agent.nflot) {
+                            agent.nStepsHistory = agent.nStepsHistory.slice(1);
+                        }
+                        agent.nStepsHistory.push(agent.nStepsCounter);
+                        agent.nStepsCounter = 0;
+                    } else {
+                        agent.gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
+                        let x = agent.gridLocation.corners[2].x - (self.grid.cellWidth / 2),
+                            y = agent.gridLocation.corners[2].y - (self.grid.cellHeight / 2);
+                        agent.pos.set(x, y);
+                    }
+                }
+
+                self.drawGrid();
+            }, 20);
+        } else {
+            clearInterval(self.sid);
+            self.sid = -1;
+        }
     };
 
     global.GridWorld = GridWorld;

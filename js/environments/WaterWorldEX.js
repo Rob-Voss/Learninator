@@ -74,7 +74,7 @@ var WaterWorldEX = WaterWorldEX || {},
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -84,7 +84,7 @@ var WaterWorldEX = WaterWorldEX || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,
@@ -106,7 +106,7 @@ var WaterWorldEX = WaterWorldEX || {},
             new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
                 {
                     brainType: 'RLDQN',
-                    env: Utility.stringify({
+                    env: {
                         getNumStates: function () {
                             return 30 * 5;
                         },
@@ -116,7 +116,7 @@ var WaterWorldEX = WaterWorldEX || {},
                         startState: function () {
                             return 0;
                         }
-                    }),
+                    },
                     numActions: 4,
                     numStates: 30 * 5,
                     numEyes: 30,

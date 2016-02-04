@@ -17,11 +17,7 @@ var Phys = Phys || {},
              * @returns {number}
              */
             distance: function (point1, point2) {
-                let x = point1.x - point2.x,
-                    y = point1.y - point2.y,
-                    sqrt = Math.sqrt(x * x + y * y);
-
-                return sqrt;
+                return Math.sqrt(point1.x - point2.x * point1.x - point2.x + point1.y - point2.y * point1.y - point2.y);
             },
             /**
              * Returns the dot product of `vector1` and `vector2`.
@@ -37,9 +33,7 @@ var Phys = Phys || {},
              * @returns {number}
              */
             dotProduct: function (vector1, vector2) {
-                let dot = vector1.vx * vector2.x + vector1.vy * vector2.y;
-
-                return dot;
+                return vector1.vx * vector2.x + vector1.vy * vector2.y;
             },
             /**
              * Returns true if `line` is intersecting `circle`.
@@ -50,13 +44,11 @@ var Phys = Phys || {},
             isLineIntersectingCircle: function (entity, wall) {
                 // Get point on line closest to circle.
                 let closest = Trig.pointOnLineClosestToCircle(entity, wall),
-                // Get the distance between the closest point and the center of
-                // the circle.
-                    circleToLineDistance = Trig.distance(entity.pos, closest),
+
+                // Get the distance between the closest point and the center of the circle.
+                    circleToLineDistance = entity.pos.distanceTo(closest),
                     intersecting = circleToLineDistance < entity.radius;
-                if (intersecting) {
-                    console.log();
-                }
+
                 // Return true if distance is less than the radius.
                 return intersecting;
             },
@@ -68,9 +60,7 @@ var Phys = Phys || {},
              * @returns {number}
              */
             magnitude: function (vector) {
-                let magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-
-                return magnitude;
+                return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
             },
             /**
              * Returns the unit vector for `vector`.
@@ -82,16 +72,11 @@ var Phys = Phys || {},
              * @returns {{x: number, y: number}}
              */
             unitVector: function (vector) {
-                let x = vector.x / Trig.magnitude(vector),
-                    y = vector.y / Trig.magnitude(vector),
-                    vx = vector.vx,
-                    vy = vector.vy;
-
                 return {
-                    x: x,
-                    y: y,
-                    vx: vx,
-                    vy: vy
+                    x: vector.x / Trig.magnitude(vector),
+                    y: vector.y / Trig.magnitude(vector),
+                    vx: vector.vx,
+                    vy: vector.vy
                 };
             },
             /**
@@ -101,16 +86,11 @@ var Phys = Phys || {},
              * @returns {{x: number, y: number}}
              */
             vectorBetween: function (startPoint, endPoint) {
-                let x = endPoint.x - startPoint.x,
-                    y = endPoint.y - startPoint.y,
-                    vx = endPoint.vx - startPoint.vx,
-                    vy = endPoint.vy - startPoint.vy;
-
                 return {
-                    x: x,
-                    y: y,
-                    vx: vx,
-                    vy: vy
+                    x: endPoint.x - startPoint.x,
+                    y: endPoint.y - startPoint.y,
+                    vx: endPoint.vx - startPoint.vx,
+                    vy: endPoint.vy - startPoint.vy
                 };
             },
             /**
@@ -179,14 +159,7 @@ var Phys = Phys || {},
              * @param {Entity} entity
              */
             moveCircle: function (entity) {
-                entity.pos.x += entity.pos.vx;
-                entity.pos.y += entity.pos.vy;
-                //if (entity.shape) {
-                //    entity.shape.position.set(entity.pos.x, entity.pos.y);
-                //} else if (entity.sprite) {
-                //    entity.sprite.position.set(entity.pos.x, entity.pos.y);
-                //}
-
+                entity.pos.advance();
             },
             /**
              * Assumes `line` is intersecting `circle` and bounces `circle` off `line`.
@@ -199,6 +172,7 @@ var Phys = Phys || {},
 
                 // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
                     dot = Trig.dotProduct(entity.pos, bounceLineNormal);
+
                 entity.pos.vx -= 2 * dot * bounceLineNormal.x;
                 entity.pos.vy -= 2 * dot * bounceLineNormal.y;
 
