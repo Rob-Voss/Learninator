@@ -1,6 +1,10 @@
 
 html, body {
-    height: 100%; /* Needed if you want to use height: 100% within the body tag */
+    height: 100%;
+    /* Needed if you want to use height: 100% within the body tag */
+    padding-top: 15px;
+    padding-left: 65px;
+    overflow: hidden;
 }
 
 * {

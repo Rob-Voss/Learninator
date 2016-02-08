@@ -1,0 +1,71 @@
+#click-open {
+    display: none;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    overflow: visible;
+    z-index: 10;
+}
+
+.menu {position: absolute;}
+
+.menu a {
+    text-decoration: none;
+    color: #fff;
+}
+
+.menu li:first-child {
+    background: #f00;
+    font-weight: bold;
+    font-family: arial black;
+    font-size: 200%;
+    background: url(http://i.imgur.com/3QGAU.png);
+    background-position-x: -2px;
+    background-position-y: -2px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px 1px #aaa;
+}
+
+.menu li {
+    background: #000;
+    color: #fff;
+    font-size: 25px;
+}
+
+#main-menu {
+    left: 0px;
+    top: 0px;
+    -webkit-transform-origin: 17px 18px;
+    -moz-transform-origin: 17px 18px;
+    -o-transform-origin: 17px 18px;
+    transform-origin: 17px 18px;
+    -webkit-transition: all .5s ease;
+    -moz-transition: all .5s ease;
+    -o-transition: all .5s ease;
+    transition: all .5s ease;
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    -o-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+#main-menu.circleMenu-open {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+}
+
+#main-menu.circleMenu-open > li:first-child {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+:not(#main-menu).circleMenu-open > li:first-child {
+    -webkit-transform: rotate(315deg);
+    -moz-transform: rotate(315deg);
+    -o-transform: rotate(315deg);
+    transform: rotate(315deg);
+}

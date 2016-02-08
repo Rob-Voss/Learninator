@@ -7,10 +7,13 @@
 
     <title>Learninator - EZGUI</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
+          rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <link href="css/circle-menu.css" rel="stylesheet" type="text/css">
+    <link href="css/twitch-nav.css" rel="stylesheet" type="text/css">
 
     <script type="text/javascript">
         /**
@@ -18,280 +21,318 @@
          * @type {World}
          */
         var stage = stage || {},
-            resizable = false,
-            renderer = renderer || {},
-            theme = 'space',
-            width = 600,
-            height = 600,
-            rendererOptions = {
-                antialiasing: false,
-                transparent: false,
-                resolution: window.devicePixelRatio,
-                autoResize: true
-            },
-            shadowGuiObj = {
-                id: 'mainShadow',
-                draggable: true,
-                component: 'Window',
-                skin: 'ShadowRoundWindow',
-                position: {x: 20, y: 20},
-                width: 400,
-                height: 400,
-                z: 1,
-                header: {
-                    id: 'titleShadow',
-                    component: 'Header',
-                    skin: 'ShadowHeader',
-                    text: 'Options',
-                    position: {x: 5, y: 0},
-                    width: 390,
-                    height: 30
+                resizable = false,
+                renderer = renderer || {},
+                theme = 'space',
+                width = 600,
+                height = 600,
+                rendererOptions = {
+                    antialiasing: false,
+                    transparent: false,
+                    resolution: window.devicePixelRatio,
+                    autoResize: true
                 },
-                layout: [1, 1],
-                children: [{
-                    id: 'inputSamples',
-                    component: 'Layout',
-                    skin: 'ShadowLayout',
-                    position: {x: 0, y: 0},
-                    width: 380,
-                    height: 360,
-                    layout: [2, 5],
+                shadowGuiObj = {
+                    id: 'mainShadow',
+                    draggable: true,
+                    component: 'Window',
+                    skin: 'ShadowRoundWindow',
+                    position: {x: 20, y: 20},
+                    width: 400,
+                    height: 400,
+                    z: 1,
+                    header: {
+                        id: 'titleShadow',
+                        component: 'Header',
+                        skin: 'ShadowHeader',
+                        text: 'Options',
+                        position: {x: 5, y: 0},
+                        width: 390,
+                        height: 30
+                    },
+                    layout: [1, 1],
                     children: [{
-                        id: 'chk1',
-                        text: 'Checkbox #1',
-                        component: 'Checkbox',
-                        skin: 'ShadowCheckbox',
+                        id: 'inputSamples',
+                        component: 'Layout',
+                        skin: 'ShadowLayout',
                         position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'radio1',
-                        text: 'Radio #1',
-                        component: 'Radio',
-                        skin: 'ShadowRadio',
-                        group: 'odd',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'chk2',
-                        text: 'Checkbox #2',
-                        component: 'Checkbox',
-                        skin: 'ShadowCheckbox',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'radio2',
-                        text: 'Radio #2',
-                        component: 'Radio',
-                        skin: 'ShadowRadio',
-                        group: 'odd',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'text1',
-                        component: 'Input',
-                        skin: 'ShadowInput',
-                        text: 'input here',
-                        position: {x: 0, y: 0},
-                        width: 150,
-                        height: 29
-                    }, {
-                        id: 'btnDone',
-                        component: 'Button',
-                        skin: 'ShadowButton',
-                        text: 'Done',
-                        position: {x: 0, y: 0},
-                        width: 75,
-                        height: 29,
-                        font: {
-                            color: 'white'
-                        }
-                    }, {
-                        id: 'mySlider',
-                        component: 'Slider',
-                        position: {x: 0, y: 0},
-                        slide: {
-                            component: 'Slide',
-                            width: 10,
-                            height: 10
-                        },
-                        width: 150,
-                        height: 5
+                        width: 380,
+                        height: 360,
+                        layout: [2, 5],
+                        children: [{
+                            id: 'chk1',
+                            text: 'Checkbox #1',
+                            component: 'Checkbox',
+                            skin: 'ShadowCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio1',
+                            text: 'Radio #1',
+                            component: 'Radio',
+                            skin: 'ShadowRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'chk2',
+                            text: 'Checkbox #2',
+                            component: 'Checkbox',
+                            skin: 'ShadowCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio2',
+                            text: 'Radio #2',
+                            component: 'Radio',
+                            skin: 'ShadowRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'text1',
+                            component: 'Input',
+                            skin: 'ShadowInput',
+                            text: 'input here',
+                            position: {x: 0, y: 0},
+                            width: 150,
+                            height: 29
+                        }, {
+                            id: 'btnDone',
+                            component: 'Button',
+                            skin: 'ShadowButton',
+                            text: 'Done',
+                            position: {x: 0, y: 0},
+                            width: 75,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }, {
+                            id: 'mySlider',
+                            component: 'Slider',
+                            position: {x: 0, y: 0},
+                            slide: {
+                                component: 'Slide',
+                                width: 10,
+                                height: 10
+                            },
+                            width: 150,
+                            height: 5
 
-                    }, {
-                        id: 'myLabel',
-                        text: 'none',
-                        component: 'Label',
-                        position: {x: 0, y: 0},
-                        width: 120,
-                        height: 29
-                    }, {
-                        id: 'btnCancelShadow',
-                        component: 'Button',
-                        skin: 'ShadowButton',
-                        text: 'Cancel',
-                        position: {x: 0, y: 0},
-                        width: 100,
-                        height: 29,
-                        font: {
-                            color: 'white'
-                        }
-                    }, {
-                        id: 'btnSaveShadow',
-                        component: 'Button',
-                        skin: 'ShadowButton',
-                        text: 'Save',
-                        position: {x: 0, y: 0},
-                        width: 100,
-                        height: 29,
-                        font: {
-                            color: 'white'
-                        }
+                        }, {
+                            id: 'myLabel',
+                            text: 'none',
+                            component: 'Label',
+                            position: {x: 0, y: 0},
+                            width: 120,
+                            height: 29
+                        }, {
+                            id: 'btnCancelShadow',
+                            component: 'Button',
+                            skin: 'ShadowButton',
+                            text: 'Cancel',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }, {
+                            id: 'btnSaveShadow',
+                            component: 'Button',
+                            skin: 'ShadowButton',
+                            text: 'Save',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }]
                     }]
-                }]
-            },
-            glassGuiObj = {
-                id: 'mainGlass',
-                draggable: true,
-                component: 'Window',
-                skin: 'GlassWindow',
-                position: {x: 20, y: 20},
-                width: 400,
-                height: 400,
-                z: 1,
-                header: {
-                    id: 'titleGlass',
-                    component: 'Header',
-                    skin: 'GlassHeader',
-                    text: 'Options',
-                    position: {x: 5, y: 0},
-                    width: 390,
-                    height: 30
                 },
-                layout: [1, 1],
-                children: [{
-                    id: 'inputSamples',
-                    component: 'Layout',
-                    skin: 'GlassLayout',
-                    position: {x: 0, y: 0},
-                    width: 380,
-                    height: 360,
-                    layout: [2, 5],
+                glassGuiObj = {
+                    id: 'mainGlass',
+                    draggable: true,
+                    component: 'Window',
+                    skin: 'GlassWindow',
+                    position: {x: 20, y: 20},
+                    width: 400,
+                    height: 400,
+                    z: 1,
+                    header: {
+                        id: 'titleGlass',
+                        component: 'Header',
+                        skin: 'GlassHeader',
+                        text: 'Options',
+                        position: {x: 5, y: 0},
+                        width: 390,
+                        height: 30
+                    },
+                    layout: [1, 1],
                     children: [{
-                        id: 'chk1',
-                        text: 'Checkbox #1',
-                        component: 'Checkbox',
-                        skin: 'GlassCheckbox',
+                        id: 'inputSamples',
+                        component: 'Layout',
+                        skin: 'GlassLayout',
                         position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'radio1',
-                        text: 'Radio #1',
-                        component: 'Radio',
-                        skin: 'GlassRadio',
-                        group: 'odd',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'chk2',
-                        text: 'Checkbox #2',
-                        component: 'Checkbox',
-                        skin: 'GlassCheckbox',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'radio2',
-                        text: 'Radio #2',
-                        component: 'Radio',
-                        skin: 'GlassRadio',
-                        group: 'odd',
-                        position: {x: 0, y: 0},
-                        width: 25,
-                        height: 25
-                    }, {
-                        id: 'text1',
-                        component: 'Input',
-                        skin: 'GlassInput',
-                        text: 'input here',
-                        position: {x: 0, y: 0},
-                        width: 150,
-                        height: 29
-                    }, {
-                        id: 'btnDone',
-                        component: 'Button',
-                        skin: 'GlassButton',
-                        text: 'Done',
-                        position: {x: 0, y: 0},
-                        width: 75,
-                        height: 29
-                    }, {
-                        id: 'mySlider',
-                        component: 'Slider',
-                        position: {x: 0, y: 0},
-                        slide: {
-                            component: 'Slide',
-                            width: 10,
-                            height: 10
-                        },
-                        width: 150,
-                        height: 5
+                        width: 380,
+                        height: 360,
+                        layout: [2, 5],
+                        children: [{
+                            id: 'chk1',
+                            text: 'Checkbox #1',
+                            component: 'Checkbox',
+                            skin: 'GlassCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio1',
+                            text: 'Radio #1',
+                            component: 'Radio',
+                            skin: 'GlassRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'chk2',
+                            text: 'Checkbox #2',
+                            component: 'Checkbox',
+                            skin: 'GlassCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio2',
+                            text: 'Radio #2',
+                            component: 'Radio',
+                            skin: 'GlassRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'text1',
+                            component: 'Input',
+                            skin: 'GlassInput',
+                            text: 'input here',
+                            position: {x: 0, y: 0},
+                            width: 150,
+                            height: 29
+                        }, {
+                            id: 'btnDone',
+                            component: 'Button',
+                            skin: 'GlassButton',
+                            text: 'Done',
+                            position: {x: 0, y: 0},
+                            width: 75,
+                            height: 29
+                        }, {
+                            id: 'mySlider',
+                            component: 'Slider',
+                            position: {x: 0, y: 0},
+                            slide: {
+                                component: 'Slide',
+                                width: 10,
+                                height: 10
+                            },
+                            width: 150,
+                            height: 5
 
-                    }, {
-                        id: 'myLabel',
-                        component: 'Label',
-                        text: 'none',
-                        position: {x: 0, y: 0},
-                        width: 120,
-                        height: 29
-                    }, {
-                        id: 'btnCancelGlass',
-                        component: 'Button',
-                        skin: 'GlassButton',
-                        text: 'Cancel',
-                        position: {x: 0, y: 0},
-                        width: 100,
-                        height: 29
-                    }, {
-                        id: 'btnSaveGlass',
-                        component: 'Button',
-                        skin: 'GlassButton',
-                        text: 'Save',
-                        position: {x: 0, y: 0},
-                        width: 100,
-                        height: 29
+                        }, {
+                            id: 'myLabel',
+                            component: 'Label',
+                            text: 'none',
+                            position: {x: 0, y: 0},
+                            width: 120,
+                            height: 29
+                        }, {
+                            id: 'btnCancelGlass',
+                            component: 'Button',
+                            skin: 'GlassButton',
+                            text: 'Cancel',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29
+                        }, {
+                            id: 'btnSaveGlass',
+                            component: 'Button',
+                            skin: 'GlassButton',
+                            text: 'Save',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29
+                        }]
                     }]
-                }]
-            };
+                };
 
-        function loadTheme() {
+        function loadCircleMenu() {
+//            document.body.querySelector('.game-container').appendChild(renderer.view);
+            $('#main-menu').circleMenu({
+                circleRadius: 50,
+                itemDiameter: 30,
+                stepIn: 0,
+                stepOut: 0,
+                // top|right|bottom|left|top-right|top-left|bottom-right|bottom-left|top-half|right-half|bottom-half|left-half|full
+                direction: 'full',
+                // ease|linear|ease-in|ease-out|ease-in-out|cubic-bezier(n,n,n,n)
+                transitionFunction: 'linear',
+                // hover|click|none
+                trigger: 'click',
+                close: function () {
+
+                },
+                init: function () {
+
+                },
+                open: function () {
+
+                },
+                select: function (evt, index) {
+
+                }
+            }).on('circleMenu-init', function () {
+
+            }).on('circleMenu-open', function () {
+
+            }).on('circleMenu-close', function () {
+
+            }).on('circleMenu-select', function () {
+
+            });
+
+            $('a').on('click', function (evt) {
+                if ($(this).attr('href') === '#') {
+                    evt.preventDefault();
+                }
+            });
+
+            $('#click-open').css('display', 'block');
+        }
+
+        function addMenuItem() {
+            $('ul').append($('<li><a href="#">New</a></li>')).circleMenu('init');
+        }
+
+        function loadTheme(guiObj, theme) {
             PIXI.utils.textureCache = {};
             PIXI.utils.baseTextureCache = {};
 
-            return EZGUI.Theme.load(['gui-themes/' + theme + '-theme/' + theme + '-theme.json'], function () {
-//                var glassContainer = EZGUI.create(glassGuiObj, theme);
-//                EZGUI.components.btnSaveGlass.on('click', function (event) {
-//                    glassContainer.visible = false;
-//                });
-//                EZGUI.components.btnCancelGlass.on('click', function (event) {
-//                    glassContainer.visible = false;
-//                });
-//                stage.addChild(glassContainer);
-
-
-                var shadowContainer = EZGUI.create(shadowGuiObj, theme);
-//                EZGUI.components.btnSaveShadow.on('click', function (event) {
-//                    shadowContainer.visible = false;
-//                });
-//                EZGUI.components.btnCancelShadow.on('click', function (event) {
-//                    shadowContainer.visible = false;
-//                });
-                stage.addChild(shadowContainer);
+            return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], function () {
+                var container = EZGUI.create(guiObj, theme);
+                EZGUI.components.btnSaveShadow.on('click', function (event) {
+                    container.visible = false;
+                });
+                EZGUI.components.btnCancelShadow.on('click', function (event) {
+                    container.visible = false;
+                });
+                stage.addChild(container);
             });
         }
 
@@ -338,149 +379,15 @@
                 // user changing the window or rotating their device
                 window.addEventListener("resize", resize);
             }
-            loadTheme();
-
+            loadTheme(shadowGuiObj, theme);
+            loadCircleMenu();
             requestAnimationFrame(animate);
         }
     </script>
 </head>
 <body onload="start();">
-<style>
-    body {
-        padding-top: 15px;
-        padding-left: 65px;
-    }
 
-    .navbar-twitch {
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 50px;
-        height: 100%;
-        border-radius: 0px;
-        border: 0px;
-        z-index: 1030;
-    }
-
-    .navbar-twitch.open {
-        width: 240px;
-    }
-
-    .navbar-twitch > .container {
-        padding: 0px;
-        width: 100%;
-    }
-
-    .navbar-twitch .navbar-header,
-    .navbar-twitch .navbar-brand {
-        float: none;
-        display: block;
-        width: 100%;
-        margin: 0px;
-    }
-
-    .navbar-twitch .navbar-brand {
-        height: 50px;
-    }
-
-    .navbar-twitch > .container .navbar-brand {
-        padding: 0px;
-        margin: 0px;
-    }
-
-    .navbar-twitch > .container .navbar-brand > .small-nav {
-        display: block;
-    }
-
-    .navbar-twitch > .container .navbar-brand > .small-nav > span.logo,
-    .navbar-twitch.open > .container .navbar-brand > .full-nav {
-        display: block;
-        font-weight: bold;
-        padding: 15px 2px 15px 3px;
-        font-size: 16pt;
-    }
-
-    .navbar-twitch.open > .container .navbar-brand {
-        width: 100%;
-        padding: 15px 15px 60px;
-        text-align: center;
-    }
-
-    .navbar-twitch.navbar-inverse > .container .navbar-brand > .small-nav > span.logo {
-        /*color: rgb(255, 255, 255);*/
-    }
-
-    .navbar-twitch .navbar-nav > li {
-        float: none;
-    }
-
-    .navbar-twitch > .container .full-nav {
-        display: none;
-    }
-
-    .navbar-twitch.open > .container .full-nav {
-        display: block;
-    }
-
-    .navbar-twitch.open > .container .small-nav {
-        display: none;
-    }
-
-    .navbar-twitch .navbar-collapse {
-        padding: 0px;
-    }
-
-    .navbar-twitch .navbar-nav {
-        float: none;
-        margin: 0px;
-    }
-
-    .navbar-twitch .navbar-nav > li > a {
-        padding: 0px;
-    }
-
-    .navbar-twitch .navbar-nav > li > a > span {
-        display: block;
-        font-size: 16pt;
-        padding: 13px 15px 13px 12px;
-    }
-
-    .navbar-twitch .tooltip,
-    .navbar-twitch .tooltip .tooltip-inner {
-        max-width: auto;
-        white-space: nowrap;
-    }
-
-    .navbar-twitch-toggle {
-        position: fixed;
-        top: 5px;
-        left: 55px;
-    }
-
-    .navbar-twitch ~ .navbar-twitch-toggle > .nav-open {
-        display: inline-block;
-    }
-
-    .navbar-twitch ~ .navbar-twitch-toggle > .nav-close {
-        display: none;
-    }
-
-    .navbar-twitch.open ~ .navbar-twitch-toggle {
-        left: 245px;
-    }
-
-    .navbar-twitch.open ~ .navbar-twitch-toggle > .nav-open {
-        display: none;
-    }
-
-    .navbar-twitch.open ~ .navbar-twitch-toggle > .nav-close {
-        display: inline-block;
-    }
-
-    .navbar {
-        background-image: none !important;
-    }
-</style>
+<!-- Twitch style navbar -->
 <div class="navbar navbar-inverse navbar-twitch" role="navigation">
     <div class="container">
         <div class="navbar-header">
@@ -555,20 +462,44 @@
     <span class="glyphicon glyphicon-chevron-right nav-open"></span>
     <span class="glyphicon glyphicon-chevron-left nav-close"></span>
 </button>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <div class="game-container"></div>
+            <div class="game-container">
+
+                <!-- Circle Menu -->
+                <div id="click-open">
+                    <ul class="menu" id="main-menu">
+                        <li><a href="#"></a></li>
+                        <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
+                        <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
+                        <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
+                        <li>
+                            <ul class="menu" id="sub-menu">
+                                <li><a href="#"></a></li>
+                                <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
+                                <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
+                                <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#" alt="Item 4" title="Item 4">4</a></li>
+                        <li><a href="#" alt="Item 5" title="Item 5">5</a></li>
+                        <li><a href="#" alt="Item 6" title="Item 6">6</a></li>
+                    </ul>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
 
 <script src="js/lib/external/EZGUI.js"></script>
+<script src="js/lib/ui/jQuery.circleMenu.js"></script>
 
 </body>
 </html>

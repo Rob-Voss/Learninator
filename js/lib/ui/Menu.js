@@ -28,7 +28,7 @@
         this.background.endFill();
         this.addChild(this.background);
 
-        this.selectedTileText = new PIXI.Text("Selected Agent: " , {font: "10px Arial", fill: "#FFFFFF", align: "left"});
+        this.selectedTileText = new PIXI.Text("Selected Agent: ", {font: "10px Arial", fill: "#FFFFFF", align: "left"});
         this.selectedTileText.x = this.menuX + 8;
         this.selectedTileText.y = this.menuY + 8;
         this.addChild(this.selectedTileText);
