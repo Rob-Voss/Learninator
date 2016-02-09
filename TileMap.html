@@ -21,8 +21,10 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
 
     <script src="js/lib/TileMap.js"></script>
+    <link rel="import" href="/templates/twitch-nav.html">
 </head>
 <body>
+<div id="container">
 <p id="demo"></p>
 <script>
     // For zoomed-in pixel art, we want crisp pixels instead of fuzziness
@@ -78,5 +80,6 @@
 
     $("#demo").append(renderer.view);
 </script>
+</div>
 </body>
 </html>

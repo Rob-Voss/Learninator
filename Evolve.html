@@ -11,23 +11,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
-    <link href="css/twitch-nav.css" rel="stylesheet" type="text/css">
-
-    <script type="text/javascript">
-        /**
-         * Global world object
-         * @type {World}
-         */
-        var world = world || {};
-
-        /**
-         * Create existence!
-         */
-        function start() {
-            world = new EvolveWorld();
-        }
-    </script>
-
     <style type="text/css">
         canvas {
             border: 1px solid #555;
@@ -58,10 +41,24 @@
             margin-right: auto;
         }
     </style>
+    <script type="text/javascript">
+        /**
+         * Global world object
+         * @type {World}
+         */
+        var world = world || {};
 
+        /**
+         * Create existence!
+         */
+        function start() {
+            world = new EvolveWorld();
+        }
+    </script>
+    <link rel="import" href="/templates/twitch-nav.html">
 </head>
 <body onLoad="start();">
-
+<div id="container">
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-6">
@@ -83,6 +80,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

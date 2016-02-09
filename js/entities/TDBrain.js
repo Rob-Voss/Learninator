@@ -1,7 +1,3 @@
-var Experience = Experience || {},
-    TDBrain = TDBrain || {},
-    Utility = Utility || {};
-
 (function (global) {
     "use strict";
 

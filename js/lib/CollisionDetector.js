@@ -40,7 +40,7 @@
                 //d = target.pos.
                     xDist = target.pos.x - entity.pos.x,
                     yDist = target.pos.y - entity.pos.y,
-                    distFrom = target.pos.distFrom(entity.pos),
+                    distFrom = target.pos.distanceTo(entity.pos),
                     radiusDist = target.radius + entity.radius,
                     distSquared = xDist * xDist + yDist * yDist,
                     radiusSquared = (target.radius + entity.radius) * (target.radius + entity.radius);
@@ -71,12 +71,10 @@
                                     radiusFrom: radiusDist
                                 },
                                 target: {
-                                    type: target.type,
                                     vx: target.pos.vx + collisionWeightA * xCollision,
                                     vy: target.pos.vy + collisionWeightA * yCollision
                                 },
                                 entity: {
-                                    type: entity.type,
                                     vx: entity.pos.vx - collisionWeightB * xCollision,
                                     vy: entity.pos.vy - collisionWeightB * yCollision
                                 }
@@ -101,47 +99,44 @@
          * @param {number} radius
          * @returns {boolean}
          */
-        this.sightCheck = function (v1, v2, walls, entities, radius) {
+        this.sightCheck = function (v1, v2, radius) {
             var minRes = false,
                 rad = radius || 0;
 
             // Collide with walls
-            if (walls) {
-                for (var i = 0, wl = walls.length; i < wl; i++) {
-                    var wall = walls[i],
-                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2, rad);
-                    if (wResult) {
-                        wResult.target = wall;
-                        if (!minRes) {
+            for (var i = 0, wl = this.walls.length; i < wl; i++) {
+                var wall = this.walls[i],
+                    wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
+                if (wResult) {
+                    wResult.target = wall;
+                    if (!minRes) {
+                        minRes = wResult;
+                    } else {
+                        // Check if it's closer
+                        if (wResult.vecX < minRes.vecX) {
+                            // If yes, replace it
                             minRes = wResult;
-                        } else {
-                            // Check if it's closer
-                            if (wResult.vecX < minRes.vecX) {
-                                // If yes, replace it
-                                minRes = wResult;
-                            }
                         }
                     }
                 }
             }
 
             // Collide with items
-            if (entities) {
-                for (var e = 0, el = entities.length; e < el; e++) {
-                    var entity = entities[e],
-                        iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
-                    if (iResult) {
-                        iResult.target = entity;
-                        if (!minRes) {
+            for (var e = 0, el = this.entities.length; e < el; e++) {
+                var entity = this.entities[e],
+                    iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
+                if (iResult) {
+                    iResult.target = entity;
+                    if (!minRes) {
+                        minRes = iResult;
+                    } else {
+                        if (iResult.vecX < minRes.vecX) {
                             minRes = iResult;
-                        } else {
-                            if (iResult.vecX < minRes.vecX) {
-                                minRes = iResult;
-                            }
                         }
                     }
                 }
             }
+
             return minRes;
         };
 
@@ -164,13 +159,13 @@
          * Find the position of intersect between a line and a point with a radius
          * @param {Vec} v1 From position
          * @param {Vec} v2 To position
-         * @param {Vec} v0 Target position
+         * @param {Vec} circle Target position
          * @param {number} radius Target radius
          * @returns {Object|Boolean}
          */
-        this.circleLineCollide = function (line, v0, radius) {
-            let lp1 = line.v1.sub(v0),
-                lp2 = line.v2.sub(v0),
+        this.circleLineCollide = function (line, circle, radius) {
+            let lp1 = line.v1.sub(circle),
+                lp2 = line.v2.sub(circle),
                 lp2MinusLp1 = lp2.sub(lp1),
                 a = lp2MinusLp1.lengthSq(),
                 b = 2 * lp2MinusLp1.dot(lp1),
@@ -180,14 +175,14 @@
 
             if (delta < 0) {
                 // No hit
-            } else if (delta == 0) {
+            } else if (delta === 0) {
                 // Edge of circle hit single point
                 let u = -b / (2 * a);
                 result = {};
                 result.pX = u;
                 result.pY = 0;
                 result.vecI = new Vec(line.v1.x + (u * lp2MinusLp1.x), line.v1.y + (u * lp2MinusLp1.y));
-                result.distance = v0.distanceTo(result.vecI);
+                result.distance = circle.distanceTo(result.vecI);
             } else if (delta > 0) {
                 // Circle breached the line at two points!
                 let delta2 = Math.sqrt(delta),
@@ -200,7 +195,7 @@
                 result.pY = u2;
                 result.vecIs = [vI1, vI2];
                 result.vecI = vI1.getPointBetween(vI2, 50);
-                result.distance = v0.distanceTo(result.vecI);
+                result.distance = circle.distanceTo(result.vecI);
             }
 
             return result;
@@ -264,19 +259,13 @@
                 if (entity.radius !== undefined && target.radius !== undefined) {
                     // If both entities have a radius use the circle collision check
                     collisionObj = self.circleCircleCollide(entity, target);
-                    if (collisionObj) {
-                        target.pos.vx = collisionObj.target.vx;
-                        target.pos.vy = collisionObj.target.vy;
-                        entity.pos.vx = collisionObj.entity.vx;
-                        entity.pos.vy = collisionObj.entity.vy;
-                        target.collisions.push(entity);
-                    }
                 } else {
                     // Is it an entity versus a wall?
                     collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
-                    if (collisionObj) {
-                        target.collisions.push(entity);
-                    }
+                }
+                if (collisionObj) {
+                    collisionObj.type = entity.type;
+                    target.collisions.push(entity);
                 }
                 return collisionObj;
             }
@@ -357,25 +346,13 @@
          * Update the population
          */
         this.updatePopulation = function () {
-            let self = this;
             this.tree.clear();
             this.nodes = [];
 
-            this.walls.forEach(function (wall) {
-                self.nodes.push(wall);
-            });
-
-            this.entities.forEach(function (entity) {
-                self.nodes.push(entity);
-            });
-
-            this.agents.forEach(function (agent) {
-                self.nodes.push(agent);
-            });
-
-            this.entityAgents.forEach(function (entityAgent) {
-                self.nodes.push(entityAgent);
-            });
+            this.walls.forEach((wall) => this.nodes.push(wall));
+            this.entities.forEach((entity) => this.nodes.push(entity));
+            this.agents.forEach((agent) => this.nodes.push(agent));
+            this.entityAgents.forEach((entityAgent) => this.nodes.push(entityAgent));
 
             this.tree.insert(this.nodes);
 
@@ -395,6 +372,7 @@
             }
         };
     };
+
     global.QuadCD = QuadCD;
 
     /**
@@ -411,7 +389,6 @@
          * Draw the regions of the grid
          */
         this.drawRegions = function () {
-            let self = this;
             // Draw the grid
             if (this.cheats.grid) {
                 // Clear the collision detection holder
@@ -421,18 +398,18 @@
                 this.collisionOverlay = new PIXI.Container();
 
                 // If we are using grid based collision set up an overlay
-                this.grid.cells.forEach(function (row) {
+                this.grid.cells.forEach((row) => {
                     if (!Array.isArray(row)) {
                         let txtOpts = {font: "10px Arial", fill: "#00FF00", align: "center"},
                             popText = new PIXI.Text(row.population.length, txtOpts);
                         popText.position.set(row.corners[0].x + row.width / 2, row.corners[0].y + row.height / 2);
-                        self.collisionOverlay.addChild(popText);
+                        this.collisionOverlay.addChild(popText);
                     } else {
                         row.forEach(function (cell) {
                             let txtOpts = {font: "10px Arial", fill: "#00FF00", align: "center"},
                                 popText = new PIXI.Text(cell.population.length, txtOpts);
                             popText.position.set(cell.corners[0].x + cell.width / 2, cell.corners[0].y + cell.height / 2);
-                            self.collisionOverlay.addChild(popText);
+                            this.collisionOverlay.addChild(popText);
                         });
                     }
                 });
@@ -451,21 +428,17 @@
          * Update populations counts and grids
          */
         this.updatePopulation = function () {
-            let self = this;
-
             // Reset the cell's population's
-            self.grid.cells.forEach(function (row) {
+            this.grid.cells.forEach((row) => {
                 if (!Array.isArray(row)) {
                     row.population = row.walls;
                 } else {
-                    row.forEach(function (cell) {
-                        cell.population = cell.walls;
-                    });
+                    row.forEach((cell) => cell.population = cell.walls);
                 }
             });
 
-            self.entities.forEach(function (entity) {
-                self.grid.getGridLocation(entity);
+            this.entities.forEach((entity) => {
+                this.grid.getGridLocation(entity);
                 if (entity.gridLocation.population !== undefined) {
                     let idx = entity.gridLocation.population.findIndex(Utility.getId, entity.id);
                     if (idx === -1) {
@@ -474,8 +447,8 @@
                 }
             });
 
-            self.entityAgents.forEach(function (entityAgent) {
-                self.grid.getGridLocation(entityAgent);
+            this.entityAgents.forEach((entityAgent) => {
+                this.grid.getGridLocation(entityAgent);
                 if (entityAgent.gridLocation.population !== undefined) {
                     let idx = entityAgent.gridLocation.population.findIndex(Utility.getId, entityAgent.id);
                     if (idx === -1) {
@@ -484,8 +457,8 @@
                 }
             });
 
-            self.agents.forEach(function (agent) {
-                self.grid.getGridLocation(agent);
+            this.agents.forEach((agent) => {
+                this.grid.getGridLocation(agent);
                 if (agent.gridLocation.population !== undefined) {
                     let idx = agent.gridLocation.population.findIndex(Utility.getId, agent.id);
                     if (idx === -1) {
@@ -493,6 +466,7 @@
                     }
                 }
             });
+
             this.drawRegions();
         };
     };
