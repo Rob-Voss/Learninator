@@ -130,6 +130,14 @@ var AgentRLDQN = AgentRLDQN || {},
             // Check the world for collisions
             world.check(this);
 
+            for (let w = 0, wl = world.walls.length; w < wl; w++) {
+                let wall = world.walls[w],
+                    result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
+                if (result) {
+                    this.collisions.unshift(wall);
+                }
+            }
+
             // Go through and process what we ate/hit
             let minRes = false;
             for (let i = 0; i < this.collisions.length; i++) {

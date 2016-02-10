@@ -1,3 +1,6 @@
+var Hex = Hex || {},
+    HexShape = HexShape || {};
+
 /**
  * Inspired by https://github.com/RobertBrewitz/axial-hexagonal-grid
  */
@@ -247,12 +250,12 @@
             let q = Math.trunc(Math.round(hex.q)),
                 r = Math.trunc(Math.round(hex.r)),
                 s = Math.trunc(Math.round(hex.s)),
-                qDiff = Math.abs(q - hex.q),
-                rDiff = Math.abs(r - hex.r),
-                sDiff = Math.abs(s - hex.s);
-            if (qDiff > rDiff && qDiff > sDiff) {
+                q_diff = Math.abs(q - hex.q),
+                r_diff = Math.abs(r - hex.r),
+                s_diff = Math.abs(s - hex.s);
+            if (q_diff > r_diff && q_diff > s_diff) {
                 q = -r - s;
-            } else if (rDiff > sDiff) {
+            } else if (r_diff > s_diff) {
                 r = -q - s;
             } else {
                 s = -q - r;

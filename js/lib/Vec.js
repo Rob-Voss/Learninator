@@ -15,14 +15,14 @@
          * @param {number} ay
          * @returns {Vec}
          */
-        constructor(x, y, vx, vy, ax, ay) {
-            this.x = x || 0;
-            this.y = y || 0;
-            this.vx = vx || 0;
-            this.vy = vy || 0;
-            this.ax = ax || 0;
-            this.ay = ay || 0;
-            this.angle = 0;
+        constructor(x = 0, y = 0, vx = 0, vy = 0, ax = 0, ay = 0) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.ax = ax;
+            this.ay = ay;
+            this.angle = this.getAngle();
 
             return this;
         }
@@ -585,7 +585,7 @@
          * @param {boolean} cheats
          * @returns {Wall}
          */
-        constructor(v1, v2, cheats) {
+        constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), cheats = false) {
             super();
 
             this.id = Utility.guid();
@@ -595,7 +595,7 @@
             this.pos = new Point((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
             this.len = this.v1.distanceTo(this.v2);
             // See more at: http://wikicode.wikidot.com/get-angle-of-line-between-two-points#toc1
-            this.angle = Math.atan2(v2.sub(v1).y, v2.sub(v1).x) * 180 / Math.PI;
+            this.angle = v2.sub(v1).getAngle();
 
             this.shape = new PIXI.Graphics();
             if (cheats) {
@@ -627,7 +627,7 @@
          * @param {number} y
          * @returns {Point}
          */
-        constructor(x, y) {
+        constructor(x = 0, y = 0) {
             this.x = x;
             this.y = y;
 

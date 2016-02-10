@@ -27,6 +27,123 @@
         }
 
         /**
+         * Set up the CD function
+         * @param {Entity} target
+         */
+        this.check = function (target) {
+            var region,
+                collisionObj = false,
+                self = this;
+            target.collisions = [];
+
+            /**
+             * Collision check
+             * @param entity
+             */
+            function checkIt(entity) {
+                if (entity === target) {
+                    return;
+                }
+                var edibleEntity = (entity.type === 2 || entity.type === 1),
+                    edibleTarget = (target.type === 2 || target.type === 1);
+
+                // If both entities have a radius
+                if (entity.radius !== undefined && target.radius !== undefined) {
+                    // Use the circle collision check
+                    collisionObj = self.circleCircleCollide(entity, target);
+                    if (collisionObj) {
+                        // If there was a collision between an agent and an edible entity
+                        if ((edibleTarget || entity.type === 5) && (edibleEntity || entity.type === 5)) {
+                            // If there was a collision between edible entities
+                            target.pos.vx = collisionObj.target.vx;
+                            target.pos.vy = collisionObj.target.vy;
+                            entity.pos.vx = collisionObj.entity.vx;
+                            entity.pos.vy = collisionObj.entity.vy;
+                        }
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                        }
+
+                        return collisionObj;
+                    } else {
+                        // Nada so return
+                        return;
+                    }
+                    // Is it an entity versus a wall?
+                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
+                    collisionObj = self.lineIntersect(target.oldPos, target.pos, entity.v1, entity.v2);
+                    if (collisionObj) {
+                        // Reset the position
+                        target.pos = target.oldPos.clone();
+                        // If the entity doesn't already exist then add it
+                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
+                        if (idx === -1) {
+                            target.collisions.push(entity);
+                        }
+                        // If it's a consumable try and change the direction
+                        if (target.type === 2 || target.type === 1) {
+                            target.pos.vx *= -1;
+                            target.pos.vy *= -1;
+                            // If it's an Agent bounce it
+                        } else if (target.type === 3 || target.type === 4) {
+                            target.pos.vx = 0;
+                            target.pos.vy = 0;
+                        }
+
+                        return collisionObj;
+                    } else {
+                        // Nada so return
+                        return;
+                    }
+                }
+            }
+
+            /**
+             * Collision check
+             * @param {Entity} entity
+             */
+            //function checkIt(entity) {
+            //    if (entity === target) { return false; }
+            //    if (entity.radius !== undefined && target.radius !== undefined) {
+            //        // If both entities have a radius use the circle collision check
+            //        collisionObj = self.circleCircleCollide(entity, target);
+            //    } else {
+            //        // Is it an entity versus a wall?
+            //        collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
+            //    }
+            //    if (collisionObj) {
+            //        collisionObj.type = entity.type;
+            //        target.collisions.push(entity);
+            //    }
+            //    return collisionObj;
+            //}
+
+            switch (this.cdType) {
+                case 'quad':
+                    region = this.tree.retrieve(target, checkIt);
+                    break;
+                case 'grid':
+                    if (target.gridLocation.population) {
+                        // Loop through all the entities in the current cell and check distances
+                        target.gridLocation.population.some(function (ent) {
+                            return checkIt(ent);
+                        });
+                    }
+                    break;
+                case 'brute':
+                    let tmpAll = this.walls.concat(this.agents, this.entities, this.entityAgents);
+                    tmpAll.some(function (ent) {
+                        return checkIt(ent);
+                    });
+                    break;
+            }
+
+            return collisionObj;
+        };
+
+        /**
          * Check for collision of circular entities, and calculate collision point
          * as well as velocity changes that should occur to them
          * @param {Entity} entity
@@ -88,71 +205,6 @@
             } else {
                 return;
             }
-        };
-
-        /**
-         * A helper function to get check for colliding walls/items
-         * @param {Vec} v1
-         * @param {Vec} v2
-         * @param {Array} walls
-         * @param {Array} entities
-         * @param {number} radius
-         * @returns {boolean}
-         */
-        this.sightCheck = function (v1, v2, radius) {
-            var minRes = false,
-                rad = radius || 0;
-
-            // Collide with walls
-            for (var i = 0, wl = this.walls.length; i < wl; i++) {
-                var wall = this.walls[i],
-                    wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
-                if (wResult) {
-                    wResult.target = wall;
-                    if (!minRes) {
-                        minRes = wResult;
-                    } else {
-                        // Check if it's closer
-                        if (wResult.vecX < minRes.vecX) {
-                            // If yes, replace it
-                            minRes = wResult;
-                        }
-                    }
-                }
-            }
-
-            // Collide with items
-            for (var e = 0, el = this.entities.length; e < el; e++) {
-                var entity = this.entities[e],
-                    iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
-                if (iResult) {
-                    iResult.target = entity;
-                    if (!minRes) {
-                        minRes = iResult;
-                    } else {
-                        if (iResult.vecX < minRes.vecX) {
-                            minRes = iResult;
-                        }
-                    }
-                }
-            }
-
-            return minRes;
-        };
-
-        /**
-         * See if a circle touches a point
-         * @param {Point} point
-         * @param {Entity} circle
-         * @returns {boolean}
-         */
-        this.pointCircleCollide = function (point, circle) {
-            if (circle.radius === 0) {
-                return false;
-            }
-            let collided = circle.pos.sub(point).lengthSq() <= circle.radius * circle.radius;
-
-            return collided;
         };
 
         /**
@@ -241,59 +293,110 @@
         };
 
         /**
-         * Set up the CD function
-         * @param {Entity} target
+         * Find the position of intersect between a line and a point
+         * @param {Vec} v1 From position
+         * @param {Vec} v2 To position
+         * @param {Vec} v0 Target position
+         * @param {Number} rad Target radius
+         * @returns {Object|Boolean}
          */
-        this.check = function (target) {
-            var region,
-                collisionObj = false,
-                self = this;
-            target.collisions = [];
+        this.linePointIntersect = function (v1, v2, v0, rad) {
+            // Create a perpendicular vector
+            var x = v2.y - v1.y,
+                y = v2.x - v1.x,
+                xDiff = v1.y - v0.y,
+                yDiff = v1.x - v0.x,
+                v = new Vec(x, -y),
+                d = Math.abs(y * xDiff - yDiff * x),
+                vecX = 0,
+                result = {};
 
-            /**
-             * Collision check
-             * @param {Entity} entity
-             */
-            function checkIt(entity) {
-                if (entity === target) { return false; }
-                if (entity.radius !== undefined && target.radius !== undefined) {
-                    // If both entities have a radius use the circle collision check
-                    collisionObj = self.circleCircleCollide(entity, target);
-                } else {
-                    // Is it an entity versus a wall?
-                    collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
-                }
-                if (collisionObj) {
-                    collisionObj.type = entity.type;
-                    target.collisions.push(entity);
-                }
-                return collisionObj;
+            d = d / v.length();
+            if (d > rad) {
+                return false;
             }
 
-            switch (this.cdType) {
-                case 'quad':
-                    region = this.tree.retrieve(target, checkIt);
-                    break;
-                case 'grid':
-                    if (target.gridLocation.population) {
-                        // Loop through all the entities in the current cell and check distances
-                        target.gridLocation.population.some(function (ent) {
-                            return checkIt(ent);
-                        });
-                    }
-                    break;
-                case 'brute':
-                    let tmpAll = this.walls.concat(this.agents, this.entities, this.entityAgents);
-                    tmpAll.some(function (ent) {
-                        return checkIt(ent);
-                    });
-                    break;
-            }
+            v.normalize();
+            v.scale(d);
 
-            return collisionObj;
+            var vecI = v0.add(v);
+            vecX = (Math.abs(y) > Math.abs(x)) ? (vecI.x - v1.x) / (y) : (vecI.y - v1.y) / (x);
+
+            if (vecX > 0.0 && vecX < 1.0) {
+                result.vecX = vecX;
+                result.vecI = vecI;
+
+                return result;
+            }
+            return false;
         };
 
+        /**
+         * See if a circle touches a point
+         * @param {Point} point
+         * @param {Entity} circle
+         * @returns {boolean}
+         */
+        this.pointCircleCollide = function (point, circle) {
+            if (circle.radius === 0) {
+                return false;
+            }
+            let collided = circle.pos.sub(point).lengthSq() <= circle.radius * circle.radius;
+
+            return collided;
+        };
+
+        /**
+         * A helper function to get check for colliding walls/items
+         * @param {Vec} v1
+         * @param {Vec} v2
+         * @param {Array} walls
+         * @param {Array} entities
+         * @param {number} radius
+         * @returns {boolean}
+         */
+        this.sightCheck = function (v1, v2, radius) {
+            var minRes = false,
+                rad = radius || 0;
+
+            // Collide with walls
+            for (var i = 0, wl = this.walls.length; i < wl; i++) {
+                var wall = this.walls[i],
+                    wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
+                if (wResult) {
+                    wResult.target = wall;
+                    if (!minRes) {
+                        minRes = wResult;
+                    } else {
+                        // Check if it's closer
+                        if (wResult.vecX < minRes.vecX) {
+                            // If yes, replace it
+                            minRes = wResult;
+                        }
+                    }
+                }
+            }
+
+            // Collide with items
+            for (var e = 0, el = this.entities.length; e < el; e++) {
+                var entity = this.entities[e],
+                    iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
+                if (iResult) {
+                    iResult.target = entity;
+                    if (!minRes) {
+                        minRes = iResult;
+                    } else {
+                        if (iResult.vecX < minRes.vecX) {
+                            minRes = iResult;
+                        }
+                    }
+                }
+            }
+
+            return minRes;
+        };
     };
+
     global.CollisionDetector = CollisionDetector;
 
     /**

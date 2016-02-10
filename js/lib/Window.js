@@ -13,10 +13,10 @@ var Window = Window || {};
      * @param {number} minSize
      * @returns {Window}
      */
-    let Window = function (size, minSize) {
+    let Window = function (size = 100, minSize = 20) {
+        this.size = size;
+        this.minsize = minSize;
         this.v = [];
-        this.size = size || 100;
-        this.minsize = minSize || 20;
         this.sum = 0;
 
         return this;

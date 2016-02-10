@@ -35,8 +35,7 @@
          * @param {cheatOpts} opts.cheats - The cheats to display
          * @returns {Entity}
          */
-        constructor(type, position, opts) {
-            let self = this;
+        constructor(type, position = new Vec(5, 5), opts) {
             this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
             this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
             this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
@@ -57,7 +56,7 @@
             }
 
             this.id = Utility.guid();
-            this.pos = position || new Vec(5, 5);
+            this.pos = position;
             this.radius = Utility.getOpt(opts, 'radius', undefined);
             this.width = Utility.getOpt(opts, 'width', undefined);
             this.height = Utility.getOpt(opts, 'height', undefined);
@@ -72,14 +71,15 @@
             this.cleanUp = false;
 
             this.age = 0;
-            this.angle = this.pos.getAngle();
-            this.rot1 = 0.0;
-            this.rot2 = 0.0;
-            this.collisions = [];
 
             // Remember the old position and angle
             this.oldPos = this.pos.clone();
             this.oldAngle = 0;
+
+            this.angle = this.pos.getAngle();
+            this.rot1 = 0.0;
+            this.rot2 = 0.0;
+            this.collisions = [];
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
@@ -96,16 +96,16 @@
 
                 if (this.sprite.interactive === true) {
                     this.sprite
-                        .on('mousedown', self.onDragStart)
-                        .on('touchstart', self.onDragStart)
-                        .on('mouseup', self.onDragEnd)
-                        .on('mouseupoutside', self.onDragEnd)
-                        .on('touchend', self.onDragEnd)
-                        .on('touchendoutside', self.onDragEnd)
-                        .on('mouseover', self.onMouseOver)
-                        .on('mouseout', self.onMouseOut)
-                        .on('mousemove', self.onDragMove)
-                        .on('touchmove', self.onDragMove);
+                        .on('mousedown', () => this.onDragStart)
+                        .on('touchstart', () => this.onDragStart)
+                        .on('mouseup', () => this.onDragEnd)
+                        .on('mouseupoutside', () => this.onDragEnd)
+                        .on('touchend', () => this.onDragEnd)
+                        .on('touchendoutside', () => this.onDragEnd)
+                        .on('mouseover', () => this.onMouseOver)
+                        .on('mouseout', () => this.onMouseOut)
+                        .on('mousemove', () => this.onDragMove)
+                        .on('touchmove', () => this.onDragMove);
                     //this.sprite.entity = self;
                 }
                 this.sprite.addChild(this.cheatsContainer);
@@ -114,16 +114,16 @@
                 this.shape.interactive = this.interactive;
                 if (this.shape.interactive === true) {
                     this.shape
-                        .on('mousedown', self.onDragStart)
-                        .on('touchstart', self.onDragStart)
-                        .on('mouseup', self.onDragEnd)
-                        .on('mouseupoutside', self.onDragEnd)
-                        .on('touchend', self.onDragEnd)
-                        .on('touchendoutside', self.onDragEnd)
-                        .on('mouseover', self.onMouseOver)
-                        .on('mouseout', self.onMouseOut)
-                        .on('mousemove', self.onDragMove)
-                        .on('touchmove', self.onDragMove);
+                        .on('mousedown', () => this.onDragStart)
+                        .on('touchstart', () => this.onDragStart)
+                        .on('mouseup', () => this.onDragEnd)
+                        .on('mouseupoutside', () => this.onDragEnd)
+                        .on('touchend', () => this.onDragEnd)
+                        .on('touchendoutside', () => this.onDragEnd)
+                        .on('mouseover', () => this.onMouseOver)
+                        .on('mouseout', () => this.onMouseOut)
+                        .on('mousemove', () => this.onDragMove)
+                        .on('touchmove', () => this.onDragMove);
                     //this.shape.entity = self;
                 }
 
@@ -279,13 +279,44 @@
         move(world) {
             this.oldPos = this.pos.clone();
 
-            this.pos.advance();
+            //this.pos.advance();
+            //let collObj = world.check(this);
+            //if (collObj) {
+            //    this.pos = this.oldPos;
+            //    if (collObj.type === 1 || collObj.type === 2) {
+            //        this.pos.vx = collObj.target.vx;
+            //        this.pos.vy = collObj.target.vy;
+            //    }
+            //}
+
+            this.pos.x += this.pos.vx;
+            this.pos.y += this.pos.vy;
+
             let collObj = world.check(this);
+
             if (collObj) {
-                this.pos = this.oldPos;
-                if (collObj.type === 1 || collObj.type === 2) {
-                    this.pos.vx = collObj.target.vx;
-                    this.pos.vy = collObj.target.vy;
+                console.log();
+            }
+            for (let w = 0, wl = world.walls.length; w < wl; w++) {
+                let wall = world.walls[w],
+                    result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
+                if (result) {
+                    this.collisions.unshift(wall);
+                }
+            }
+
+            for (let i = 0; i < this.collisions.length; i++) {
+                if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
+                    // Agent
+                    //console.log('Oh shit it\'s a ' + this.collisions[i].name);
+                } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
+                    // Edible
+                    //console.log('Watch it ' + this.collisions[i].name);
+                } else if (this.collisions[i].type === 0) {
+                    // Wall
+                    this.pos = this.oldPos.clone();
+                    this.pos.vx *= -1;
+                    this.pos.vy *= -1;
                 }
             }
 

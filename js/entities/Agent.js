@@ -58,7 +58,7 @@ var Agent = Agent || {},
             // Is it a worker
             let worker = Utility.getOpt(opts, 'worker', false);
             super((worker ? 'Agent Worker' : 'Agent'), position, opts);
-
+            this.worker = worker;
             // Just a text value for the brain type, also useful for worker posts
             this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
             // The number of item types the Agent's eyes can see
@@ -98,6 +98,7 @@ var Agent = Agent || {},
 
             this.action = null;
             this.angle = this.pos.getAngle();
+            this.angleRadians = this.pos.getAngleInRadians();
             this.avgReward = 0;
             this.lastReward = 0;
             this.digestionSignal = 0.0;
@@ -136,14 +137,13 @@ var Agent = Agent || {},
          * @param {String} file
          */
         load(file) {
-            let _this = this;
-            $.getJSON(file, function (data) {
-                if (!_this.worker) {
-                    _this.brain.fromJSON(data);
-                    _this.brain.epsilon = 0.05;
-                    _this.brain.alpha = 0;
+            $.getJSON(file, (data) => {
+                if (!this.worker) {
+                    this.brain.fromJSON(data);
+                    this.brain.epsilon = 0.05;
+                    this.brain.alpha = 0;
                 } else {
-                    _this.post('load', JSON.stringify(data));
+                    this.post('load', JSON.stringify(data));
                 }
             });
 
@@ -192,14 +192,16 @@ var Agent = Agent || {},
          * @name Eye
          * @constructor
          */
-        constructor(angle, position, range, proximity) {
+        constructor(angle, position = new Vec(0, 0), range = 85, proximity = 85) {
             this.angle = angle;
-            this.maxRange = range || 85;
-            this.sensedProximity = proximity || 85;
-            this.pos = position || new Vec(0, 0);
+            this.maxRange = range;
+            this.pos = position;
             this.maxPos = new Vec(0, 0);
+            this.sensedProximity = proximity;
             this.sensedType = -1;
             this.collisions = [];
+            this.vx = 0;
+            this.vy = 0;
 
             // PIXI graphics
             this.shape = new PIXI.Graphics();
@@ -243,6 +245,7 @@ var Agent = Agent || {},
             let aEyeX = this.pos.x + this.sensedProximity * Math.sin(agent.angle + this.angle),
                 aEyeY = this.pos.y + this.sensedProximity * Math.cos(agent.angle + this.angle),
                 eyeV = new Vec(aEyeX, aEyeY);
+            this.maxPos = eyeV;
 
             // Draw the agent's line of sights
             this.shape.moveTo(this.pos.x, this.pos.y);
@@ -259,31 +262,29 @@ var Agent = Agent || {},
                 aEyeX = this.pos.x + this.maxRange * Math.sin(agent.angle + this.angle),
                 aEyeY = this.pos.y + this.maxRange * Math.cos(agent.angle + this.angle),
                 eyeV = new Vec(aEyeX, aEyeY);
+            this.maxPos = eyeV;
 
-            result = world.sightCheck(this.pos, eyeV, agent.radius);
+            result = world.sightCheck(this.pos, this.maxPos, agent.radius);
             if (result) {
-                // eye collided with an entity
-                this.sensedProximity = result.vecI.distanceTo(this.pos);
-                this.sensedType = result.target.type;
-                if ('vx' in result.vecI) {
-                    this.x = result.vecI.x;
-                    this.y = result.vecI.y;
-                    this.vx = result.vecI.vx;
-                    this.vy = result.vecI.vy;
-                } else {
-                    this.x = 0;
-                    this.y = 0;
-                    this.vx = 0;
-                    this.vy = 0;
+                let distance = result.vecI.distanceTo(this.pos);
+                if (distance <= this.maxRange) {
+                    // eye collided with an entity
+                    this.sensedProximity = result.vecI.distanceTo(this.pos);
+                    this.sensedType = result.target.type;
+                    if ('vx' in result.vecI) {
+                        this.vx = ('vx' in result.vecI) ? result.vecI.vx : 0;
+                        this.vy = ('vy' in result.vecI) ? result.vecI.vy : 0;
+                    }
+
+                    return result;
                 }
-            } else {
-                this.sensedProximity = this.maxRange;
-                this.sensedType = -1;
-                this.x = 0;
-                this.y = 0;
-                this.vx = 0;
-                this.vy = 0;
             }
+            this.sensedProximity = this.maxRange;
+            this.sensedType = -1;
+            this.vx = 0;
+            this.vy = 0;
+
+            return;
         }
     }
 
