@@ -33,16 +33,25 @@
             this.removedEdges = [];
             this.cells = [];
             this.path = [];
+            this.walls = [];
+            this.map = new Map();
+            this.cellsContainer = new PIXI.Container();
 
-            var row, c;
-            for (let i = 0; i < this.xCount; i++) {
-                this.cells.push([]);
-                row = this.cells[i];
-                for (let j = 0; j < this.yCount; j++) {
-                    c = new Cell(i, j, this.cellWidth, this.cellHeight);
-                    row.push(c);
+            let c, cs;
+            for (let x = 0; x < this.xCount; x++) {
+                for (let y = 0; y < this.yCount; y++) {
+                    c = new Cell(x, y, this.cellWidth, this.cellHeight);
+                    c.population = [];
+                    this.cells.push(c);
+
+                    cs = new CellShape(c.corners);
+                    cs.walls.forEach((wall) => {
+                        this.walls.push(wall);
+                    });
+                    this.cellsContainer.addChild(cs.shape);
                 }
             }
+            this.mapCells();
 
             return this;
         }
@@ -75,9 +84,9 @@
          * @returns {Array}
          */
         connectedNeighbors(c) {
-            var _this = this, con;
-            return _.select(this.neighbors(c), function (c0) {
-                con = _this.areConnected(c, c0);
+            var con;
+            return _.select(this.neighbors(c), (c0) => {
+                con = this.areConnected(c, c0);
 
                 return con;
             });
@@ -86,13 +95,13 @@
         /**
          * Returns all neighbors of this Cell that are NOT separated by an edge
          * This means there is a maze path between both cells.
-         * @param {Cell} c
+         * @param {Cell} cell
          * @returns {Array}
          */
-        disconnectedNeighbors(c) {
-            var _this = this, disc;
-            return _.reject(this.neighbors(c), function (c0) {
-                disc = _this.areConnected(c, c0);
+        disconnectedNeighbors(cell) {
+            var disc;
+            return _.reject(this.neighbors(cell), (c0) => {
+                disc = this.areConnected(cell, c0);
 
                 return disc;
             });
@@ -105,11 +114,11 @@
          * @returns {Cell}
          */
         getCellAt(x, y) {
-            if (x >= this.xCount || y >= this.yCount || x < 0 || y < 0 || !this.cells[x]) {
-                return null;
-            }
+            let column = this.map.get(x),
+                row = column ? column.get(y) : false,
+                cell = row ? row.get(-x - y) : false;
 
-            return this.cells[x][y];
+            return cell;
         }
 
         /**
@@ -126,26 +135,23 @@
         }
 
         /**
+         * Return the centered location of the entity within a grid
+         * @param {Cell} cell
+         * @returns {Object}
+         */
+        getCenterXY(cell) {
+            let x = cell.corners[2].x - (this.cellWidth / 2),
+                y = cell.corners[2].x - (this.cellHeight / 2);
+
+            return new Point(x, y);
+        }
+
+        /**
          * Return a PIXI container with the grid
          * @returns {PIXI.Container|*}
          */
         getGrid() {
-            let self = this,
-                c = new PIXI.Container();
-
-            this.cells.forEach(function (row) {
-                if (Array.isArray(row)) {
-                    row.forEach(function (cell) {
-                        cell.population = [];
-                        c.addChild(cell.shape);
-                    })
-                } else {
-                    row.population = [];
-                    c.addChild(row.shape);
-                }
-            });
-
-            return c;
+            return this.cellsContainer;
         }
 
         /**
@@ -154,31 +160,17 @@
          * @returns {Object}
          */
         getGridLocation(entity) {
-            var xCell, yCell;
-            for (let x = 0; x < this.xCount; x++) {
-                xCell = this.cells[x];
-                for (let y = 0; y < this.yCount; y++) {
-                    yCell = xCell[y];
-                    if ((entity.pos.x >= yCell.corners[0].x && entity.pos.x <= yCell.corners[2].x) &&
-                        (entity.pos.y >= yCell.corners[0].y && entity.pos.y <= yCell.corners[2].y)) {
-                        entity.gridLocation = this.cells[x][y];
-
-                        return entity;
-                    }
-                }
+            let hex = this.pixelToHex(entity.pos.x, entity.pos.y),
+                q = Math.round(hex.q),
+                r = Math.round(hex.r);
+            let cell = this.getCellAt(q, r);
+            if (cell) {
+                entity.gridLocation = cell;
+            } else {
+                entity.gridLocation = hex;
             }
-        }
 
-        /**
-         * Return the centered location of the entity within a grid
-         * @param {Cell} c
-         * @returns {Object}
-         */
-        getPositionFromGridLocation(c) {
-            let x = c.coords.bottom.right.x - (this.cellWidth / 2),
-                y = c.coords.bottom.right.y - (this.cellHeight / 2);
-
-            return new Vec(x, y);
+            return entity;
         }
 
         /**
@@ -208,6 +200,35 @@
                 }
             }
             return neighbors;
+        }
+
+        /**
+         * Add the cells to a hash map
+         */
+        mapCells() {
+            let column, row, c;
+            this.cells.forEach((cell) => {
+                let center = this.getCenterXY(cell);
+
+                // check x
+                column = this.map.get(cell.x);
+                if (!column) {
+                    this.map.set(cell.x, new Map());
+                    column = this.map.get(cell.x);
+                }
+                // check y
+                row = column.get(cell.y);
+                if (!row) {
+                    column.set(cell.y, new Map());
+                    row = column.get(cell.y);
+                }
+                // check s
+                c = row.get(-cell.x - cell.y);
+                if (!c) {
+                    row.set(-cell.x - cell.y, cell);
+                    cell = row.get(-cell.x - cell.y);
+                }
+            });
         }
 
         /**

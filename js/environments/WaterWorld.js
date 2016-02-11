@@ -15,6 +15,7 @@
                     antialiasing: false,
                     autoResize: true,
                     resolution: window.devicePixelRatio,
+                    resizable: false,
                     transparent: false,
                     width: 800,
                     height: 800
@@ -64,12 +65,9 @@
                 grid = maze.grid,
                 worldOpts = {
                     grid: grid,
-                    walls: maze.walls,
-                    agents: agents,
-                    numAgents: agents.length,
                     simSpeed: 1,
                     cheats: {
-                        quad: true,
+                        quad: false,
                         grid: false,
                         walls: false
                     },
@@ -87,12 +85,9 @@
                             name: false
                         }
                     }
-                },
-                cellsContainer = grid.getGrid();
+                };
 
-            super(worldOpts, renderOpts);
-
-            this.stage.addChild(cellsContainer);
+            super(agents, maze.walls, worldOpts, renderOpts);
 
             return this;
         }

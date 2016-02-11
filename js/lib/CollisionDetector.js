@@ -38,87 +38,23 @@
 
             /**
              * Collision check
-             * @param entity
-             */
-            function checkIt(entity) {
-                if (entity === target) {
-                    return;
-                }
-                var edibleEntity = (entity.type === 2 || entity.type === 1),
-                    edibleTarget = (target.type === 2 || target.type === 1);
-
-                // If both entities have a radius
-                if (entity.radius !== undefined && target.radius !== undefined) {
-                    // Use the circle collision check
-                    collisionObj = self.circleCircleCollide(entity, target);
-                    if (collisionObj) {
-                        // If there was a collision between an agent and an edible entity
-                        if ((edibleTarget || entity.type === 5) && (edibleEntity || entity.type === 5)) {
-                            // If there was a collision between edible entities
-                            target.pos.vx = collisionObj.target.vx;
-                            target.pos.vy = collisionObj.target.vy;
-                            entity.pos.vx = collisionObj.entity.vx;
-                            entity.pos.vy = collisionObj.entity.vy;
-                        }
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-
-                        return collisionObj;
-                    } else {
-                        // Nada so return
-                        return;
-                    }
-                    // Is it an entity versus a wall?
-                } else if ((entity.width !== undefined && entity.height !== undefined) && target.radius !== undefined) {
-                    collisionObj = self.lineIntersect(target.oldPos, target.pos, entity.v1, entity.v2);
-                    if (collisionObj) {
-                        // Reset the position
-                        target.pos = target.oldPos.clone();
-                        // If the entity doesn't already exist then add it
-                        let idx = target.collisions.findIndex(Utility.getId, entity.id);
-                        if (idx === -1) {
-                            target.collisions.push(entity);
-                        }
-                        // If it's a consumable try and change the direction
-                        if (target.type === 2 || target.type === 1) {
-                            target.pos.vx *= -1;
-                            target.pos.vy *= -1;
-                            // If it's an Agent bounce it
-                        } else if (target.type === 3 || target.type === 4) {
-                            target.pos.vx = 0;
-                            target.pos.vy = 0;
-                        }
-
-                        return collisionObj;
-                    } else {
-                        // Nada so return
-                        return;
-                    }
-                }
-            }
-
-            /**
-             * Collision check
              * @param {Entity} entity
              */
-            //function checkIt(entity) {
-            //    if (entity === target) { return false; }
-            //    if (entity.radius !== undefined && target.radius !== undefined) {
-            //        // If both entities have a radius use the circle collision check
-            //        collisionObj = self.circleCircleCollide(entity, target);
-            //    } else {
-            //        // Is it an entity versus a wall?
-            //        collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
-            //    }
-            //    if (collisionObj) {
-            //        collisionObj.type = entity.type;
-            //        target.collisions.push(entity);
-            //    }
-            //    return collisionObj;
-            //}
+            function checkIt(entity) {
+                if (entity === target) { return false; }
+                if (entity.radius !== undefined && target.radius !== undefined) {
+                    // If both entities have a radius use the circle collision check
+                    collisionObj = self.circleCircleCollide(entity, target);
+                } else {
+                    // Is it an entity versus a wall?
+                    collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
+                }
+                if (collisionObj) {
+                    collisionObj.id = entity.id;
+                    collisionObj.type = entity.type;
+                    target.collisions.push(collisionObj);
+                }
+            }
 
             switch (this.cdType) {
                 case 'quad':
@@ -128,14 +64,14 @@
                     if (target.gridLocation.population) {
                         // Loop through all the entities in the current cell and check distances
                         target.gridLocation.population.some(function (ent) {
-                            return checkIt(ent);
+                            checkIt(ent);
                         });
                     }
                     break;
                 case 'brute':
                     let tmpAll = this.walls.concat(this.agents, this.entities, this.entityAgents);
                     tmpAll.some(function (ent) {
-                        return checkIt(ent);
+                        checkIt(ent);
                     });
                     break;
             }
@@ -359,35 +295,32 @@
             var minRes = false,
                 rad = radius || 0;
 
-            // Collide with walls
-            for (var i = 0, wl = this.walls.length; i < wl; i++) {
-                var wall = this.walls[i],
-                    wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
-                if (wResult) {
-                    wResult.target = wall;
-                    if (!minRes) {
-                        minRes = wResult;
-                    } else {
-                        // Check if it's closer
-                        if (wResult.vecX < minRes.vecX) {
-                            // If yes, replace it
-                            minRes = wResult;
+            // Collide with items
+            for (let [id, entity] of this.population.entries()) {
+                if (entity.type !== 0) {
+                    let iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
+                    if (iResult) {
+                        iResult.target = entity;
+                        if (!minRes) {
+                            minRes = iResult;
+                        } else {
+                            if (iResult.vecX < minRes.vecX) {
+                                minRes = iResult;
+                            }
                         }
                     }
-                }
-            }
-
-            // Collide with items
-            for (var e = 0, el = this.entities.length; e < el; e++) {
-                var entity = this.entities[e],
-                    iResult = this.circleLineCollide({v1: v1, v2: v2}, entity.pos, rad + entity.radius);
-                if (iResult) {
-                    iResult.target = entity;
-                    if (!minRes) {
-                        minRes = iResult;
-                    } else {
-                        if (iResult.vecX < minRes.vecX) {
-                            minRes = iResult;
+                } else {
+                    let wResult = this.lineIntersect(v1, v2, entity.v1, entity.v2);
+                    if (wResult) {
+                        wResult.target = entity;
+                        if (!minRes) {
+                            minRes = wResult;
+                        } else {
+                            // Check if it's closer
+                            if (wResult.vecX < minRes.vecX) {
+                                // If yes, replace it
+                                minRes = wResult;
+                            }
                         }
                     }
                 }
@@ -452,10 +385,9 @@
             this.tree.clear();
             this.nodes = [];
 
-            this.walls.forEach((wall) => this.nodes.push(wall));
-            this.entities.forEach((entity) => this.nodes.push(entity));
-            this.agents.forEach((agent) => this.nodes.push(agent));
-            this.entityAgents.forEach((entityAgent) => this.nodes.push(entityAgent));
+            for (let [id, entity] of this.population.entries()) {
+                this.nodes.push(entity);
+            }
 
             this.tree.insert(this.nodes);
 

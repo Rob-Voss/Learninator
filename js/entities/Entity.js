@@ -278,45 +278,22 @@
          */
         move(world) {
             this.oldPos = this.pos.clone();
+            this.pos.advance();
 
-            //this.pos.advance();
-            //let collObj = world.check(this);
-            //if (collObj) {
-            //    this.pos = this.oldPos;
-            //    if (collObj.type === 1 || collObj.type === 2) {
-            //        this.pos.vx = collObj.target.vx;
-            //        this.pos.vy = collObj.target.vy;
-            //    }
-            //}
+            if (world.check(this)) {
+                for (let i = 0; i < this.collisions.length; i++) {
+                    let collObj = this.collisions[i];
+                    if (collObj.type === 0) {
+                        // Wall
+                        this.pos = this.oldPos.clone();
+                        this.pos.vx *= -1;
+                        this.pos.vy *= -1;
+                    } else if (collObj.type === 1 || collObj.type === 2) {
+                        this.pos.vx = collObj.target.vx;
+                        this.pos.vy = collObj.target.vy;
+                    } else if (collObj.type === 3 || collObj.type === 4) {
 
-            this.pos.x += this.pos.vx;
-            this.pos.y += this.pos.vy;
-
-            let collObj = world.check(this);
-
-            if (collObj) {
-                console.log();
-            }
-            for (let w = 0, wl = world.walls.length; w < wl; w++) {
-                let wall = world.walls[w],
-                    result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
-                if (result) {
-                    this.collisions.unshift(wall);
-                }
-            }
-
-            for (let i = 0; i < this.collisions.length; i++) {
-                if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
-                    // Agent
-                    //console.log('Oh shit it\'s a ' + this.collisions[i].name);
-                } else if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                    // Edible
-                    //console.log('Watch it ' + this.collisions[i].name);
-                } else if (this.collisions[i].type === 0) {
-                    // Wall
-                    this.pos = this.oldPos.clone();
-                    this.pos.vx *= -1;
-                    this.pos.vy *= -1;
+                    }
                 }
             }
 

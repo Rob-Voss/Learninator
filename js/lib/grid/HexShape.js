@@ -26,7 +26,7 @@ var Hex = Hex || {},
         }
     }
 
-    class HexShape extends Hex {
+    class HexShape {
         /**
          *
          * @param {Layout} layout
@@ -36,7 +36,6 @@ var Hex = Hex || {},
          * @constructor
          */
         constructor(layout = false, size = 20, fill = false) {
-            super();
             this.layout = layout;
             this.size = size;
             this.fill = fill;

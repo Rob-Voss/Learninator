@@ -136,51 +136,49 @@
                     }) !== undefined;
             };
 
-            for (let i = 0; i < grid.xCount; i++) {
-                for (let j = 0; j < grid.yCount; j++) {
-                    v = grid.cells[i][j];
-                    topV = grid.getCellAt(v.x, v.y - 1);
-                    leftV = grid.getCellAt(v.x - 1, v.y);
-                    rightV = grid.getCellAt(v.x + 1, v.y);
-                    bottomV = grid.getCellAt(v.x, v.y + 1);
+            for (let i = 0; i < grid.cells.length; i++) {
+                v = grid.cells[i];
+                topV = grid.getCellAt(v.x, v.y - 1);
+                leftV = grid.getCellAt(v.x - 1, v.y);
+                rightV = grid.getCellAt(v.x + 1, v.y);
+                bottomV = grid.getCellAt(v.x, v.y + 1);
 
-                    if (!edgeAlreadyDrawn(v, topV) && grid.areConnected(v, topV)) {
-                        x1 = v.x * this.cellWidth;
-                        y1 = v.y * this.cellHeight;
-                        x2 = x1 + this.cellWidth;
-                        y2 = y1;
+                if (!edgeAlreadyDrawn(v, topV) && grid.areConnected(v, topV)) {
+                    x1 = v.x * this.cellWidth;
+                    y1 = v.y * this.cellHeight;
+                    x2 = x1 + this.cellWidth;
+                    y2 = y1;
 
-                        this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                        drawnEdges.push([v, topV]);
-                    }
+                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
+                    drawnEdges.push([v, topV]);
+                }
 
-                    if (!edgeAlreadyDrawn(v, leftV) && grid.areConnected(v, leftV)) {
-                        x2 = x1;
-                        y2 = y1 + this.cellHeight;
+                if (!edgeAlreadyDrawn(v, leftV) && grid.areConnected(v, leftV)) {
+                    x2 = x1;
+                    y2 = y1 + this.cellHeight;
 
-                        this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                        drawnEdges.push([v, leftV]);
-                    }
+                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
+                    drawnEdges.push([v, leftV]);
+                }
 
-                    if (!edgeAlreadyDrawn(v, rightV) && grid.areConnected(v, rightV)) {
-                        x1 = (v.x * this.cellWidth) + this.cellWidth;
-                        y1 = v.y * this.cellHeight;
-                        x2 = x1;
-                        y2 = y1 + this.cellHeight;
+                if (!edgeAlreadyDrawn(v, rightV) && grid.areConnected(v, rightV)) {
+                    x1 = (v.x * this.cellWidth) + this.cellWidth;
+                    y1 = v.y * this.cellHeight;
+                    x2 = x1;
+                    y2 = y1 + this.cellHeight;
 
-                        this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                        drawnEdges.push([v, rightV]);
-                    }
+                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
+                    drawnEdges.push([v, rightV]);
+                }
 
-                    if (!edgeAlreadyDrawn(v, bottomV) && grid.areConnected(v, bottomV)) {
-                        x1 = v.x * this.cellWidth;
-                        y1 = (v.y * this.cellHeight) + this.cellHeight;
-                        x2 = x1 + this.cellWidth;
-                        y2 = y1;
+                if (!edgeAlreadyDrawn(v, bottomV) && grid.areConnected(v, bottomV)) {
+                    x1 = v.x * this.cellWidth;
+                    y1 = (v.y * this.cellHeight) + this.cellHeight;
+                    x2 = x1 + this.cellWidth;
+                    y2 = y1;
 
-                        this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                        drawnEdges.push([v, bottomV]);
-                    }
+                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
+                    drawnEdges.push([v, bottomV]);
                 }
             }
 

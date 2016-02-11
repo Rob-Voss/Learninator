@@ -5,37 +5,52 @@
 (function (global) {
     "use strict";
 
-    class CellShape extends Cell {
+    class CellShape {
         /**
-         * Create a cell
-         * @name Cell
+         * Create a CellShape
+         * @name CellShape
          * @constructor
          *
-         * @param {number} x
-         * @param {number} y
-         * @param {number} width
-         * @param {number} height
-         * @returns {Cell}
+         * @param {Array} corners
+         * @returns {CellShape}
          */
-        constructor(x = 0, y = 0, width = 10, height = 10) {
-            super(x, y);
-            let self = this;
+        constructor(corners) {
+            this.color = 0xFFFFFF;
+            this.corners = corners;
+            this.population = [];
+
+            this.walls = [];
+            for (let c = 0; c < this.corners.length; c++) {
+                let x1 = this.corners[c].x,
+                    y1 = this.corners[c].y,
+                    x2, y2;
+                if (c !== this.corners.length - 1) {
+                    x2 = this.corners[c + 1].x;
+                    y2 = this.corners[c + 1].y;
+                } else {
+                    x2 = this.corners[0].x;
+                    y2 = this.corners[0].y;
+                }
+                let v1 = new Vec(x1, y1),
+                    v2 = new Vec(x2, y2);
+                this.walls.push(new Wall(v1, v2));
+            }
 
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
             this.shape
-                .on('mousedown', function (event) {
+                .on('mousedown', (event) => {
                     this.data = event.data;
-                    self.color = 0x00FF00;
+                    this.color = 0x00FF00;
                 })
-                .on('mouseup', function (event) {
-                    self.color = 0xFFFFFF;
+                .on('mouseup', (event) => {
+                    this.color = 0xFFFFFF;
                 })
-                .on('mouseover', function (event) {
-                    self.color = 0xFF0000;
+                .on('mouseover', (event) => {
+                    this.color = 0xFF0000;
                 })
-                .on('mouseout', function (event) {
-                    self.color = 0xFFFFFF;
+                .on('mouseout', (event) => {
+                    this.color = 0xFFFFFF;
                 });
             //this.shape.entity = self;
             this.shape.alpha = 0.09;

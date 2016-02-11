@@ -23,109 +23,6 @@
         }
     }
 
-    class HexShape extends Hex {
-        /**
-         *
-         * @param {Layout} layout
-         * @param {number} size
-         * @param {boolean} fill
-         * @returns {HexShape}
-         * @constructor
-         */
-        constructor(layout = false, size = 20, fill = false) {
-            super();
-            this.layout = layout;
-            this.size = size;
-            this.fill = fill;
-            this.color = colorForHex(this.q, this.r, this.s);
-            this.corners = [];
-            this.population = [];
-            this.walls = [];
-
-            if (this.layout) {
-                this.pos = this.layout.hexToPixel(this);
-                this.corners = this.layout.polygonCorners(this);
-                for (let c = 0; c < this.corners.length; c++) {
-                    let x1 = this.corners[c].x,
-                        y1 = this.corners[c].y,
-                        x2, y2;
-                    if (c !== this.corners.length - 1) {
-                        x2 = this.corners[c + 1].x;
-                        y2 = this.corners[c + 1].y;
-                    } else {
-                        x2 = this.corners[0].x;
-                        y2 = this.corners[0].y;
-                    }
-                    let v1 = new Vec(x1, y1),
-                        v2 = new Vec(x2, y2);
-                    this.walls.push(new Wall(v1, v2));
-                }
-            } else {
-                this.pointy = true;
-                for (let i = 0; i < 6; i++) {
-                    var angleAdd = (this.pointy) ? 30 : 0,
-                        angleDeg = 60 * i + angleAdd,
-                        angleRad = Math.PI / 180 * angleDeg;
-                    this.corners.push(new Point(this.pos.x + this.size * Math.cos(angleRad),
-                        this.pos.y + this.size * Math.sin(angleRad)));
-                }
-            }
-
-            this.shape = new PIXI.Graphics();
-            this.shape.interactive = true;
-            let self = this;
-            this.shape
-                .on('mousedown', function (event) {
-                    this.data = event.data;
-                    self.color = 0x00FF00;
-                })
-                .on('mouseup', function (event) {
-                    self.color = colorForHex(self.q, self.r, self.s);
-                })
-                .on('mouseover', function (event) {
-                    self.color = 0xFF0000;
-                })
-                .on('mouseout', function (event) {
-                    self.color = colorForHex(self.q, self.r, self.s);
-                });
-
-
-            return this;
-        }
-
-        draw() {
-            this.shape.clear();
-            this.shape.lineStyle(1, 0x000000);
-            if (this.fill) {
-                this.shape.beginFill(this.color);
-            }
-            for (let i = 0; i <= this.corners.length; i++) {
-                if (i == 0) {
-                    this.shape.moveTo(this.corners[i].x, this.corners[i].y);
-                } else if (i == 6) {
-                    this.shape.lineTo(this.corners[0].x, this.corners[0].y);
-                } else {
-                    this.shape.lineTo(this.corners[i].x, this.corners[i].y);
-                }
-            }
-            if (this.fill) {
-                this.shape.endFill();
-            }
-
-            if (this.cheatOverlay !== undefined) {
-                this.shape.removeChild(this.cheatOverlay);
-            }
-            let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
-                posText = new PIXI.Text(this.toString(), txtOpts);
-            posText.position.set(this.pos.x - this.size / 2, this.pos.y - 7);
-
-            this.cheatOverlay = new PIXI.Container();
-            this.cheatOverlay.addChild(posText);
-
-            this.shape.addChild(this.cheatOverlay);
-        }
-    }
-
     class Hex {
         /**
          * A Hex
@@ -302,6 +199,109 @@
         hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
     Hex.hexDirections = hexDirections;
     Hex.hexDiagonals = hexDiagonals;
+
+    class HexShape extends Hex {
+        /**
+         *
+         * @param {Layout} layout
+         * @param {number} size
+         * @param {boolean} fill
+         * @returns {HexShape}
+         * @constructor
+         */
+        constructor(layout = false, size = 20, fill = false) {
+            super();
+            this.layout = layout;
+            this.size = size;
+            this.fill = fill;
+            this.color = colorForHex(this.q, this.r, this.s);
+            this.corners = [];
+            this.population = [];
+            this.walls = [];
+
+            if (this.layout) {
+                this.pos = this.layout.hexToPixel(this);
+                this.corners = this.layout.polygonCorners(this);
+                for (let c = 0; c < this.corners.length; c++) {
+                    let x1 = this.corners[c].x,
+                        y1 = this.corners[c].y,
+                        x2, y2;
+                    if (c !== this.corners.length - 1) {
+                        x2 = this.corners[c + 1].x;
+                        y2 = this.corners[c + 1].y;
+                    } else {
+                        x2 = this.corners[0].x;
+                        y2 = this.corners[0].y;
+                    }
+                    let v1 = new Vec(x1, y1),
+                        v2 = new Vec(x2, y2);
+                    this.walls.push(new Wall(v1, v2));
+                }
+            } else {
+                this.pointy = true;
+                for (let i = 0; i < 6; i++) {
+                    var angleAdd = (this.pointy) ? 30 : 0,
+                        angleDeg = 60 * i + angleAdd,
+                        angleRad = Math.PI / 180 * angleDeg;
+                    this.corners.push(new Point(this.pos.x + this.size * Math.cos(angleRad),
+                        this.pos.y + this.size * Math.sin(angleRad)));
+                }
+            }
+
+            this.shape = new PIXI.Graphics();
+            this.shape.interactive = true;
+            let self = this;
+            this.shape
+                .on('mousedown', function (event) {
+                    this.data = event.data;
+                    self.color = 0x00FF00;
+                })
+                .on('mouseup', function (event) {
+                    self.color = colorForHex(self.q, self.r, self.s);
+                })
+                .on('mouseover', function (event) {
+                    self.color = 0xFF0000;
+                })
+                .on('mouseout', function (event) {
+                    self.color = colorForHex(self.q, self.r, self.s);
+                });
+
+
+            return this;
+        }
+
+        draw() {
+            this.shape.clear();
+            this.shape.lineStyle(1, 0x000000);
+            if (this.fill) {
+                this.shape.beginFill(this.color);
+            }
+            for (let i = 0; i <= this.corners.length; i++) {
+                if (i == 0) {
+                    this.shape.moveTo(this.corners[i].x, this.corners[i].y);
+                } else if (i == 6) {
+                    this.shape.lineTo(this.corners[0].x, this.corners[0].y);
+                } else {
+                    this.shape.lineTo(this.corners[i].x, this.corners[i].y);
+                }
+            }
+            if (this.fill) {
+                this.shape.endFill();
+            }
+
+            if (this.cheatOverlay !== undefined) {
+                this.shape.removeChild(this.cheatOverlay);
+            }
+            let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
+                posText = new PIXI.Text(this.toString(), txtOpts);
+            posText.position.set(this.pos.x - this.size / 2, this.pos.y - 7);
+
+            this.cheatOverlay = new PIXI.Container();
+            this.cheatOverlay.addChild(posText);
+
+            this.shape.addChild(this.cheatOverlay);
+        }
+    }
 
     global.Hex = Hex;
     global.HexShape = HexShape;

@@ -4,7 +4,7 @@
 (function (global) {
     "use strict";
 
-    class Cube extends Hex {
+    class Cube {
         /**
          * A Cube
          * @name Cube
@@ -17,8 +17,6 @@
          * @returns {Cube}
          */
         constructor(x, y, z) {
-            super(x, y, -x - y);
-
             this.x = x;
             this.y = y;
             this.z = z;

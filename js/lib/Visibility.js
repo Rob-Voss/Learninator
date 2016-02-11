@@ -1,89 +1,85 @@
 (function (global) {
     "use strict";
 
-    var Std = function () {
-    };
-    Std.name = true;
-    Std.string = function (s) {
-        return js_Boot.string_rec(s, "");
-    };
-
-    var Block = function () {
-    };
-    Block.name = true;
-    Block.prototype = {
-        class: Block
-    };
-
-    var Point = function (x, v) {
-        this.y = 0.0;
-        this.x = 0.0;
-        this.x = x;
-        this.y = v;
-    };
-    Point.name = true;
-    Point.prototype = {
-        class: Point
-    };
-
-    var EndPoint = function (x, y) {
-        this.visualize = false;
-        this.angle = 0.0;
-        this.segment = null;
-        this.begin = false;
-        Point.call(this, x, y);
-    };
-    EndPoint.name = true;
-    EndPoint.super = Point;
-    EndPoint.prototype = Point.prototype;
-
-    var Segment = function () {
-    };
-    Segment.name = true;
-    Segment.prototype = {
-        class: Segment
-    };
-
-    var Visibility = function () {
-        this.segments = new de_polygonal_ds_DLL();
-        this.endpoints = new de_polygonal_ds_DLL();
-        this.open = new de_polygonal_ds_DLL();
-        this.center = new Point(0.0, 0.0);
-        this.output = new Array();
-        this.demo_intersectionsDetected = [];
-        this.segments.toArray();
-    };
-    Visibility.name = true;
-    Visibility._endpoint_compare = function (a, b) {
-        if (a.angle > b.angle) {
-            return 1;
+    class Std {
+        constructor() {
+            this.name = true;
         }
-        if (a.angle < b.angle) {
-            return -1;
+
+        string(s) {
+            return js_Boot.string_rec(s, "");
         }
-        if (!a.begin && b.begin) {
-            return 1;
+    }
+
+    class Block {
+        constructor() {
+            this.name = true;
         }
-        if (a.begin && !b.begin) {
-            return -1;
+    }
+
+    class EndPoint extends Point {
+        constructor(x, y) {
+            super(x, y);
+            this.visualize = false;
+            this.angle = 0.0;
+            this.segment = null;
+            this.begin = false;
+            this.name = true;
+            this.super = Point;
         }
-        return 0;
-    };
-    Visibility.leftOf = function (s, p) {
-        var cross = (s.p2.x - s.p1.x) * (p.y - s.p1.y) - (s.p2.y - s.p1.y) * (p.x - s.p1.x);
-        return cross < 0;
-    };
-    Visibility.interpolate = function (p, q, f) {
-        return new Point(p.x * (1 - f) + q.x * f, p.y * (1 - f) + q.y * f);
-    };
-    Visibility.prototype = {
-        loadEdgeOfMap: function (size, margin) {
+    }
+
+    class Segment {
+        constructor() {
+            this.name = true;
+        }
+    }
+
+    class Visibility {
+        constructor() {
+            this.segments = new de_polygonal_ds_DLL();
+            this.endpoints = new de_polygonal_ds_DLL();
+            this.open = new de_polygonal_ds_DLL();
+            this.center = new Point(0.0, 0.0);
+            this.output = new Array();
+            this.demo_intersectionsDetected = [];
+            this.segments.toArray();
+            this.name = true;
+        }
+
+        _endpoint_compare(a, b) {
+            if (a.angle > b.angle) {
+                return 1;
+            }
+            if (a.angle < b.angle) {
+                return -1;
+            }
+            if (!a.begin && b.begin) {
+                return 1;
+            }
+            if (a.begin && !b.begin) {
+                return -1;
+            }
+            return 0;
+        }
+
+        leftOf(s, p) {
+            var cross = (s.p2.x - s.p1.x) * (p.y - s.p1.y) - (s.p2.y - s.p1.y) * (p.x - s.p1.x);
+            return cross < 0;
+        }
+
+        interpolate(p, q, f) {
+            return new Point(p.x * (1 - f) + q.x * f, p.y * (1 - f) + q.y * f);
+        }
+
+        loadEdgeOfMap(size, margin) {
             this.addSegment(margin, margin, margin, size - margin);
             this.addSegment(margin, size - margin, size - margin, size - margin);
             this.addSegment(size - margin, size - margin, size - margin, margin);
             this.addSegment(size - margin, margin, margin, margin);
-        },
-        loadMap: function (size, margin, blocks, walls) {
+        }
+
+        loadMap(size, margin, blocks, walls) {
             this.segments.clear();
             this.endpoints.clear();
             this.loadEdgeOfMap(size, margin);
@@ -105,8 +101,9 @@
                 ++_g1;
                 this.addSegment(wall.p1.x, wall.p1.y, wall.p2.x, wall.p2.y);
             }
-        },
-        addSegment: function (x1, y1, x2, y2) {
+        }
+
+        addSegment(x1, y1, x2, y2) {
             var segment = null;
             var p1 = new EndPoint(0.0, 0.0);
             p1.segment = segment;
@@ -127,8 +124,9 @@
             this.segments.append(segment);
             this.endpoints.append(p1);
             this.endpoints.append(p2);
-        },
-        setLightLocation: function (x, y) {
+        }
+
+        setLightLocation(x, y) {
             this.center.x = x;
             this.center.y = y;
             var $it0 = this.segments.iterator();
@@ -149,8 +147,9 @@
                 segment.p1.begin = dAngle > 0.0;
                 segment.p2.begin = !segment.p1.begin;
             }
-        },
-        _segment_in_front_of: function (a, b, relativeTo) {
+        }
+
+        _segment_in_front_of(a, b, relativeTo) {
             var A1 = Visibility.leftOf(a, Visibility.interpolate(b.p1, b.p2, 0.01));
             var A2 = Visibility.leftOf(a, Visibility.interpolate(b.p2, b.p1, 0.01));
             var A3 = Visibility.leftOf(a, relativeTo);
@@ -171,8 +170,9 @@
             }
             this.demo_intersectionsDetected.push([a.p1, a.p2, b.p1, b.p2]);
             return false;
-        },
-        sweep: function (maxAngle) {
+        }
+
+        sweep(maxAngle) {
             if (maxAngle === null) {
                 maxAngle = 999.0;
             }
@@ -223,12 +223,14 @@
                     }
                 }
             }
-        },
-        lineIntersection: function (p1, p2, p3, p4) {
+        }
+
+        lineIntersection(p1, p2, p3, p4) {
             var s = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
             return new Point(p1.x + s * (p2.x - p1.x), p1.y + s * (p2.y - p1.y));
-        },
-        addTriangle: function (angle1, angle2, segment) {
+        }
+
+        addTriangle(angle1, angle2, segment) {
             var p1 = this.center;
             var p2 = new Point(this.center.x + Math.cos(angle1), this.center.y + Math.sin(angle1));
             var p3 = new Point(0.0, 0.0);
@@ -250,60 +252,71 @@
             var pEnd = this.lineIntersection(p3, p4, p1, p2);
             this.output.push(pBegin);
             this.output.push(pEnd);
-        },
-        class: Visibility
-    };
-    var de_polygonal_ds_ArrayUtil = function () {
-    };
-    de_polygonal_ds_ArrayUtil.name = true;
-    de_polygonal_ds_ArrayUtil.alloc = function (x) {
-        var a;
-        a = new Array(x);
-        return a;
-    };
-    var de_polygonal_ds_Hashable = function () {
-    };
-    de_polygonal_ds_Hashable.name = true;
-    var de_polygonal_ds_Collection = function () {
-    };
-    de_polygonal_ds_Collection.name = true;
-    de_polygonal_ds_Collection.interfaces = [de_polygonal_ds_Hashable];
-    var de_polygonal_ds_Comparable = function () {
-    };
-    de_polygonal_ds_Comparable.name = true;
-    de_polygonal_ds_Comparable.prototype = {
-        class: de_polygonal_ds_Comparable
-    };
-    var de_polygonal_ds_Itr = function () {
-    };
-    de_polygonal_ds_Itr.name = true;
-    de_polygonal_ds_Itr.prototype = {
-        class: de_polygonal_ds_Itr
-    };
-    var de_polygonal_ds_DLL = function (reservedSize, maxSize) {
-        if (maxSize === null) {
-            maxSize = -1;
         }
-        if (reservedSize === null) {
-            reservedSize = 0;
+    }
+
+    class de_polygonal_ds_ArrayUtil {
+        constructor() {
+            this.name = true;
         }
-        this.maxSize = -1;
-        this._reservedSize = reservedSize;
-        this._size = 0;
-        this._poolSize = 0;
-        this._circular = false;
-        this._iterator = null;
-        if (reservedSize > 0) {
-            this._headPool = this._tailPool = new de_polygonal_ds_DLLNode(null, this);
+
+        alloc(x) {
+            var a;
+            a = new Array(x);
+            return a;
         }
-        this.head = this.tail = null;
-        this.key = de_polygonal_ds_HashKey._counter++;
-        this.reuseIterator = false;
-    };
-    de_polygonal_ds_DLL.name = true;
-    de_polygonal_ds_DLL.interfaces = [de_polygonal_ds_Collection];
-    de_polygonal_ds_DLL.prototype = {
-        append: function (x) {
+    }
+
+    class de_polygonal_ds_Hashable {
+        constructor() {
+            this.name = true;
+        }
+    }
+
+    class de_polygonal_ds_Collection {
+        constructor() {
+            this.name = true;
+            this.interfaces = [de_polygonal_ds_Hashable];
+        }
+    }
+
+    class de_polygonal_ds_Comparable {
+        constructor() {
+            this.name = true;
+        }
+    }
+
+    class de_polygonal_ds_Itr {
+        constructor() {
+            this.name = true;
+        }
+    }
+
+    class de_polygonal_ds_DLL {
+        constructor(reservedSize, maxSize) {
+            if (maxSize === null) {
+                maxSize = -1;
+            }
+            if (reservedSize === null) {
+                reservedSize = 0;
+            }
+            this.maxSize = -1;
+            this._reservedSize = reservedSize;
+            this._size = 0;
+            this._poolSize = 0;
+            this._circular = false;
+            this._iterator = null;
+            if (reservedSize > 0) {
+                this._headPool = this._tailPool = new de_polygonal_ds_DLLNode(null, this);
+            }
+            this.head = this.tail = null;
+            this.key = de_polygonal_ds_HashKey._counter++;
+            this.reuseIterator = false;
+            de_polygonal_ds_DLL.name = true;
+            de_polygonal_ds_DLL.interfaces = [de_polygonal_ds_Collection];
+        }
+
+        append(x) {
             var node = this._getNode(x);
             if (this.tail !== null) {
                 this.tail.next = node;
@@ -318,8 +331,9 @@
             }
             this._size++;
             return node;
-        },
-        insertBefore: function (node, x) {
+        }
+
+        insertBefore(node, x) {
             var t = this._getNode(x);
             node._insertBefore(t);
             if (node === this.head) {
@@ -330,8 +344,9 @@
             }
             this._size++;
             return t;
-        },
-        unlink: function (node) {
+        }
+
+        unlink(node) {
             var hook = node.next;
             if (node === this.head) {
                 this.head = this.head.next;
@@ -358,8 +373,9 @@
             this._putNode(node);
             this._size--;
             return hook;
-        },
-        sort: function (compare, useInsertionSort) {
+        }
+
+        sort(compare, useInsertionSort) {
             if (useInsertionSort === null) {
                 useInsertionSort = false;
             }
@@ -386,8 +402,9 @@
                     this.head.prev = this.tail;
                 }
             }
-        },
-        remove: function (x) {
+        }
+
+        remove(x) {
             var s = this._size;
             if (s === 0) {
                 return false;
@@ -401,8 +418,9 @@
                 }
             }
             return this._size < s;
-        },
-        clear: function (purge) {
+        }
+
+        clear(purge) {
             if (purge === null) {
                 purge = false;
             }
@@ -421,8 +439,9 @@
             }
             this.head = this.tail = null;
             this._size = 0;
-        },
-        iterator: function () {
+        }
+
+        iterator() {
             if (this.reuseIterator) {
                 if (this._iterator === null) {
                     if (this._circular) {
@@ -439,8 +458,9 @@
             } else {
                 return new de_polygonal_ds_DLLIterator(this);
             }
-        },
-        toArray: function () {
+        }
+
+        toArray() {
             var a = de_polygonal_ds_ArrayUtil.alloc(this._size);
             var node = this.head;
             var _g1 = 0;
@@ -451,8 +471,9 @@
                 node = node.next;
             }
             return a;
-        },
-        _mergeSortComparable: function (node) {
+        }
+
+        _mergeSortComparable(node) {
             var h = node;
             var p;
             var q;
@@ -518,8 +539,9 @@
             h.prev = null;
             this.tail = tail;
             return h;
-        },
-        _mergeSort: function (node, cmp) {
+        }
+
+        _mergeSort(node, cmp) {
             var h = node;
             var p;
             var q;
@@ -585,8 +607,9 @@
             h.prev = null;
             this.tail = tail;
             return h;
-        },
-        _insertionSortComparable: function (node) {
+        }
+
+        _insertionSortComparable(node) {
             var h = node;
             var n = h.next;
             while (n !== null) {
@@ -624,8 +647,9 @@
                 n = m;
             }
             return h;
-        },
-        _insertionSort: function (node, cmp) {
+        }
+
+        _insertionSort(node, cmp) {
             var h = node;
             var n = h.next;
             while (n !== null) {
@@ -663,8 +687,9 @@
                 n = m;
             }
             return h;
-        },
-        _getNode: function (x) {
+        }
+
+        _getNode(x) {
             if (this._reservedSize === 0 || this._poolSize === 0) {
                 return new de_polygonal_ds_DLLNode(x, this);
             } else {
@@ -675,8 +700,9 @@
                 n.val = x;
                 return n;
             }
-        },
-        _putNode: function (x) {
+        }
+
+        _putNode(x) {
             var val = x.val;
             if (this._reservedSize > 0 && this._poolSize < this._reservedSize) {
                 this._tailPool = this._tailPool.next = x;
@@ -686,76 +712,82 @@
                 x._list = null;
             }
             return val;
-        },
-        class: de_polygonal_ds_DLL
-    };
-    var de_polygonal_ds_DLLIterator = function (f) {
-        this._f = f;
-        {
-            this._walker = this._f.head;
-            this._hook = null;
-            this;
         }
-    };
-    de_polygonal_ds_DLLIterator.name = true;
-    de_polygonal_ds_DLLIterator.interfaces = [de_polygonal_ds_Itr];
-    de_polygonal_ds_DLLIterator.prototype = {
-        reset: function () {
+    }
+
+    class de_polygonal_ds_DLLIterator {
+        constructor(f) {
+            this._f = f;
+            {
+                this._walker = this._f.head;
+                this._hook = null;
+                this;
+            }
+            this.name = true;
+            this.interfaces = [de_polygonal_ds_Itr];
+        }
+
+        reset() {
             this._walker = this._f.head;
             this._hook = null;
             return this;
-        },
-        hasNext: function () {
+        }
+
+        hasNext() {
             return this._walker !== null;
-        },
-        next: function () {
+        }
+
+        next() {
             var x = this._walker.val;
             this._hook = this._walker;
             this._walker = this._walker.next;
             return x;
-        },
-        class: de_polygonal_ds_DLLIterator
-    };
-
-    var de_polygonal_ds_CircularDLLIterator = function (f) {
-        this._f = f;
-        {
-            this._walker = this._f.head;
-            this._s = this._f._size;
-            this._i = 0;
-            this._hook = null;
-            this;
         }
-    };
-    de_polygonal_ds_CircularDLLIterator.name = true;
-    de_polygonal_ds_CircularDLLIterator.interfaces = [de_polygonal_ds_Itr];
-    de_polygonal_ds_CircularDLLIterator.prototype = {
-        reset: function () {
+    }
+
+    class de_polygonal_ds_CircularDLLIterator {
+        constructor(f) {
+            this._f = f;
+            {
+                this._walker = this._f.head;
+                this._s = this._f._size;
+                this._i = 0;
+                this._hook = null;
+                this;
+            }
+            this.name = true;
+            this.interfaces = [de_polygonal_ds_Itr];
+        }
+
+        reset() {
             this._walker = this._f.head;
             this._s = this._f._size;
             this._i = 0;
             this._hook = null;
             return this;
-        },
-        hasNext: function () {
+        }
+
+        hasNext() {
             return this._i < this._s;
-        },
-        next: function () {
+        }
+
+        next() {
             var x = this._walker.val;
             this._hook = this._walker;
             this._walker = this._walker.next;
             this._i++;
             return x;
-        },
-        class: de_polygonal_ds_CircularDLLIterator
-    };
-    var de_polygonal_ds_DLLNode = function (x, list) {
-        this.val = x;
-        this._list = list;
-    };
-    de_polygonal_ds_DLLNode.name = true;
-    de_polygonal_ds_DLLNode.prototype = {
-        _unlink: function () {
+        }
+    }
+
+    class de_polygonal_ds_DLLNode {
+        constructor(x, list) {
+            this.val = x;
+            this._list = list;
+            this.name = true;
+        }
+
+        _unlink() {
             var t = this.next;
             if (this.prev != null) {
                 this.prev.next = this.next;
@@ -765,186 +797,199 @@
             }
             this.next = this.prev = null;
             return t;
-        },
-        _insertAfter: function (node) {
+        }
+
+        _insertAfter(node) {
             node.next = this.next;
             node.prev = this;
             if (this.next != null) {
                 this.next.prev = node;
             }
             this.next = node;
-        },
-        _insertBefore: function (node) {
+        }
+
+        _insertBefore(node) {
             node.next = this;
             node.prev = this.prev;
             if (this.prev != null) {
                 this.prev.next = node;
             }
             this.prev = node;
-        },
-        class: de_polygonal_ds_DLLNode
-    };
-    var de_polygonal_ds_HashKey = function () {
-    };
-    de_polygonal_ds_HashKey.name = true;
-    var js_Boot = function () {
-    };
-    js_Boot.name = true;
-    js_Boot.getClass = function (o) {
-        if ((o instanceof Array) && o.enum === null) {
-            return Array;
-        } else {
-            return o.class;
         }
-    };
-    js_Boot.string_rec = function (o, s) {
-        if (o == null) {
-            return "null";
+    }
+
+    class de_polygonal_ds_HashKey {
+        constructor() {
+            this.name = true;
         }
-        if (s.length >= 5) {
-            return "<...>";
+    }
+
+    class js_Boot {
+        constructor() {
+            this.name = true;
         }
-        var t = typeof(o);
-        if (t === "function" && (o.name || o.ename)) {
-            t = "object";
-        }
-        switch (t) {
-            case "object":
-                if (o instanceof Array) {
-                    if (o.enum) {
-                        if (o.length === 2) {
-                            return o[0];
-                        }
-                        var str = o[0] + "(";
-                        s += "\t";
-                        var _g1 = 2;
-                        var _g = o.length;
-                        while (_g1 < _g) {
-                            var i = _g1++;
-                            if (i !== 2) {
-                                str += "," + js_Boot.string_rec(o[i], s);
-                            } else {
-                                str += js_Boot.string_rec(o[i], s);
-                            }
-                        }
-                        return str + ")";
-                    }
-                    var l = o.length;
-                    var i1;
-                    var str1 = "[";
-                    s += "\t";
-                    var _g2 = 0;
-                    while (_g2 < l) {
-                        var i2 = _g2++;
-                        str1 += (i2 > 0 ? "," : "") + js_Boot.string_rec(o[i2], s);
-                    }
-                    str1 += "]";
-                    return str1;
-                }
-                var tostr;
-                try {
-                    tostr = o.toString;
-                } catch (e) {
-                    return "???";
-                }
-                if (tostr !== null && tostr !== Object.toString) {
-                    var s2 = o.toString();
-                    if (s2 != "[object Object]") {
-                        return s2;
-                    }
-                }
-                var k = null;
-                var str2 = "{\n";
-                s += "\t";
-                var hasp = o.hasOwnProperty !== null;
-                for (var k in o) {
-                    if (hasp && !o.hasOwnProperty(k)) {
-                        continue;
-                    }
-                    if (k === "prototype" || k === "class" || k === "super" || k === "interfaces" || k === "properties") {
-                        continue;
-                    }
-                    if (str2.length != 2) str2 += ", \n";
-                    str2 += s + k + " : " + js_Boot.string_rec(o[k], s);
-                }
-                s = s.substring(1);
-                str2 += "\n" + s + "}";
-                return str2;
-            case "function":
-                return "<function>";
-            case "string":
-                return o;
-            default:
-                return String(o);
-        }
-    };
-    js_Boot.interfLoop = function (cc, cl) {
-        if (cc === null) {
-            return false;
-        }
-        if (cc === cl) {
-            return true;
-        }
-        var intf = cc.interfaces;
-        if (intf !== null) {
-            var _g1 = 0;
-            var _g = intf.length;
-            while (_g1 < _g) {
-                var i = _g1++;
-                var i1 = intf[i];
-                if (i1 === cl || js_Boot.interfLoop(i1, cl)) {
-                    return true;
-                }
+
+        getClass(o) {
+            if ((o instanceof Array) && o.enum === null) {
+                return Array;
+            } else {
+                return o.class;
             }
         }
-        return js_Boot.interfLoop(cc.super, cl);
-    };
-    js_Boot.instanceof = function (o, cl) {
-        if (cl === null) {
-            return false;
-        }
-        switch (cl) {
-            case Int:
-                return (o | 0) === o;
-            case Float:
-                return typeof(o) === "number";
-            case Bool:
-                return typeof(o) === "boolean";
-            case String:
-                return typeof(o) === "string";
-            case Array:
-                return (o instanceof Array) && o.enum === null;
-            case Dynamic:
-                return true;
-            default:
-                if (o !== null) {
-                    if (typeof(cl) === "function") {
-                        if (o instanceof cl) {
-                            return true;
+
+        string_rec(o, s) {
+            if (o == null) {
+                return "null";
+            }
+            if (s.length >= 5) {
+                return "<...>";
+            }
+            var t = typeof(o);
+            if (t === "function" && (o.name || o.ename)) {
+                t = "object";
+            }
+            switch (t) {
+                case "object":
+                    if (o instanceof Array) {
+                        if (o.enum) {
+                            if (o.length === 2) {
+                                return o[0];
+                            }
+                            var str = o[0] + "(";
+                            s += "\t";
+                            var _g1 = 2;
+                            var _g = o.length;
+                            while (_g1 < _g) {
+                                var i = _g1++;
+                                if (i !== 2) {
+                                    str += "," + js_Boot.string_rec(o[i], s);
+                                } else {
+                                    str += js_Boot.string_rec(o[i], s);
+                                }
+                            }
+                            return str + ")";
                         }
-                        if (js_Boot.interfLoop(js_Boot.getClass(o), cl)) {
-                            return true;
+                        var l = o.length;
+                        var i1;
+                        var str1 = "[";
+                        s += "\t";
+                        var _g2 = 0;
+                        while (_g2 < l) {
+                            var i2 = _g2++;
+                            str1 += (i2 > 0 ? "," : "") + js_Boot.string_rec(o[i2], s);
+                        }
+                        str1 += "]";
+                        return str1;
+                    }
+                    var tostr;
+                    try {
+                        tostr = o.toString;
+                    } catch (e) {
+                        return "???";
+                    }
+                    if (tostr !== null && tostr !== Object.toString) {
+                        var s2 = o.toString();
+                        if (s2 != "[object Object]") {
+                            return s2;
                         }
                     }
-                } else {
-                    return false;
-                }
-                if (cl === Class && o.name !== null) {
-                    return true;
-                }
-                if (cl === Enum && o.ename !== null) {
-                    return true;
-                }
-                return o.enum === cl;
+                    var k = null;
+                    var str2 = "{\n";
+                    s += "\t";
+                    var hasp = o.hasOwnProperty !== null;
+                    for (var k in o) {
+                        if (hasp && !o.hasOwnProperty(k)) {
+                            continue;
+                        }
+                        if (k === "prototype" || k === "class" || k === "super" || k === "interfaces" || k === "properties") {
+                            continue;
+                        }
+                        if (str2.length != 2) str2 += ", \n";
+                        str2 += s + k + " : " + js_Boot.string_rec(o[k], s);
+                    }
+                    s = s.substring(1);
+                    str2 += "\n" + s + "}";
+                    return str2;
+                case "function":
+                    return "<function>";
+                case "string":
+                    return o;
+                default:
+                    return String(o);
+            }
         }
-    };
-    js_Boot.cast = function (o, t) {
-        if (js_Boot.instanceof(o, t)) {
-            return o;
-        } else {
-            throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
+
+        interfLoop(cc, cl) {
+            if (cc === null) {
+                return false;
+            }
+            if (cc === cl) {
+                return true;
+            }
+            var intf = cc.interfaces;
+            if (intf !== null) {
+                var _g1 = 0;
+                var _g = intf.length;
+                while (_g1 < _g) {
+                    var i = _g1++;
+                    var i1 = intf[i];
+                    if (i1 === cl || js_Boot.interfLoop(i1, cl)) {
+                        return true;
+                    }
+                }
+            }
+            return js_Boot.interfLoop(cc.super, cl);
         }
-    };
+
+        instanceof(o, cl) {
+            if (cl === null) {
+                return false;
+            }
+            switch (cl) {
+                case Int:
+                    return (o | 0) === o;
+                case Float:
+                    return typeof(o) === "number";
+                case Bool:
+                    return typeof(o) === "boolean";
+                case String:
+                    return typeof(o) === "string";
+                case Array:
+                    return (o instanceof Array) && o.enum === null;
+                case Dynamic:
+                    return true;
+                default:
+                    if (o !== null) {
+                        if (typeof(cl) === "function") {
+                            if (o instanceof cl) {
+                                return true;
+                            }
+                            if (js_Boot.interfLoop(js_Boot.getClass(o), cl)) {
+                                return true;
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                    if (cl === Class && o.name !== null) {
+                        return true;
+                    }
+                    if (cl === Enum && o.ename !== null) {
+                        return true;
+                    }
+                    return o.enum === cl;
+            }
+        }
+
+        cast(o, t) {
+            if (js_Boot.instanceof(o, t)) {
+                return o;
+            } else {
+                throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
+            }
+        }
+    }
+
     Math.NaN = Number.NaN;
     Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
     Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;

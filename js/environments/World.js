@@ -1,8 +1,3 @@
-var World = World || {},
-    Utility = Utility || {},
-    document = document || {},
-    PIXI = PIXI || {};
-
 /**
  * The flags for what to display for 'cheats'
  * Show the QuadTree overlay, show the grid overlay, show the wall's numbers
@@ -15,9 +10,6 @@ var World = World || {},
 /**
  * Options for the World that define the width/height
  * @typedef {Object} worldOpts
- * @property {number} width - The width
- * @property {number} height - The height
- * @property {boolean} resizable - Should it be resizable
  * @property {number} simSpeed - The speed of the simulation
  * @property {cdOpts} collision - The collision definition
  * @property {cheatsOpts} cheats - The cheats definition
@@ -27,9 +19,12 @@ var World = World || {},
  * Options for the World renderer
  * @typedef {Object} renderOpts
  * @property {boolean} antialiasing - Use Antialiasing
- * @property {boolean} transparent - Transparent background
- * @property {boolean} resolution - The canvas resolution
  * @property {boolean} autoResize - Auto resize the canvas
+ * @property {boolean} resolution - The canvas resolution
+ * @property {boolean} resizable - Should it be resizable
+ * @property {boolean} transparent - Transparent background
+ * @property {number} width - The width
+ * @property {number} height - The height
  */
 
 (function (global) {
@@ -41,11 +36,13 @@ var World = World || {},
          * @name World
          * @constructor
          *
+         * @param {Array} agents
+         * @param {Array} walls
          * @param {worldOpts} worldOpts
          * @param {renderOpts} renderOpts
          * @returns {World}
          */
-        constructor(worldOpts, renderOpts) {
+        constructor(agents = [], walls, worldOpts, renderOpts) {
             var self = this;
             this.rendererOpts = renderOpts || {
                 antialiasing: false,
@@ -69,17 +66,63 @@ var World = World || {},
 
             // The collision detection type
             this.collision = Utility.getOpt(worldOpts, 'collision', {
-                    type: 'quad',
-                    maxChildren: 3,
-                    maxDepth: 20
-                });
+                type: 'quad',
+                maxChildren: 3,
+                maxDepth: 20
+            });
 
             // The cheats to display
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
-                    quad: false,
-                    grid: false,
-                    walls: false
-                });
+                quad: false,
+                grid: false,
+                walls: false
+            });
+
+            // Walls if they were sent or 4 if not
+            this.walls = walls || [
+                new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
+                new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
+                new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
+                new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
+            ];
+
+            // Get agents
+            this.agents = agents;
+
+            // Number of agents
+            this.numAgents = this.agents.length;
+
+            // Entity options
+            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {
+                radius: 10,
+                collision: true,
+                interactive: false,
+                useSprite: false,
+                movingEntities: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    name: false,
+                    id: false
+                }
+            });
+
+            // Entity Agent options
+            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {
+                radius: 10,
+                collision: true,
+                interactive: false,
+                useSprite: false,
+                movingEntities: false,
+                cheats: {
+                    gridLocation: false,
+                    position: false,
+                    name: false,
+                    id: false
+                }
+            });
 
             function resize() {
                 // Determine which screen dimension is most constrained
@@ -117,9 +160,13 @@ var World = World || {},
                 // Size the renderer to fill the screen
                 resize();
             }
+            this.populate();
 
-            this.setCollisionDetection(this.collision);
-            this.populate(worldOpts);
+            this.grid = Utility.getOpt(worldOpts, 'grid', false);
+            if (this.grid) {
+                this.cellsContainer = this.grid.getGrid();
+                this.stage.addChild(this.cellsContainer);
+            }
 
             if (document.getElementById('flotreward')) {
                 this.rewards = new FlotGraph(this.agents);
@@ -147,76 +194,9 @@ var World = World || {},
                 requestAnimationFrame(animate);
             }
 
+            CollisionDetector.apply(this, [this.collision]);
+
             requestAnimationFrame(animate);
-
-            return this;
-        }
-
-        /**
-         * Set up the population
-         * @param {worldOpts} worldOpts
-         * @returns {World}
-         */
-        populate(worldOpts) {
-            // Walls
-            this.wallContainer = new PIXI.Container();
-            this.walls = Utility.getOpt(worldOpts, 'walls', [
-                    new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
-                    new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
-                    new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
-                    new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
-                ]);
-            this.addWalls();
-            this.stage.addChild(this.wallContainer);
-
-            // Add the entities
-            this.entityContainer = new PIXI.Container();
-            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 20);
-            this.entities = Utility.getOpt(worldOpts, 'entities', []);
-            // Entity options
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {
-                    radius: 10,
-                    collision: true,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false,
-                    cheats: {
-                        gridLocation: false,
-                        position: false,
-                        name: false,
-                        id: false
-                    }
-                });
-            this.addEntities();
-            this.stage.addChild(this.entityContainer);
-
-            // Population of Agents that are considered 'smart' entities for the environment
-            this.entityAgentContainer = new PIXI.Container();
-            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgents = Utility.getOpt(worldOpts, 'entityAgents', []);
-            // Entity Agent options
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {
-                    radius: 10,
-                    collision: true,
-                    interactive: false,
-                    useSprite: false,
-                    movingEntities: false,
-                    cheats: {
-                        gridLocation: false,
-                        position: false,
-                        name: false,
-                        id: false
-                    }
-                });
-            this.addEntityAgents();
-            this.stage.addChild(this.entityAgentContainer);
-
-            // Population of Agents for the environment
-            this.agentContainer = new PIXI.Container();
-            this.numAgents = Utility.getOpt(worldOpts, 'numAgents', 0);
-            this.agents = Utility.getOpt(worldOpts, 'agents', []);
-            this.addAgents();
-            this.stage.addChild(this.agentContainer);
 
             return this;
         }
@@ -228,13 +208,16 @@ var World = World || {},
         addAgents() {
             // Add the agents
             for (let a = 0; a < this.numAgents; a++) {
-                this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
-                let agentContainer = new PIXI.Container();
+                let agent = this.agents[a].shape || this.agents[a].sprite,
+                    agentContainer = new PIXI.Container();
+                agentContainer.addChild(agent);
                 for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                     agentContainer.addChild(this.agents[a].eyes[ei].shape);
                 }
-                agentContainer.addChild(this.agents[a].shape || this.agents[a].sprite);
-                this.agentContainer.addChild(agentContainer);
+                this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+
+                this.populationContainer.addChild(agentContainer);
+                this.population.set(this.agents[a].id, this.agents[a]);
             }
 
             return this;
@@ -246,21 +229,22 @@ var World = World || {},
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let agentContainer = new PIXI.Container(),
-                    x = Utility.randi(5, this.width - 10),
+                let x = Utility.randi(5, this.width - 10),
                     y = Utility.randi(5, this.height - 10),
                     vx = Math.random() * 5 - 2.5,
                     vy = Math.random() * 5 - 2.5,
-                    position = new Vec(x, y, vx, vy),
-                    entity = new EntityRLDQN(position, this.entityAgentOpts);
-                entity.enemy = this.agents[k];
-                entity.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
-                for (let ei = 0; ei < entity.eyes.length; ei++) {
-                    agentContainer.addChild(entity.eyes[ei].shape);
+                    entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
+                    entity = entityAgent.shape || entityAgent.sprite,
+                    agentContainer = new PIXI.Container();
+                agentContainer.addChild(entity);
+                entityAgent.enemy = this.agents[k];
+                entityAgent.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
+                for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
+                    agentContainer.addChild(entityAgent.eyes[ei].shape);
                 }
-                agentContainer.addChild(entity.shape || entity.sprite);
-                this.entityAgents.push(entity);
-                this.entityAgentContainer.addChild(agentContainer);
+
+                this.populationContainer.addChild(agentContainer);
+                this.population.set(entityAgent.id, entityAgent);
             }
 
             return this;
@@ -272,26 +256,20 @@ var World = World || {},
          * @returns {World}
          */
         addEntities(number) {
-            let self = this;
             if (number === undefined) {
-                number = this.numEntities - this.entities.length;
+                number = 1;
             }
             // Populating the world
             for (let k = 0; k < number; k++) {
-                let x = Utility.randi(2, this.width - 2),
+                let type = Utility.randi(1, 3),
+                    x = Utility.randi(2, this.width - 2),
                     y = Utility.randi(2, this.height - 2),
-                    type = Utility.randi(1, 3),
                     vx = Utility.randf(-3, 3),
                     vy = Utility.randf(-3, 3),
-                    position = new Vec(x, y, vx, vy),
-                    entity = new Entity(type, position, this.entityOpts);
+                    entity = new Entity(type, new Vec(x, y, vx, vy), this.entityOpts);
 
-                // Insert the population
-                if (this.cdType === 'quad') {
-                    this.tree.insert(entity);
-                }
-                this.entities.push(entity);
-                this.entityContainer.addChild(entity.shape || entity.sprite);
+                this.populationContainer.addChild(entity.shape || entity.sprite);
+                this.population.set(entity.id, entity);
             }
 
             return this;
@@ -302,23 +280,27 @@ var World = World || {},
          * @returns {World}
          */
         addWalls() {
-            let self = this;
             // Add the walls to the world
-            this.walls.forEach((wall) => this.wallContainer.addChild(wall.shape));
+            this.walls.forEach((wall) => {
+                this.populationContainer.addChild(wall.shape);
+                this.population.set(wall.id, wall);
+            });
 
             return this;
         }
 
         /**
          * Remove the entity from the world
-         * @param {Object} entity
+         * @param {string} id
          * @returns {World}
          */
-        deleteEntity(entity) {
-            this.entities.splice(this.entities.findIndex(Utility.getId, entity.id), 1);
-            let entityIdx = this.entityContainer.getChildIndex(entity.shape || entity.sprite);
-            this.entityContainer.removeChildAt(entityIdx);
-
+        deleteEntity(id) {
+            if (this.population.has(id)) {
+                let entity = this.population.get(id),
+                    entityIdx = this.populationContainer.getChildIndex(entity.shape || entity.sprite);
+                this.populationContainer.removeChildAt(entityIdx);
+                this.population.delete(id);
+            }
             return this;
         }
 
@@ -327,16 +309,40 @@ var World = World || {},
          * @returns {World}
          */
         draw() {
-            // draw items
-            this.entities.forEach((entity) => entity.draw());
-            // draw agents
-            this.agents.forEach((agent) => agent.draw());
-            // draw entity agents
-            this.entityAgents.forEach((entityAgent) => entityAgent.draw());
+            for (let [id, entity] of this.population.entries()) {
+                if (entity.type !== 0) {
+                    entity.draw();
+                }
+            }
 
             if (this.rewards) {
                 this.rewards.graphRewards();
             }
+
+            return this;
+        }
+
+        /**
+         * Set up the population
+         * @returns {World}
+         */
+        populate() {
+            this.populationContainer = new PIXI.Container();
+            this.population = new Map();
+
+            // Walls
+            this.addWalls();
+
+            // Population of Agents for the environment
+            this.addAgents();
+
+            // Population of Agents that are considered 'smart' entities for the environment
+            this.addEntityAgents();
+
+            // Add the entities
+            this.addEntities(this.numEntities);
+
+            this.stage.addChild(this.populationContainer);
 
             return this;
         }
@@ -357,30 +363,27 @@ var World = World || {},
          * @returns {World}
          */
         tick() {
-            let self = this;
             this.updatePopulation();
             this.clock++;
 
-            // Loop through the agents of the world and make them do work!
-            this.agents.forEach((agent) => agent.tick(this));
-
-            // Loop through entity agents
-            this.entityAgents.forEach((entityAgent) => entityAgent.tick(this));
-
-            // Loop through the entities of the world and make them do work son!
-            this.entities.forEach((entity) => entity.tick(this));
-
-            // Loop through and destroy old items
-            this.entities.forEach((entity) => {
-                let edibleEntity = (entity.type === 2 || entity.type === 1);
-                if ((edibleEntity && entity.age > 5000) || entity.cleanUp === true) {
-                    this.deleteEntity(entity);
+            for (let [id, entity] of this.population.entries()) {
+                if (entity.type !== 0) {
+                    entity.tick(this);
                 }
-            });
+            }
+
+            let popCount = 0;
+            for (let [id, entity] of this.population.entries()) {
+                if (entity.cleanUp === true || ((entity.type === 2 || entity.type === 1) && entity.age > 5000)) {
+                    this.deleteEntity(entity.id);
+                } else if (entity.type === 2 || entity.type === 1) {
+                    popCount++;
+                }
+            }
 
             // If we have less then the number of Items allowed throw a random one in
-            if (this.entities.length < this.numEntities) {
-                this.addEntities();
+            if (popCount < this.numEntities) {
+                this.addEntities(this.numEntities - popCount);
             }
 
             this.draw();

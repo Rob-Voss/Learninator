@@ -158,14 +158,16 @@ var Hex = Hex || {},
         this.walls = [];
 
         this.cellsContainer = new PIXI.Container();
-        this.cells.forEach(function (cell) {
+        this.cells.forEach((cell) => {
             HexShape.call(cell, self.layout, self.tileSize, self.fill);
             cell.population = [];
-            self.cellsContainer.addChild(cell.shape);
-            cell.walls.forEach(function (wall) {
-                self.walls.push(wall);
+            this.cellsContainer.addChild(cell.shape);
+
+            cell.walls.forEach((wall) => {
+                this.walls.push(wall);
             });
         });
+
         this.mapCells();
 
         return this;
@@ -219,6 +221,14 @@ var Hex = Hex || {},
          */
         getCenterXY: function (hex) {
             return this.layout.hexToPixel(hex);
+        },
+        /**
+         * Return the location of the entity within a grid
+         * @param {Entity} entity
+         * @returns {Object}
+         */
+        getGrid: function () {
+            return this.cellsContainer;
         },
         /**
          * Return the location of the entity within a grid

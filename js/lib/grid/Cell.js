@@ -14,7 +14,7 @@
      * @param {number} height - The height
      */
 
-    class Cell extends Point {
+    class Cell {
         /**
          * Create a cell
          * @name Cell
@@ -27,20 +27,17 @@
          * @returns {Cell}
          */
         constructor(x = 0, y = 0, width = 10, height = 10) {
-            super(x, y);
-            let self = this;
+            this.x = x;
+            this.y = y;
+            this.z = -x - y;
             this.width = width;
             this.height = height;
-            this.pos = new Point(x, y);
-            this.color = 0xFFFFFF;
             this.visited = false;
             this.parent = null;
             this.heuristic = 0;
             this.reward = 0;
-            this.population = [];
-            this.walls = [];
-            this.corners = [];
 
+            this.corners = [];
             for (let i = 0; i < 4; i++) {
                 let point;
                 switch (i) {
@@ -58,22 +55,6 @@
                         break;
                 }
                 this.corners.push(point);
-            }
-
-            for (let c = 0; c < this.corners.length; c++) {
-                let x1 = this.corners[c].x,
-                    y1 = this.corners[c].y,
-                    x2, y2;
-                if (c !== this.corners.length - 1) {
-                    x2 = this.corners[c + 1].x;
-                    y2 = this.corners[c + 1].y;
-                } else {
-                    x2 = this.corners[0].x;
-                    y2 = this.corners[0].y;
-                }
-                let v1 = new Vec(x1, y1),
-                    v2 = new Vec(x2, y2);
-                this.walls.push(new Wall(v1, v2));
             }
 
             return this;

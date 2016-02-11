@@ -14,7 +14,7 @@
          * @returns {Cube}
          */
         constructor(x, y, z) {
-            super(x, y, -x - y);
+            super(x, y, z);
 
             return this;
         }

@@ -127,53 +127,23 @@ var AgentRLDQN = AgentRLDQN || {},
             this.pos.vy *= 0.95;
             this.pos.advance();
 
-            // Check the world for collisions
-            world.check(this);
-
-            for (let w = 0, wl = world.walls.length; w < wl; w++) {
-                let wall = world.walls[w],
-                    result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
-                if (result) {
-                    this.collisions.unshift(wall);
-                }
-            }
-
-            // Go through and process what we ate/hit
-            let minRes = false;
-            for (let i = 0; i < this.collisions.length; i++) {
-                // Nom or Gnar
-                if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                    for (let w = 0, wl = world.walls.length; w < wl; w++) {
-                        let wall = world.walls[w],
-                            result = world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
-                        if (result) {
-                            if (!minRes) {
-                                minRes = result;
-                            } else {
-                                // Check if it's closer
-                                if (result.vecX < minRes.vecX) {
-                                    // If yes, replace it
-                                    minRes = result;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!minRes) {
+            if (world.check(this)) {
+                for (let i = 0; i < this.collisions.length; i++) {
+                    let collObj = this.collisions[i];
+                    if (collObj.type === 0) {
+                        // Wall
+                        this.pos = this.oldPos.clone();
+                        this.pos.vx = 0;
+                        this.pos.vy = 0;
+                    } else if (collObj.type === 1 || collObj.type === 2) {
                         //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
                         //    stickBySize = this.stick - (this.collisions[i].radius / 100);
                         //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
-                        this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
-                        this.collisions[i].cleanUp = true;
+                        this.digestionSignal += (collObj.type === 1) ? this.carrot : this.stick;
+                        world.deleteEntity(collObj.id);
+                    } else if (collObj.type === 3 || collObj.type === 4) {
+
                     }
-                } else if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
-                    // Agent
-                    //console.log('Watch it ' + this.collisions[i].name);
-                } else if (this.collisions[i].type === 0) {
-                    // Wall
-                    this.pos = this.oldPos.clone();
-                    this.pos.vx = 0;
-                    this.pos.vy = 0;
                 }
             }
 
