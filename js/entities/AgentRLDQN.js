@@ -43,11 +43,6 @@ var AgentRLDQN = AgentRLDQN || {},
          * @returns {AgentRLDQN}
          */
         act(world) {
-            // Loop through the eyes and check the walls and nearby entities
-            for (let e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this, world);
-            }
-
             // in forward pass the agent simply behaves in the environment
             let ne = this.numEyes * this.numTypes,
                 inputArray = new Array(this.numStates);
@@ -91,93 +86,6 @@ var AgentRLDQN = AgentRLDQN || {},
                 this.epsilon = this.brain.epsilon;
             } else {
                 this.post('learn', this.digestionSignal);
-            }
-
-            return this;
-        }
-
-        /**
-         * Move around
-         * @returns {AgentRLDQN}
-         */
-        move(world) {
-            let speed = 1;
-            this.oldAngle = this.angle;
-            this.oldPos = this.pos.clone();
-            this.digestionSignal = 0;
-
-            // Execute agent's desired action
-            switch (this.action) {
-                case 0:
-                    this.pos.vx += -speed;
-                    break;
-                case 1:
-                    this.pos.vx += speed;
-                    break;
-                case 2:
-                    this.pos.vy += -speed;
-                    break;
-                case 3:
-                    this.pos.vy += speed;
-                    break;
-            }
-
-            // Forward the agent by velocity
-            this.pos.vx *= 0.95;
-            this.pos.vy *= 0.95;
-            this.pos.advance();
-
-            if (world.check(this)) {
-                for (let i = 0; i < this.collisions.length; i++) {
-                    let collObj = this.collisions[i];
-                    if (collObj.type === 0) {
-                        // Wall
-                        this.pos = this.oldPos.clone();
-                        this.pos.vx = 0;
-                        this.pos.vy = 0;
-                    } else if (collObj.type === 1 || collObj.type === 2) {
-                        //let rewardBySize = this.carrot + (this.collisions[i].radius / 100),
-                        //    stickBySize = this.stick - (this.collisions[i].radius / 100);
-                        //this.digestionSignal += (this.collisions[i].type === 1) ? rewardBySize : stickBySize;
-                        this.digestionSignal += (collObj.type === 1) ? this.carrot : this.stick;
-                        world.deleteEntity(collObj.id);
-                    } else if (collObj.type === 3 || collObj.type === 4) {
-
-                    }
-                }
-            }
-
-            // Handle boundary conditions.. bounce Agent
-            let top = world.height - (world.height - this.radius),
-                bottom = world.height - this.radius,
-                left = world.width - (world.width - this.radius),
-                right = world.width - this.radius;
-            if (this.pos.x < left) {
-                this.pos.x = left;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
-            }
-
-            if (this.pos.x > right) {
-                this.pos.x = right;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
-            }
-
-            if (this.pos.y < top) {
-                this.pos.y = top;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
-            }
-
-            if (this.pos.y > bottom) {
-                this.pos.y = bottom;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
-            }
-
-            if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
             }
 
             return this;

@@ -57,6 +57,7 @@
 
             this.id = Utility.guid();
             this.pos = position;
+            this.angle = this.pos.getAngle();
             this.radius = Utility.getOpt(opts, 'radius', undefined);
             this.width = Utility.getOpt(opts, 'width', undefined);
             this.height = Utility.getOpt(opts, 'height', undefined);
@@ -67,8 +68,9 @@
             this.useSprite = Utility.getOpt(opts, 'useSprite', false);
 
             this.cheats = Utility.getOpt(opts, 'cheats', false);
-            this.gridLocation = new Vec(0, 0);
+            this.gridLocation = {};
             this.cleanUp = false;
+            this.direction = Utility.getDirection(this.angle);
 
             this.age = 0;
 
@@ -76,7 +78,6 @@
             this.oldPos = this.pos.clone();
             this.oldAngle = 0;
 
-            this.angle = this.pos.getAngle();
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.collisions = [];
@@ -85,6 +86,7 @@
             this.cheatsContainer = new PIXI.Container();
             this.addCheats();
 
+            let entity;
             if (this.useSprite) {
                 this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
                 this.sprite = new PIXI.Sprite(this.texture);
@@ -92,42 +94,27 @@
                 this.sprite.height = this.height;
                 this.sprite.anchor.set(0.5, 0.5);
                 this.sprite.position.set(this.pos.x, this.pos.y);
-                this.sprite.interactive = this.interactive;
-
-                if (this.sprite.interactive === true) {
-                    this.sprite
-                        .on('mousedown', () => this.onDragStart)
-                        .on('touchstart', () => this.onDragStart)
-                        .on('mouseup', () => this.onDragEnd)
-                        .on('mouseupoutside', () => this.onDragEnd)
-                        .on('touchend', () => this.onDragEnd)
-                        .on('touchendoutside', () => this.onDragEnd)
-                        .on('mouseover', () => this.onMouseOver)
-                        .on('mouseout', () => this.onMouseOut)
-                        .on('mousemove', () => this.onDragMove)
-                        .on('touchmove', () => this.onDragMove);
-                    //this.sprite.entity = self;
-                }
                 this.sprite.addChild(this.cheatsContainer);
+                entity = this.sprite;
             } else {
                 this.shape = new PIXI.Graphics();
-                this.shape.interactive = this.interactive;
-                if (this.shape.interactive === true) {
-                    this.shape
-                        .on('mousedown', () => this.onDragStart)
-                        .on('touchstart', () => this.onDragStart)
-                        .on('mouseup', () => this.onDragEnd)
-                        .on('mouseupoutside', () => this.onDragEnd)
-                        .on('touchend', () => this.onDragEnd)
-                        .on('touchendoutside', () => this.onDragEnd)
-                        .on('mouseover', () => this.onMouseOver)
-                        .on('mouseout', () => this.onMouseOut)
-                        .on('mousemove', () => this.onDragMove)
-                        .on('touchmove', () => this.onDragMove);
-                    //this.shape.entity = self;
-                }
-
                 this.shape.addChild(this.cheatsContainer);
+                entity = this.shape;
+            }
+
+            if (this.interactive === true) {
+                entity.interactive = true;
+                entity
+                    .on('mousedown', (e, data) => this.onDragStart)
+                    .on('touchstart', (e, data) => this.onDragStart)
+                    .on('mouseup', (e, data) => this.onDragEnd)
+                    .on('mouseupoutside', (e, data) => this.onDragEnd)
+                    .on('touchend', (e, data) => this.onDragEnd)
+                    .on('touchendoutside', (e, data) => this.onDragEnd)
+                    .on('mouseover', (e, data) => this.onMouseOver)
+                    .on('mouseout', (e, data) => this.onMouseOut)
+                    .on('mousemove', (e, data) => this.onDragMove)
+                    .on('touchmove', (e, data) => this.onDragMove);
             }
 
             return this;
@@ -135,6 +122,7 @@
 
         /**
          * Set up the cheat displays
+         * @returns {Entity}
          */
         addCheats() {
             let fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
@@ -172,10 +160,12 @@
                 this.cheatsContainer.addChild(this.idText);
             }
 
+            return this;
         }
 
         /**
-         *
+         * Update the cheats if they are on
+         * @returns {Entity}
          */
         updateCheats() {
             let posText, gridText, nameText, idText;
@@ -185,7 +175,7 @@
                     this.addCheats();
                 }
                 gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-                gridText.text = ' Grid(' + this.gridLocation.toString() + ')';
+                gridText.text = '(' + this.gridLocation.toString() + ')';
                 gridText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius));
             } else {
                 if (this.gridText !== undefined) {
@@ -242,6 +232,8 @@
                     this.idText = undefined;
                 }
             }
+
+            return this;
         }
 
         /**
@@ -259,12 +251,6 @@
                 this.shape.endFill();
             }
 
-            // draw entities sight
-            if (this.eyes !== undefined) {
-                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
-                    this.eyes[ae].draw(this);
-                }
-            }
             if (this.cheats) {
                 this.updateCheats();
             }
@@ -278,49 +264,37 @@
          */
         move(world) {
             this.oldPos = this.pos.clone();
-            this.pos.advance();
+            this.angle = this.pos.getAngle();
+            this.direction = Utility.getDirection(this.pos.angle);
 
             if (world.check(this)) {
                 for (let i = 0; i < this.collisions.length; i++) {
-                    let collObj = this.collisions[i];
-                    if (collObj.type === 0) {
-                        // Wall
-                        this.pos = this.oldPos.clone();
-                        this.pos.vx *= -1;
-                        this.pos.vy *= -1;
-                    } else if (collObj.type === 1 || collObj.type === 2) {
-                        this.pos.vx = collObj.target.vx;
-                        this.pos.vy = collObj.target.vy;
-                    } else if (collObj.type === 3 || collObj.type === 4) {
+                    let collisionObj = this.collisions[i];
+                    // Wall
+                    if (collisionObj.type === 0) {
+                        if (world.population.has(collisionObj.id)) {
+                            let wall = world.population.get(collisionObj.id),
+                                between = this.pos.getVectorBetween(this.oldPos, collisionObj.vecI),
+                            // Get the vector that points out from the surface the circle is bouncing on.
+                                bounceLineNormal = between.getUnitVector(),
+                            // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
+                                dot = this.pos.vx * bounceLineNormal.x + this.pos.vy * bounceLineNormal.y;
 
+                            this.pos.vx -= 2 * dot * bounceLineNormal.x;
+                            this.pos.vy -= 2 * dot * bounceLineNormal.y;
+                        }
+                    } else if (collisionObj.type === 1 || collisionObj.type === 2) {
+                        this.pos.vx = collisionObj.target.vx;
+                        this.pos.vy = collisionObj.target.vy;
+                        if (world.population.has(collisionObj.id)){
+                            let entity = world.population.get(collisionObj.id);
+                            entity.pos.vx = collisionObj.entity.vx;
+                            entity.pos.vy = collisionObj.entity.vy;
+                        }
                     }
                 }
             }
-
-            // Handle boundary conditions.. bounce Agent
-            let top = world.height - (world.height - this.radius),
-                bottom = world.height - this.radius,
-                left = world.width - (world.width - this.radius),
-                right = world.width - this.radius;
-            if (this.pos.x < left) {
-                this.pos.x = left;
-                this.pos.vx *= -1;
-            }
-
-            if (this.pos.x > right) {
-                this.pos.x = right;
-                this.pos.vx *= -1;
-            }
-
-            if (this.pos.y < top) {
-                this.pos.y = top;
-                this.pos.vy *= -1;
-            }
-
-            if (this.pos.y > bottom) {
-                this.pos.y = bottom;
-                this.pos.vy *= -1;
-            }
+            this.pos.advance();
 
             if (this.useSprite) {
                 this.sprite.position.set(this.pos.x, this.pos.y);

@@ -110,6 +110,146 @@
         }
 
         /**
+         * Draws it
+         * @returns {Entity}
+         */
+        draw() {
+            if (this.useSprite) {
+                this.sprite.position.set(this.pos.x, this.pos.y);
+            } else {
+                this.shape.clear();
+                this.shape.lineStyle(1, 0x000000);
+                this.shape.beginFill(this.color);
+                this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
+                this.shape.endFill();
+            }
+
+            if (this.cheats) {
+                this.updateCheats();
+            }
+
+            return this;
+        }
+
+        /**
+         * Move around
+         * @returns {AgentRLDQN}
+         */
+        move(world) {
+            let speed = 1;
+            this.oldAngle = this.angle;
+            this.oldPos = this.pos.clone();
+            this.digestionSignal = 0;
+
+            // Execute agent's desired action
+            switch (this.action) {
+                case 0:
+                    this.pos.vx += -speed;
+                    break;
+                case 1:
+                    this.pos.vx += speed;
+                    break;
+                case 2:
+                    this.pos.vy += -speed;
+                    break;
+                case 3:
+                    this.pos.vy += speed;
+                    break;
+            }
+
+            // Forward the agent by velocity
+            this.pos.vx *= 0.95;
+            this.pos.vy *= 0.95;
+            this.pos.advance();
+
+            if (world.check(this)) {
+                for (let i = 0; i < this.collisions.length; i++) {
+                    let collisionObj = this.collisions[i];
+                    if (collisionObj.type === 0) {
+                        // Wall
+                        this.pos = this.oldPos.clone();
+                        this.pos.vx = 0;
+                        this.pos.vy = 0;
+                    } else if (collisionObj.type === 1 || collisionObj.type === 2) {
+                        // Noms or Gnars
+                        this.digestionSignal += (collisionObj.type === 1) ? this.carrot : this.stick;
+                        world.deleteEntity(collisionObj.id);
+                    } else if (collisionObj.type === 3 || collisionObj.type === 4) {
+                        // Other Agents
+                        this.pos.vx = collisionObj.target.vx;
+                        this.pos.vy = collisionObj.target.vy;
+                        if (world.population.has(collisionObj.id)){
+                            let entity = world.population.get(collisionObj.id);
+                            entity.pos.vy = collisionObj.entity.vy;
+                            entity.pos.vy = collisionObj.entity.vy;
+                        }
+                    }
+                }
+            }
+
+            // Handle boundary conditions.. bounce Agent
+            let top = world.height - (world.height - this.radius),
+                bottom = world.height - this.radius,
+                left = world.width - (world.width - this.radius),
+                right = world.width - this.radius;
+            if (this.pos.x < left) {
+                this.pos.x = left;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
+            }
+
+            if (this.pos.x > right) {
+                this.pos.x = right;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
+            }
+
+            if (this.pos.y < top) {
+                this.pos.y = top;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
+            }
+
+            if (this.pos.y > bottom) {
+                this.pos.y = bottom;
+                this.pos.vx = 0;
+                this.pos.vy = 0;
+            }
+
+            if (this.useSprite) {
+                this.sprite.position.set(this.pos.x, this.pos.y);
+            }
+
+            return this;
+        }
+
+        /**
+         * Tick the agent
+         * @param {Object} world
+         */
+        tick(world) {
+            // Let the agents behave in the world based on their input
+            this.act(world);
+
+            // If it's not a worker we need to run the rest of the steps
+            if (!this.worker) {
+                // Move eet!
+                this.move(world);
+                // This is where the agents learns based on the feedback of their
+                // actions on the environment
+                this.learn();
+            }
+
+            // Loop through the eyes and check the walls and nearby entities
+            if (this.eyes !== undefined) {
+                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
+                    this.eyes[ae].sense(this, world);
+                }
+            }
+
+            return this;
+        }
+        /**
          * Agent's chance to learn
          * @returns {Agent}
          */
@@ -156,25 +296,6 @@
             }
         }
 
-        /**
-         * Tick the agent
-         * @param {Object} world
-         */
-        tick(world) {
-            // Let the agents behave in the world based on their input
-            this.act(world);
-
-            // If it's not a worker we need to run the rest of the steps
-            if (!this.worker) {
-                // Move eet!
-                this.move(world);
-                // This is where the agents learns based on the feedback of their
-                // actions on the environment
-                this.learn();
-            }
-
-            return this;
-        }
     }
 
     global.Agent = Agent;

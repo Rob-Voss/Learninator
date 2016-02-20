@@ -24,7 +24,7 @@ button, input, optgroup, select, textarea {
 
 .game-container {
     height: 100%; /* The 'html, body' styles above can be removed if you want to use a fixed height here (ie. 800px) */
-    text-align: center; /* Horizontally align text elements to centre */
+    text-align: left; /* Horizontally align text elements to centre */
     font-size: 0; /* Remove whitespace between elements (ie. a space between a word) */
 }
 

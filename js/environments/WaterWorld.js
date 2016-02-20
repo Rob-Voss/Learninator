@@ -13,12 +13,12 @@
         constructor() {
             let renderOpts = {
                     antialiasing: false,
-                    autoResize: true,
-                    resolution: window.devicePixelRatio,
+                    autoResize: false,
                     resizable: false,
                     transparent: false,
-                    width: 800,
-                    height: 800
+                    resolution: window.devicePixelRatio,
+                    width: 600,
+                    height: 600
                 },
                 agentOpts = {
                     brainType: 'RLDQN',
@@ -46,7 +46,7 @@
                     cheats: {
                         gridLocation: false,
                         position: false,
-                        id: false,
+                        id: true,
                         name: false
                     },
                     worker: false
@@ -66,12 +66,15 @@
                 worldOpts = {
                     grid: grid,
                     simSpeed: 1,
+                    collision: {
+                        type: 'brute'
+                    },
                     cheats: {
                         quad: false,
                         grid: false,
                         walls: false
                     },
-                    numEntities: 50,
+                    numEntities: 10,
                     entityOpts: {
                         radius: 10,
                         collision: true,
@@ -81,7 +84,7 @@
                         cheats: {
                             gridLocation: false,
                             position: false,
-                            id: false,
+                            id: true,
                             name: false
                         }
                     }

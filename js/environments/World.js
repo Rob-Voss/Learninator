@@ -208,15 +208,13 @@
         addAgents() {
             // Add the agents
             for (let a = 0; a < this.numAgents; a++) {
-                let agent = this.agents[a].shape || this.agents[a].sprite,
-                    agentContainer = new PIXI.Container();
-                agentContainer.addChild(agent);
+                let agent = this.agents[a].shape || this.agents[a].sprite;
                 for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                    agentContainer.addChild(this.agents[a].eyes[ei].shape);
+                    agent.addChild(this.agents[a].eyes[ei].shape);
                 }
                 this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
 
-                this.populationContainer.addChild(agentContainer);
+                this.populationContainer.addChild(agent);
                 this.population.set(this.agents[a].id, this.agents[a]);
             }
 
@@ -234,16 +232,14 @@
                     vx = Math.random() * 5 - 2.5,
                     vy = Math.random() * 5 - 2.5,
                     entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
-                    entity = entityAgent.shape || entityAgent.sprite,
-                    agentContainer = new PIXI.Container();
-                agentContainer.addChild(entity);
+                    entity = entityAgent.shape || entityAgent.sprite;
                 entityAgent.enemy = this.agents[k];
                 entityAgent.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
-                    agentContainer.addChild(entityAgent.eyes[ei].shape);
+                    entity.addChild(entityAgent.eyes[ei].shape);
                 }
 
-                this.populationContainer.addChild(agentContainer);
+                this.populationContainer.addChild(entity);
                 this.population.set(entityAgent.id, entityAgent);
             }
 
@@ -281,10 +277,12 @@
          */
         addWalls() {
             // Add the walls to the world
+            let wallsContainer = new PIXI.Container()
             this.walls.forEach((wall) => {
-                this.populationContainer.addChild(wall.shape);
+                wallsContainer.addChild(wall.shape);
                 this.population.set(wall.id, wall);
             });
+            this.populationContainer.addChild(wallsContainer);
 
             return this;
         }

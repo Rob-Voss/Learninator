@@ -15,9 +15,7 @@
          * @returns {CellShape}
          */
         constructor(corners) {
-            this.color = 0xFFFFFF;
             this.corners = corners;
-            this.population = [];
 
             this.walls = [];
             for (let c = 0; c < this.corners.length; c++) {
@@ -38,6 +36,8 @@
 
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
+            this.shape.alpha = 0.09;
+            this.shape.color = 0xFFFFFF;
             this.shape
                 .on('mousedown', (event) => {
                     this.data = event.data;
@@ -53,8 +53,6 @@
                     this.color = 0xFFFFFF;
                 });
             //this.shape.entity = self;
-            this.shape.alpha = 0.09;
-            this.shape.color = this.color;
 
             return this;
         }
@@ -81,6 +79,8 @@
             this.cheatOverlay.addChild(posText);
 
             this.shape.addChild(this.cheatOverlay);
+
+            return this;
         }
     }
 

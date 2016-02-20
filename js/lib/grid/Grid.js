@@ -157,20 +157,41 @@
         /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
-         * @returns {Object}
+         * @returns {Entity}
          */
         getGridLocation(entity) {
-            let hex = this.pixelToHex(entity.pos.x, entity.pos.y),
-                q = Math.round(hex.q),
-                r = Math.round(hex.r);
-            let cell = this.getCellAt(q, r);
-            if (cell) {
-                entity.gridLocation = cell;
-            } else {
-                entity.gridLocation = hex;
+            if (entity.type !== undefined) {
+                return this.pixelToCell(entity.pos.x, entity.pos.y);
             }
+        }
 
-            return entity;
+        /**
+         * Add the cells to a hash map
+         */
+        mapCells() {
+            let column, row, c;
+            this.cells.forEach((cell) => {
+                // check x
+                column = this.map.get(cell.x);
+                if (!column) {
+                    this.map.set(cell.x, new Map());
+                    column = this.map.get(cell.x);
+                }
+                // check y
+                row = column.get(cell.y);
+                if (!row) {
+                    column.set(cell.y, new Map());
+                    row = column.get(cell.y);
+                }
+                // check s
+                c = row.get(-cell.x - cell.y);
+                if (!c) {
+                    row.set(-cell.x - cell.y, cell);
+                    cell = row.get(-cell.x - cell.y);
+                }
+            });
+
+            return this;
         }
 
         /**
@@ -203,32 +224,20 @@
         }
 
         /**
-         * Add the cells to a hash map
+         * @param {number} x
+         * @param {number} y
          */
-        mapCells() {
-            let column, row, c;
-            this.cells.forEach((cell) => {
-                let center = this.getCenterXY(cell);
-
-                // check x
-                column = this.map.get(cell.x);
-                if (!column) {
-                    this.map.set(cell.x, new Map());
-                    column = this.map.get(cell.x);
-                }
-                // check y
-                row = column.get(cell.y);
-                if (!row) {
-                    column.set(cell.y, new Map());
-                    row = column.get(cell.y);
-                }
-                // check s
-                c = row.get(-cell.x - cell.y);
-                if (!c) {
-                    row.set(-cell.x - cell.y, cell);
-                    cell = row.get(-cell.x - cell.y);
+        pixelToCell(x, y) {
+            var foundCell = false;
+            this.cells.some((cell) => {
+                let inIt = x >= cell.corners[0].x && x <= cell.corners[2].x
+                    && y >= cell.corners[0].y && y <= cell.corners[2].y;
+                if (inIt) {
+                    foundCell = cell;
                 }
             });
+
+            return foundCell;
         }
 
         /**
@@ -238,6 +247,8 @@
          */
         removeEdgeBetween(c1, c2) {
             this.removedEdges.push([c1, c2]);
+
+            return this;
         }
 
         /**

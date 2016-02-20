@@ -95,11 +95,6 @@ var AgentTD = AgentTD || {},
          * Agent's chance to act on the world
          */
         act(world) {
-            // Loop through the eyes and check the walls and nearby entities
-            for (let e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this, world);
-            }
-
             // Create input to brain
             let inputArray = new Array(this.numEyes * this.numTypes);
             for (let i = 0; i < this.numEyes; i++) {
@@ -212,43 +207,28 @@ var AgentTD = AgentTD || {},
                 this.angle -= 2 * Math.PI;
             }
 
-            // Check the world for collisions
-            world.check(this);
-
-            // Go through and process what we ate/hit
-            let minRes = false,
-                result;
-            for (let i = 0; i < this.collisions.length; i++) {
-                // Nom or Gnar
-                if (this.collisions[i].type === 1 || this.collisions[i].type === 2) {
-                    for (let w = 0, wl = world.walls.length; w < wl; w++) {
-                        let wall = world.walls[w];
-                        result = world.lineIntersect(this.pos, this.collisions[i].pos, wall.v1, wall.v2, this.radius);
-                        if (result) {
-                            if (!minRes) {
-                                minRes = result;
-                            } else {
-                                // Check if it's closer
-                                if (result.vecX < minRes.vecX) {
-                                    // If yes, replace it
-                                    minRes = result;
-                                }
-                            }
+            if (world.check(this)) {
+                for (let i = 0; i < this.collisions.length; i++) {
+                    let collObj = this.collisions[i];
+                    if (collObj.type === 0) {
+                        // Wall
+                        this.pos = this.oldPos.clone();
+                        this.pos.vx = 0;
+                        this.pos.vy = 0;
+                    } else if (collObj.type === 1 || collObj.type === 2) {
+                        // Noms or Gnars
+                        this.digestionSignal += (collObj.type === 1) ? this.carrot : this.stick;
+                        world.deleteEntity(collObj.id);
+                    } else if (collObj.type === 3 || collObj.type === 4) {
+                        // Other Agents
+                        this.pos.vx = collObj.target.vx;
+                        this.pos.vy = collObj.target.vy;
+                        if (world.population.has(collObj.id)){
+                            let entity = world.population.get(collObj.id);
+                            entity.pos.vy = collObj.entity.vy;
+                            entity.pos.vy = collObj.entity.vy;
                         }
                     }
-
-                    if (!minRes) {
-                        this.digestionSignal += (this.collisions[i].type === 1) ? this.carrot : this.stick;
-                        this.collisions[i].cleanUp = true;
-                    }
-                } else if (this.collisions[i].type === 3 || this.collisions[i].type === 4) {
-                    // Agent
-                    //console.log('Watch it ' + this.collisions[i].name);
-                } else if (this.collisions[i].type === 0) {
-                    // Wall
-                    this.pos = this.oldPos.clone();
-                    this.pos.vx = 0;
-                    this.pos.vy = 0;
                 }
             }
 

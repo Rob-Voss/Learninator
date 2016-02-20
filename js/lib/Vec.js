@@ -16,6 +16,8 @@
          * @returns {Vec}
          */
         constructor(x = 0, y = 0, vx = 0, vy = 0, ax = 0, ay = 0) {
+            const toRadian = Math.PI / 180,
+                toDegree = 180 / Math.PI;
             this.x = x;
             this.y = y;
             this.vx = vx;
@@ -66,7 +68,6 @@
          * @returns {Vec}
          */
         advance() {
-            let oldV = this.clone();
             this.x += this.vx;
             this.y += this.vy;
 
@@ -91,18 +92,6 @@
             this.angle = this.getAngle();
 
             return this;
-        }
-
-        /**
-         * Calculate angle between any two vectors.
-         * @param {Vec} v First vec
-         * @return {number} Angle between vectors.
-         */
-        angleBetween(v) {
-            let v1 = this.clone().normalize(),
-                v2 = v.clone().normalize();
-
-            return Math.atan2(v2.sub(v1).y, v2.sub(v1).x) * (180 / Math.PI);
         }
 
         /**
@@ -255,15 +244,70 @@
         }
 
         /**
+         * Calculate angle between any two vectors.
+         * @param {Vec} v First vec
+         * @return {number} Angle between vectors.
+         */
+        getAngleBetween(v) {
+            let v1 = this.clone(),
+                v2 = v.clone(),
+                y = v2.sub(v1).y,
+                x = v2.sub(v1).x,
+                slope = (y > 0 && x > 0) ? y / x : 0,
+                radians = Math.atan2(y, x),
+                angle = radians * 180 / Math.PI;
+
+            return angle;
+        }
+
+        /**
+         * Returns the magnitude of the passed vector.
+         * Sort of like the vector's speed.
+         * A vector with a larger x or y will have a larger magnitude.
+         * @returns {number}
+         */
+        getMagnitude() {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        }
+
+        /**
+         * Returns the unit vector for `vector`.
+         * A unit vector points in the same direction as the original, but has
+         * a magnitude of 1.
+         * It's like a direction with a speed that is the same as all other
+         * unit vectors.
+         * @returns {{x: number, y: number}}
+         */
+        getUnitVector() {
+            return {
+                x: this.x / this.getMagnitude(),
+                y: this.y / this.getMagnitude()
+            };
+        }
+
+        /**
          * Get a point at a % point between this Vec and another
          * @param {Vec} v
-         * @param {number} perc
+         * @param {number} p
          * @return {Vec} .
          */
-        getPointBetween(v, perc) {
-            let blend = perc / 100,
+        getPointBetween(v, p) {
+            let blend = p / 100,
                 x = this.x + blend * (v.x - this.x),
                 y = this.y + blend * (v.y - this.y);
+
+            return new Vec(x, y);
+        }
+
+        /**
+         * Get a point at a % point between this Vec and another
+         * @param {Vec} v1
+         * @param {Vec} v2
+         * @return {Vec} .
+         */
+        getVectorBetween(v1, v2) {
+            let x = v2.x - v1.x,
+                y = v2.y - v1.y;
 
             return new Vec(x, y);
         }
@@ -382,11 +426,6 @@
             return this;
         }
 
-        plusEq(v) {
-            this.x += v.x;
-            this.y += v.y;
-        }
-
         /**
          * Project this vector on to another vector.
          * @param {Vec} v The vector to project onto.
@@ -455,6 +494,8 @@
                 anchor.x + (dist * Math.cos(angle)),
                 anchor.y + (dist * Math.sin(angle))
             );
+
+            return this;
         }
 
         /**
@@ -508,6 +549,8 @@
             this.vy = vy || this.vy;
             this.ax = ax || this.ax;
             this.ay = ay || this.ay;
+
+            return this;
         }
 
         /**
@@ -518,6 +561,8 @@
             let len = this.length();
             this.x = Math.cos(angle) * len;
             this.y = Math.sin(angle) * len;
+
+            return this;
         }
 
         /**

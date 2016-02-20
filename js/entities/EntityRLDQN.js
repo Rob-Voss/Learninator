@@ -92,11 +92,6 @@ var EntityRLDQN = EntityRLDQN || {};
          * Agent's chance to act on the world
          */
         act() {
-            // Loop through the eyes and check the walls and nearby entities
-            for (let e = 0; e < this.numEyes; e++) {
-                this.eyes[e].sense(this);
-            }
-
             // in forward pass the agent simply behaves in the environment
             let ne = this.numEyes * this.numTypes,
                 inputArray = new Array(this.numStates);
@@ -187,36 +182,25 @@ var EntityRLDQN = EntityRLDQN || {};
             this.pos.vy *= 0.95;
 
             // Forward the agent by velocity
-            this.pos.x += this.pos.vx;
-            this.pos.y += this.pos.vy;
+            this.pos.advance();
 
-            world.check(this);
-
-            // Add any walls we hit
-            // @TODO I need to get these damn walls into the CollisionDetection call
-            for (let w = 0, wl = world.walls.length; w < wl; w++) {
-                let wall = world.walls[w],
-                    result = world.lineIntersect(this.oldPos, this.pos, wall.v1, wall.v2, this.radius);
-                if (result) {
-                    this.collisions.push(wall);
-                }
-            }
-
-            // Loop through collisions and do stuff
-            for (let i = 0; i < this.collisions.length; i++) {
-                if (this.collisions[i].type === 3 || this.collisions[i].type === 4 || this.collisions[i].type === 5) {
-                    // Agent
-                    //this.target = this.collisions[i];
-                } else if (this.collisions[i].type === 1) {
-                    // Edible
-                    //this.target = this.collisions[i];
-                    //this.enemy = this.collisions[i];
-                    //console.log('Watch it ' + this.collisions[i].name);
-                } else if (this.collisions[i].type === 0) {
-                    // Wall
-                    this.pos = this.oldPos.clone();
-                    this.pos.vx *= -1;
-                    this.pos.vy *= -1;
+            if (world.check(this)) {
+                for (let i = 0; i < this.collisions.length; i++) {
+                    let collObj = this.collisions[i];
+                    if (collObj.type === 0) {
+                        // Wall
+                        this.pos = this.oldPos.clone();
+                        this.pos.vx *= -1;
+                        this.pos.vy *= -1;
+                    } else if (collObj.type >= 1 && collObj.type <= 4) {
+                        this.pos.vx = collObj.target.vx;
+                        this.pos.vy = collObj.target.vy;
+                        if (world.population.has(collObj.id)){
+                            let entity = world.population.get(collObj.id);
+                            entity.pos.vy = collObj.entity.vy;
+                            entity.pos.vy = collObj.entity.vy;
+                        }
+                    }
                 }
             }
 
@@ -299,10 +283,6 @@ var EntityRLDQN = EntityRLDQN || {};
          */
         tick(world) {
             for (let k = 0; k < this.stepsPerTick; k++) {
-                // Loop through the eyes and check the walls and nearby entities
-                for (let e = 0; e < this.numEyes; e++) {
-                    this.eyes[e].sense(this, world);
-                }
                 //this.state = this.act();
                 this.state = this.getState();
                 this.action = this.brain.act(this.state);

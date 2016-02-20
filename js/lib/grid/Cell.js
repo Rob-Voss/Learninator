@@ -36,6 +36,7 @@
             this.parent = null;
             this.heuristic = 0;
             this.reward = 0;
+            this.population = new Map();
 
             this.corners = [];
             for (let i = 0; i < 4; i++) {
@@ -98,7 +99,7 @@
          * @returns {string}
          */
         toString() {
-            return this.v().join(",");
+            return this.toArray().join(",");
         }
 
         /**
@@ -116,7 +117,7 @@
          * @returns {*[]}
          */
         toArray() {
-            return [this.x, this.y];
+            return [this.x, this.y, this.z];
         }
     }
 

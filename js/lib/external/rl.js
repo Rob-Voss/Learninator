@@ -1,4 +1,3 @@
-
 (function (global) {
     "use strict";
 
@@ -155,7 +154,7 @@
          * @param gamma
          * @returns {}
          */
-        randc = function(m, gamma) {
+        randc = function (m, gamma) {
             return m + gamma * 0.01 * Utility.randn(0.0, 1.0) / Utility.randn(0.0, 1.0);
         },
         /**
@@ -1973,7 +1972,7 @@
      * @name Chromosome
      * @constructor
      */
-    var Chromosome = function(floatArray) {
+    var Chromosome = function (floatArray) {
         this.fitness = 0; // default value
         this.nTrial = 0; // number of trials subjected to so far.
         this.gene = floatArray;
@@ -1984,7 +1983,7 @@
          * Adds a normal random variable of stdev width, zero mean to each gene.
          * @param burstMagnitude
          */
-        burstMutate: function(burstMagnitude) {
+        burstMutate: function (burstMagnitude) {
             var burstMagnitude = burstMagnitude || 0.1,
                 N = this.gene.length;
 
@@ -1996,7 +1995,7 @@
          * Resets each gene to a random value with zero mean and stdev
          * @param burstMagnitude
          */
-        randomize: function(burstMagnitude) {
+        randomize: function (burstMagnitude) {
             var burstMagnitude = burstMagnitude || 0.1,
                 N = this.gene.length;
 
@@ -2009,13 +2008,13 @@
          * @param mutationRate
          * @param burstMagnitude
          */
-        mutate: function(mutationRate, burstMagnitude) {
+        mutate: function (mutationRate, burstMagnitude) {
             var mutationRate = mutationRate || 0.1,
                 burstMagnitude = burstMagnitude || 0.1,
                 N = this.gene.length;
 
             for (var i = 0; i < N; i++) {
-                if (Utility.randf(0,1) < mutationRate) {
+                if (Utility.randf(0, 1) < mutationRate) {
                     this.gene[i] += Utility.randn(0.0, burstMagnitude);
                 }
             }
@@ -2026,7 +2025,7 @@
          * @param kid1
          * @param kid2
          */
-        crossover: function(partner, kid1, kid2) {
+        crossover: function (partner, kid1, kid2) {
             //assumes all chromosomes are initialised with same array size. pls make sure of this before calling
             var N = this.gene.length,
                 l = Utility.randi(0, N); // crossover point
@@ -2044,14 +2043,14 @@
          * Copies c's gene into itself
          * @param c
          */
-        copyFrom: function(c) {
+        copyFrom: function (c) {
             this.copyFromGene(c.gene);
         },
         /**
          * Copy a gene into itself
          * @param gene
          */
-        copyFromGene: function(gene) {
+        copyFromGene: function (gene) {
             var N = this.gene.length;
             for (var i = 0; i < N; i++) {
                 this.gene[i] = gene[i];
@@ -2061,10 +2060,10 @@
          * Returns an exact copy of itself (into new memory, doesn't return reference)
          * @returns {Chromosome}
          */
-        clone: function() {
+        clone: function () {
             var newGene = Utility.zeros(this.gene.length);
             for (var i = 0; i < this.gene.length; i++) {
-                newGene[i] = Math.round(10000*this.gene[i])/10000;
+                newGene[i] = Math.round(10000 * this.gene[i]) / 10000;
             }
             var c = new Chromosome(newGene);
             c.fitness = this.fitness;
@@ -2075,7 +2074,7 @@
          * Pushes this chromosome to a specified network
          * @param net
          */
-        pushToNetwork: function(net) {
+        pushToNetwork: function (net) {
             pushGeneToNetwork(net, this.gene);
         }
     };
@@ -2136,7 +2135,7 @@
             bias = layer.biases;
             if (bias) {
                 w = bias.w;
-                for ( k = 0; k < w.length; k++) {
+                for (k = 0; k < w.length; k++) {
                     w[k] = gene[count++];
                 }
             }
@@ -2169,7 +2168,7 @@
             bias = layer.biases;
             if (bias) {
                 w = bias.w;
-                for ( k = 0; k < w.length; k++) {
+                for (k = 0; k < w.length; k++) {
                     gene.push(w[k]);
                 }
             }
@@ -2207,7 +2206,7 @@
      * Randomize neural network with random weights and biases
      * @param net
      */
-    var randomizeNetwork = function(net) {
+    var randomizeNetwork = function (net) {
         var netSize = getNetworkSize(net),
             chromosome = new Chromosome(Utility.zeros(netSize));
         chromosome.randomize(1.0);
@@ -3072,46 +3071,87 @@
     };
 
 // exports
+    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+        module.exports = {
+            // various utils
+            maxI: maxI,
+            sampleI: sampleI,
+            softMax: softMax,
 
-    // various utils
-    global.maxI = maxI;
-    global.sampleI = sampleI;
-    global.softMax = softMax;
+            // more utils
+            updateMat: updateMat,
+            updateNet: updateNet,
+            copyMat: copyMat,
+            copyNet: copyNet,
+            netToJSON: netToJSON,
+            netFromJSON: netFromJSON,
+            netZeroGrads: netZeroGrads,
+            netFlattenGrads: netFlattenGrads,
+            pushGeneToNetwork: pushGeneToNetwork,
+            randomizeNetwork: randomizeNetwork,
 
-    // more utils
-    global.updateMat = updateMat;
-    global.updateNet = updateNet;
-    global.copyMat = copyMat;
-    global.copyNet = copyNet;
-    global.netToJSON = netToJSON;
-    global.netFromJSON = netFromJSON;
-    global.netZeroGrads = netZeroGrads;
-    global.netFlattenGrads = netFlattenGrads;
-    global.pushGeneToNetwork = pushGeneToNetwork;
-    global.randomizeNetwork = randomizeNetwork;
+            // classes
+            Mat: Mat,
+            randMat: randMat,
+            forwardLSTM: forwardLSTM,
+            initLSTM: initLSTM,
 
-    // classes
-    global.Mat = Mat;
-    global.randMat = randMat;
-    global.forwardLSTM = forwardLSTM;
-    global.initLSTM = initLSTM;
+            // optimization
+            Solver: Solver,
+            Graph: Graph,
 
-    // optimization
-    global.Solver = Solver;
-    global.Graph = Graph;
+            // Agents
+            DPAgent: DPAgent,
+            TDAgent: TDAgent,
+            DQNAgent: DQNAgent,
 
-    // Agents
-    global.DPAgent = DPAgent;
-    global.TDAgent = TDAgent;
-    global.DQNAgent = DQNAgent;
+            // GA plugin
+            Chromosome: Chromosome,
+            ESPNet: ESPNet,
+            ESPTrainer: ESPTrainer,
+            GATrainer: GATrainer
+        };
+    } else {
+        // various utils
+        global.maxI = maxI;
+        global.sampleI = sampleI;
+        global.softMax = softMax;
 
-    // GA plugin
-    global.Chromosome = Chromosome;
-    global.ESPNet = ESPNet;
-    global.ESPTrainer = ESPTrainer;
-    global.GATrainer = GATrainer;
+        // more utils
+        global.updateMat = updateMat;
+        global.updateNet = updateNet;
+        global.copyMat = copyMat;
+        global.copyNet = copyNet;
+        global.netToJSON = netToJSON;
+        global.netFromJSON = netFromJSON;
+        global.netZeroGrads = netZeroGrads;
+        global.netFlattenGrads = netFlattenGrads;
+        global.pushGeneToNetwork = pushGeneToNetwork;
+        global.randomizeNetwork = randomizeNetwork;
+
+        // classes
+        global.Mat = Mat;
+        global.randMat = randMat;
+        global.forwardLSTM = forwardLSTM;
+        global.initLSTM = initLSTM;
+
+        // optimization
+        global.Solver = Solver;
+        global.Graph = Graph;
+
+        // Agents
+        global.DPAgent = DPAgent;
+        global.TDAgent = TDAgent;
+        global.DQNAgent = DQNAgent;
+
+        // GA plugin
+        global.Chromosome = Chromosome;
+        global.ESPNet = ESPNet;
+        global.ESPTrainer = ESPTrainer;
+        global.GATrainer = GATrainer;
 //  global.SimpleReinforceAgent = SimpleReinforceAgent;
 //  global.RecurrentReinforceAgent = RecurrentReinforceAgent;
 //  global.DeterministPG = DeterministPG;
+    }
 
 })(this);

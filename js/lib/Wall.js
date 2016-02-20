@@ -19,7 +19,7 @@
             this.v2 = v2;
             this.pos = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
             this.len = this.v1.distanceTo(this.v2);
-            this.angle = v2.sub(v1).getAngle();
+            this.angle = this.pos.getAngleBetween(v2);
 
             this.shape = new PIXI.Graphics();
             if (cheats) {

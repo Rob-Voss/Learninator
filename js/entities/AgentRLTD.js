@@ -1,7 +1,3 @@
-var AgentRLTD = AgentRLTD || {},
-    Agent = Agent || {},
-    Utility = Utility || {};
-
 (function (global) {
     "use strict";
 

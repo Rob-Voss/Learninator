@@ -71,6 +71,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                 y: y, // top right point
                 width: width, // width
                 height: height, // height
+                id: Utility.guid(),
                 depth: depth, // depth level of the node
                 items: items,
 
@@ -82,7 +83,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                  */
                 retrieve: function (item, callback, instance) {
                     for (let i = 0, il = items.length; i < il; ++i) {
-                        (instance) ? callback.call(instance, items[i]) : callback(items[i]);
+                        (instance) ? callback.call(instance, [items[i]]) : callback(items[i]);
                     }
                     // check if node has subnodes
                     if (nodes.length) {
