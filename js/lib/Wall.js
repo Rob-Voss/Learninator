@@ -17,25 +17,36 @@
             this.type = 0;
             this.v1 = v1;
             this.v2 = v2;
-            this.pos = new Vec((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+            this.pos = new Vec((this.v1.x + this.v2.x) / 2, (this.v1.y + this.v2.y) / 2);
+            this.width = (this.v2.x - this.v1.x === 0) ? 2 : this.v2.x - this.v1.x;
+            this.height = (this.v2.y - this.v1.y === 0) ? 2 : this.v2.y - this.v1.y;
             this.len = this.v1.distanceTo(this.v2);
-            this.angle = this.pos.getAngleBetween(v2);
+            this.angle = this.v1.getAngleBetween(this.v2);
+            this.rotation = this.angle  * Math.PI / 180;
 
             this.shape = new PIXI.Graphics();
-            if (cheats) {
-                let wallText = new PIXI.Text(this.id.substring(0, 10), {
-                    font: "10px Arial",
-                    fill: "#640000",
-                    align: "center"
-                });
-                wallText.position.set(this.v1.x + 10, this.v1.y - 10);
-                this.shape.addChild(wallText);
-            }
             this.shape.clear();
-            this.shape.lineStyle(1, 0x000000);
+            this.shape.lineStyle(1, 0x000000, 1);
             this.shape.moveTo(this.v1.x, this.v1.y);
             this.shape.lineTo(this.v2.x, this.v2.y);
             this.shape.endFill();
+            if (cheats) {
+                this.cheatsContainer = new PIXI.Container();
+                let wallText = new PIXI.Text(this.id.substring(0, 10), {
+                        font: "12px Arial",
+                        fill: "#000000",
+                        align: "center"
+                    }),
+                    angle = (this.angle < 0) ? this.angle * -1 : this.angle * 1,
+                    addX = (angle === 90) ? ((this.v1.x === 600) ? -6 : 6) : 0,
+                    addY = (angle === 180 || angle === 0) ? ((this.v1.y === 600) ? -6 : 6) : 0;
+                wallText.anchor.x = wallText.anchor.y = 0.5;
+                wallText.rotation = ((angle === 180) ? 0 : angle) * Math.PI / 180;
+
+                wallText.position.set(this.pos.x + addX, this.pos.y + addY);
+                this.cheatsContainer.addChild(wallText);
+                this.shape.addChild(this.cheatsContainer);
+            }
 
             return this;
         }

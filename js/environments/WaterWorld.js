@@ -12,13 +12,14 @@
          */
         constructor() {
             let renderOpts = {
-                    antialiasing: false,
+                    antialiasing: true,
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: window.devicePixelRatio,
-                    width: 600,
-                    height: 600
+                    resolution: 1,///window.devicePixelRatio,
+                    noWebGL: false,
+                    width: 800,
+                    height: 800
                 },
                 agentOpts = {
                     brainType: 'RLDQN',
@@ -46,7 +47,7 @@
                     cheats: {
                         gridLocation: false,
                         position: false,
-                        id: true,
+                        id: false,
                         name: false
                     },
                     worker: false
@@ -56,41 +57,45 @@
                     new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
                 ],
                 maze = new Maze({
-                    xCount: 4,
-                    yCount: 3,
+                    xCount: 2,
+                    yCount: 2,
                     width: renderOpts.width,
                     height: renderOpts.height,
-                    closed: true
+                    closed: false,
+                    cheats: false
                 }),
-                grid = maze.grid,
                 worldOpts = {
-                    grid: grid,
+                    grid: maze.grid,
                     simSpeed: 1,
                     collision: {
-                        type: 'brute'
+                       type: 'grid'
                     },
                     cheats: {
                         quad: false,
                         grid: false,
                         walls: false
                     },
-                    numEntities: 10,
+                    numEntities: 20,
                     entityOpts: {
                         radius: 10,
                         collision: true,
-                        interactive: false,
+                        interactive: true,
                         useSprite: false,
                         movingEntities: true,
                         cheats: {
+                            id: false,
+                            name: false,
                             gridLocation: false,
-                            position: false,
-                            id: true,
-                            name: false
+                            position: false
                         }
                     }
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);
+            // this.agents[0].load('zoo/wateragent.json');
+            // this.agents[1].load('zoo/wateragent.json');
+
+            // super([], maze.walls, worldOpts, renderOpts);
 
             return this;
         }

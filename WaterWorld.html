@@ -7,62 +7,45 @@
 
     <title>Water World</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
-          rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css"
-          rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
-          rel="stylesheet" type="text/css">
+    <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"-->
+          <!--rel="stylesheet" type="text/css">-->
+    <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css"-->
+          <!--rel="stylesheet" type="text/css">-->
+    <!--<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"-->
+          <!--rel="stylesheet" type="text/css">-->
 
     <link href="css/styles.css" rel="stylesheet" type="text/css">
-    <link rel="import" href="/templates/twitch-nav.html">
+    <!--<link rel="import" href="/templates/twitch-nav.html">-->
 </head>
 <body onload="start();">
 <div id="container">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <h2>
                     Water World
                     <small>Funsies</small>
                 </h2>
                 <div class="game-container"></div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div id="flotreward"></div>
             </div>
         </div>
     </div>
 </div>
 <script>
-    /**
-     * Global world object
-     * @type {World}
-     */
     var world = world || {};
 
-    /**
-     * Create existence!
-     */
     function start() {
         world = new WaterWorld();
-
-        var socket = io.connect('https://ai.digerati.io:3000/');
-
-        socket.emit('event', {
-            message: 'Hey, I have an important message!'
-        });
-
-        socket.on('announcements', function(data) {
-            console.log('Got announcement:', data.message);
-        });
     }
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>-->
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>

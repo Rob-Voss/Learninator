@@ -62,8 +62,8 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
          * @returns {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
          */
         node = function (x, y, width, height, depth, maxChildren, maxDepth) {
-            var items = [], // holds all items
-                nodes = []; // holds all child nodes
+            var items = new Map(), // holds all items
+                nodes = new Map(); // holds all child nodes
 
             // returns a fresh node object
             return {
@@ -73,10 +73,10 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                 width: width, // width
                 height: height, // height
                 corners: [
-                    new Point(x, y),
-                    new Point(x + width, y),
-                    new Point(x + width, y + height),
-                    new Point(x, y + height)
+                    new Point(x * width, y * height),
+                    new Point(x * width + width, y * height),
+                    new Point(x * width + width, y * height + height),
+                    new Point(x * width, y * height + height)
                 ],
                 depth: depth, // depth level of the node
                 items: items,
@@ -88,14 +88,15 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                  * @param {Node} instance
                  */
                 retrieve: function (item, callback, instance) {
-                    for (let i = 0, il = items.length; i < il; ++i) {
-                        (instance) ? callback.call(instance, [items[i]]) : callback(items[i]);
+                    for (let [id, entity] of items.entries()) {
+                        (instance) ? callback.call(instance, [items.get(item.id)]) : callback(items.get(item.id));
                     }
-                    // check if node has subnodes
-                    if (nodes.length) {
-                        // call retrieve on all matching subnodes
+
+                    // Check if node has subnodes
+                    if (nodes.entries()) {
+                        // Call retrieve on all matching subnodes
                         this.findOverlappingNodes(item, function (dir) {
-                            nodes[dir].retrieve(item, callback, instance);
+                            nodes.get(dir).retrieve(item, callback, instance);
                         });
                     }
                 },
@@ -113,19 +114,19 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                  * @param {Array|Object} item
                  */
                 insert: function (item) {
-                    if (nodes.length) {
+                    if (nodes.entries()) {
                         // Get the node in which the item fits best
                         let i = this.findInsertNode(item);
                         if (i === PARENT) {
                             // If the item does not fit, push it into the children array
-                            items.push(item);
+                            items.set(item.id, item);
                         } else {
-                            nodes[i].insert(item);
+                            nodes.set(item.id, item);
                         }
                     } else {
-                        items.push(item);
+                        items.set(item.id, item);
                         // Divide the node if maxChildren is exceeded and maxDepth is not reached
-                        if (items.length > maxChildren && this.depth < maxDepth) {
+                        if (items.entries() > maxChildren && this.depth < maxDepth) {
                             this.divide();
                         }
                     }
@@ -162,21 +163,21 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                         }
                     } else {
                         // Left
-                        if (item.pos.x  < this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.pos.x + item.width < this.x + wD) {
+                            if (item.pos.y + item.height < this.y + hD) {
                                 return TOP_LEFT;
                             }
-                            if (item.pos.y + item.height / 2 >= this.y + hD) {
+                            if (item.pos.y >= this.y + hD) {
                                 return BOTTOM_LEFT;
                             }
                             return PARENT;
                         }
                         // Right
-                        if (item.pos.x + item.width / 2 >= this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.pos.x >= this.x + wD) {
+                            if (item.pos.y + item.height < this.y + hD) {
                                 return TOP_RIGHT;
                             }
-                            if (item.pos.y + item.height / 2 >= this.y + hD) {
+                            if (item.pos.y >= this.y + hD) {
                                 return BOTTOM_RIGHT;
                             }
                             return PARENT;
@@ -219,16 +220,16 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                             if (item.pos.y < this.y + hD) {
                                 callback(TOP_LEFT);
                             }
-                            if (item.pos.y + item.height / 2 >= this.y + hD) {
+                            if (item.pos.y + item.height >= this.y + hD) {
                                 callback(BOTTOM_LEFT);
                             }
                         }
                         // Right
-                        if (item.pos.x + item.width / 2 >= this.x + wD) {
+                        if (item.pos.x + item.width >= this.x + wD) {
                             if (item.pos.y < this.y + hD) {
                                 callback(TOP_RIGHT);
                             }
-                            if (item.pos.y + item.height / 2 >= this.y + hD) {
+                            if (item.pos.y + item.height >= this.y + hD) {
                                 callback(BOTTOM_RIGHT);
                             }
                         }
@@ -241,19 +242,23 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                  * children.
                  */
                 divide: function () {
-                    let width, height, oldChildren,
-                        childrenDepth = this.depth + 1;
+                    let oldChildren,
+                        childrenDepth = this.depth + 1,
                     // Set the dimensions of the new nodes
-                    width = (this.width / 2);
-                    height = (this.height / 2);
+                        width = (this.width / 2),
+                        height = (this.height / 2),
                     // Create top left node
-                    nodes.push(node(this.x, this.y, width, height, childrenDepth, maxChildren, maxDepth));
+                        topLeft = node(this.x, this.y, width, height, childrenDepth, maxChildren, maxDepth),
                     // Create top right node
-                    nodes.push(node(this.x + width, this.y, width, height, childrenDepth, maxChildren, maxDepth));
+                        topRight = node(this.x + width, this.y, width, height, childrenDepth, maxChildren, maxDepth),
                     // Create bottom left node
-                    nodes.push(node(this.x, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
+                        bottomLeft = node(this.x, this.y + height, width, height, childrenDepth, maxChildren, maxDepth),
                     // Create bottom right node
-                    nodes.push(node(this.x + width, this.y + height, width, height, childrenDepth, maxChildren, maxDepth));
+                        bottomRight = node(this.x + width, this.y + height, width, height, childrenDepth, maxChildren, maxDepth);
+                    nodes.set(topLeft.id, topLeft);
+                    nodes.set(topRight.id, topRight);
+                    nodes.set(bottomLeft.id, bottomLeft);
+                    nodes.set(bottomRight.id, bottomRight);
 
                     oldChildren = items;
                     items = [];

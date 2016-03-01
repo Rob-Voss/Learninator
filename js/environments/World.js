@@ -18,11 +18,13 @@
 /**
  * Options for the World renderer
  * @typedef {Object} renderOpts
- * @property {boolean} antialiasing - Use Antialiasing
- * @property {boolean} autoResize - Auto resize the canvas
- * @property {boolean} resolution - The canvas resolution
- * @property {boolean} resizable - Should it be resizable
- * @property {boolean} transparent - Transparent background
+ * @property [view] {HTMLCanvasElement} the canvas to use as a view, optional
+ * @property [transparent=false] {boolean} If the render view is transparent, default false
+ * @property [antialias=false] {boolean} sets antialias (only applicable in chrome at the moment)
+ * @property [preserveDrawingBuffer=false] {boolean} enables drawing buffer preservation, enable this if you
+ *      need to call toDataUrl on the webgl context
+ * @property [resolution=1] {number} the resolution of the renderer, retina would be 2
+ * @property [noWebGL=false] {boolean} prevents selection of WebGL renderer, even if such is present
  * @property {number} width - The width
  * @property {number} height - The height
  */
@@ -46,10 +48,11 @@
             var self = this;
             this.rendererOpts = renderOpts || {
                 antialiasing: false,
-                autoResize: true,
+                autoResize: false,
                 resolution: window.devicePixelRatio,
                 resizable: false,
                 transparent: false,
+                noWebGL: true,
                 width: 600,
                 height: 600
             };
@@ -67,7 +70,7 @@
             // The collision detection type
             this.collision = Utility.getOpt(worldOpts, 'collision', {
                 type: 'quad',
-                maxChildren: 3,
+                maxChildren: 10,
                 maxDepth: 20
             });
 
@@ -80,14 +83,15 @@
 
             // Walls if they were sent or 4 if not
             this.walls = walls || [
-                new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
-                new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
-                new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
-                new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
+                new Wall(new Vec(1, 1), new Vec(this.width, 1), this.cheats.walls),
+                new Wall(new Vec(this.width, 1), new Vec(this.width, this.height), this.cheats.walls),
+                new Wall(new Vec(this.width, this.height), new Vec(1, this.height), this.cheats.walls),
+                new Wall(new Vec(1, this.height), new Vec(1, 1), this.cheats.walls)
             ];
 
             // Get agents
             this.agents = agents;
+            this.entityAgents = [];
 
             // Number of agents
             this.numAgents = this.agents.length;
@@ -135,7 +139,8 @@
 
             // Create the canvas in which the game will show, and a
             // generic container for all the graphical objects
-            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, renderOpts);
+            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
+            //this.renderer = PIXI.CanvasRenderer(this.width, this.height, this.rendererOpts);
             this.renderer.backgroundColor = 0xFFFFFF;
             // Round the pixels
             //this.renderer.roundPixels = true;
@@ -238,7 +243,7 @@
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
                     entity.addChild(entityAgent.eyes[ei].shape);
                 }
-
+                this.entityAgents.push(entityAgent);
                 this.populationContainer.addChild(entity);
                 this.population.set(entityAgent.id, entityAgent);
             }
@@ -278,9 +283,11 @@
         addWalls() {
             // Add the walls to the world
             let wallsContainer = new PIXI.Container()
-            this.walls.forEach((wall) => {
+            this.walls.forEach((wall, id) => {
                 wallsContainer.addChild(wall.shape);
-                this.population.set(wall.id, wall);
+                if (id > 3) {
+                    this.population.set(wall.id, wall);
+                }
             });
             this.populationContainer.addChild(wallsContainer);
 

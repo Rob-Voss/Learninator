@@ -12,28 +12,11 @@
          * @constructor
          *
          * @param {Array} corners
+         * @param {boolean} cheats
          * @returns {CellShape}
          */
-        constructor(corners) {
+        constructor(corners, cheats = false) {
             this.corners = corners;
-
-            this.walls = [];
-            for (let c = 0; c < this.corners.length; c++) {
-                let x1 = this.corners[c].x,
-                    y1 = this.corners[c].y,
-                    x2, y2;
-                if (c !== this.corners.length - 1) {
-                    x2 = this.corners[c + 1].x;
-                    y2 = this.corners[c + 1].y;
-                } else {
-                    x2 = this.corners[0].x;
-                    y2 = this.corners[0].y;
-                }
-                let v1 = new Vec(x1, y1),
-                    v2 = new Vec(x2, y2);
-                this.walls.push(new Wall(v1, v2));
-            }
-
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
             this.shape.alpha = 0.09;

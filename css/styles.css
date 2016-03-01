@@ -14,8 +14,9 @@ html, body {
 
 #flotreward {
     width: 600px;
-    height: 300px;
+    height: 600px;
     margin-top: 60px;
+    align: left; /* Horizontally align text elements to centre */
 }
 
 button, input, optgroup, select, textarea {
@@ -24,7 +25,7 @@ button, input, optgroup, select, textarea {
 
 .game-container {
     height: 100%; /* The 'html, body' styles above can be removed if you want to use a fixed height here (ie. 800px) */
-    text-align: left; /* Horizontally align text elements to centre */
+    text-align: center; /* Horizontally align text elements to centre */
     font-size: 0; /* Remove whitespace between elements (ie. a space between a word) */
 }
 
@@ -36,8 +37,6 @@ button, input, optgroup, select, textarea {
 }
 
 .game-container .world {
-    width: 600px; /* Your game width */
-    height: 600px; /* Your game height */
     background: white;
 }
 

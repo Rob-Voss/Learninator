@@ -56,8 +56,8 @@ var FlotGraph = FlotGraph || {},
                 max: this.nflot
             },
             yaxis: {
-                min: -0.1,
-                max: 0.1
+                min: -1,
+                max: 1
             }
         });
 

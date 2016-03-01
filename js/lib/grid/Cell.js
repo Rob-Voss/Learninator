@@ -5,15 +5,6 @@
 (function (global) {
     "use strict";
 
-    /**
-     * Options for the Grid
-     * @typedef {Object} gridOpts
-     * @param {number} xCount - The horizontal Cell count
-     * @param {number} yCount - The vertical Cell count
-     * @param {number} width - The width
-     * @param {number} height - The height
-     */
-
     class Cell {
         /**
          * Create a cell
@@ -38,25 +29,12 @@
             this.reward = 0;
             this.population = new Map();
 
-            this.corners = [];
-            for (let i = 0; i < 4; i++) {
-                let point;
-                switch (i) {
-                    case 0:
-                        point = new Point(this.x * this.width, this.y * this.height);
-                        break;
-                    case 1:
-                        point = new Point(this.x * this.width + this.width, this.y * this.height);
-                        break;
-                    case 2:
-                        point = new Point(this.x * this.width + this.width, this.y * this.height + this.height);
-                        break;
-                    case 3:
-                        point = new Point(this.x * this.width, this.y * this.height + this.height);
-                        break;
-                }
-                this.corners.push(point);
-            }
+            this.corners = [
+                new Point(this.x * this.width, this.y * this.height),
+                new Point(this.x * this.width + this.width, this.y * this.height),
+                new Point(this.x * this.width + this.width, this.y * this.height + this.height),
+                new Point(this.x * this.width, this.y * this.height + this.height)
+            ];
 
             return this;
         }

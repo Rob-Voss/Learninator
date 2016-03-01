@@ -143,8 +143,6 @@ var AgentTD = AgentTD || {},
 
             // Calculate the proximity reward
             proximityReward = Math.min(1.0, (proximityReward / this.numEyes) * 2);
-            //proximityReward = proximityReward / this.numEyes;
-            //proximityReward = Math.min(1.0, proximityReward * 2);
 
             // Agents like to go straight forward
             if (this.actionIndex === 0 && proximityReward > 0.75) {

@@ -204,7 +204,7 @@
          * @return {number} Returns the dot product
          */
         dot(v) {
-            return this.x * v.x + this.y * v.y;
+            return (this.x * v.x) + (this.y * v.y);
         }
 
         /**
@@ -267,7 +267,7 @@
          * @returns {number}
          */
         getMagnitude() {
-            return Math.sqrt(this.x * this.x + this.y * this.y);
+            return Math.sqrt((this.x * this.x) + (this.y * this.y));
         }
 
         /**
@@ -401,6 +401,16 @@
          */
         normalize() {
             return this.divideScalar(this.length());
+            //var magnitude = this.getMagnitude();
+            //if (magnitude === 0) {
+            //    this.x = this.y = 0;
+            //
+            //    return this;
+            //} else {
+            //    this.x = this.x / magnitude;
+            //    this.y = this.y / magnitude;
+            //}
+            //return this;
         }
 
         /**
@@ -424,6 +434,11 @@
             this.y = -this.y;
 
             return this;
+        }
+
+        plusEq(v) {
+            this.x += v.x;
+            this.y += v.y;
         }
 
         /**

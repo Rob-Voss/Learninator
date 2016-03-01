@@ -137,8 +137,9 @@
          */
         move(world) {
             let speed = 1;
-            this.oldAngle = this.angle;
             this.oldPos = this.pos.clone();
+            this.angle = this.pos.getAngle();
+            this.direction = Utility.getDirection(this.pos.angle);
             this.digestionSignal = 0;
 
             // Execute agent's desired action
@@ -165,21 +166,21 @@
             if (world.check(this)) {
                 for (let i = 0; i < this.collisions.length; i++) {
                     let collisionObj = this.collisions[i];
-                    if (collisionObj.type === 0) {
-                        // Wall
-                        this.pos = this.oldPos.clone();
-                        this.pos.vx = 0;
-                        this.pos.vy = 0;
-                    } else if (collisionObj.type === 1 || collisionObj.type === 2) {
-                        // Noms or Gnars
-                        this.digestionSignal += (collisionObj.type === 1) ? this.carrot : this.stick;
-                        world.deleteEntity(collisionObj.id);
-                    } else if (collisionObj.type === 3 || collisionObj.type === 4) {
-                        // Other Agents
-                        this.pos.vx = collisionObj.target.vx;
-                        this.pos.vy = collisionObj.target.vy;
-                        if (world.population.has(collisionObj.id)){
-                            let entity = world.population.get(collisionObj.id);
+                    if (world.population.has(collisionObj.id)) {
+                        let entity = world.population.get(collisionObj.id);
+                        if (collisionObj.type === 0) {
+                            // Wall
+                            this.pos = this.oldPos.clone();
+                            this.pos.vx = 0;
+                            this.pos.vy = 0;
+                        } else if (collisionObj.type === 1 || collisionObj.type === 2) {
+                            // Noms or Gnars
+                            this.digestionSignal += (collisionObj.type === 1) ? this.carrot : this.stick;
+                            world.deleteEntity(entity.id);
+                        } else if (collisionObj.type === 3 || collisionObj.type === 4) {
+                            // Other Agents
+                            this.pos.vx = collisionObj.target.vx;
+                            this.pos.vy = collisionObj.target.vy;
                             entity.pos.vy = collisionObj.entity.vy;
                             entity.pos.vy = collisionObj.entity.vy;
                         }
@@ -274,7 +275,8 @@
         load(file) {
             $.getJSON(file, (data) => {
                 if (!this.worker) {
-                    this.brain.fromJSON(data);
+                    this.brain.valueNet.fromJSON(data);
+                    // this.brain.fromJSON(data);
                     this.brain.epsilon = 0.05;
                     this.brain.alpha = 0;
                 } else {

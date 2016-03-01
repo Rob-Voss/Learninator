@@ -27,8 +27,10 @@
             this.yCount = Utility.getOpt(opts, 'yCount', 6);
             this.width = Utility.getOpt(opts, 'width', 600);
             this.height = Utility.getOpt(opts, 'height', 600);
-            this.cellWidth = this.width / this.xCount;
-            this.cellHeight = this.height / this.yCount;
+            this.cheats = Utility.getOpt(opts, 'cheats', false);
+            this.buffer = Utility.getOpt(opts, 'buffer', 2);
+            this.cellWidth = (this.width - this.buffer) / this.xCount;
+            this.cellHeight = (this.height - this.buffer) / this.yCount;
 
             this.removedEdges = [];
             this.cells = [];
@@ -44,10 +46,7 @@
                     c.population = [];
                     this.cells.push(c);
 
-                    cs = new CellShape(c.corners);
-                    cs.walls.forEach((wall) => {
-                        this.walls.push(wall);
-                    });
+                    cs = new CellShape(c.corners, this.cheats);
                     this.cellsContainer.addChild(cs.shape);
                 }
             }
@@ -141,7 +140,7 @@
          */
         getCenterXY(cell) {
             let x = cell.corners[2].x - (this.cellWidth / 2),
-                y = cell.corners[2].x - (this.cellHeight / 2);
+                y = cell.corners[2].y - (this.cellHeight / 2);
 
             return new Point(x, y);
         }
@@ -230,8 +229,10 @@
         pixelToCell(x, y) {
             var foundCell = false;
             this.cells.some((cell) => {
-                let inIt = x >= cell.corners[0].x && x <= cell.corners[2].x
-                    && y >= cell.corners[0].y && y <= cell.corners[2].y;
+                let inIt = x >= cell.corners[0].x
+                    && x <= cell.corners[2].x
+                    && y >= cell.corners[0].y
+                    && y <= cell.corners[2].y;
                 if (inIt) {
                     foundCell = cell;
                 }

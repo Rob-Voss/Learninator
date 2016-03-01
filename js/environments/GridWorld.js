@@ -507,10 +507,10 @@ var GridWorld = GridWorld || {},
                     this.pas[s][a] = pa;
 
                     g.append('line')
-                        .attr('x1', lx1 - 1)
-                        .attr('y1', ly1 - 1)
-                        .attr('x2', lx2 - 1)
-                        .attr('y2', ly2 - 1)
+                        .attr('x1', (lx1 !== 0) ? lx1 - 1 : 0)
+                        .attr('y1', (ly1 !== 0) ? ly1 - 1 : 0)
+                        .attr('x2', (lx2 !== 0) ? lx2 - 1 : 0)
+                        .attr('y2', (ly2 !== 0) ? ly2 - 1 : 0)
                         .attr('stroke', 'red')
                         .attr('stroke-width', '2');
                 }

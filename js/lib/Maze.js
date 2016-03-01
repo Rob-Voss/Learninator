@@ -26,16 +26,18 @@
         this.yCount = Utility.getOpt(opts, 'yCount', 6);
         this.width = Utility.getOpt(opts, 'width', 600);
         this.height = Utility.getOpt(opts, 'height', 600);
-        this.cellWidth = this.width / this.xCount;
-        this.cellHeight = this.height / this.yCount;
+        this.cheats = Utility.getOpt(opts, 'cheats', false);
+        this.closed = Utility.getOpt(opts, 'closed', false);
+        this.buffer = Utility.getOpt(opts, 'buffer', 2);
+        this.grid = Utility.getOpt(opts, 'grid', new Grid(opts));
+        this.cellWidth = (this.width - this.buffer) / this.xCount;
+        this.cellHeight = (this.height - this.buffer) / this.yCount;
 
         this.walls = [];
         this.cellStack = [];
         this.path = [];
-        this.grid = Utility.getOpt(opts, 'grid', new Grid(opts));
 
-        this.draw(opts.closed);
-
+        this.draw();
         this.solve();
 
         return this;
@@ -49,23 +51,9 @@
          * @returns {Maze}
          */
         addWall: function (v1, v2) {
-            this.walls.push(new Wall(v1, v2));
+            this.walls.push(new Wall(v1, v2, this.cheats));
 
             return this;
-        },
-        /**
-         * Return the walls
-         * @returns {Array}
-         */
-        walls: function () {
-            return this.walls;
-        },
-        /**
-         * Return the Graph's Cells
-         * @returns {Array}
-         */
-        graphCells: function () {
-            return this.grid.cells;
         },
         /**
          * Draw it
@@ -82,11 +70,11 @@
          * Draw the borders
          * @returns {Maze}
          */
-        drawBorders: function (closed) {
-            this.addWall(new Vec(closed ? 0 : this.cellWidth, 0), new Vec(this.width, 0));
-            this.addWall(new Vec(this.width, 0), new Vec(this.width, this.height));
-            this.addWall(new Vec(this.width - (closed ? 0 : this.cellWidth), this.height), new Vec(0, this.height));
-            this.addWall(new Vec(0, this.height), new Vec(0, 0));
+        drawBorders: function () {
+            this.addWall(new Vec((this.closed ? this.buffer : this.cellWidth), this.buffer), new Vec(this.width - this.buffer, this.buffer));
+            this.addWall(new Vec(this.width - this.buffer, this.buffer), new Vec(this.width - this.buffer, this.height - this.buffer));
+            this.addWall(new Vec(this.width - (this.closed ? this.buffer : this.cellWidth), this.height - this.buffer), new Vec(this.buffer, this.height - this.buffer));
+            this.addWall(new Vec(this.buffer, this.height - this.buffer), new Vec(this.buffer, this.buffer));
 
             return this;
         },
@@ -195,6 +183,13 @@
             return this;
         },
         /**
+         * Return the Graph's Cells
+         * @returns {Array}
+         */
+        graphCells: function () {
+            return this.grid.cells;
+        },
+        /**
          * Recurse through a Cell's neighbors
          * @param {Cell} cell
          * @returns {Maze}
@@ -263,6 +258,13 @@
             }
 
             return this;
+        },
+        /**
+         * Return the walls
+         * @returns {Array}
+         */
+        walls: function () {
+            return this.walls;
         }
     };
 

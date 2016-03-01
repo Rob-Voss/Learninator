@@ -103,18 +103,40 @@
             }
 
             if (this.interactive === true) {
+                this.isOver = false;
+                this.isDown = false;
                 entity.interactive = true;
                 entity
-                    .on('mousedown', (e, data) => this.onDragStart)
-                    .on('touchstart', (e, data) => this.onDragStart)
-                    .on('mouseup', (e, data) => this.onDragEnd)
-                    .on('mouseupoutside', (e, data) => this.onDragEnd)
-                    .on('touchend', (e, data) => this.onDragEnd)
-                    .on('touchendoutside', (e, data) => this.onDragEnd)
-                    .on('mouseover', (e, data) => this.onMouseOver)
-                    .on('mouseout', (e, data) => this.onMouseOut)
-                    .on('mousemove', (e, data) => this.onDragMove)
-                    .on('touchmove', (e, data) => this.onDragMove);
+                    .on('mousedown', (e, data) => {
+                        this.onDragStart(e);
+                    })
+                    .on('touchstart', (e, data) => {
+                        this.onDragStart(e);
+                    })
+                    .on('mouseup', (e, data) => {
+                        this.onDragEnd();
+                    })
+                    .on('mouseupoutside', (e, data) => {
+                        this.onDragEnd();
+                    })
+                    .on('touchend', (e, data) => {
+                        this.onDragEnd();
+                    })
+                    .on('touchendoutside', (e, data) => {
+                        this.onDragEnd();
+                    })
+                    .on('mouseover', (e, data) => {
+                        this.onMouseOver();
+                    })
+                    .on('mouseout', (e, data) => {
+                        this.onMouseOut();
+                    })
+                    .on('mousemove', (e, data) => {
+                        this.onDragMove();
+                    })
+                    .on('touchmove', (e, data) => {
+                        this.onDragMove();
+                    });
             }
 
             return this;
@@ -266,15 +288,16 @@
             this.oldPos = this.pos.clone();
             this.angle = this.pos.getAngle();
             this.direction = Utility.getDirection(this.pos.angle);
+            this.pos.advance();
 
             if (world.check(this)) {
                 for (let i = 0; i < this.collisions.length; i++) {
                     let collisionObj = this.collisions[i];
-                    // Wall
-                    if (collisionObj.type === 0) {
-                        if (world.population.has(collisionObj.id)) {
-                            let wall = world.population.get(collisionObj.id),
-                                between = this.pos.getVectorBetween(this.oldPos, collisionObj.vecI),
+                    if (world.population.has(collisionObj.id)) {
+                        let entity = world.population.get(collisionObj.id);
+                        // Wall
+                        if (collisionObj.type === 0) {
+                            let between = this.pos.getVectorBetween(this.pos, collisionObj.vecI),
                             // Get the vector that points out from the surface the circle is bouncing on.
                                 bounceLineNormal = between.getUnitVector(),
                             // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
@@ -282,19 +305,43 @@
 
                             this.pos.vx -= 2 * dot * bounceLineNormal.x;
                             this.pos.vy -= 2 * dot * bounceLineNormal.y;
-                        }
-                    } else if (collisionObj.type === 1 || collisionObj.type === 2) {
-                        this.pos.vx = collisionObj.target.vx;
-                        this.pos.vy = collisionObj.target.vy;
-                        if (world.population.has(collisionObj.id)){
-                            let entity = world.population.get(collisionObj.id);
+                            this.pos.x = this.oldPos.x;
+                            this.pos.y = this.oldPos.y;
+                        } else if (collisionObj.type === 1 || collisionObj.type === 2) {
+                            this.pos.vx = collisionObj.target.vx;
+                            this.pos.vy = collisionObj.target.vy;
                             entity.pos.vx = collisionObj.entity.vx;
                             entity.pos.vy = collisionObj.entity.vy;
                         }
                     }
                 }
             }
-            this.pos.advance();
+
+            // Handle boundary conditions.. bounce Agent
+            let top = world.height - (world.height - this.radius),
+                bottom = world.height - this.radius,
+                left = world.width - (world.width - this.radius),
+                right = world.width - this.radius;
+            if (this.pos.x < left) {
+                this.pos.x = left;
+                this.pos.vx *= -1;
+            }
+
+            if (this.pos.x > right) {
+                this.pos.x = right;
+                this.pos.vx *= -1;
+            }
+
+            if (this.pos.y < top) {
+                this.pos.y = top;
+                this.pos.vy *= -1;
+            }
+
+            if (this.pos.y > bottom) {
+                this.pos.y = bottom;
+                this.pos.vy *= -1;
+            }
+
 
             if (this.useSprite) {
                 this.sprite.position.set(this.pos.x, this.pos.y);
@@ -326,6 +373,7 @@
          */
         onDragStart(event) {
             this.data = event.data;
+            this.interactionTarget = event.target;
             this.alpha = 0.5;
             this.dragging = true;
 
@@ -339,9 +387,8 @@
          */
         onDragMove() {
             if (this.dragging) {
-                let newPosition = this.data.getLocalPosition(this.parent);
+                let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
                 this.pos.set(newPosition.x, newPosition.y);
-                this.entity.pos.set(newPosition.x, newPosition.y);
             }
 
             return this;
@@ -355,12 +402,12 @@
         onDragEnd() {
             this.alpha = 1;
             this.dragging = false;
-            let newPosition = this.data.getLocalPosition(this.parent);
+            let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
             this.pos.set(newPosition.x, newPosition.y);
-            this.entity.pos.set(newPosition.x, newPosition.y);
 
             // set the interaction data to null
             this.data = null;
+            this.interactionTarget = null;
 
             return this;
         }
@@ -371,7 +418,7 @@
          * @returns {Entity}
          */
         onMouseDown() {
-            this.isdown = true;
+            this.isDown = true;
             this.alpha = 1;
 
             return this;
@@ -383,7 +430,7 @@
          * @returns {Entity}
          */
         onMouseUp() {
-            this.isdown = false;
+            this.isDown = false;
 
             return this;
         }
@@ -395,7 +442,7 @@
          */
         onMouseOver() {
             this.isOver = true;
-            if (this.isdown) {
+            if (this.isDown) {
                 return this;
             }
 
@@ -409,7 +456,7 @@
          */
         onMouseOut() {
             this.isOver = false;
-            if (this.isdown) {
+            if (this.isDown) {
                 return this;
             }
 

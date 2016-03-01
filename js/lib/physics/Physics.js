@@ -46,7 +46,7 @@ var Phys = Phys || {},
                 let closest = Trig.pointOnLineClosestToCircle(entity, wall),
 
                 // Get the distance between the closest point and the center of the circle.
-                    circleToLineDistance = entity.pos.distanceTo(closest),
+                    circleToLineDistance = Trig.distance(entity.pos, closest),
                     intersecting = circleToLineDistance < entity.radius;
 
                 // Return true if distance is less than the radius.

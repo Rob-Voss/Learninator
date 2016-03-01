@@ -159,7 +159,7 @@ var Hex = Hex || {},
 
         this.cellsContainer = new PIXI.Container();
         this.cells.forEach((cell) => {
-            HexShape.call(cell, self.layout, self.tileSize, self.fill);
+            HexShape.apply(cell, [self.layout, self.tileSize, self.fill]);
             cell.population = [];
             this.cellsContainer.addChild(cell.shape);
 
