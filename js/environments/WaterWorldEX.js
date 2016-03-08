@@ -50,8 +50,8 @@ var WaterWorldEX = WaterWorldEX || {},
                     cheats: {
                         gridLocation: false,
                         position: false,
-                        id: true,
-                        name: false
+                        name: false,
+                        id: true
                     },
                     worker: false
                 },
@@ -60,8 +60,8 @@ var WaterWorldEX = WaterWorldEX || {},
                     new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
                 ],
                 maze = new Maze({
-                    xCount: 4,
-                    yCount: 3,
+                    xCount: 1,
+                    yCount: 1,
                     width: renderOpts.width,
                     height: renderOpts.height,
                     closed: true
@@ -88,8 +88,8 @@ var WaterWorldEX = WaterWorldEX || {},
                         cheats: {
                             gridLocation: false,
                             position: false,
-                            id: true,
-                            name: false
+                            name: false,
+                            id: true
                         }
                     },
                     numEntityAgents: 2,
@@ -130,7 +130,13 @@ var WaterWorldEX = WaterWorldEX || {},
 
             this.agents[0].load('zoo/wateragent.json');
             this.agents[1].load('zoo/wateragent.json');
+
+            this.entityAgents[0].enemy = this.agents[0];
+            this.entityAgents[0].target = this.agents[1];
             this.entityAgents[0].load('zoo/puckagent.json');
+
+            this.entityAgents[1].enemy = this.agents[1];
+            this.entityAgents[1].target = this.agents[0];
             this.entityAgents[1].load('zoo/puckagent.json');
 
             return this;

@@ -43,7 +43,7 @@ var AgentGA = AgentGA || {},
             this.net = new convnetjs.Net();
             this.net.makeLayers(this.layerDefs);
             this.initialGene = randomizeNetwork(this.net);
-            this.chromosome = new Chromosome(this.initialGene);
+            this.chromosome = new RL.Chromosome(this.initialGene);
             this.chromosome.pushToNetwork(this.net);
 
             return this;
@@ -163,7 +163,7 @@ var AgentGA = AgentGA || {},
             });
 
             this.brain = new Brain();
-            this.trainer = new GATrainer(this.brainOpts, this.brain.initialGene);
+            this.trainer = new RL.GATrainer(this.brainOpts, this.brain.initialGene);
 
             return this;
         }

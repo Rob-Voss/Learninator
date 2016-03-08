@@ -1,6 +1,9 @@
 (function (global) {
     "use strict";
 
+    const toRadian = Math.PI / 180,
+        toDegree = 180 / Math.PI;
+
     class Vec {
         /**
          * A 2D vector utility
@@ -16,8 +19,6 @@
          * @returns {Vec}
          */
         constructor(x = 0, y = 0, vx = 0, vy = 0, ax = 0, ay = 0) {
-            const toRadian = Math.PI / 180,
-                toDegree = 180 / Math.PI;
             this.x = x;
             this.y = y;
             this.vx = vx;
@@ -83,7 +84,7 @@
          * @returns {Vec}
          */
         advanceAtAngle(angle, speed) {
-            let radians = angle * Math.PI / 180;
+            let radians = angle * toRadian;
             this.vx = Math.cos(radians) * speed;
             this.vy = Math.sin(radians) * speed;
             this.x += this.vx;
@@ -92,6 +93,28 @@
             this.angle = this.getAngle();
 
             return this;
+        }
+
+        /**
+         * Get the angle of this Vec
+         * @returns {number}
+         */
+        getAngle() {
+            return Math.atan2(this.y, this.x) * toDegree;
+        }
+
+        /**
+         * Calculate angle between any two vectors.
+         * @param {Vec} v First vec
+         * @return {number} Angle between vectors.
+         */
+        angleBetween(v) {
+            let v1 = this.clone(),
+                v2 = v.clone(),
+                y = v2.sub(v1).y,
+                x = v2.sub(v1).x;
+
+            return Math.atan2(y, x) * toDegree;
         }
 
         /**
@@ -228,88 +251,19 @@
         }
 
         /**
-         * Get the angle of this Vec
-         * @returns {number}
+         * Calculates the square length of the vector
+         * @return {number} Returns the square length of the vector
          */
-        getAngle() {
-            return Math.atan2(this.y, this.x) * 180 / Math.PI;
+        lengthSq() {
+            return this.dot(this);
         }
 
         /**
-         * Get the angle of this Vec
-         * @returns {number}
+         * Calculates the length of the vector
+         * @return {number} Returns the length of the vector
          */
-        getAngleInRadians() {
-            return this.getAngle() * Math.PI / 180;
-        }
-
-        /**
-         * Calculate angle between any two vectors.
-         * @param {Vec} v First vec
-         * @return {number} Angle between vectors.
-         */
-        getAngleBetween(v) {
-            let v1 = this.clone(),
-                v2 = v.clone(),
-                y = v2.sub(v1).y,
-                x = v2.sub(v1).x,
-                slope = (y > 0 && x > 0) ? y / x : 0,
-                radians = Math.atan2(y, x),
-                angle = radians * 180 / Math.PI;
-
-            return angle;
-        }
-
-        /**
-         * Returns the magnitude of the passed vector.
-         * Sort of like the vector's speed.
-         * A vector with a larger x or y will have a larger magnitude.
-         * @returns {number}
-         */
-        getMagnitude() {
-            return Math.sqrt((this.x * this.x) + (this.y * this.y));
-        }
-
-        /**
-         * Returns the unit vector for `vector`.
-         * A unit vector points in the same direction as the original, but has
-         * a magnitude of 1.
-         * It's like a direction with a speed that is the same as all other
-         * unit vectors.
-         * @returns {{x: number, y: number}}
-         */
-        getUnitVector() {
-            return {
-                x: this.x / this.getMagnitude(),
-                y: this.y / this.getMagnitude()
-            };
-        }
-
-        /**
-         * Get a point at a % point between this Vec and another
-         * @param {Vec} v
-         * @param {number} p
-         * @return {Vec} .
-         */
-        getPointBetween(v, p) {
-            let blend = p / 100,
-                x = this.x + blend * (v.x - this.x),
-                y = this.y + blend * (v.y - this.y);
-
-            return new Vec(x, y);
-        }
-
-        /**
-         * Get a point at a % point between this Vec and another
-         * @param {Vec} v1
-         * @param {Vec} v2
-         * @return {Vec} .
-         */
-        getVectorBetween(v1, v2) {
-            let x = v2.x - v1.x,
-                y = v2.y - v1.y;
-
-            return new Vec(x, y);
+        length() {
+            return Math.sqrt(this.lengthSq());
         }
 
         /**
@@ -326,19 +280,13 @@
         }
 
         /**
-         * Calculates the square length of the vector
-         * @return {number} Returns the square length of the vector
+         * Returns the magnitude of the passed vector.
+         * Sort of like the vector's speed.
+         * A vector with a larger x or y will have a larger magnitude.
+         * @returns {number}
          */
-        lengthSq() {
-            return this.dot(this);
-        }
-
-        /**
-         * Calculates the length of the vector
-         * @return {number} Returns the length of the vector
-         */
-        length() {
-            return Math.sqrt(this.dot(this));
+        magnitude() {
+            return this.length();
         }
 
         /**
@@ -401,16 +349,6 @@
          */
         normalize() {
             return this.divideScalar(this.length());
-            //var magnitude = this.getMagnitude();
-            //if (magnitude === 0) {
-            //    this.x = this.y = 0;
-            //
-            //    return this;
-            //} else {
-            //    this.x = this.x / magnitude;
-            //    this.y = this.y / magnitude;
-            //}
-            //return this;
         }
 
         /**
@@ -442,6 +380,20 @@
         }
 
         /**
+         * Get a point at a % point between this Vec and another
+         * @param {Vec} v
+         * @param {number} p
+         * @return {Vec} .
+         */
+        pointBetween(v, p) {
+            let blend = p / 100,
+                x = this.x + blend * (v.x - this.x),
+                y = this.y + blend * (v.y - this.y);
+
+            return new Vec(x, y);
+        }
+
+        /**
          * Project this vector on to another vector.
          * @param {Vec} v The vector to project onto.
          * @return {Vec} Returns itself.
@@ -465,6 +417,14 @@
             this.y = amt * v.y;
 
             return this;
+        }
+
+        /**
+         * Get the angle of this Vec
+         * @returns {number}
+         */
+        radians() {
+            return this.angle() * toRadian;
         }
 
         /**
@@ -509,8 +469,6 @@
                 anchor.x + (dist * Math.cos(angle)),
                 anchor.y + (dist * Math.sin(angle))
             );
-
-            return this;
         }
 
         /**
@@ -622,7 +580,7 @@
          * @return {Array}
          */
         toArray() {
-            return [this.x, this.y];
+            return [Math.round(this.x), Math.round(this.y)];
         }
 
         /**
@@ -632,6 +590,32 @@
         toString() {
             return this.toArray().join(",");
         }
+
+        /**
+         * Returns the unit vector for `vector`.
+         * A unit vector points in the same direction as the original, but has
+         * a magnitude of 1.
+         * It's like a direction with a speed that is the same as all other
+         * unit vectors.
+         * @returns {Vec}
+         */
+        unitVector() {
+            return this.divideScalar(this.length());
+        }
+
+        /**
+         * Get a Vec between this Vec and another
+         * @param {Vec} v1
+         * @param {Vec} v2
+         * @return {Vec} .
+         */
+        vectorBetween(v1, v2) {
+            let x = v2.x - v1.x,
+                y = v2.y - v1.y;
+
+            return new Vec(x, y);
+        }
+
     }
 
     global.Vec = Vec;

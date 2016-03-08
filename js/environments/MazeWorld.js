@@ -73,11 +73,11 @@
                     grid: maze.grid,
                     simSpeed: 1,
                     collision: {
-                        type: 'brute'
+                        type: 'grid'
                     },
                     cheats: {
                         quad: false,
-                        grid: false,
+                        grid: true,
                         walls: false
                     },
                     numEntities: 30,

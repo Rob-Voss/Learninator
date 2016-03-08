@@ -38,27 +38,25 @@
             this.shape.clear();
 
             switch (this.sensedType) {
-                case -1:
-                case 0:
-                    // Is it wall or nothing?
-                    this.shape.lineStyle(0.5, 0x000000);
-                    break;
                 case 1:
                     // It is noms
-                    this.shape.lineStyle(0.5, 0xFF0000);
+                    this.shape.lineStyle(0.5, 0xFF0000, 1);
                     break;
                 case 2:
                     // It is gnar gnar
-                    this.shape.lineStyle(0.5, 0x00FF00);
+                    this.shape.lineStyle(0.5, 0x00FF00, 1);
                     break;
                 case 3:
                 case 4:
                 case 5:
                     // Is it another Agent
-                    this.shape.lineStyle(0.5, 0x0000FF);
+                    this.shape.lineStyle(0.5, 0x0000FF, 1);
                     break;
                 default:
-                    this.shape.lineStyle(0.5, 0x000000);
+                case -1:
+                case 0:
+                    // Is it wall or nothing?
+                    this.shape.lineStyle(0.5, 0x000000, 1);
                     break;
             }
 
@@ -108,8 +106,6 @@
                 this.vx = 0;
                 this.vy = 0;
             }
-
-            this.draw(agent);
         }
     }
 

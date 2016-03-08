@@ -1,5 +1,4 @@
-var Hex = Hex || {},
-    HexShape = HexShape || {};
+var HexShape = HexShape || {};
 
 /**
  * Inspired by https://github.com/RobertBrewitz/axial-hexagonal-grid
@@ -35,18 +34,19 @@ var Hex = Hex || {},
          * @returns {HexShape}
          * @constructor
          */
-        constructor(layout = false, size = 20, fill = false) {
+        constructor(hex, layout = false, size = 20, fill = false) {
+            this.hex = hex;
             this.layout = layout;
             this.size = size;
             this.fill = fill;
             this.color = colorForHex(this.q, this.r, this.s);
+            this.population = new Map();
             this.corners = [];
-            this.population = [];
             this.walls = [];
 
             if (this.layout) {
-                this.pos = this.layout.hexToPixel(this);
-                this.corners = this.layout.polygonCorners(this);
+                this.pos = this.layout.hexToPixel(hex);
+                this.corners = this.layout.polygonCorners(this.pos);
                 for (let c = 0; c < this.corners.length; c++) {
                     let x1 = this.corners[c].x,
                         y1 = this.corners[c].y,
@@ -75,7 +75,8 @@ var Hex = Hex || {},
 
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
-
+            this.shape.alpha = 0.09;
+            this.shape.color = this.color;
             this.shape
                 .on('mousedown', (event) => {
                     this.data = event.data;
@@ -97,31 +98,27 @@ var Hex = Hex || {},
 
         draw() {
             this.shape.clear();
-            this.shape.lineStyle(1, 0x000000);
-            if (this.fill) {
-                this.shape.beginFill(this.color);
-            }
+            this.shape.lineStyle(1, 0xFF0000, 0.9);
+            this.shape.beginFill(this.color, 0.09);
             for (let i = 0; i <= this.corners.length; i++) {
-                if (i == 0) {
+                if (i === 0) {
                     this.shape.moveTo(this.corners[i].x, this.corners[i].y);
-                } else if (i == 6) {
+                } else if (i === 6) {
                     this.shape.lineTo(this.corners[0].x, this.corners[0].y);
                 } else {
                     this.shape.lineTo(this.corners[i].x, this.corners[i].y);
                 }
             }
-            if (this.fill) {
-                this.shape.endFill();
-            }
+            this.shape.endFill();
 
             if (this.cheatOverlay !== undefined) {
                 this.shape.removeChild(this.cheatOverlay);
             }
-            let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
-                posText = new PIXI.Text(this.toString(), txtOpts);
-            posText.position.set(this.pos.x - this.size / 2, this.pos.y - 7);
-
             this.cheatOverlay = new PIXI.Container();
+
+            let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
+                posText = new PIXI.Text(this.hex.toString() + "\n" + this.pos.toString(), txtOpts);
+            posText.position.set(this.pos.x - this.size / 2, this.pos.y - 7);
             this.cheatOverlay.addChild(posText);
 
             this.shape.addChild(this.cheatOverlay);

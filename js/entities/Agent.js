@@ -92,8 +92,7 @@
             }
 
             this.action = null;
-            this.angle = this.pos.getAngle();
-            this.angleRadians = this.pos.getAngleInRadians();
+            this.angle = this.pos.angle;
             this.avgReward = 0;
             this.lastReward = 0;
             this.digestionSignal = 0.0;
@@ -111,7 +110,7 @@
 
         /**
          * Draws it
-         * @returns {Entity}
+         * @returns {Agent}
          */
         draw() {
             if (this.useSprite) {
@@ -122,6 +121,16 @@
                 this.shape.beginFill(this.color);
                 this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
                 this.shape.endFill();
+
+                let aEyeX = this.pos.x + 20 * Math.sin(this.angle),
+                    aEyeY = this.pos.y + 20 * Math.cos(this.angle);
+                this.shape.lineStyle(2, 0xFF0000, 2);
+                this.shape.moveTo(this.pos.x, this.pos.y);
+                this.shape.lineTo(aEyeX, aEyeY);
+            }
+
+            for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
+                this.eyes[ae].draw(this);
             }
 
             if (this.cheats) {
@@ -133,27 +142,25 @@
 
         /**
          * Move around
-         * @returns {AgentRLDQN}
+         * @returns {Agent}
          */
         move(world) {
             let speed = 1;
             this.oldPos = this.pos.clone();
-            this.angle = this.pos.getAngle();
-            this.direction = Utility.getDirection(this.pos.angle);
             this.digestionSignal = 0;
 
             // Execute agent's desired action
             switch (this.action) {
-                case 0:
+                case 0: // Left
                     this.pos.vx += -speed;
                     break;
-                case 1:
+                case 1: // Right
                     this.pos.vx += speed;
                     break;
-                case 2:
+                case 2: // Up
                     this.pos.vy += -speed;
                     break;
-                case 3:
+                case 3: // Down
                     this.pos.vy += speed;
                     break;
             }
@@ -162,6 +169,8 @@
             this.pos.vx *= 0.95;
             this.pos.vy *= 0.95;
             this.pos.advance();
+            this.angle = this.pos.angle;
+            this.direction = Utility.getDirection(this.angle);
 
             if (world.check(this)) {
                 for (let i = 0; i < this.collisions.length; i++) {
@@ -226,9 +235,15 @@
 
         /**
          * Tick the agent
-         * @param {Object} world
+         * @param {World} world
          */
         tick(world) {
+            // Loop through the eyes and check the walls and nearby entities
+            if (this.eyes !== undefined) {
+                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
+                    this.eyes[ae].sense(this, world);
+                }
+            }
             // Let the agents behave in the world based on their input
             this.act(world);
 
@@ -241,15 +256,9 @@
                 this.learn();
             }
 
-            // Loop through the eyes and check the walls and nearby entities
-            if (this.eyes !== undefined) {
-                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
-                    this.eyes[ae].sense(this, world);
-                }
-            }
-
             return this;
         }
+
         /**
          * Agent's chance to learn
          * @returns {Agent}
@@ -273,18 +282,22 @@
          * @param {String} file
          */
         load(file) {
+            let self = this;
             $.getJSON(file, (data) => {
-                if (!this.worker) {
-                    this.brain.valueNet.fromJSON(data);
-                    // this.brain.fromJSON(data);
-                    this.brain.epsilon = 0.05;
-                    this.brain.alpha = 0;
+                if (!self.worker) {
+                    if (self.brain.valueNet !== undefined) {
+                        self.brain.valueNet.fromJSON(data);
+                    } else {
+                        self.brain.fromJSON(data);
+                    }
+                    self.brain.epsilon = 0.05;
+                    self.brain.alpha = 0;
                 } else {
-                    this.post('load', JSON.stringify(data));
+                    self.post('load', JSON.stringify(data));
                 }
             });
 
-            return this;
+            return self;
         }
 
         /**

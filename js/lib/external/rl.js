@@ -1,15 +1,173 @@
+var R = {}; // the Recurrent library
+
 (function (global) {
     "use strict";
+
+    // Utility fun
+    function assert(condition, message) {
+        // from http://stackoverflow.com/questions/15313418/javascript-assert
+        if (!condition) {
+            message = message || "Assertion failed";
+            if (typeof Error !== "undefined") {
+                throw new Error(message);
+            }
+            throw message; // Fallback
+        }
+    }
 
     // Random numbers utils
     var returnV = false,
         vVal = 0.0,
+        gaussRandom = function () {
+            if (returnV) {
+                returnV = false;
+                return vVal;
+            }
+            var u = 2 * Math.random() - 1,
+                v = 2 * Math.random() - 1,
+                r = u * u + v * v;
+            if (r == 0 || r > 1) {
+                return gaussRandom();
+            }
+            var c = Math.sqrt(-2 * Math.log(r) / r);
+            vVal = v * c; // cache this
+            returnV = true;
+            return u * c;
+        },
+        randf = function (a, b) {
+            return Math.random() * (b - a) + a;
+        },
+        randi = function (a, b) {
+            return Math.floor(Math.random() * (b - a) + a);
+        },
+        randn = function (mu, std) {
+            return mu + gaussRandom() * std;
+        },
+        /**
+         * returns a random cauchy random variable with gamma (controls magnitude sort of like stdev in randn)
+         * http://en.wikipedia.org/wiki/Cauchy_distribution
+         * @param m
+         * @param gamma
+         * @returns {}
+         */
+        randc = function (m, gamma) {
+            return m + gamma * 0.01 * randn(0.0, 1.0) / randn(0.0, 1.0);
+        },
+        /**
+         * helper function returns array of zeros of length n and uses typed arrays if available
+         * @param n
+         * @returns {*}
+         */
+        zeros = function (n) {
+            if (typeof(n) === 'undefined' || isNaN(n)) {
+                return [];
+            }
+            if (typeof ArrayBuffer === 'undefined') {
+                // lacking browser support
+                var arr = new Array(n);
+                for (var i = 0; i < n; i++) {
+                    arr[i] = 0;
+                }
+                return arr;
+            } else {
+                return new Float64Array(n);
+            }
+        };
+
+    /**
+     * Mat holds a matrix
+     * @param n
+     * @param d
+     * @name Mat
+     * @constructor
+     */
+    var Mat = function (n, d) {
+        this.n = n; // n is number of rows
+        this.d = d; // d is number of columns
+        this.w = zeros(n * d);
+        this.dw = zeros(n * d);
+    };
+
+    /**
+     *
+     * @type {{get: Function, set: Function, setFrom: Function, setColumn: Function, toJSON: Function, fromJSON: Function}}
+     */
+    Mat.prototype = {
+        /**
+         * Slow but careful accessor function we want row-major order
+         * @param row
+         * @param col
+         * @returns {*}
+         */
+        get: function (row, col) {
+            var ix = (this.d * row) + col;
+            assert(ix >= 0 && ix < this.w.length);
+
+            return this.w[ix];
+        },
+        /**
+         * Slow but careful accessor function
+         * @param row
+         * @param col
+         * @param v
+         */
+        set: function (row, col, v) {
+            var ix = (this.d * row) + col;
+            assert(ix >= 0 && ix < this.w.length);
+            this.w[ix] = v;
+        },
         /**
          *
-         * @param {Object} b
-         * @returns {Mat}
+         * @param arr
          */
-        copyMat = function (b) {
+        setFrom: function (arr) {
+            for (var i = 0, n = arr.length; i < n; i++) {
+                this.w[i] = arr[i];
+            }
+        },
+        /**
+         *
+         * @param m
+         * @param i
+         */
+        setColumn: function (m, i) {
+            for (var q = 0, n = m.w.length; q < n; q++) {
+                this.w[(this.d * q) + i] = m.w[q];
+            }
+        },
+        /**
+         *
+         * @returns {}
+         */
+        toJSON: function () {
+            var json = {};
+            json.n = this.n;
+            json.d = this.d;
+            json.w = this.w;
+
+            return json;
+        },
+        /**
+         *
+         * @param json
+         */
+        fromJSON: function (json) {
+            this.n = json.n;
+            this.d = json.d;
+            this.w = zeros(this.n * this.d);
+            this.dw = zeros(this.n * this.d);
+            for (var i = 0, n = this.n * this.d; i < n; i++) {
+                this.w[i] = json.w[i]; // copy over weights
+            }
+        }
+    };
+
+    /**
+     *
+     * @param {Object} b
+     * @returns {Mat}
+     */
+    var copyMat = function (b) {
             var a = new Mat(b.n, b.d);
             a.setFrom(b.w);
             return a;
@@ -144,18 +302,8 @@
          */
         fillRandn = function (m, mu, std) {
             for (var i = 0, n = m.w.length; i < n; i++) {
-                m.w[i] = Utility.randn(mu, std);
+                m.w[i] = randn(mu, std);
             }
-        },
-        /**
-         * returns a random cauchy random variable with gamma (controls magnitude sort of like stdev in randn)
-         * http://en.wikipedia.org/wiki/Cauchy_distribution
-         * @param m
-         * @param gamma
-         * @returns {}
-         */
-        randc = function (m, gamma) {
-            return m + gamma * 0.01 * Utility.randn(0.0, 1.0) / Utility.randn(0.0, 1.0);
         },
         /**
          *
@@ -165,7 +313,7 @@
          */
         fillRand = function (m, lo, hi) {
             for (var i = 0, n = m.w.length; i < n; i++) {
-                m.w[i] = Utility.randf(lo, hi);
+                m.w[i] = randf(lo, hi);
             }
         },
         /**
@@ -177,43 +325,359 @@
             for (var i = 0, n = m.dw.length; i < n; i++) {
                 m.dw[i] = c;
             }
+        };
+
+    /**
+     * Transformer definitions
+     * @param needsBackprop
+     * @name Graph
+     * @constructor
+     */
+    var Graph = function (needsBackprop) {
+        if (typeof needsBackprop === 'undefined') {
+            needsBackprop = true;
+        }
+        this.needsBackprop = needsBackprop;
+
+        // this will store a list of functions that perform backprop,
+        // in their forward pass order. So in backprop we will go
+        // backwards and evoke each one
+        this.backprop = [];
+    };
+
+    /**
+     *
+     * @type {{backward: Function, rowPluck: Function, tanh: Function, sigmoid: Function, relu: Function, mul: Function, add: Function, dot: Function, eltmul: Function}}
+     */
+    Graph.prototype = {
+        /**
+         *
+         */
+        backward: function () {
+            for (var i = this.backprop.length - 1; i >= 0; i--) {
+                this.backprop[i](); // tick!
+            }
+        },
+        /**
+         * Pluck a row of m with index ix and return it as col vector
+         * @param m
+         * @param ix
+         * @returns {Mat}
+         */
+        rowPluck: function (m, ix) {
+            assert(ix >= 0 && ix < m.n);
+            var d = m.d,
+                out = new Mat(d, 1);
+            // copy over the data
+            for (var i = 0, n = d; i < n; i++) {
+                out.w[i] = m.w[d * ix + i];
+            }
+
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0, n = d; i < n; i++) {
+                        m.dw[d * ix + i] += out.dw[i];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
+        },
+        /**
+         * tanh nonlinearity
+         * @param m
+         * @returns {Mat}
+         */
+        tanh: function (m) {
+            var out = new Mat(m.n, m.d),
+                n = m.w.length;
+            for (var i = 0; i < n; i++) {
+                out.w[i] = Math.tanh(m.w[i]);
+            }
+
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0; i < n; i++) {
+                        // grad for z = tanh(x) is (1 - z^2)
+                        var mwi = out.w[i];
+                        m.dw[i] += (1.0 - mwi * mwi) * out.dw[i];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
+        },
+        /**
+         * Sigmoid nonlinearity
+         * @param m
+         * @returns {Mat}
+         */
+        sigmoid: function (m) {
+            var out = new Mat(m.n, m.d),
+                n = m.w.length;
+            for (var i = 0; i < n; i++) {
+                out.w[i] = sig(m.w[i]);
+            }
+
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0; i < n; i++) {
+                        // grad for z = tanh(x) is (1 - z^2)
+                        var mwi = out.w[i];
+                        m.dw[i] += mwi * (1.0 - mwi) * out.dw[i];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
         },
         /**
          *
          * @param m
          * @returns {Mat}
          */
-        softMax = function (m) {
-            var out = new Mat(m.n, m.d), // probability volume
-                maxVal = -999999,
-                s = 0.0;
-            for (let i = 0, n = m.w.length; i < n; i++) {
-                if (m.w[i] > maxVal) {
-                    maxVal = m.w[i];
+        relu: function (m) {
+            var out = new Mat(m.n, m.d),
+                n = m.w.length;
+            for (var i = 0; i < n; i++) {
+                out.w[i] = Math.max(0, m.w[i]); // relu
+            }
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0; i < n; i++) {
+                        m.dw[i] += m.w[i] > 0 ? out.dw[i] : 0.0;
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
+        },
+        /**
+         * Multiply matrices m1 * m2
+         * @param m1
+         * @param m2
+         * @returns {Mat}
+         */
+        mul: function (m1, m2) {
+            assert(m1.d === m2.n, 'matmul dimensions misaligned');
+
+            var n = m1.n,
+                d = m2.d,
+                out = new Mat(n, d);
+            // loop over rows of m1
+            for (var i = 0; i < m1.n; i++) {
+                // loop over cols of m2
+                for (var j = 0; j < m2.d; j++) {
+                    var dot = 0.0;
+                    // dot product loop
+                    for (var k = 0; k < m1.d; k++) {
+                        dot += m1.w[m1.d * i + k] * m2.w[m2.d * k + j];
+                    }
+                    out.w[d * i + j] = dot;
                 }
             }
 
-            for (let i = 0, n = m.w.length; i < n; i++) {
-                out.w[i] = Math.exp(m.w[i] - maxVal);
-                s += out.w[i];
-            }
-            for (let i = 0, n = m.w.length; i < n; i++) {
-                out.w[i] /= s;
+            if (this.needsBackprop) {
+                var backward = function () {
+                    // loop over rows of m1
+                    for (var i = 0; i < m1.n; i++) {
+                        // loop over cols of m2
+                        for (var j = 0; j < m2.d; j++) {
+                            // dot product loop
+                            for (var k = 0; k < m1.d; k++) {
+                                var b = out.dw[d * i + j];
+                                m1.dw[m1.d * i + k] += m2.w[m2.d * k + j] * b;
+                                m2.dw[m2.d * k + j] += m1.w[m1.d * i + k] * b;
+                            }
+                        }
+                    }
+                };
+                this.backprop.push(backward);
             }
 
-            // no backward pass here needed
-            // since we will use the computed probabilities outside
-            // to set gradients directly on m
             return out;
         },
         /**
          *
-         * @param inputSize
-         * @param hiddenSizes
-         * @param outputSize
-         * @returns {}
+         * @param m1
+         * @param m2
+         * @returns {Mat}
          */
-        initLSTM = function (inputSize, hiddenSizes, outputSize) {
+        add: function (m1, m2) {
+            assert(m1.w.length === m2.w.length);
+
+            var out = new Mat(m1.n, m1.d);
+            for (var i = 0, n = m1.w.length; i < n; i++) {
+                out.w[i] = m1.w[i] + m2.w[i];
+            }
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0, n = m1.w.length; i < n; i++) {
+                        m1.dw[i] += out.dw[i];
+                        m2.dw[i] += out.dw[i];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+            return out;
+        },
+        /**
+         * m1 m2 are both column vectors
+         * @param m1
+         * @param m2
+         * @returns {Mat}
+         */
+        dot: function (m1, m2) {
+            assert(m1.w.length === m2.w.length);
+            var out = new Mat(1, 1),
+                dot = 0.0;
+            for (var i = 0, n = m1.w.length; i < n; i++) {
+                dot += m1.w[i] * m2.w[i];
+            }
+            out.w[0] = dot;
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0, n = m1.w.length; i < n; i++) {
+                        m1.dw[i] += m2.w[i] * out.dw[0];
+                        m2.dw[i] += m1.w[i] * out.dw[0];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
+        },
+        /**
+         *
+         * @param m1
+         * @param m2
+         * @returns {Mat}
+         */
+        eltmul: function (m1, m2) {
+            assert(m1.w.length === m2.w.length);
+
+            var out = new Mat(m1.n, m1.d);
+            for (var i = 0, n = m1.w.length; i < n; i++) {
+                out.w[i] = m1.w[i] * m2.w[i];
+            }
+            if (this.needsBackprop) {
+                var backward = function () {
+                    for (var i = 0, n = m1.w.length; i < n; i++) {
+                        m1.dw[i] += m2.w[i] * out.dw[i];
+                        m2.dw[i] += m1.w[i] * out.dw[i];
+                    }
+                };
+                this.backprop.push(backward);
+            }
+
+            return out;
+        }
+    };
+
+    /**
+     *
+     * @param m
+     * @returns {Mat}
+     */
+    var softMax = function (m) {
+        var out = new Mat(m.n, m.d), // probability volume
+            maxVal = -999999,
+            s = 0.0;
+        for (let i = 0, n = m.w.length; i < n; i++) {
+            if (m.w[i] > maxVal) {
+                maxVal = m.w[i];
+            }
+        }
+
+        for (let i = 0, n = m.w.length; i < n; i++) {
+            out.w[i] = Math.exp(m.w[i] - maxVal);
+            s += out.w[i];
+        }
+        for (let i = 0, n = m.w.length; i < n; i++) {
+            out.w[i] /= s;
+        }
+
+        // no backward pass here needed
+        // since we will use the computed probabilities outside
+        // to set gradients directly on m
+        return out;
+    };
+
+    /**
+     * @name Solver
+     * @constructor
+     */
+    var Solver = function () {
+        this.decayRate = 0.999;
+        this.smoothEps = 1e-8;
+        this.stepCache = {};
+    };
+
+    /**
+     *
+     * @type {{step: Function}}
+     */
+    Solver.prototype = {
+        /**
+         * perform parameter update
+         * @param model
+         * @param stepSize
+         * @param regc
+         * @param clipVal
+         * @returns {{}}
+         */
+        step: function (model, stepSize, regc, clipVal) {
+            var solverStats = {},
+                numClipped = 0,
+                numTot = 0;
+            for (var k in model) {
+                if (model.hasOwnProperty(k)) {
+                    var m = model[k]; // mat ref
+                    if (!(k in this.stepCache)) {
+                        this.stepCache[k] = new Mat(m.n, m.d);
+                    }
+                    var s = this.stepCache[k];
+                    for (var i = 0, n = m.w.length; i < n; i++) {
+
+                        // rmsprop adaptive learning rate
+                        var mdwi = m.dw[i];
+                        s.w[i] = s.w[i] * this.decayRate + (1.0 - this.decayRate) * mdwi * mdwi;
+
+                        // gradient clip
+                        if (mdwi > clipVal) {
+                            mdwi = clipVal;
+                            numClipped++;
+                        }
+                        if (mdwi < -clipVal) {
+                            mdwi = -clipVal;
+                            numClipped++;
+                        }
+                        numTot++;
+
+                        // update (and regularize)
+                        m.w[i] += -stepSize * mdwi / Math.sqrt(s.w[i] + this.smoothEps) - regc * m.w[i];
+                        m.dw[i] = 0; // reset gradients for next iteration
+                    }
+                }
+            }
+            solverStats.ratioClipped = numClipped * 1.0 / numTot;
+
+            return solverStats;
+        }
+    };
+
+    /**
+     *
+     * @param inputSize
+     * @param hiddenSizes
+     * @param outputSize
+     * @returns {}
+     */
+    var initLSTM = function (inputSize, hiddenSizes, outputSize) {
             // hidden size should be a list
             var model = {};
             for (var d = 0; d < hiddenSizes.length; d++) { // loop over depths
@@ -344,7 +808,7 @@
          * @returns {number}
          */
         sampleI = function (w) {
-            var r = Utility.randf(0, 1),
+            var r = randf(0, 1),
                 x = 0.0,
                 i = 0;
             while (true) {
@@ -356,8 +820,100 @@
             }
 
             return w.length - 1; // pretty sure we should never get here?
+        };
+
+// exports
+    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+        module.exports = {
+            // various utils
+            assert: assert,
+            zeros: zeros,
+            maxI: maxI,
+            sampleI: sampleI,
+            randi: randi,
+            randn: randn,
+            randc: randc,
+            randf: randf,
+            softMax: softMax,
+
+            // more utils
+            updateMat: updateMat,
+            updateNet: updateNet,
+            copyMat: copyMat,
+            copyNet: copyNet,
+            netToJSON: netToJSON,
+            netFromJSON: netFromJSON,
+            netZeroGrads: netZeroGrads,
+            netFlattenGrads: netFlattenGrads,
+
+            // classes
+            Mat: Mat,
+            randMat: randMat,
+            forwardLSTM: forwardLSTM,
+            initLSTM: initLSTM,
+
+            // optimization
+            Solver: Solver,
+            Graph: Graph
+        };
+    } else {
+        // various utils
+        global.assert = assert;
+        global.zeros = zeros;
+        global.maxI = maxI;
+        global.sampleI = sampleI;
+        global.randi = randi;
+        global.randn = randn;
+        global.randc = randc;
+        global.randf = randf;
+        global.softMax = softMax;
+
+        // more utils
+        global.updateMat = updateMat;
+        global.updateNet = updateNet;
+        global.copyMat = copyMat;
+        global.copyNet = copyNet;
+        global.netToJSON = netToJSON;
+        global.netFromJSON = netFromJSON;
+        global.netZeroGrads = netZeroGrads;
+        global.netFlattenGrads = netFlattenGrads;
+
+        // classes
+        global.Mat = Mat;
+        global.randMat = randMat;
+        global.forwardLSTM = forwardLSTM;
+        global.initLSTM = initLSTM;
+
+        // optimization
+        global.Solver = Solver;
+        global.Graph = Graph;
+    }
+})(R);
+
+// END OF RECURRENTJS
+
+var RL = {};
+(function (global) {
+    "use strict";
+
+    /**
+     * syntactic sugar function for getting default parameter values
+     * @param opt
+     * @param field_name
+     * @param default_value
+     * @returns {*}
+     */
+    var getOpt = function (opt, field_name, default_value) {
+            if (typeof opt === 'undefined') {
+                return default_value;
+            }
+            return (typeof opt[field_name] !== 'undefined') ? opt[field_name] : default_value;
         },
-        /**
+        zeros = R.zeros, // inherit these
+        assert = R.assert,
+        randi = R.randi,
+        randf = R.randf,
+        /*
          *
          * @param arr
          * @param c
@@ -381,410 +937,9 @@
                     return i;
                 }
             }
-            Utility.assert(false, 'wtf');
+            assert(false, 'wtf');
         };
 
-    /**
-     * Mat holds a matrix
-     * @param n
-     * @param d
-     * @name Mat
-     * @constructor
-     */
-    var Mat = function (n, d) {
-        this.n = n; // n is number of rows
-        this.d = d; // d is number of columns
-        this.w = Utility.zeros(n * d);
-        this.dw = Utility.zeros(n * d);
-    };
-
-    /**
-     *
-     * @type {{get: Function, set: Function, setFrom: Function, setColumn: Function, toJSON: Function, fromJSON: Function}}
-     */
-    Mat.prototype = {
-        /**
-         * Slow but careful accessor function we want row-major order
-         * @param row
-         * @param col
-         * @returns {*}
-         */
-        get: function (row, col) {
-            var ix = (this.d * row) + col;
-            Utility.assert(ix >= 0 && ix < this.w.length);
-
-            return this.w[ix];
-        },
-        /**
-         * Slow but careful accessor function
-         * @param row
-         * @param col
-         * @param v
-         */
-        set: function (row, col, v) {
-            var ix = (this.d * row) + col;
-            Utility.assert(ix >= 0 && ix < this.w.length);
-            this.w[ix] = v;
-        },
-        /**
-         *
-         * @param arr
-         */
-        setFrom: function (arr) {
-            for (var i = 0, n = arr.length; i < n; i++) {
-                this.w[i] = arr[i];
-            }
-        },
-        /**
-         *
-         * @param m
-         * @param i
-         */
-        setColumn: function (m, i) {
-            for (var q = 0, n = m.w.length; q < n; q++) {
-                this.w[(this.d * q) + i] = m.w[q];
-            }
-        },
-        /**
-         *
-         * @returns {}
-         */
-        toJSON: function () {
-            var json = {};
-            json.n = this.n;
-            json.d = this.d;
-            json.w = this.w;
-
-            return json;
-        },
-        /**
-         *
-         * @param json
-         */
-        fromJSON: function (json) {
-            this.n = json.n;
-            this.d = json.d;
-            this.w = Utility.zeros(this.n * this.d);
-            this.dw = Utility.zeros(this.n * this.d);
-            for (var i = 0, n = this.n * this.d; i < n; i++) {
-                this.w[i] = json.w[i]; // copy over weights
-            }
-        }
-    };
-
-    /**
-     * Transformer definitions
-     * @param needsBackprop
-     * @name Graph
-     * @constructor
-     */
-    var Graph = function (needsBackprop) {
-        if (typeof needsBackprop === 'undefined') {
-            needsBackprop = true;
-        }
-        this.needsBackprop = needsBackprop;
-
-        // this will store a list of functions that perform backprop,
-        // in their forward pass order. So in backprop we will go
-        // backwards and evoke each one
-        this.backprop = [];
-    };
-
-    /**
-     *
-     * @type {{backward: Function, rowPluck: Function, tanh: Function, sigmoid: Function, relu: Function, mul: Function, add: Function, dot: Function, eltmul: Function}}
-     */
-    Graph.prototype = {
-        /**
-         *
-         */
-        backward: function () {
-            for (var i = this.backprop.length - 1; i >= 0; i--) {
-                this.backprop[i](); // tick!
-            }
-        },
-        /**
-         * Pluck a row of m with index ix and return it as col vector
-         * @param m
-         * @param ix
-         * @returns {Mat}
-         */
-        rowPluck: function (m, ix) {
-            Utility.assert(ix >= 0 && ix < m.n);
-            var d = m.d,
-                out = new Mat(d, 1);
-            // copy over the data
-            for (var i = 0, n = d; i < n; i++) {
-                out.w[i] = m.w[d * ix + i];
-            }
-
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0, n = d; i < n; i++) {
-                        m.dw[d * ix + i] += out.dw[i];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         * tanh nonlinearity
-         * @param m
-         * @returns {Mat}
-         */
-        tanh: function (m) {
-            var out = new Mat(m.n, m.d),
-                n = m.w.length;
-            for (var i = 0; i < n; i++) {
-                out.w[i] = Math.tanh(m.w[i]);
-            }
-
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0; i < n; i++) {
-                        // grad for z = tanh(x) is (1 - z^2)
-                        var mwi = out.w[i];
-                        m.dw[i] += (1.0 - mwi * mwi) * out.dw[i];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         * Sigmoid nonlinearity
-         * @param m
-         * @returns {Mat}
-         */
-        sigmoid: function (m) {
-            var out = new Mat(m.n, m.d),
-                n = m.w.length;
-            for (var i = 0; i < n; i++) {
-                out.w[i] = sig(m.w[i]);
-            }
-
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0; i < n; i++) {
-                        // grad for z = tanh(x) is (1 - z^2)
-                        var mwi = out.w[i];
-                        m.dw[i] += mwi * (1.0 - mwi) * out.dw[i];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         *
-         * @param m
-         * @returns {Mat}
-         */
-        relu: function (m) {
-            var out = new Mat(m.n, m.d),
-                n = m.w.length;
-            for (var i = 0; i < n; i++) {
-                out.w[i] = Math.max(0, m.w[i]); // relu
-            }
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0; i < n; i++) {
-                        m.dw[i] += m.w[i] > 0 ? out.dw[i] : 0.0;
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         * Multiply matrices m1 * m2
-         * @param m1
-         * @param m2
-         * @returns {Mat}
-         */
-        mul: function (m1, m2) {
-            Utility.assert(m1.d === m2.n, 'matmul dimensions misaligned');
-
-            var n = m1.n,
-                d = m2.d,
-                out = new Mat(n, d);
-            // loop over rows of m1
-            for (var i = 0; i < m1.n; i++) {
-                // loop over cols of m2
-                for (var j = 0; j < m2.d; j++) {
-                    var dot = 0.0;
-                    // dot product loop
-                    for (var k = 0; k < m1.d; k++) {
-                        dot += m1.w[m1.d * i + k] * m2.w[m2.d * k + j];
-                    }
-                    out.w[d * i + j] = dot;
-                }
-            }
-
-            if (this.needsBackprop) {
-                var backward = function () {
-                    // loop over rows of m1
-                    for (var i = 0; i < m1.n; i++) {
-                        // loop over cols of m2
-                        for (var j = 0; j < m2.d; j++) {
-                            // dot product loop
-                            for (var k = 0; k < m1.d; k++) {
-                                var b = out.dw[d * i + j];
-                                m1.dw[m1.d * i + k] += m2.w[m2.d * k + j] * b;
-                                m2.dw[m2.d * k + j] += m1.w[m1.d * i + k] * b;
-                            }
-                        }
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         *
-         * @param m1
-         * @param m2
-         * @returns {Mat}
-         */
-        add: function (m1, m2) {
-            Utility.assert(m1.w.length === m2.w.length);
-
-            var out = new Mat(m1.n, m1.d);
-            for (var i = 0, n = m1.w.length; i < n; i++) {
-                out.w[i] = m1.w[i] + m2.w[i];
-            }
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0, n = m1.w.length; i < n; i++) {
-                        m1.dw[i] += out.dw[i];
-                        m2.dw[i] += out.dw[i];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-            return out;
-        },
-        /**
-         * m1 m2 are both column vectors
-         * @param m1
-         * @param m2
-         * @returns {Mat}
-         */
-        dot: function (m1, m2) {
-            Utility.assert(m1.w.length === m2.w.length);
-            var out = new Mat(1, 1),
-                dot = 0.0;
-            for (var i = 0, n = m1.w.length; i < n; i++) {
-                dot += m1.w[i] * m2.w[i];
-            }
-            out.w[0] = dot;
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0, n = m1.w.length; i < n; i++) {
-                        m1.dw[i] += m2.w[i] * out.dw[0];
-                        m2.dw[i] += m1.w[i] * out.dw[0];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        },
-        /**
-         *
-         * @param m1
-         * @param m2
-         * @returns {Mat}
-         */
-        eltmul: function (m1, m2) {
-            Utility.assert(m1.w.length === m2.w.length);
-
-            var out = new Mat(m1.n, m1.d);
-            for (var i = 0, n = m1.w.length; i < n; i++) {
-                out.w[i] = m1.w[i] * m2.w[i];
-            }
-            if (this.needsBackprop) {
-                var backward = function () {
-                    for (var i = 0, n = m1.w.length; i < n; i++) {
-                        m1.dw[i] += m2.w[i] * out.dw[i];
-                        m2.dw[i] += m1.w[i] * out.dw[i];
-                    }
-                };
-                this.backprop.push(backward);
-            }
-
-            return out;
-        }
-    };
-
-    /**
-     * @name Solver
-     * @constructor
-     */
-    var Solver = function () {
-        this.decayRate = 0.999;
-        this.smoothEps = 1e-8;
-        this.stepCache = {};
-    };
-
-    /**
-     *
-     * @type {{step: Function}}
-     */
-    Solver.prototype = {
-        /**
-         * perform parameter update
-         * @param model
-         * @param stepSize
-         * @param regc
-         * @param clipVal
-         * @returns {{}}
-         */
-        step: function (model, stepSize, regc, clipVal) {
-            var solverStats = {},
-                numClipped = 0,
-                numTot = 0;
-            for (var k in model) {
-                if (model.hasOwnProperty(k)) {
-                    var m = model[k]; // mat ref
-                    if (!(k in this.stepCache)) {
-                        this.stepCache[k] = new Mat(m.n, m.d);
-                    }
-                    var s = this.stepCache[k];
-                    for (var i = 0, n = m.w.length; i < n; i++) {
-
-                        // rmsprop adaptive learning rate
-                        var mdwi = m.dw[i];
-                        s.w[i] = s.w[i] * this.decayRate + (1.0 - this.decayRate) * mdwi * mdwi;
-
-                        // gradient clip
-                        if (mdwi > clipVal) {
-                            mdwi = clipVal;
-                            numClipped++;
-                        }
-                        if (mdwi < -clipVal) {
-                            mdwi = -clipVal;
-                            numClipped++;
-                        }
-                        numTot++;
-
-                        // update (and regularize)
-                        m.w[i] += -stepSize * mdwi / Math.sqrt(s.w[i] + this.smoothEps) - regc * m.w[i];
-                        m.dw[i] = 0; // reset gradients for next iteration
-                    }
-                }
-            }
-            solverStats.ratioClipped = numClipped * 1.0 / numTot;
-
-            return solverStats;
-        }
-    };
 
 // ------
 // AGENTS
@@ -805,7 +960,7 @@
         this.V = null; // state value function
         this.P = null; // policy distribution \pi(s,a)
         this.env = env; // store pointer to environment
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.75); // future reward discount factor
+        this.gamma = getOpt(opt, 'gamma', 0.75); // future reward discount factor
         this.reset();
     };
 
@@ -820,8 +975,8 @@
         reset: function () {
             this.ns = this.env.getNumStates();
             this.na = this.env.getMaxNumActions();
-            this.V = Utility.zeros(this.ns);
-            this.P = Utility.zeros(this.ns * this.na);
+            this.V = zeros(this.ns);
+            this.P = zeros(this.ns * this.na);
             // initialize uniform random policy
             for (var s = 0; s < this.ns; s++) {
                 var poss = this.env.allowedActions(s);
@@ -858,7 +1013,7 @@
          * Perform a synchronous update of the value function
          */
         evaluatePolicy: function () {
-            var Vnew = Utility.zeros(this.ns);
+            var Vnew = zeros(this.ns);
             for (var s = 0; s < this.ns; s++) {
                 // integrate over actions in a stochastic policy
                 // note that we assume that policy probability mass over allowed actions sums to one
@@ -919,23 +1074,23 @@
      * @constructor
      */
     var TDAgent = function (env, opt) {
-        this.update = Utility.getOpt(opt, 'update', 'qlearn'); // qlearn | sarsa
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.75); // future reward discount factor
-        this.epsilon = Utility.getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
-        this.alpha = Utility.getOpt(opt, 'alpha', 0.01); // value function learning rate
+        this.update = getOpt(opt, 'update', 'qlearn'); // qlearn | sarsa
+        this.gamma = getOpt(opt, 'gamma', 0.75); // future reward discount factor
+        this.epsilon = getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
+        this.alpha = getOpt(opt, 'alpha', 0.01); // value function learning rate
 
         // class allows non-deterministic policy, and smoothly regressing towards the optimal policy based on Q
-        this.smoothPolicyUpdate = Utility.getOpt(opt, 'smoothPolicyUpdate', false);
-        this.beta = Utility.getOpt(opt, 'beta', 0.01); // learning rate for policy, if smooth updates are on
+        this.smoothPolicyUpdate = getOpt(opt, 'smoothPolicyUpdate', false);
+        this.beta = getOpt(opt, 'beta', 0.01); // learning rate for policy, if smooth updates are on
 
         // eligibility traces
-        this.lambda = Utility.getOpt(opt, 'lambda', 0); // eligibility trace decay. 0 = no eligibility traces used
-        this.replacingTraces = Utility.getOpt(opt, 'replacingTraces', true);
+        this.lambda = getOpt(opt, 'lambda', 0); // eligibility trace decay. 0 = no eligibility traces used
+        this.replacingTraces = getOpt(opt, 'replacingTraces', true);
 
         // optional optimistic initial values
-        this.qInitVal = Utility.getOpt(opt, 'qInitVal', 0);
+        this.qInitVal = getOpt(opt, 'qInitVal', 0);
 
-        this.planN = Utility.getOpt(opt, 'planN', 0); // number of planning steps per learning iteration (0 = no planning)
+        this.planN = getOpt(opt, 'planN', 0); // number of planning steps per learning iteration (0 = no planning)
 
         this.Q = null; // state action value function
         this.P = null; // policy distribution \pi(s,a)
@@ -959,19 +1114,19 @@
         reset: function () {
             this.ns = this.env.getNumStates();
             this.na = this.env.getMaxNumActions();
-            this.Q = Utility.zeros(this.ns * this.na);
+            this.Q = zeros(this.ns * this.na);
             if (this.qInitVal !== 0) {
                 setConst(this.Q, this.qInitVal);
             }
-            this.P = Utility.zeros(this.ns * this.na);
-            this.e = Utility.zeros(this.ns * this.na);
+            this.P = zeros(this.ns * this.na);
+            this.e = zeros(this.ns * this.na);
 
             // model/planning vars
-            this.envModelS = Utility.zeros(this.ns * this.na);
+            this.envModelS = zeros(this.ns * this.na);
             setConst(this.envModelS, -1); // init to -1 so we can test if we saw the state before
-            this.envModelR = Utility.zeros(this.ns * this.na);
+            this.envModelR = zeros(this.ns * this.na);
             this.saSeen = [];
-            this.pq = Utility.zeros(this.ns * this.na);
+            this.pq = zeros(this.ns * this.na);
 
             // initialize uniform random policy
             for (var s = 0; s < this.ns; s++) {
@@ -1008,7 +1163,7 @@
             }
             // epsilon greedy policy
             if (Math.random() < this.epsilon) {
-                a = poss[Utility.randi(0, poss.length)]; // random available action
+                a = poss[randi(0, poss.length)]; // random available action
                 this.explored = true;
             } else {
                 a = poss[sampleWeighted(probs)];
@@ -1071,7 +1226,7 @@
             var nSteps = Math.min(this.planN, spq.length);
             for (var k = 0; k < nSteps; k++) {
                 // random exploration
-                //var i = Utility.randi(0, this.saSeen.length); // pick random prev seen state action
+                //var i = randi(0, this.saSeen.length); // pick random prev seen state action
                 //var s0a0 = this.saSeen[i];
                 var s0a0 = spq[k].sa,
                     s0 = s0a0 % this.ns,
@@ -1085,7 +1240,7 @@
                 if (this.update === 'sarsa') {
                     // generate random action?...
                     var poss = this.env.allowedActions(s1),
-                        a1 = poss[Utility.randi(0, poss.length)];
+                        a1 = poss[randi(0, poss.length)];
                 }
                 // note lambda = 0 - shouldnt use eligibility trace here
                 this.learnFromTuple(s0, a0, r0, s1, a1, 0);
@@ -1130,7 +1285,7 @@
                     this.e[sa] += 1;
                 }
                 var eDecay = lambda * this.gamma,
-                    stateUpdate = Utility.zeros(this.ns);
+                    stateUpdate = zeros(this.ns);
                 for (var s = 0; s < this.ns; s++) {
                     var poss = this.env.allowedActions(s);
                     for (var i = 0; i < poss.length; i++) {
@@ -1154,7 +1309,7 @@
                 }
                 if (this.explored && this.update === 'qlearn') {
                     // have to wipe the trace since q learning is off-policy :(
-                    this.e = Utility.zeros(this.ns * this.na);
+                    this.e = zeros(this.ns * this.na);
                 }
             } else {
                 // simpler and faster update without eligibility trace
@@ -1261,14 +1416,14 @@
      * @param {boolean} opt.spec.numHiddenUnits - Number of neurons in hidden layer
      */
     var DQNAgent = function (env, opt) {
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.75); // future reward discount factor
-        this.epsilon = Utility.getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
-        this.alpha = Utility.getOpt(opt, 'alpha', 0.01); // value function learning rate
-        this.experienceAddEvery = Utility.getOpt(opt, 'experienceAddEvery', 25); // number of time steps before we add another experience to replay memory
-        this.experienceSize = Utility.getOpt(opt, 'experienceSize', 5000); // size of experience replay
-        this.learningStepsPerIteration = Utility.getOpt(opt, 'learningStepsPerIteration', 10);
-        this.tdErrorClamp = Utility.getOpt(opt, 'tdErrorClamp', 1.0);
-        this.numHiddenUnits = Utility.getOpt(opt, 'numHiddenUnits', 100);
+        this.gamma = getOpt(opt, 'gamma', 0.75); // future reward discount factor
+        this.epsilon = getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
+        this.alpha = getOpt(opt, 'alpha', 0.01); // value function learning rate
+        this.experienceAddEvery = getOpt(opt, 'experienceAddEvery', 25); // number of time steps before we add another experience to replay memory
+        this.experienceSize = getOpt(opt, 'experienceSize', 5000); // size of experience replay
+        this.learningStepsPerIteration = getOpt(opt, 'learningStepsPerIteration', 10);
+        this.tdErrorClamp = getOpt(opt, 'tdErrorClamp', 1.0);
+        this.numHiddenUnits = getOpt(opt, 'numHiddenUnits', 100);
 
         this.tdError = 0; // for visualization only...
         this.env = env;
@@ -1291,10 +1446,10 @@
             // not proud of this. better solution is to have a whole Net object
             // on top of Mats, but for now sticking with this
             this.net = {};
-            this.net.W1 = new randMat(this.nh, this.ns, 0, 0.01);
-            this.net.b1 = new Mat(this.nh, 1, 0, 0.01);
-            this.net.W2 = new randMat(this.na, this.nh, 0, 0.01);
-            this.net.b2 = new Mat(this.na, 1, 0, 0.01);
+            this.net.W1 = new R.randMat(this.nh, this.ns, 0, 0.01);
+            this.net.b1 = new R.Mat(this.nh, 1, 0, 0.01);
+            this.net.W2 = new R.randMat(this.na, this.nh, 0, 0.01);
+            this.net.b2 = new R.Mat(this.na, 1, 0, 0.01);
 
             this.exp = []; // experience
             this.expi = 0; // where to insert
@@ -1319,7 +1474,7 @@
             j.nh = this.nh;
             j.ns = this.ns;
             j.na = this.na;
-            j.net = netToJSON(this.net);
+            j.net = R.netToJSON(this.net);
             return j;
         },
         /**
@@ -1331,7 +1486,7 @@
             this.nh = j.nh;
             this.ns = j.ns;
             this.na = j.na;
-            this.net = netFromJSON(j.net);
+            this.net = R.netFromJSON(j.net);
         },
         /**
          *
@@ -1341,7 +1496,7 @@
          * @returns {*}
          */
         forwardQ: function (net, s, needsBackprop) {
-            var G = new Graph(needsBackprop),
+            var G = new R.Graph(needsBackprop),
                 a1mat = G.add(G.mul(net.W1, s), net.b1),
                 h1mat = G.tanh(a1mat),
                 a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
@@ -1356,16 +1511,16 @@
          */
         act: function (slist) {
             // convert to a Mat column vector
-            var a, s = new Mat(this.ns, 1);
+            var a, s = new R.Mat(this.ns, 1);
             s.setFrom(slist);
 
             // epsilon greedy policy
             if (Math.random() < this.epsilon) {
-                a = Utility.randi(0, this.na);
+                a = randi(0, this.na);
             } else {
                 // greedy wrt Q function
                 var aMat = this.forwardQ(this.net, s, false);
-                a = maxI(aMat.w); // returns index of argmax action
+                a = R.maxI(aMat.w); // returns index of argmax action
             }
 
             // shift state memory
@@ -1398,7 +1553,7 @@
 
                 // sample some additional experience from replay memory and learn from it
                 for (var k = 0; k < this.learningStepsPerIteration; k++) {
-                    var ri = Utility.randi(0, this.exp.length), // todo: priority sweeps?
+                    var ri = randi(0, this.exp.length), // todo: priority sweeps?
                         e = this.exp[ri];
                     this.learnFromTuple(e[0], e[1], e[2], e[3], e[4]);
                 }
@@ -1418,7 +1573,7 @@
             // compute the target Q value
             var tMat = this.forwardQ(this.net, s1, false),
             // want: Q(s,a) = r + gamma * max_a' Q(s',a')
-                qMax = r0 + this.gamma * tMat.w[maxI(tMat.w)],
+                qMax = r0 + this.gamma * tMat.w[R.maxI(tMat.w)],
             // now predict so use backProp
                 pred = this.forwardQ(this.net, s0, true),
                 clamp = this.tdErrorClamp;
@@ -1435,7 +1590,7 @@
             this.lastG.backward(); // compute gradients on net params
 
             // update net
-            updateNet(this.net, this.alpha);
+            R.updateNet(this.net, this.alpha);
 
             return this.tdError;
         }
@@ -1449,10 +1604,10 @@
      * @constructor
      */
     var SimpleReinforceAgent = function (env, opt) {
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.5); // future reward discount factor
-        this.epsilon = Utility.getOpt(opt, 'epsilon', 0.75); // for epsilon-greedy policy
-        this.alpha = Utility.getOpt(opt, 'alpha', 0.001); // actor net learning rate
-        this.beta = Utility.getOpt(opt, 'beta', 0.01); // baseline net learning rate
+        this.gamma = getOpt(opt, 'gamma', 0.5); // future reward discount factor
+        this.epsilon = getOpt(opt, 'epsilon', 0.75); // for epsilon-greedy policy
+        this.alpha = getOpt(opt, 'alpha', 0.001); // actor net learning rate
+        this.beta = getOpt(opt, 'beta', 0.01); // baseline net learning rate
         this.env = env;
         this.reset();
     };
@@ -1472,10 +1627,10 @@
             this.nhb = 100; // and also in the baseline lstm
 
             this.actorNet = {};
-            this.actorNet.W1 = new randMat(this.nh, this.ns, 0, 0.01);
-            this.actorNet.b1 = new Mat(this.nh, 1, 0, 0.01);
-            this.actorNet.W2 = new randMat(this.na, this.nh, 0, 0.1);
-            this.actorNet.b2 = new Mat(this.na, 1, 0, 0.01);
+            this.actorNet.W1 = new R.randMat(this.nh, this.ns, 0, 0.01);
+            this.actorNet.b1 = new R.Mat(this.nh, 1, 0, 0.01);
+            this.actorNet.W2 = new R.randMat(this.na, this.nh, 0, 0.1);
+            this.actorNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
             this.actorOutputs = [];
             this.actorGraphs = [];
             this.actorActions = []; // sampled ones
@@ -1483,10 +1638,10 @@
             this.rewardHistory = [];
 
             this.baselineNet = {};
-            this.baselineNet.W1 = new randMat(this.nhb, this.ns, 0, 0.01);
-            this.baselineNet.b1 = new Mat(this.nhb, 1, 0, 0.01);
-            this.baselineNet.W2 = new randMat(this.na, this.nhb, 0, 0.01);
-            this.baselineNet.b2 = new Mat(this.na, 1, 0, 0.01);
+            this.baselineNet.W1 = new R.randMat(this.nhb, this.ns, 0, 0.01);
+            this.baselineNet.b1 = new R.Mat(this.nhb, 1, 0, 0.01);
+            this.baselineNet.W2 = new R.randMat(this.na, this.nhb, 0, 0.01);
+            this.baselineNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
             this.baselineOutputs = [];
             this.baselineGraphs = [];
 
@@ -1500,7 +1655,7 @@
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
-                G = new Graph(needsBackprop),
+                G = new R.Graph(needsBackprop),
                 a1Mat = G.add(G.mul(net.W1, s), net.b1),
                 h1Mat = G.tanh(a1Mat),
                 a2Mat = G.add(G.mul(net.W2, h1Mat), net.b2);
@@ -1518,7 +1673,7 @@
          */
         forwardValue: function (s, needsBackprop) {
             var net = this.baselineNet,
-                G = new Graph(needsBackprop),
+                G = new R.Graph(needsBackprop),
                 a1Mat = G.add(G.mul(net.W1, s), net.b1),
                 h1Mat = G.tanh(a1Mat),
                 a2Mat = G.add(G.mul(net.W2, h1Mat), net.b2);
@@ -1535,7 +1690,7 @@
          */
         act: function (slist) {
             // convert to a Mat column vector
-            var s = new Mat(this.ns, 1);
+            var s = new R.Mat(this.ns, 1);
             s.setFrom(slist);
 
             // forward the actor to get action output
@@ -1553,10 +1708,10 @@
             this.baselineGraphs.push(vg);
 
             // sample action from the stochastic gaussian policy
-            var a = copyMat(aMat),
+            var a = R.copyMat(aMat),
                 gaussVar = 0.02;
-            a.w[0] = Utility.randn(0, gaussVar);
-            a.w[1] = Utility.randn(0, gaussVar);
+            a.w[0] = randn(0, gaussVar);
+            a.w[1] = randn(0, gaussVar);
 
             this.actorActions.push(a);
 
@@ -1624,8 +1779,8 @@
                     this.actorGraphs[t].backward();
                     this.baselineGraphs[t].backward();
                 }
-                updateNet(this.actorNet, this.alpha); // update actor network
-                updateNet(this.baselineNet, this.beta); // update baseline network
+                R.updateNet(this.actorNet, this.alpha); // update actor network
+                R.updateNet(this.baselineNet, this.beta); // update baseline network
 
                 // flush
                 this.actorOutputs = [];
@@ -1650,10 +1805,10 @@
      * @constructor
      */
     var RecurrentReinforceAgent = function (env, opt) {
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.5); // future reward discount factor
-        this.epsilon = Utility.getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
-        this.alpha = Utility.getOpt(opt, 'alpha', 0.001); // actor net learning rate
-        this.beta = Utility.getOpt(opt, 'beta', 0.01); // baseline net learning rate
+        this.gamma = getOpt(opt, 'gamma', 0.5); // future reward discount factor
+        this.epsilon = getOpt(opt, 'epsilon', 0.1); // for epsilon-greedy policy
+        this.alpha = getOpt(opt, 'alpha', 0.001); // actor net learning rate
+        this.beta = getOpt(opt, 'beta', 0.01); // baseline net learning rate
         this.env = env;
         this.reset();
     };
@@ -1672,15 +1827,15 @@
             this.nh = 40; // number of hidden units
             this.nhb = 40; // and also in the baseline lstm
 
-            this.actorLSTM = initLSTM(this.ns, [this.nh], this.na);
-            this.actorG = new Graph();
+            this.actorLSTM = R.initLSTM(this.ns, [this.nh], this.na);
+            this.actorG = new R.Graph();
             this.actorPrev = null;
             this.actorOutputs = [];
             this.rewardHistory = [];
             this.actorActions = [];
 
-            this.baselineLSTM = initLSTM(this.ns, [this.nhb], 1);
-            this.baselineG = new Graph();
+            this.baselineLSTM = R.initLSTM(this.ns, [this.nhb], 1);
+            this.baselineG = new R.Graph();
             this.baselinePrev = null;
             this.baselineOutputs = [];
 
@@ -1699,26 +1854,26 @@
          */
         act: function (sList) {
             // convert to a Mat column vector
-            var s = new Mat(this.ns, 1);
+            var s = new R.Mat(this.ns, 1);
             s.setFrom(sList);
 
             // forward the LSTM to get action distribution
-            var actorNext = forwardLSTM(this.actorG, this.actorLSTM, [this.nh], s, this.actorPrev);
+            var actorNext = R.forwardLSTM(this.actorG, this.actorLSTM, [this.nh], s, this.actorPrev);
             this.actorPrev = actorNext;
             var aMat = actorNext.o;
             this.actorOutputs.push(aMat);
 
             // forward the baseline LSTM
-            var baselineNext = forwardLSTM(this.baselineG, this.baselineLSTM, [this.nhb], s, this.baselinePrev);
+            var baselineNext = R.forwardLSTM(this.baselineG, this.baselineLSTM, [this.nhb], s, this.baselinePrev);
             this.baselinePrev = baselineNext;
             this.baselineOutputs.push(baselineNext.o);
 
             // sample action from actor policy
             var gaussVar = 0.05,
-                a = copyMat(aMat);
+                a = R.copyMat(aMat);
             for (var i = 0, n = a.w.length; i < n; i++) {
-                a.w[0] += Utility.randn(0, gaussVar);
-                a.w[1] += Utility.randn(0, gaussVar);
+                a.w[0] += randn(0, gaussVar);
+                a.w[1] += randn(0, gaussVar);
             }
             this.actorActions.push(a);
 
@@ -1755,8 +1910,24 @@
                         } // efficiency savings
                     }
                     var b = this.baselineOutputs[t].w[0];
+                    // todo: take out the constants etc.
                     for (var i = 0; i < this.na; i++) {
-                        this.actorOutputs[t].dw[i] += (b - V);
+                        // [the action delta] * [the desirability]
+                        var update = -(V - b) * (this.actorActions[t].w[i] - this.actorOutputs[t].w[i]);
+                        if (update > 0.1) {
+                            update = 0.1;
+                        }
+                        if (update < -0.1) {
+                            update = -0.1;
+                        }
+                        this.actorOutputs[t].dw[i] += update;
+                    }
+                    var update = -(V - b);
+                    if (update > 0.1) {
+                        update = 0.1;
+                    }
+                    if (update < 0.1) {
+                        update = -0.1;
                     }
                     this.baselineOutputs[t].dw[0] = (b - V);
                     baselineMSE += (V - b) * (V - b);
@@ -1765,17 +1936,17 @@
                 baselineMSE /= nUse;
                 this.actorG.backward(); // update params! woohoo!
                 this.baselineG.backward();
-                updateNet(this.actorLSTM, this.alpha); // update actor network
-                updateNet(this.baselineLSTM, this.beta); // update baseline network
+                R.updateNet(this.actorLSTM, this.alpha); // update actor network
+                R.updateNet(this.baselineLSTM, this.beta); // update baseline network
 
                 // flush
-                this.actorG = new Graph();
+                this.actorG = new R.Graph();
                 this.actorPrev = null;
                 this.actorOutputs = [];
                 this.rewardHistory = [];
                 this.actorActions = [];
 
-                this.baselineG = new Graph();
+                this.baselineG = new R.Graph();
                 this.baselinePrev = null;
                 this.baselineOutputs = [];
 
@@ -1794,10 +1965,10 @@
      * @constructor
      */
     var DeterministPG = function (env, opt) {
-        this.gamma = Utility.getOpt(opt, 'gamma', 0.5); // future reward discount factor
-        this.epsilon = Utility.getOpt(opt, 'epsilon', 0.5); // for epsilon-greedy policy
-        this.alpha = Utility.getOpt(opt, 'alpha', 0.001); // actor net learning rate
-        this.beta = Utility.getOpt(opt, 'beta', 0.01); // baseline net learning rate
+        this.gamma = getOpt(opt, 'gamma', 0.5); // future reward discount factor
+        this.epsilon = getOpt(opt, 'epsilon', 0.5); // for epsilon-greedy policy
+        this.alpha = getOpt(opt, 'alpha', 0.001); // actor net learning rate
+        this.beta = getOpt(opt, 'beta', 0.01); // baseline net learning rate
         this.env = env;
         this.reset();
     };
@@ -1817,14 +1988,14 @@
 
             // actor
             this.actorNet = {};
-            this.actorNet.W1 = new randMat(this.nh, this.ns, 0, 0.01);
-            this.actorNet.b1 = new Mat(this.nh, 1, 0, 0.01);
-            this.actorNet.W2 = new randMat(this.na, this.ns, 0, 0.1);
-            this.actorNet.b2 = new Mat(this.na, 1, 0, 0.01);
+            this.actorNet.W1 = new R.randMat(this.nh, this.ns, 0, 0.01);
+            this.actorNet.b1 = new R.Mat(this.nh, 1, 0, 0.01);
+            this.actorNet.W2 = new R.randMat(this.na, this.ns, 0, 0.1);
+            this.actorNet.b2 = new R.Mat(this.na, 1, 0, 0.01);
             this.nTheta = this.na * this.ns + this.na; // number of params in actor
 
             // critic
-            this.criticW = new randMat(1, this.nTheta, 0, 0.01); // row vector
+            this.criticW = new R.randMat(1, this.nTheta, 0, 0.01); // row vector
 
             this.r0 = null;
             this.s0 = null;
@@ -1841,7 +2012,7 @@
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
-                G = new Graph(needsBackprop),
+                G = new R.Graph(needsBackprop),
                 a1Mat = G.add(G.mul(net.W1, s), net.b1),
                 h1Mat = G.tanh(a1Mat),
                 a2Mat = G.add(G.mul(net.W2, h1Mat), net.b2);
@@ -1858,7 +2029,7 @@
          */
         act: function (sList) {
             // convert to a Mat column vector
-            var s = new Mat(this.ns, 1);
+            var s = new R.Mat(this.ns, 1);
             s.setFrom(sList);
 
             // forward the actor to get action output
@@ -1867,11 +2038,11 @@
                 ag = aNs.G,
 
             // sample action from the stochastic gaussian policy
-                a = copyMat(aMat);
+                a = R.copyMat(aMat);
             if (Math.random() < this.epsilon) {
                 var gaussVar = 0.02;
-                a.w[0] = Utility.randn(0, gaussVar);
-                a.w[1] = Utility.randn(0, gaussVar);
+                a.w[0] = randn(0, gaussVar);
+                a.w[1] = randn(0, gaussVar);
             }
             var clamp = 0.25;
             if (a.w[0] > clamp) {
@@ -1901,13 +2072,13 @@
          * @returns {Mat}
          */
         utilJacobianAt: function (s) {
-            var uJacobian = new Mat(this.nTheta, this.na);
+            var uJacobian = new R.Mat(this.nTheta, this.na);
             for (var a = 0; a < this.na; a++) {
-                netZeroGrads(this.actorNet);
+                R.netZeroGrads(this.actorNet);
                 var ag = this.forwardActor(this.s0, true);
                 ag.a.dw[a] = 1.0;
                 ag.G.backward();
-                var gFlat = netFlattenGrads(this.actorNet);
+                var gFlat = R.netFlattenGrads(this.actorNet);
                 uJacobian.setColumn(gFlat, a);
             }
 
@@ -1921,7 +2092,7 @@
             // perform an update on Q function
             //this.rewardHistory.push(r1);
             if (this.r0 !== null) {
-                var gTmp = new Graph(false),
+                var gTmp = new R.Graph(false),
                 // dpg update:
                 // first compute the features psi:
                 // the jacobian matrix of the actor for s
@@ -1988,7 +2159,7 @@
                 N = this.gene.length;
 
             for (var i = 0; i < N; i++) {
-                this.gene[i] += Utility.randn(0.0, burstMagnitude);
+                this.gene[i] += randn(0.0, burstMagnitude);
             }
         },
         /**
@@ -2000,7 +2171,7 @@
                 N = this.gene.length;
 
             for (var i = 0; i < N; i++) {
-                this.gene[i] = Utility.randn(0.0, burstMagnitude);
+                this.gene[i] = randn(0.0, burstMagnitude);
             }
         },
         /**
@@ -2014,8 +2185,8 @@
                 N = this.gene.length;
 
             for (var i = 0; i < N; i++) {
-                if (Utility.randf(0, 1) < mutationRate) {
-                    this.gene[i] += Utility.randn(0.0, burstMagnitude);
+                if (randf(0, 1) < mutationRate) {
+                    this.gene[i] += randn(0.0, burstMagnitude);
                 }
             }
         },
@@ -2028,7 +2199,7 @@
         crossover: function (partner, kid1, kid2) {
             //assumes all chromosomes are initialised with same array size. pls make sure of this before calling
             var N = this.gene.length,
-                l = Utility.randi(0, N); // crossover point
+                l = randi(0, N); // crossover point
             for (var i = 0; i < N; i++) {
                 if (i < l) {
                     kid1.gene[i] = this.gene[i];
@@ -2061,7 +2232,7 @@
          * @returns {Chromosome}
          */
         clone: function () {
-            var newGene = Utility.zeros(this.gene.length);
+            var newGene = zeros(this.gene.length);
             for (var i = 0; i < this.gene.length; i++) {
                 newGene[i] = Math.round(10000 * this.gene[i]) / 10000;
             }
@@ -2183,7 +2354,7 @@
      */
     function copyFloatArray(x) {
         var N = x.length,
-            y = Utility.zeros(N);
+            y = zeros(N);
         for (var i = 0; i < N; i++) {
             y[i] = x[i];
         }
@@ -2208,7 +2379,7 @@
      */
     var randomizeNetwork = function (net) {
         var netSize = getNetworkSize(net),
-            chromosome = new Chromosome(Utility.zeros(netSize));
+            chromosome = new Chromosome(zeros(netSize));
         chromosome.randomize(1.0);
         pushGeneToNetwork(net, chromosome.gene);
 
@@ -2234,7 +2405,7 @@
      */
     var GATrainer = function (opts, initGene) {
         this.net = new convnetjs.Net();
-        var layerDefs = Utility.getOpt(opts, 'layerDefs', [
+        var layerDefs = getOpt(opts, 'layerDefs', [
             {type: 'input', out_sx: 1, out_sy: 1, out_depth: 1},
             {type: 'fc', num_neurons: 12, activation: 'relu'},
             {type: 'fc', num_neurons: 8, activation: 'sigmoid'},
@@ -2242,14 +2413,14 @@
         ]);
         this.net.makeLayers(layerDefs);
 
-        this.populationSize = Utility.getOpt(opts, 'populationSize', 100);
+        this.populationSize = getOpt(opts, 'populationSize', 100);
         this.populationSize = Math.floor(this.populationSize / 2) * 2; // make sure even number
-        this.mutationRate = Utility.getOpt(opts, 'mutationRate', 0.01);
-        this.elitePercentage = Utility.getOpt(opts, 'elitePercentage', 0.2);
-        this.mutationSize = Utility.getOpt(opts, 'mutationSize', 0.05);
-        this.targetFitness = Utility.getOpt(opts, 'targetFitness', 10000000000000000);
-        this.burstGenerations = Utility.getOpt(opts, 'burstGenerations', 10);
-        this.bestTrial = Utility.getOpt(opts, 'bestTrial', 1);
+        this.mutationRate = getOpt(opts, 'mutationRate', 0.01);
+        this.elitePercentage = getOpt(opts, 'elitePercentage', 0.2);
+        this.mutationSize = getOpt(opts, 'mutationSize', 0.05);
+        this.targetFitness = getOpt(opts, 'targetFitness', 10000000000000000);
+        this.burstGenerations = getOpt(opts, 'burstGenerations', 10);
+        this.bestTrial = getOpt(opts, 'bestTrial', 1);
         this.chromosomeSize = getNetworkSize(this.net);
 
         var initChromosome = null;
@@ -2259,7 +2430,7 @@
         // population
         this.chromosomes = [];
         for (var i = 0; i < this.populationSize; i++) {
-            var chromosome = new Chromosome(Utility.zeros(this.chromosomeSize));
+            var chromosome = new Chromosome(zeros(this.chromosomeSize));
             // if initial gene supplied, burst mutate param.
             if (initChromosome) {
                 chromosome.copyFrom(initChromosome);
@@ -2340,8 +2511,8 @@
 
             var Nelite = Math.floor(Math.floor(this.elitePercentage * N) / 2) * 2; // even number
             for (i = Nelite; i < N; i += 2) {
-                var p1 = Utility.randi(0, Nelite),
-                    p2 = Utility.randi(0, Nelite);
+                var p1 = randi(0, Nelite),
+                    p2 = randi(0, Nelite);
                 c[p1].crossover(c[p2], c[i], c[i + 1]);
             }
 
@@ -2393,7 +2564,7 @@
         this.nSp = nSp;
         this.nHidden = nHidden;
         this.input = new Vol(1, 1, nSp + nInput); // hold most up to date input vector
-        this.output = Utility.zeros(nSp);
+        this.output = zeros(nSp);
 
         // define the architecture of each sub nn:
         var layerDefs = [],
@@ -2466,7 +2637,7 @@
             var i, j,
                 nInput = this.nInput,
                 nSp = this.nSp,
-                y = Utility.zeros(nSp),
+                y = zeros(nSp),
                 a; // temp variable to old output of forward pass
             for (i = nSp - 1; i >= 0; i--) {
                 // for the base network, forward with output of other support networks
@@ -2540,15 +2711,15 @@
         this.espnet = espnet;
         this.nSp = espnet.nSp;
         var nSp = this.nSp;
-        this.populationSize = Utility.getOpt(opts, 'populationSize', 50);
+        this.populationSize = getOpt(opts, 'populationSize', 50);
         this.populationSize = Math.floor(this.populationSize / 2) * 2; // make sure even number
-        this.mutationRate = Utility.getOpt(opts, 'mutationRate', 0.2);
-        this.elitePercentage = Utility.getOpt(opts, 'elitePercentage', 0.2);
-        this.mutationSize = Utility.getOpt(opts, 'mutationSize', 0.02);
-        this.targetFitness = Utility.getOpt(opts, 'targetFitness', 10000000000000000);
-        this.numPasses = Utility.getOpt(opts, 'numPasses', 2);
-        this.burstGenerations = Utility.getOpt(opts, 'burstGenerations', 10);
-        this.bestMode = Utility.getOpt(opts, 'bestMode', false);
+        this.mutationRate = getOpt(opts, 'mutationRate', 0.2);
+        this.elitePercentage = getOpt(opts, 'elitePercentage', 0.2);
+        this.mutationSize = getOpt(opts, 'mutationSize', 0.02);
+        this.targetFitness = getOpt(opts, 'targetFitness', 10000000000000000);
+        this.numPasses = getOpt(opts, 'numPasses', 2);
+        this.burstGenerations = getOpt(opts, 'burstGenerations', 10);
+        this.bestMode = getOpt(opts, 'bestMode', false);
         this.chromosomeSize = this.espnet.getNetworkSize();
 
         this.initialize(initGenes);
@@ -2575,7 +2746,7 @@
                 // empty list of chromosomes
                 chromosomes = [];
                 for (j = 0; j < this.populationSize; j++) {
-                    chromosome = new Chromosome(Utility.zeros(this.chromosomeSize));
+                    chromosome = new Chromosome(zeros(this.chromosomeSize));
                     if (initGenes) {
                         chromosome.copyFromGene(initGenes[i]);
                         // don't mutate first guy (pretrained)
@@ -2596,7 +2767,7 @@
                 this.sp.push(chromosomes);
             }
 
-            Utility.assert(this.bestGenes.length === nSp);
+            assert(this.bestGenes.length === nSp);
             this.espnet.pushGenes(this.bestGenes); // initial
 
             this.bestFitness = -10000000000000000;
@@ -2704,7 +2875,7 @@
             }
 
             // see if the global best gene has met target.  if so, can end it now.
-            Utility.assert(this.bestGenes.length === nSp);
+            assert(this.bestGenes.length === nSp);
             this.espnet.pushGenes(this.bestGenes); // put the random set of networks into the espnet
             fitness = fitFunc(this.espnet); // try out this set, and get the fitness
             if (fitness > this.targetFitness) {
@@ -2729,11 +2900,11 @@
                             if (m === i) { // push current iterated neuron
                                 cSet.push(c[m][j]);
                             } else { // push random neuron in sub population m
-                                cSet.push(c[m][Utility.randi(0, N)]);
+                                cSet.push(c[m][randi(0, N)]);
                             }
                         }
                         genes = getGenesFromChromosomes(cSet);
-                        Utility.assert(genes.length === nSp);
+                        assert(genes.length === nSp);
                         this.espnet.pushGenes(genes); // put the random set of networks into the espnet
 
                         fitness = fitFunc(this.espnet); // try out this set, and get the fitness
@@ -2765,8 +2936,8 @@
             var nElite = Math.floor(Math.floor(this.elitePercentage * N) / 2) * 2; // even number
             for (i = 0; i < nSp; i++) {
                 for (j = nElite; j < N; j += 2) {
-                    var p1 = Utility.randi(0, nElite);
-                    var p2 = Utility.randi(0, nElite);
+                    var p1 = randi(0, nElite);
+                    var p2 = randi(0, nElite);
                     c[i][p1].crossover(c[i][p2], c[i][j], c[i][j + 1]);
                 }
             }
@@ -2805,7 +2976,7 @@
             }
 
             // push best one (found so far from all of history, not just this time) to network.
-            Utility.assert(this.bestGenes.length === nSp);
+            assert(this.bestGenes.length === nSp);
             this.espnet.pushGenes(this.bestGenes);
 
             return bestFitness;
@@ -2838,7 +3009,7 @@
             case 'DQN':
                 switch (data.cmd) {
                     case 'init':
-                        _DQNAgent = new DQNAgent(oEnv, oOpts);
+                        _DQNAgent = new RL.DQNAgent(oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
@@ -2903,7 +3074,7 @@
             case 'DP':
                 switch (data.cmd) {
                     case 'init':
-                        _DPAgent = new DPAgent(oEnv, oOpts);
+                        _DPAgent = new RL.DPAgent(oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
@@ -2945,7 +3116,7 @@
             case 'TD':
                 switch (data.cmd) {
                     case 'init':
-                        _TDAgent = new TDAgent(oEnv, oOpts);
+                        _TDAgent = new RL.TDAgent(oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
@@ -2987,7 +3158,7 @@
             case 'GA':
                 switch (data.cmd) {
                     case 'init':
-                        _GATrainer = new GATrainer(oEnv, oOpts);
+                        _GATrainer = new RL.GATrainer(oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
@@ -3029,7 +3200,7 @@
             case 'ESP':
                 switch (data.cmd) {
                     case 'init':
-                        _ESPTrainer = new ESPTrainer(oEnv, oOpts);
+                        _ESPTrainer = new RL.ESPTrainer(oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
@@ -3073,85 +3244,32 @@
 // exports
     if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
         module.exports = {
-            // various utils
-            maxI: maxI,
-            sampleI: sampleI,
-            softMax: softMax,
-
-            // more utils
-            updateMat: updateMat,
-            updateNet: updateNet,
-            copyMat: copyMat,
-            copyNet: copyNet,
-            netToJSON: netToJSON,
-            netFromJSON: netFromJSON,
-            netZeroGrads: netZeroGrads,
-            netFlattenGrads: netFlattenGrads,
-            pushGeneToNetwork: pushGeneToNetwork,
-            randomizeNetwork: randomizeNetwork,
-
-            // classes
-            Mat: Mat,
-            randMat: randMat,
-            forwardLSTM: forwardLSTM,
-            initLSTM: initLSTM,
-
-            // optimization
-            Solver: Solver,
-            Graph: Graph,
-
-            // Agents
-            DPAgent: DPAgent,
-            TDAgent: TDAgent,
-            DQNAgent: DQNAgent,
-
             // GA plugin
             Chromosome: Chromosome,
             ESPNet: ESPNet,
             ESPTrainer: ESPTrainer,
-            GATrainer: GATrainer
+            GATrainer: GATrainer,
+
+            // Agents
+            DPAgent: DPAgent,
+            TDAgent: TDAgent,
+            DQNAgent: DQNAgent
         };
     } else {
-        // various utils
-        global.maxI = maxI;
-        global.sampleI = sampleI;
-        global.softMax = softMax;
-
-        // more utils
-        global.updateMat = updateMat;
-        global.updateNet = updateNet;
-        global.copyMat = copyMat;
-        global.copyNet = copyNet;
-        global.netToJSON = netToJSON;
-        global.netFromJSON = netFromJSON;
-        global.netZeroGrads = netZeroGrads;
-        global.netFlattenGrads = netFlattenGrads;
-        global.pushGeneToNetwork = pushGeneToNetwork;
-        global.randomizeNetwork = randomizeNetwork;
-
-        // classes
-        global.Mat = Mat;
-        global.randMat = randMat;
-        global.forwardLSTM = forwardLSTM;
-        global.initLSTM = initLSTM;
-
-        // optimization
-        global.Solver = Solver;
-        global.Graph = Graph;
+        // GA plugin
+        global.Chromosome = Chromosome;
+        global.ESPNet = ESPNet;
+        global.ESPTrainer = ESPTrainer;
+        global.GATrainer = GATrainer;
 
         // Agents
         global.DPAgent = DPAgent;
         global.TDAgent = TDAgent;
         global.DQNAgent = DQNAgent;
 
-        // GA plugin
-        global.Chromosome = Chromosome;
-        global.ESPNet = ESPNet;
-        global.ESPTrainer = ESPTrainer;
-        global.GATrainer = GATrainer;
 //  global.SimpleReinforceAgent = SimpleReinforceAgent;
 //  global.RecurrentReinforceAgent = RecurrentReinforceAgent;
 //  global.DeterministPG = DeterministPG;
     }
 
-})(this);
+})(RL);

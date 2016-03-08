@@ -37,7 +37,7 @@
         reset() {
             let self = this;
             if (!self.worker) {
-                self.brain = new TDAgent(self.env, self.brainOpts);
+                self.brain = new RL.TDAgent(self.env, self.brainOpts);
                 self.state = self.env.startState();
 
                 self.env.reset();

@@ -1,0 +1,48 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Matter World</title>
+        <!--<link href="css/styles.css" rel="stylesheet" type="text/css">-->
+        <style type="text/css">
+            body, html {
+                margin: 0;
+                padding: 10px;
+                background-color: #333;
+            }
+
+            canvas {
+                float: left;
+                transform: scale(.75) translate(-10%, -20%);
+            }
+        </style>
+    </head>
+    <!--<body onload="test();">-->
+    <body onload="start();">
+
+    <script>
+        var world = world || {};
+
+        function start() {
+            world = new MatterWorld(800, 800);
+        }
+
+    </script>
+
+    <div class="game-container"></div>
+
+    <script src="js/lib/external/matter.js"></script>
+    <script src="js/lib/external/rl.js"></script>
+
+    <script src="js/lib/Utility.js"></script>
+    <script src="js/lib/Point.js"></script>
+    <script src="js/lib/Vec.js"></script>
+
+    <script src="js/entities/MatterEntity.js"></script>
+    <script src="js/environments/MatterWorld.js"></script>
+    </body>
+    </html>

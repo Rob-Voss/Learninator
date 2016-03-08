@@ -96,10 +96,10 @@ var GridWorld = GridWorld || {},
                     useSprite: false,
                     worker: false,
                     cheats: {
-                        gridLocation: false,
-                        position: false,
                         id: false,
-                        name: true
+                        name: true,
+                        gridLocation: false,
+                        position: false
                     }
                 })
         ];

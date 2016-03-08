@@ -23,18 +23,16 @@
             this.z = -x - y;
             this.width = width;
             this.height = height;
-            this.visited = false;
-            this.parent = null;
-            this.heuristic = 0;
-            this.reward = 0;
-            this.population = new Map();
-
             this.corners = [
                 new Point(this.x * this.width, this.y * this.height),
                 new Point(this.x * this.width + this.width, this.y * this.height),
                 new Point(this.x * this.width + this.width, this.y * this.height + this.height),
                 new Point(this.x * this.width, this.y * this.height + this.height)
             ];
+            this.visited = false;
+            this.parent = null;
+            this.heuristic = 0;
+            this.reward = 0;
 
             return this;
         }
@@ -73,6 +71,14 @@
         }
 
         /**
+         * Get an array of coords
+         * @returns {*[]}
+         */
+        toArray() {
+            return [this.x, this.y, this.z];
+        }
+
+        /**
          * Convert coords to string
          * @returns {string}
          */
@@ -90,13 +96,6 @@
             return this;
         }
 
-        /**
-         * Get an array of coords
-         * @returns {*[]}
-         */
-        toArray() {
-            return [this.x, this.y, this.z];
-        }
     }
 
     global.Cell = Cell;

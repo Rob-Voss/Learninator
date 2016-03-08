@@ -71,11 +71,12 @@
             this.collision = Utility.getOpt(worldOpts, 'collision', {
                 type: 'quad',
                 maxChildren: 10,
-                maxDepth: 20
+                maxDepth: 30
             });
 
             // The cheats to display
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
+                brute: false,
                 quad: false,
                 grid: false,
                 walls: false
@@ -83,10 +84,10 @@
 
             // Walls if they were sent or 4 if not
             this.walls = walls || [
-                new Wall(new Vec(1, 1), new Vec(this.width, 1), this.cheats.walls),
-                new Wall(new Vec(this.width, 1), new Vec(this.width, this.height), this.cheats.walls),
-                new Wall(new Vec(this.width, this.height), new Vec(1, this.height), this.cheats.walls),
-                new Wall(new Vec(1, this.height), new Vec(1, 1), this.cheats.walls)
+                new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
+                new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
+                new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
+                new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
             ];
 
             // Get agents
@@ -103,7 +104,7 @@
                 collision: true,
                 interactive: false,
                 useSprite: false,
-                movingEntities: false,
+                moving: false,
                 cheats: {
                     gridLocation: false,
                     position: false,
@@ -119,7 +120,7 @@
                 collision: true,
                 interactive: false,
                 useSprite: false,
-                movingEntities: false,
+                moving: false,
                 cheats: {
                     gridLocation: false,
                     position: false,
@@ -238,8 +239,6 @@
                     vy = Math.random() * 5 - 2.5,
                     entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
                     entity = entityAgent.shape || entityAgent.sprite;
-                entityAgent.enemy = this.agents[k];
-                entityAgent.target = (k === 0) ? this.agents[k + 1] : this.agents[k - 1];
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
                     entity.addChild(entityAgent.eyes[ei].shape);
                 }

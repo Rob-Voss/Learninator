@@ -52,40 +52,9 @@ var EntityRLDQN = EntityRLDQN || {};
                 this.eyes.push(new Eye(k * Math.PI / 3, this.pos, 75, 75));
             }
 
-            this.brain = new DQNAgent(this, this.brainOpts);
+            this.brain = new RL.DQNAgent(this, this.brainOpts);
 
             return this;
-        }
-
-        /**
-         * Load a pre-trained agent
-         * @param {String} file
-         */
-        load(file) {
-            let _this = this;
-            $.getJSON(file, function (data) {
-                if (!_this.worker) {
-                    _this.brain.fromJSON(data);
-                    _this.brain.epsilon = 0.05;
-                    _this.brain.alpha = 0;
-                } else {
-                    _this.post('load', JSON.stringify(data));
-                }
-            });
-
-            return this;
-        }
-
-        /**
-         *
-         */
-        saveAgent(id) {
-            let brain;
-            if (!this.worker) {
-                brain = this.brain;
-            }
-
-            return JSON.stringify(brain.toJSON());
         }
 
         /**
@@ -113,7 +82,9 @@ var EntityRLDQN = EntityRLDQN || {};
             inputArray[ne + 0] = this.pos.vx;
             inputArray[ne + 1] = this.pos.vy;
 
-            return inputArray;
+            this.state = inputArray;
+
+            return this;
         }
 
         /**
@@ -134,27 +105,27 @@ var EntityRLDQN = EntityRLDQN || {};
 
         /**
          * Get the current state
-         * @returns {Array}
+         * @returns {EntityRLDQN}
          */
         getState() {
-            let s = [
+            this.state = [
                 this.enemy.pos.x / 1000,
                 this.enemy.pos.y / 1000,
-                this.enemy.pos.vx / 10,
-                this.enemy.pos.vy / 10,
+                this.enemy.pos.vx * 10,
+                this.enemy.pos.vy * 10,
                 (this.target.pos.x / 1000) - (this.pos.x / 1000),
                 (this.target.pos.y / 1000) - (this.pos.y / 1000),
                 (this.enemy.pos.x / 1000) - (this.pos.x / 1000),
                 (this.enemy.pos.y / 1000) - (this.pos.y / 1000)
             ];
-            return s;
+
+            return this;
         }
 
         /**
-         * Move around
-         * @returns {EntityRLDQN}
+         * Sample the next state
          */
-        move(world) {
+        sampleNextState(world) {
             let speed = 0.50;
 
             // Execute agent's desired action
@@ -190,8 +161,8 @@ var EntityRLDQN = EntityRLDQN || {};
                     if (collObj.type === 0) {
                         // Wall
                         this.pos = this.oldPos.clone();
-                        this.pos.vx *= -1;
-                        this.pos.vy *= -1;
+                        this.pos.vx = 0;
+                        this.pos.vy = 0;
                     } else if (collObj.type >= 1 && collObj.type <= 4) {
                         this.pos.vx = collObj.target.vx;
                         this.pos.vy = collObj.target.vy;
@@ -233,13 +204,6 @@ var EntityRLDQN = EntityRLDQN || {};
                 this.sprite.position.set(this.pos.x, this.pos.y);
             }
 
-            return this;
-        }
-
-        /**
-         * Sample the next state
-         */
-        sampleNextState() {
             // Compute distances
             let dx1 = (this.pos.x / 1000) - (this.target.pos.x / 1000), // Distance from Noms
                 dy1 = (this.pos.y / 1000) - (this.target.pos.y / 1000), // Distance from Noms
@@ -273,8 +237,9 @@ var EntityRLDQN = EntityRLDQN || {};
                 blue = 255 + vv * ms;
                 this.color = parseInt(Utility.rgbToHex(255, green, blue));
             }
+            this.lastReward = r;
 
-            return r;
+            return this;
         }
 
         /**
@@ -283,13 +248,13 @@ var EntityRLDQN = EntityRLDQN || {};
          */
         tick(world) {
             for (let k = 0; k < this.stepsPerTick; k++) {
-                //this.state = this.act();
-                this.state = this.getState();
+                this.getState();
                 this.action = this.brain.act(this.state);
-                this.move(world);
-                this.lastReward = this.sampleNextState();
-                this.pts.push(this.lastReward);
+                this.sampleNextState(world);
+
+                // this.pts.push(this.lastReward);
                 this.brain.learn(this.lastReward);
+                this.epsilon = this.brain.epsilon;
             }
 
             return this;

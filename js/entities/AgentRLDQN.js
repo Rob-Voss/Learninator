@@ -79,7 +79,7 @@ var AgentRLDQN = AgentRLDQN || {},
          */
         learn() {
             this.lastReward = this.digestionSignal;
-            this.pts.push(this.digestionSignal);
+            // this.pts.push(this.digestionSignal);
 
             if (!this.worker) {
                 this.brain.learn(this.digestionSignal);
@@ -98,7 +98,7 @@ var AgentRLDQN = AgentRLDQN || {},
             let self = this;
             // If it's a worker then we have to load it a bit different
             if (!self.worker) {
-                self.brain = new DQNAgent(self.env, self.brainOpts);
+                self.brain = new RL.DQNAgent(self.env, self.brainOpts);
 
                 return self;
             } else {

@@ -11,7 +11,7 @@
          * @returns {WaterWorld}
          */
         constructor() {
-            let renderOpts = {
+            let opts = {
                     antialiasing: true,
                     autoResize: false,
                     resizable: false,
@@ -23,6 +23,11 @@
                 },
                 agentOpts = {
                     brainType: 'RLDQN',
+                    worker: false,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numStates: 30 * 5,
                     env: {
                         getNumStates: function () {
                             return 30 * 5;
@@ -34,10 +39,6 @@
                             return 0;
                         }
                     },
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    numEyes: 30,
-                    numTypes: 5,
                     range: 120,
                     proximity: 120,
                     radius: 10,
@@ -45,22 +46,21 @@
                     interactive: false,
                     useSprite: false,
                     cheats: {
+                        id: true,
+                        name: false,
                         gridLocation: false,
-                        position: false,
-                        id: false,
-                        name: false
-                    },
-                    worker: false
+                        position: false
+                    }
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
+                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
+                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
                 ],
                 maze = new Maze({
-                    xCount: 2,
+                    xCount: 5,
                     yCount: 2,
-                    width: renderOpts.width,
-                    height: renderOpts.height,
+                    width: opts.width,
+                    height: opts.height,
                     closed: false,
                     cheats: false
                 }),
@@ -71,8 +71,9 @@
                        type: 'grid'
                     },
                     cheats: {
+                        brute: false,
                         quad: false,
-                        grid: false,
+                        grid: true,
                         walls: false
                     },
                     numEntities: 20,
@@ -91,7 +92,7 @@
                     }
                 };
 
-            super(agents, maze.walls, worldOpts, renderOpts);
+            super(agents, maze.walls, worldOpts, opts);
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 

@@ -64,7 +64,7 @@
             this.size = this.radius || this.width;
             this.interactive = Utility.getOpt(opts, 'interactive', false);
             this.collision = Utility.getOpt(opts, 'collision', true);
-            this.movingEntities = Utility.getOpt(opts, 'movingEntities', false);
+            this.moving = Utility.getOpt(opts, 'moving', false);
             this.useSprite = Utility.getOpt(opts, 'useSprite', false);
 
             this.cheats = Utility.getOpt(opts, 'cheats', false);
@@ -297,16 +297,14 @@
                         let entity = world.population.get(collisionObj.id);
                         // Wall
                         if (collisionObj.type === 0) {
-                            let between = this.pos.getVectorBetween(this.pos, collisionObj.vecI),
+                            let between = this.pos.vectorBetween(this.pos, collisionObj.vecI),
                             // Get the vector that points out from the surface the circle is bouncing on.
-                                bounceLineNormal = between.getUnitVector(),
+                                bounceLineNormal = between.unitVector(),
                             // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
                                 dot = this.pos.vx * bounceLineNormal.x + this.pos.vy * bounceLineNormal.y;
 
                             this.pos.vx -= 2 * dot * bounceLineNormal.x;
                             this.pos.vy -= 2 * dot * bounceLineNormal.y;
-                            this.pos.x = this.oldPos.x;
-                            this.pos.y = this.oldPos.y;
                         } else if (collisionObj.type === 1 || collisionObj.type === 2) {
                             this.pos.vx = collisionObj.target.vx;
                             this.pos.vy = collisionObj.target.vy;
@@ -358,7 +356,7 @@
         tick(world) {
             this.age += 1;
 
-            if (this.movingEntities) {
+            if (this.moving) {
                 this.move(world);
             }
 

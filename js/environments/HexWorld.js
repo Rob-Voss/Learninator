@@ -1,67 +1,105 @@
-var HexWorld = HexWorld || {},
-    AgentRLDQN = AgentRLDQN || {},
-    Hex = Hex || {},
-    HexGrid = HexGrid || {},
-    Utility = Utility || {},
-    Vec = Vec || {},
-    World = World || {};
-
 (function (global) {
     "use strict";
 
-    /**
-     * A Hexagonal world
-     * @name HexWorld
-     * @extends World
-     * @constructor
-     *
-     * @returns {HexWorld}
-     */
-    function HexWorld() {
-        this.width = 600;
-        this.height = 600;
-        this.walls = [];
-        this.collision = {
-            type: 'grid'
-        };
+    class HexWorld extends World {
+        /**
+         * A Hexagonal world
+         * @name HexWorld
+         * @extends World
+         * @constructor
+         *
+         * @returns {HexWorld}
+         */
+        constructor() {
+            let opts = {
+                    antialiasing: true,
+                    autoResize: false,
+                    resizable: false,
+                    transparent: false,
+                    resolution: 1,///window.devicePixelRatio,
+                    noWebGL: false,
+                    width: 600,
+                    height: 600
+                },
+                agentOpts = {
+                    brainType: 'RLDQN',
+                    worker: false,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numStates: 30 * 5,
+                    env: {
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    },
+                    range: 120,
+                    proximity: 120,
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    cheats: {
+                        id: true,
+                        name: false,
+                        gridLocation: false,
+                        position: false
+                    }
+                },
+                agents = [
+                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
+                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
+                ],
+                gridOptions = {
+                    width: opts.width,
+                    height: opts.height,
+                    size: 2,
+                    tileSize: 60,
+                    tileSpacing: 0,
+                    fill: false
+                },
+                grid = new HexGrid(gridOptions),
+                worldOpts = {
+                    grid: grid,
+                    simSpeed: 1,
+                    collision: {
+                       type: 'brute'
+                    },
+                    cheats: {
+                        brute: true,
+                        quad: false,
+                        grid: false,
+                        walls: false
+                    },
+                    numEntities: 20,
+                    entityOpts: {
+                        radius: 10,
+                        collision: true,
+                        interactive: true,
+                        useSprite: false,
+                        movingEntities: true,
+                        cheats: {
+                            id: true,
+                            name: false,
+                            gridLocation: false,
+                            position: false
+                        }
+                    }
+                };
 
-        this.numEntities = 10;//350;
-        this.entityOpts = {
-            radius: 5,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            movingEntities: true,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: false
-            }
-        };
+            super(agents, grid.walls, worldOpts, opts);
+            // this.agents[0].load('zoo/wateragent.json');
+            // this.agents[1].load('zoo/wateragent.json');
 
-        let gridOptions = {
-            width: this.width,
-            height: this.height,
-            size: 2,
-            tileSize: 60,
-            tileSpacing: 0,
-            fill: false
-        };
-        this.grid = new HexGrid(gridOptions);
-        this.walls = this.grid.walls;
-
-        World.call(this);
-
-        this.stage.addChild(this.grid.cellsContainer);
-
-        //this.agents[0].load('zoo/wateragent.json');
-
-        return this;
+            return this;
+        }
     }
-
-    HexWorld.prototype = Object.create(World.prototype);
-    HexWorld.prototype.constructor = World;
 
     global.HexWorld = HexWorld;
 

@@ -19,7 +19,7 @@
      */
     Vec3.prototype = {
         /**
-         *
+         * Add a Vec3 or a number to this Vec3
          * @param {Vec3|number} v
          * @returns {Vec3}
          */
@@ -31,22 +31,22 @@
             }
         },
         /**
-         *
-         * @param {Vec3} a
+         * Angle to the Vec3
+         * @param {Vec3} v
          * @returns {number}
          */
-        angleTo: function (a) {
-            return Math.acos(this.dot(a) / (this.length() * a.length()));
+        angleTo: function (v) {
+            return Math.acos(this.dot(v) / (this.length() * v.length()));
         },
         /**
-         *
+         * Return a copy of this Vec3
          * @returns {Vec3}
          */
         clone: function () {
             return new Vec3(this.x, this.y, this.z);
         },
         /**
-         *
+         * Get the cross product between this and another Vec3
          * @param {Vec3} v
          * @returns {Vec3}
          */
@@ -58,7 +58,7 @@
             );
         },
         /**
-         *
+         * Dived this Vec3 by another or a number
          * @param {Vec3|number} v
          * @returns {Vec3}
          */
@@ -70,7 +70,7 @@
             }
         },
         /**
-         *
+         * Get the dot product of this Vec3 and another
          * @param {Vec3} v
          * @returns {number}
          */
@@ -78,7 +78,7 @@
             return this.x * v.x + this.y * v.y + this.z * v.z;
         },
         /**
-         *
+         * Check if this Vec3 is equal to another
          * @param {Vec3} v
          * @returns {boolean}
          */
@@ -86,7 +86,7 @@
             return this.x === v.x && this.y === v.y && this.z === v.z;
         },
         /**
-         *
+         * Initialize this Vec3
          * @param {number} x
          * @param {number} y
          * @param {number} z
@@ -99,28 +99,28 @@
             return this;
         },
         /**
-         *
+         * Get the length of this Vec3
          * @returns {number}
          */
         length: function () {
             return Math.sqrt(this.dot(this));
         },
         /**
-         *
+         * Get the max of this Vec3
          * @returns {number}
          */
         max: function () {
             return Math.max(Math.max(this.x, this.y), this.z);
         },
         /**
-         *
+         * Get the min of this Vec3
          * @returns {number}
          */
         min: function () {
             return Math.min(Math.min(this.x, this.y), this.z);
         },
         /**
-         *
+         * Multiply this Vec3 by another or a number
          * @param {Vec3|number} v
          * @returns {Vec3}
          */
@@ -132,14 +132,14 @@
             }
         },
         /**
-         *
+         * Return the negative of this Vec3
          * @returns {Vec3}
          */
         negative: function () {
             return new Vec3(-this.x, -this.y, -this.z);
         },
         /**
-         *
+         * Subtract a Vec3 or number from this one
          * @param {Vec3|number} v
          * @returns {Vec3}
          */
@@ -151,7 +151,7 @@
             }
         },
         /**
-         *
+         * Return the angles of this Vec3
          * @returns {{theta: number, phi: number}}
          */
         toAngles: function () {
@@ -161,7 +161,7 @@
             };
         },
         /**
-         *
+         * Return an array of this Vec3
          * @param {number} n
          * @returns {Array}
          */
@@ -176,7 +176,7 @@
             return this.toArray().join(",");
         },
         /**
-         *
+         * Get the unit of this Vec3
          * @returns {*|Vec3}
          */
         unit: function () {
@@ -191,21 +191,21 @@
      *
      * @param {Vec3} a
      * @param {Vec3|number} b
-     * @param {Vec3} c
-     * @returns {Vec3}
+     * @param {Vec3} out
+     * @returns {Vec3} out
      */
-    Vec3.add = function (a, b, c) {
+    Vec3.add = function (a, b, out) {
         if (b instanceof Vec3) {
-            c.x = a.x + b.x;
-            c.y = a.y + b.y;
-            c.z = a.z + b.z;
+            out.x = a.x + b.x;
+            out.y = a.y + b.y;
+            out.z = a.z + b.z;
         } else {
-            c.x = a.x + b;
-            c.y = a.y + b;
-            c.z = a.z + b;
+            out.x = a.x + b;
+            out.y = a.y + b;
+            out.z = a.z + b;
         }
 
-        return c;
+        return out;
     };
     /**
      *
@@ -220,35 +220,35 @@
      *
      * @param {Vec3} a
      * @param {Vec3} b
-     * @param {Vec3} c
-     * @returns {Vec3}
+     * @param {Vec3} out
+     * @returns {Vec3} out
      */
-    Vec3.cross = function (a, b, c) {
-        c.x = a.y * b.z - a.z * b.y;
-        c.y = a.z * b.x - a.x * b.z;
-        c.z = a.x * b.y - a.y * b.x;
+    Vec3.cross = function (a, b, out) {
+        out.x = a.y * b.z - a.z * b.y;
+        out.y = a.z * b.x - a.x * b.z;
+        out.z = a.x * b.y - a.y * b.x;
 
-        return c;
+        return out;
     };
     /**
      *
      * @param {Vec3} a
      * @param {Vec3|number} b
-     * @param {Vec3} c
-     * @returns {Vec3}
+     * @param {Vec3} out
+     * @returns {Vec3} out
      */
-    Vec3.divide = function (a, b, c) {
+    Vec3.divide = function (a, b, out) {
         if (b instanceof Vec3) {
-            c.x = a.x / b.x;
-            c.y = a.y / b.y;
-            c.z = a.z / b.z;
+            out.x = a.x / b.x;
+            out.y = a.y / b.y;
+            out.z = a.z / b.z;
         } else {
-            c.x = a.x / b;
-            c.y = a.y / b;
-            c.z = a.z / b;
+            out.x = a.x / b;
+            out.y = a.y / b;
+            out.z = a.z / b;
         }
 
-        return c;
+        return out;
     };
     /**
      *
@@ -299,34 +299,34 @@
      *
      * @param {Vec3} a
      * @param {Vec3|number} b
-     * @param {Vec3} c
+     * @param {Vec3} out
      * @returns {Vec3}
      */
-    Vec3.multiply = function (a, b, c) {
+    Vec3.multiply = function (a, b, out) {
         if (b instanceof Vec3) {
-            c.x = a.x * b.x;
-            c.y = a.y * b.y;
-            c.z = a.z * b.z;
+            out.x = a.x * b.x;
+            out.y = a.y * b.y;
+            out.z = a.z * b.z;
         } else {
-            c.x = a.x * b;
-            c.y = a.y * b;
-            c.z = a.z * b;
+            out.x = a.x * b;
+            out.y = a.y * b;
+            out.z = a.z * b;
         }
 
-        return c;
+        return out;
     };
     /**
      *
      * @param {Vec3} a
-     * @param {Vec3} b
+     * @param {Vec3} out
      * @returns {Vec3}
      */
-    Vec3.negative = function (a, b) {
-        b.x = -a.x;
-        b.y = -a.y;
-        b.z = -a.z;
+    Vec3.negative = function (a, out) {
+        out.x = -a.x;
+        out.y = -a.y;
+        out.z = -a.z;
 
-        return b;
+        return out;
     };
     /**
      *
@@ -339,35 +339,35 @@
      *
      * @param {Vec3} a
      * @param {Vec3|number} b
-     * @param {Vec3} c
+     * @param {Vec3} out
      * @returns {Vec3}
      */
-    Vec3.subtract = function (a, b, c) {
+    Vec3.subtract = function (a, b, out) {
         if (b instanceof Vec3) {
-            c.x = a.x - b.x;
-            c.y = a.y - b.y;
-            c.z = a.z - b.z;
+            out.x = a.x - b.x;
+            out.y = a.y - b.y;
+            out.z = a.z - b.z;
         } else {
-            c.x = a.x - b;
-            c.y = a.y - b;
-            c.z = a.z - b;
+            out.x = a.x - b;
+            out.y = a.y - b;
+            out.z = a.z - b;
         }
 
-        return c;
+        return out;
     };
     /**
      *
      * @param {Vec3} a
-     * @param {Vec3} b
+     * @param {Vec3} out
      * @returns {Vec3}
      */
-    Vec3.unit = function (a, b) {
+    Vec3.unit = function (a, out) {
         let length = a.length();
-        b.x = a.x / length;
-        b.y = a.y / length;
-        b.z = a.z / length;
+        out.x = a.x / length;
+        out.y = a.y / length;
+        out.z = a.z / length;
 
-        return b;
+        return out;
     };
 
     global.Vec3 = Vec3;

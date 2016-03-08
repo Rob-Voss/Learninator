@@ -39,14 +39,13 @@
             this.map = new Map();
             this.cellsContainer = new PIXI.Container();
 
-            let c, cs;
             for (let x = 0; x < this.xCount; x++) {
                 for (let y = 0; y < this.yCount; y++) {
-                    c = new Cell(x, y, this.cellWidth, this.cellHeight);
-                    c.population = [];
-                    this.cells.push(c);
+                    let cell = new Cell(x, y, this.cellWidth, this.cellHeight),
+                        cs = new CellShape(cell, this.cheats);
+                    cell.shape = cs;
+                    this.cells.push(cell);
 
-                    cs = new CellShape(c.corners, this.cheats);
                     this.cellsContainer.addChild(cs.shape);
                 }
             }

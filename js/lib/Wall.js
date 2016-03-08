@@ -17,11 +17,11 @@
             this.type = 0;
             this.v1 = v1;
             this.v2 = v2;
-            this.pos = new Vec((this.v1.x + this.v2.x) / 2, (this.v1.y + this.v2.y) / 2);
-            this.width = (this.v2.x - this.v1.x === 0) ? 2 : this.v2.x - this.v1.x;
-            this.height = (this.v2.y - this.v1.y === 0) ? 2 : this.v2.y - this.v1.y;
-            this.len = this.v1.distanceTo(this.v2);
-            this.angle = this.v1.getAngleBetween(this.v2);
+            this.pos = this.v2.pointBetween(this.v1, 50);
+            this.width = (this.v2.x - this.v1.x <= 0) ? 2 : this.v2.x - this.v1.x;
+            this.height = (this.v2.y - this.v1.y <= 0) ? 2 : this.v2.y - this.v1.y;
+            this.len = this.v2.distanceTo(this.v1);
+            this.angle = this.v2.angleBetween(this.v1);
             this.rotation = this.angle  * Math.PI / 180;
 
             this.shape = new PIXI.Graphics();
