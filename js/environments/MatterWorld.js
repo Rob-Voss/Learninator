@@ -1,11 +1,40 @@
 var Matter = Matter || {},
     Utility = Utility || {},
-    MatterEntity = MatterEntity || {};
+    PhysicalEntity = PhysicalEntity || {};
 
 (function (global) {
     "use strict";
 
+    // Matter aliases
+    var Engine = Matter.Engine,
+        World = Matter.World,
+        Bodies = Matter.Bodies,
+        Body = Matter.Body,
+        Composite = Matter.Composite,
+        Composites = Matter.Composites,
+        Common = Matter.Common,
+        Constraint = Matter.Constraint,
+        Events = Matter.Events,
+        Bounds = Matter.Bounds,
+        Vector = Matter.Vector,
+        Vertices = Matter.Vertices,
+        MouseConstraint = Matter.MouseConstraint,
+        Mouse = Matter.Mouse,
+        Query = Matter.Query,
+        Svg = Matter.Svg,
+        container = document.body.querySelector('.game-container');
+
+    // MatterTools aliases
+    if (window.MatterTools) {
+        var useTools = true,
+            Gui = MatterTools.Gui,
+            Inspector = MatterTools.Inspector,
+            useInspector = window.location.hash.indexOf('-inspect') !== -1,
+            isMobile = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
+    }
+
     class MatterWorld {
+
         /**
          * Make a World
          * @name MatterWorld
@@ -16,111 +45,120 @@ var Matter = Matter || {},
          * @returns {MatterWorld}
          */
         constructor(width = 800, height = 800) {
-            var self = this,
-                Bodies = Matter.Bodies,
-                Body = Matter.Body,
-                Engine = Matter.Engine,
-                Events = Matter.Events,
-                Mouse = Matter.Mouse,
-                Vector = Matter.Vector,
-                Vertices = Matter.Vertices,
-                World = Matter.World,
-                container = document.body.querySelector('.game-container');
-
             this.width = width;
             this.height = height;
             this.bodies = [];
             this.population = new Map();
+            if (useTools) {
+                this.useInspector = useInspector;
+                this.isMobile = isMobile;
+            }
 
-            this.renderOpts = {
-                background: '#fafafa',
-                enabled: true,
+            this.engineOpts = {
                 enableSleeping: false,
-                hasBounds: false,
-                width: width,
-                height: height,
-                wireframeBackground: '#222',
-                wireframes: true,
-                showAngleIndicator: true,
-                showAxes: true,
-                showSleeping: true,
-                showBounds: false,
-                showBroadphase: false,
-                showCollisions: true,
-                showConvexHulls: false,
-                showDebug: false,
-                showIds: false,
-                showInternalEdges: false,
-                showPositions: false,
-                showShadows: false,
-                showSeparations: false,
-                showVelocity: true,
-                showVertexNumbers: false,
-                positionIterations: 10,
-                velocityIterations: 30,
                 metrics: {
                     extended: true
+                },
+                world: {
+                    gravity: {
+                        y: 0,
+                        x: 0
+                    }
+                },
+                render: {
+                    options: {
+                        width: width,
+                        height: height,
+                        background: '#ffffff',
+                        enabled: true,
+                        wireframes: false,
+                        wireframeBackground: '#222',
+                        showAngleIndicator: true,
+                        showAxes: false,
+                        showSleeping: false,
+                        showBounds: false,
+                        showBroadphase: false,
+                        showCollisions: true,
+                        showConvexHulls: false,
+                        showDebug: true,
+                        showIds: false,
+                        showInternalEdges: false,
+                        showPositions: false,
+                        showShadows: false,
+                        showSeparations: false,
+                        showVelocity: false,
+                        showVertexNumbers: false
+                    }
                 }
             };
-
-            this.engine = Engine.create(container, this.renderOpts);
-            this.engine.timing.isFixed = true;
-            this.engine.timing.timeScale = 1;
-            this.engine.world.gravity.y = 0;
-            this.engine.world.gravity.x = 0;
-
-            this.runner = Engine.run(this.engine);
+            this.engine = Engine.create(container, this.engineOpts);
             this.canvas = this.engine.render.canvas;
-            this.mouse = Mouse.create(this.canvas);
+
+            // add a mouse controlled constraint
+            this.mouseConstraint = MouseConstraint.create(this.engine);
+            World.add(this.engine.world, this.mouseConstraint);
+
+            // pass mouse to renderer to enable showMousePosition
+            this.engine.render.mouse = this.mouseConstraint.mouse;
 
             // Ground
-            var offset = 5;
-            this.bodies.push(Bodies.rectangle(400, -offset, 800.5 + 2 * offset, 50.5, {isStatic: true}));
-            this.bodies.push(Bodies.rectangle(400, 600 + offset, 800.5 + 2 * offset, 50.5, {isStatic: true}));
-            this.bodies.push(Bodies.rectangle(800 + offset, 300, 50.5, 600.5 + 2 * offset, {isStatic: true}));
-            this.bodies.push(Bodies.rectangle(-offset, 300, 50.5, 600.5 + 2 * offset, {isStatic: true}));
+            var buffer = 1,
+                wallOpts = {isStatic: true, render: {strokeStyle: '#555', fillStyle: '#555'}},
+                top = Bodies.rectangle(this.width / 2, buffer, this.height - buffer, buffer, wallOpts),
+                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width - buffer, buffer, wallOpts),
+                left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height - buffer, wallOpts),
+                right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height - buffer, wallOpts);
 
-            // Entities
-            this.addEntities(150);
+            this.bodies.push(left);
+            this.bodies.push(top);
+            this.bodies.push(right);
+            this.bodies.push(bottom);
 
-            // Events.on(self.engine, 'tick', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //         Body.applyForce(body, body.position, body.velocity);
-            //     }
-            // });
-
-            // Events.on(self.engine, 'beforeUpdate', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //     }
-            // });
-
-            // Events.on(self.engine, 'afterUpdate', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //     }
-            // });
-
-            // Events.on(self.engine, 'collisionActive', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //     }
-            // });
-
-            // Events.on(self.engine, 'collisionStart', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //     }
-            // });
-
-            // Events.on(self.engine, 'collisionEnd', function () {
-            //     for (let i = 0; i < self.bodies.length; i++) {
-            //         var body = self.bodies[i];
-            //     }
-            // });
+            // this.addAgents(1);
+            // this.setCollisionFiltering();
+            this.addEntities(25);
+            this.setEvents();
 
             World.add(this.engine.world, this.bodies);
+
+            this.runner = Engine.run(this.engine);
+
+            // create a Matter.Gui
+            if (useTools) {
+                this.gui = Gui.create(this.engine);
+                this.initControls(this.gui);
+                Gui.update(this.gui);
+            }
+
+            return this;
+        }
+
+        /**
+         * Add new agents
+         * @parameter {number} number
+         * @returns {MatterWorld}
+         */
+        addAgents(number) {
+            if (number === undefined) {
+                number = 1;
+            }
+            // Populating the world
+            for (let k = 0; k < number; k++) {
+                let entityOpt = {
+                        angle: -Math.PI * Utility.randf(0, 1),
+                        position: {
+                            x: Utility.randi(4, this.height - 4),
+                            y: Utility.randi(4, this.height - 4)
+                        }
+                    },
+                    size = Utility.randi(5, 15),
+                    type = Utility.randi(1, 3),
+                    circle = Matter.Bodies.circle(entityOpt.x, entityOpt.y, size, entityOpt),
+                    entity = new PhysicalAgent(type, circle);
+
+                this.bodies.push(entity.body);
+                this.population.set(entity.id, entity);
+            }
 
             return this;
         }
@@ -128,7 +166,7 @@ var Matter = Matter || {},
         /**
          * Add new entities
          * @parameter {number} number
-         * @returns {World}
+         * @returns {MatterWorld}
          */
         addEntities(number) {
             if (number === undefined) {
@@ -137,20 +175,23 @@ var Matter = Matter || {},
             // Populating the world
             for (let k = 0; k < number; k++) {
                 let entityOpt = {
-                        x: Utility.randi(15, this.width - 15),
-                        y: Utility.randi(15, this.height - 15),
-                        velocity: {
-                            x: Utility.randf(-0.005, 0.005),
-                            y: Utility.randf(-0.005, 0.005)
+                        angle: 0,
+                        position: {
+                            x: Utility.randi(4, this.height - 4),
+                            y: Utility.randi(4, this.height - 4)
                         },
+                        frictionAir: Utility.randf(0.001, 0.1),
+                        friction: Utility.randf(0.0001, 0.1),
+                        restitution: Utility.randf(0.1, 0.9),
                         mass: 0.000,
-                        angle: Utility.randf(0, 3.145),
-                        frictionAir: 0.000,
-                        restitution: 0.0,
                         density: 1
                     },
-                    circle = Matter.Bodies.circle(entityOpt.x, entityOpt.y, 15, entityOpt),
-                    entity = new MatterEntity('Nom', circle);
+                    size = Utility.randi(10, 15),
+                    type = Utility.randi(1, 3),
+                    body = Matter.Bodies.circle(entityOpt.x, entityOpt.y, size, entityOpt),
+                    entity = new PhysicalEntity(type, body);
+                Body.setAngle(body, -Math.PI * 0.26);
+                Body.setAngularVelocity(body, 0.2);
 
                 this.bodies.push(entity.body);
                 this.population.set(entity.id, entity);
@@ -170,113 +211,252 @@ var Matter = Matter || {},
             }
             return this;
         }
-    }
 
-    var concave = function (World) {
-        var arrow = Vertices.fromPath('40 0 40 20 100 20 100 80 40 80 40 100 0 50'),
-            chevron = Vertices.fromPath('100 0 75 50 100 100 25 100 0 50 25 0'),
-            star = Vertices.fromPath('50 0 63 38 100 38 69 59 82 100 50 75 18 100 31 59 0 38 37 38'),
-            horseShoe = Vertices.fromPath('35 7 19 17 14 38 14 58 25 79 45 85 65 84 65 66 46 67 34 59 30 44 33 29 45 23 66 23 66 7 53 7');
+        initControls(gui) {
+            let self = this;
 
-        var stack = Composites.stack(50, 50, 6, 4, 10, 10, function (x, y, column, row) {
-            var color = Common.choose(['#556270', '#4ECDC4', '#C7F464', '#FF6B6B', '#C44D58']);
-            return Bodies.fromVertices(x, y, Common.choose([arrow, chevron, star, horseShoe]), {
-                render: {
-                    fillStyle: color,
-                    strokeStyle: color
+            // need to add mouse constraint back in after gui clear or load is pressed
+            Events.on(gui, 'clear load', function () {
+                // add a mouse controlled constraint
+                self.mouseConstraint = MouseConstraint.create(self.engine);
+                World.add(self.engine.world, self.mouseConstraint);
+
+                // pass mouse to renderer to enable showMousePosition
+                self.engine.render.mouse = self.mouseConstraint.mouse;
+
+                World.add(self.engine.world, self.mouseConstraint);
+            });
+
+            // need to rebind mouse on render change
+            Events.on(gui, 'setRenderer', function () {
+                Mouse.setElement(self.mouseConstraint.mouse, self.engine.render.canvas);
+            });
+
+            // create a Matter.Inspector
+            if (Inspector && this.useInspector) {
+                this.inspector = Inspector.create(self.engine);
+
+                Events.on(this.inspector, 'import', function () {
+                    self.mouseConstraint = MouseConstraint.create(self.engine);
+                    World.add(self.engine.world, self.mouseConstraint);
+                });
+
+                Events.on(this.inspector, 'play', function () {
+                    self.mouseConstraint = MouseConstraint.create(self.engine);
+                    World.add(self.engine.world, self.mouseConstraint);
+                });
+
+                Events.on(this.inspector, 'selectStart', function () {
+                    self.mouseConstraint.constraint.render.visible = false;
+                });
+
+                Events.on(this.inspector, 'selectEnd', function () {
+                    self.mouseConstraint.constraint.render.visible = true;
+                });
+            }
+        }
+        /**
+         *
+         */
+        setEvents() {
+            let self = this,
+                counter = 0,
+                action = 0;
+
+            var moveAction = function(body) {
+                let speed = Utility.randi(0, 5),
+                    velocity = getRandomForce(body);
+
+                // Execute agent's desired action
+                switch (action) {
+                    case 0: // Left
+                        velocity.x += -speed;
+                        break;
+                    case 1: // Right
+                        velocity.x += speed;
+                        break;
+                    case 2: // Up
+                        velocity.y += -speed;
+                        break;
+                    case 3: // Down
+                        velocity.y += speed;
+                        break;
                 }
-            }, true);
-        });
 
-        World.add(_world, stack);
-    };
+                // Forward the agent by velocity
+                velocity.x *= 0.95;
+                velocity.y *= 0.95;
+                Body.setVelocity(body, velocity);
+            };
 
-    var collisionFiltering = function () {
-        // define our categories
-        // (as bit fields, there are up to 32 available)
-        var defaultCategory = 0x0001,
-            redCategory = 0x0002,
-            greenCategory = 0x0004,
-            blueCategory = 0x0008;
+            /**
+             * Using the Body's mass return a random force
+             * @param {Body} body
+             * @returns {{x: number, y: number}}
+             */
+            var getRandomForce = function(body) {
+                let forceMagnitude = 0.01 * body.mass,
+                    fx = (forceMagnitude + Common.random() * forceMagnitude) * Common.choose([1, -1]),
+                    fv = -forceMagnitude + Common.random() * -forceMagnitude;
 
-        var redColor = '#C44D58',
-            blueColor = '#4ECDC4',
-            greenColor = '#C7F464';
+                return {x: fx, y: fv};
+            };
 
-        // create a stack with varying body categories
-        // (but these bodies can all collide with each other)
-        World.add(_world,
-            Composites.stack(275, 150, 5, 10, 10, 10, function (x, y, column, row) {
-                var category = redCategory,
-                    color = redColor;
-
-                if (row > 5) {
-                    category = blueCategory;
-                    color = blueColor;
-                } else if (row > 2) {
-                    category = greenCategory;
-                    color = greenColor;
+            Events.on(this.engine, 'tick', function (event) {
+                counter += 1;
+                if (self.mouseConstraint.mouse.button !== -1) {
+                    // console.log(self.mouseConstraint.mouse.button);
                 }
 
-                return Bodies.circle(x, y, 20, {
+                for (let i = 0; i < self.bodies.length; i++) {
+                    let body = self.bodies[i];
+
+                    if (!body.isStatic) {
+                        // every 1.5 sec
+                        if (counter >= 60 * 1.5) {
+                            action = Utility.randi(0, 4);
+                        }
+                        Body.setAngularVelocity(body, 0.02);
+                        // moveAction(body);
+                    }
+                }
+            });
+
+            Events.on(this.engine, 'beforeUpdate', function (event) {
+                // for (let i = 0; i < self.bodies.length; i++) {
+                //     let body = self.bodies[i],
+                //         px = body.position.x * Math.sin(self.engine.timing.timestamp * 0.002),
+                //         py = body.position.y * Math.sin(self.engine.timing.timestamp * 0.003);
+                //
+                //     if (!body.isStatic) {
+                //         Body.setVelocity(body, {x: px - body.position.x, y: py - body.position.y});
+                //         Body.setAngularVelocity(body, 0.02);
+                //         Body.setPosition(body, {x: px - body.position.x, y: py - body.position.y});
+                //         Body.rotate(body, 0.02);
+                //     }
+                // }
+
+            });
+
+            Events.on(this.engine, 'afterUpdate', function (event) {
+                // for (let i = 0; i < self.bodies.length; i++) {
+                //     let body = self.bodies[i];
+                // }
+            });
+
+            Events.on(this.engine, 'collisionStart', function (event) {
+                var pairs = event.pairs;
+
+                // change object colours to show those starting a collision
+                for (let q = 0; q < pairs.length; q++) {
+                    var pair = pairs[q];
+                    pair.bodyA.render.fillStyle = '#bbbbbb';
+                    pair.bodyB.render.fillStyle = '#bbbbbb';
+                }
+            });
+
+            Events.on(this.engine, 'collisionActive', function (event) {
+                var pairs = event.pairs;
+
+                // change object colours to show those in an active collision (e.g. resting contact)
+                for (var q = 0; q < pairs.length; q++) {
+                    var pair = pairs[q];
+                    pair.bodyA.render.fillStyle = '#aaaaaa';
+                    pair.bodyB.render.fillStyle = '#aaaaaa';
+                }
+            });
+
+            Events.on(this.engine, 'collisionEnd', function (event) {
+                var pairs = event.pairs;
+
+                // change object colours to show those ending a collision
+                for (var q = 0; q < pairs.length; q++) {
+                    var pair = pairs[q];
+                    pair.bodyA.render.fillStyle = pair.bodyA.color;
+                    pair.bodyB.render.fillStyle = pair.bodyB.color;
+                }
+            });
+        }
+
+        setCollisionFiltering() {
+            // define our categories
+            // (as bit fields, there are up to 32 available)
+            var defaultCategory = 0x0001,
+                redCategory = 0x0002,
+                greenCategory = 0x0004,
+                blueCategory = 0x0008;
+
+            var redColor = '#C44D58',
+                blueColor = '#4ECDC4',
+                greenColor = '#C7F464';
+
+            // create a stack with varying body categories
+            // (but these bodies can all collide with each other)
+            World.add(this.engine.world,
+                Composites.stack(275, 150, 5, 10, 10, 10, function (x, y, column, row) {
+                    var category = redCategory,
+                        color = redColor;
+
+                    if (row > 5) {
+                        category = blueCategory;
+                        color = blueColor;
+                    } else if (row > 2) {
+                        category = greenCategory;
+                        color = greenColor;
+                    }
+
+                    return Bodies.circle(x, y, 20, {
+                        collisionFilter: {
+                            category: category
+                        },
+                        render: {
+                            strokeStyle: color,
+                            fillStyle: 'transparent'
+                        }
+                    });
+                })
+            );
+
+            // this body will only collide with the walls and the green bodies
+            World.add(this.engine.world,
+                Bodies.circle(310, 40, 30, {
                     collisionFilter: {
-                        category: category
+                        mask: defaultCategory | greenCategory
                     },
                     render: {
-                        strokeStyle: color,
-                        fillStyle: 'transparent'
+                        strokeStyle: Common.shadeColor(greenColor, -20),
+                        fillStyle: greenColor
                     }
-                });
-            })
-        );
+                })
+            );
 
-        // this body will only collide with the walls and the green bodies
-        World.add(_world,
-            Bodies.circle(310, 40, 30, {
-                collisionFilter: {
-                    mask: defaultCategory | greenCategory
-                },
-                render: {
-                    strokeStyle: Common.shadeColor(greenColor, -20),
-                    fillStyle: greenColor
-                }
-            })
-        );
+            // this body will only collide with the walls and the red bodies
+            World.add(this.engine.world,
+                Bodies.circle(400, 40, 30, {
+                    collisionFilter: {
+                        mask: defaultCategory | redCategory
+                    },
+                    render: {
+                        strokeStyle: Common.shadeColor(redColor, -20),
+                        fillStyle: redColor
+                    }
+                })
+            );
 
-        // this body will only collide with the walls and the red bodies
-        World.add(_world,
-            Bodies.circle(400, 40, 30, {
-                collisionFilter: {
-                    mask: defaultCategory | redCategory
-                },
-                render: {
-                    strokeStyle: Common.shadeColor(redColor, -20),
-                    fillStyle: redColor
-                }
-            })
-        );
-
-        // this body will only collide with the walls and the blue bodies
-        World.add(_world,
-            Bodies.circle(480, 40, 30, {
-                collisionFilter: {
-                    mask: defaultCategory | blueCategory
-                },
-                render: {
-                    strokeStyle: Common.shadeColor(blueColor, -20),
-                    fillStyle: blueColor
-                }
-            })
-        );
-
-        // red category objects should not be draggable with the mouse
-        _mouseConstraint.collisionFilter.mask = defaultCategory | blueCategory | greenCategory;
-
-        var renderOptions = _engine.render.options;
-        renderOptions.wireframes = false;
-        renderOptions.background = '#222';
-        renderOptions.showAngleIndicator = false;
-    };
+            // this body will only collide with the walls and the blue bodies
+            World.add(this.engine.world,
+                Bodies.circle(480, 40, 30, {
+                    collisionFilter: {
+                        mask: defaultCategory | blueCategory
+                    },
+                    render: {
+                        strokeStyle: Common.shadeColor(blueColor, -20),
+                        fillStyle: blueColor
+                    }
+                })
+            );
+        }
+    }
 
     global.MatterWorld = MatterWorld;
 
