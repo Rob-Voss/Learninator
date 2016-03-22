@@ -33,6 +33,7 @@
     "use strict";
 
     class World {
+
         /**
          * Make a World
          * @name World
@@ -104,7 +105,7 @@
                 collision: true,
                 interactive: false,
                 useSprite: false,
-                moving: false,
+                moving: true,
                 cheats: {
                     gridLocation: false,
                     position: false,

@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width,minimal-ui">
 
     <title>Matter World</title>
-    <link rel="stylesheet" href="./css/matter-tools.css" type="text/css">
-</head>
-<body onload="start();">
 
+    <link rel="stylesheet" href="css/matter-tools.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+</head>
 <script>
     var world = world || {};
 
@@ -17,19 +17,27 @@
         world = new MatterWorld(600, 600);
     }
 </script>
+<body onload="start();">
+<div class="container">
+    <div class="canvas-container"></div>
 
-<div class="game-container"></div>
+    <div id="flotreward" style="width:800px; height: 400px;"></div>
+</div>
+
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
 
 <script src="js/lib/external/matter.js"></script>
 <script src="js/lib/external/matter-tools.js"></script>
 <script src="js/lib/external/rl.js"></script>
 
+<script src="js/lib/graphing/FlotGraph.js"></script>
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
 
 <script src="js/entities/PhysicalEntity.js"></script>
+<script src="js/entities/PhysicalAgent.js"></script>
 <script src="js/environments/MatterWorld.js"></script>
 </body>
 </html>

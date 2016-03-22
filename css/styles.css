@@ -12,13 +12,6 @@ html, body {
     box-sizing: border-box;
 }
 
-#flotreward {
-    width: 600px;
-    height: 600px;
-    margin-top: 60px;
-    align: left; /* Horizontally align text elements to centre */
-}
-
 button, input, optgroup, select, textarea {
     color: black;
 }

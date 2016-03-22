@@ -151,22 +151,22 @@
           }, 5e3);
         }
       };
-      var metrics = datGui.addFolder("Metrics");
-      metrics.add(engine.timing, "fps").listen();
-      if (engine.metrics.extended) {
-        metrics.add(engine.timing, "delta").listen();
-        metrics.add(engine.timing, "correction").listen();
-        metrics.add(engine.metrics, "bodies").listen();
-        metrics.add(engine.metrics, "collisions").listen();
-        metrics.add(engine.metrics, "pairs").listen();
-        metrics.add(engine.metrics, "broadEff").listen();
-        metrics.add(engine.metrics, "midEff").listen();
-        metrics.add(engine.metrics, "narrowEff").listen();
-        metrics.add(engine.metrics, "narrowReuse").listen();
-        metrics.close();
-      } else {
-        metrics.open();
-      }
+      // var metrics = datGui.addFolder("Metrics");
+      // metrics.add(engine.timing, "fps").listen();
+      // if (engine.metrics.extended) {
+      //   metrics.add(engine.timing, "delta").listen();
+      //   metrics.add(engine.timing, "correction").listen();
+      //   metrics.add(engine.metrics, "bodies").listen();
+      //   metrics.add(engine.metrics, "collisions").listen();
+      //   metrics.add(engine.metrics, "pairs").listen();
+      //   metrics.add(engine.metrics, "broadEff").listen();
+      //   metrics.add(engine.metrics, "midEff").listen();
+      //   metrics.add(engine.metrics, "narrowEff").listen();
+      //   metrics.add(engine.metrics, "narrowReuse").listen();
+      //   metrics.close();
+      // } else {
+      //   metrics.open();
+      // }
       var controls = datGui.addFolder("Add Body");
       controls.add(gui, "amount", 1, 5).step(1);
       controls.add(gui, "size", 5, 150).step(1);

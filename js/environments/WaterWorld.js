@@ -67,9 +67,9 @@
                 worldOpts = {
                     grid: maze.grid,
                     simSpeed: 1,
-                    collision: {
-                       type: 'grid'
-                    },
+                    // collision: {
+                    //    type: 'grid'
+                    // },
                     cheats: {
                         brute: false,
                         quad: false,
@@ -82,7 +82,7 @@
                         collision: true,
                         interactive: true,
                         useSprite: false,
-                        movingEntities: true,
+                        moving: true,
                         cheats: {
                             id: false,
                             name: false,
