@@ -1,38 +1,38 @@
-/**
- * The flags for what to display for 'cheats'
- * Show the QuadTree overlay, show the grid overlay, show the wall's numbers
- * @typedef {Object} cheatsOpts
- * @property {boolean} quad - Show the Quadtree overlay
- * @property {boolean} grid - Show the Grid overlay
- * @property {boolean} walls - Show the Wall numbers
- */
-
-/**
- * Options for the World that define the width/height
- * @typedef {Object} worldOpts
- * @property {number} simSpeed - The speed of the simulation
- * @property {cdOpts} collision - The collision definition
- * @property {cheatsOpts} cheats - The cheats definition
- */
-
-/**
- * Options for the World renderer
- * @typedef {Object} renderOpts
- * @property [view] {HTMLCanvasElement} the canvas to use as a view, optional
- * @property [transparent=false] {boolean} If the render view is transparent, default false
- * @property [antialias=false] {boolean} sets antialias (only applicable in chrome at the moment)
- * @property [preserveDrawingBuffer=false] {boolean} enables drawing buffer preservation, enable this if you
- *      need to call toDataUrl on the webgl context
- * @property [resolution=1] {number} the resolution of the renderer, retina would be 2
- * @property [noWebGL=false] {boolean} prevents selection of WebGL renderer, even if such is present
- * @property {number} width - The width
- * @property {number} height - The height
- */
-
 (function (global) {
     "use strict";
 
     class World {
+
+        /**
+         * The flags for what to display for 'cheats'
+         * Show the QuadTree overlay, show the grid overlay, show the wall's numbers
+         * @typedef {Object} cheatsOpts
+         * @property {boolean} quad - Show the Quadtree overlay
+         * @property {boolean} grid - Show the Grid overlay
+         * @property {boolean} walls - Show the Wall numbers
+         */
+
+        /**
+         * Options for the World that define the width/height
+         * @typedef {Object} worldOpts
+         * @property {number} simSpeed - The speed of the simulation
+         * @property {cdOpts} collision - The collision definition
+         * @property {cheatsOpts} cheats - The cheats definition
+         */
+
+        /**
+         * Options for the World renderer
+         * @typedef {Object} renderOpts
+         * @property [view] {HTMLCanvasElement} the canvas to use as a view, optional
+         * @property [transparent=false] {boolean} If the render view is transparent, default false
+         * @property [antialias=false] {boolean} sets antialias (only applicable in chrome at the moment)
+         * @property [preserveDrawingBuffer=false] {boolean} enables drawing buffer preservation, enable this if you
+         *      need to call toDataUrl on the webgl context
+         * @property [resolution=1] {number} the resolution of the renderer, retina would be 2
+         * @property [noWebGL=false] {boolean} prevents selection of WebGL renderer, even if such is present
+         * @property {number} width - The width
+         * @property {number} height - The height
+         */
 
         /**
          * Make a World
@@ -45,7 +45,7 @@
          * @param {renderOpts} renderOpts
          * @returns {World}
          */
-        constructor(agents = [], walls, worldOpts, renderOpts) {
+        constructor(agents, walls, worldOpts, renderOpts) {
             var self = this;
             this.rendererOpts = renderOpts || {
                 antialiasing: false,
@@ -92,7 +92,7 @@
             ];
 
             // Get agents
-            this.agents = agents;
+            this.agents = agents || [];
             this.entityAgents = [];
 
             // Number of agents

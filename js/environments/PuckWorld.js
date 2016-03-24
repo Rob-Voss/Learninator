@@ -97,9 +97,9 @@ var PuckWorld = PuckWorld || {},
         this.puck = {};
         this.target = {};
         this.enemy = {};
-        this.puck.pos = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
-        this.target.pos = new Vec(Math.random(), Math.random()); // target
-        this.enemy.pos = new Vec(Math.random(), Math.random()); // enemy
+        this.puck.position = new Vec(Math.random(), Math.random(), 0, Math.random() * 0.05 - 0.025, Math.random() * 0.05 - 0.025);
+        this.target.position = new Vec(Math.random(), Math.random()); // target
+        this.enemy.position = new Vec(Math.random(), Math.random()); // enemy
         this.radius = 0.05;
         this.t = 0;
 
@@ -127,14 +127,14 @@ var PuckWorld = PuckWorld || {},
 
     PuckWorld.prototype.getState = function () {
         var s = [
-            this.puck.pos.x - 0.5,
-            this.puck.pos.y - 0.5,
-            this.puck.pos.vx * 10,
-            this.puck.pos.vy * 10,
-            this.target.pos.x - this.puck.pos.x,
-            this.target.pos.y - this.puck.pos.y,
-            this.enemy.pos.x - this.puck.pos.x,
-            this.enemy.pos.y - this.puck.pos.y
+            this.puck.position.x - 0.5,
+            this.puck.position.y - 0.5,
+            this.puck.position.vx * 10,
+            this.puck.position.vy * 10,
+            this.target.position.x - this.puck.position.x,
+            this.target.position.y - this.puck.position.y,
+            this.enemy.position.x - this.puck.position.x,
+            this.enemy.position.y - this.puck.position.y
         ];
         return s;
     };
@@ -143,64 +143,64 @@ var PuckWorld = PuckWorld || {},
      */
     PuckWorld.prototype.sampleNextState = function () {
         // world dynamics
-        this.puck.pos.x += this.puck.pos.vx; // newton
-        this.puck.pos.y += this.puck.pos.vy;
-        this.puck.pos.vx *= 0.95; // damping
-        this.puck.pos.vy *= 0.95;
+        this.puck.position.x += this.puck.position.vx; // newton
+        this.puck.position.y += this.puck.position.vy;
+        this.puck.position.vx *= 0.95; // damping
+        this.puck.position.vy *= 0.95;
 
         // agent action influences puck velocity
         var accel = 0.002;
         switch (this.action) {
             case 0:
-                this.puck.pos.vx -= accel;
+                this.puck.position.vx -= accel;
                 break;
             case 1:
-                this.puck.pos.vx += accel;
+                this.puck.position.vx += accel;
                 break;
             case 2:
-                this.puck.pos.vy -= accel;
+                this.puck.position.vy -= accel;
                 break;
             case 3:
-                this.puck.pos.vy += accel;
+                this.puck.position.vy += accel;
                 break;
         }
 
         // handle boundary conditions and bounce
-        if (this.puck.pos.x < this.radius) {
-            this.puck.pos.vx *= -0.5; // bounce!
-            this.puck.pos.x = this.radius;
+        if (this.puck.position.x < this.radius) {
+            this.puck.position.vx *= -0.5; // bounce!
+            this.puck.position.x = this.radius;
         }
-        if (this.puck.pos.x > 1 - this.radius) {
-            this.puck.pos.vx *= -0.5;
-            this.puck.pos.x = 1 - this.radius;
+        if (this.puck.position.x > 1 - this.radius) {
+            this.puck.position.vx *= -0.5;
+            this.puck.position.x = 1 - this.radius;
         }
-        if (this.puck.pos.y < this.radius) {
-            this.puck.pos.vy *= -0.5; // bounce!
-            this.puck.pos.y = this.radius;
+        if (this.puck.position.y < this.radius) {
+            this.puck.position.vy *= -0.5; // bounce!
+            this.puck.position.y = this.radius;
         }
-        if (this.puck.pos.y > 1 - this.radius) {
-            this.puck.pos.vy *= -0.5;
-            this.puck.pos.y = 1 - this.radius;
+        if (this.puck.position.y > 1 - this.radius) {
+            this.puck.position.vy *= -0.5;
+            this.puck.position.y = 1 - this.radius;
         }
 
         this.t += 1;
         if (this.t % 73 === 0) {
-            this.enemy.pos.x = Math.random(); // reset the target location
-            this.enemy.pos.y = Math.random();
+            this.enemy.position.x = Math.random(); // reset the target location
+            this.enemy.position.y = Math.random();
         }
 
         // compute distances
-        var dx1 = this.puck.pos.x - this.target.pos.x, // Distance from gewdness
-            dy1 = this.puck.pos.y - this.target.pos.y, // Distance from gewdness
+        var dx1 = this.puck.position.x - this.target.position.x, // Distance from gewdness
+            dy1 = this.puck.position.y - this.target.position.y, // Distance from gewdness
             d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-            dx2 = this.puck.pos.x - this.enemy.pos.x, // Distance from badness
-            dy2 = this.puck.pos.y - this.enemy.pos.y, // Distance from badness
+            dx2 = this.puck.position.x - this.enemy.position.x, // Distance from badness
+            dy2 = this.puck.position.y - this.enemy.position.y, // Distance from badness
             d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
             dxnorm = dx2 / d2,
             dynorm = dy2 / d2,
             speed = 0.001;
-        this.enemy.pos.x += speed * dxnorm;
-        this.enemy.pos.y += speed * dynorm;
+        this.enemy.position.x += speed * dxnorm;
+        this.enemy.position.y += speed * dynorm;
 
         // compute reward
         // want to go close to green
@@ -297,12 +297,12 @@ var PuckWorld = PuckWorld || {},
 
     PuckWorld.prototype.updateDraw = function (a, s, r) {
         // reflect puck world state on screen
-        var ppx = this.puck.pos.x,
-            ppy = this.puck.pos.y,
-            tx = this.target.pos.x,
-            ty = this.target.pos.y,
-            tx2 = this.enemy.pos.x,
-            ty2 = this.enemy.pos.y,
+        var ppx = this.puck.position.x,
+            ppy = this.puck.position.y,
+            tx = this.target.position.x,
+            ty = this.target.position.y,
+            tx2 = this.enemy.position.x,
+            ty2 = this.enemy.position.y,
             g, b;
 
         d3agent.attr('cx', ppx * this.width).attr('cy', ppy * this.height);

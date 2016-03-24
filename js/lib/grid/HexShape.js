@@ -45,8 +45,8 @@ var HexShape = HexShape || {};
             this.walls = [];
 
             if (this.layout) {
-                this.pos = this.layout.hexToPixel(hex);
-                this.corners = this.layout.polygonCorners(this.pos);
+                this.position = this.layout.hexToPixel(hex);
+                this.corners = this.layout.polygonCorners(this.position);
                 for (let c = 0; c < this.corners.length; c++) {
                     let x1 = this.corners[c].x,
                         y1 = this.corners[c].y,
@@ -68,8 +68,8 @@ var HexShape = HexShape || {};
                     var angleAdd = (this.pointy) ? 30 : 0,
                         angleDeg = 60 * i + angleAdd,
                         angleRad = Math.PI / 180 * angleDeg;
-                    this.corners.push(new Point(this.pos.x + this.size * Math.cos(angleRad),
-                        this.pos.y + this.size * Math.sin(angleRad)));
+                    this.corners.push(new Point(this.position.x + this.size * Math.cos(angleRad),
+                        this.position.y + this.size * Math.sin(angleRad)));
                 }
             }
 
@@ -117,8 +117,8 @@ var HexShape = HexShape || {};
             this.cheatOverlay = new PIXI.Container();
 
             let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
-                posText = new PIXI.Text(this.hex.toString() + "\n" + this.pos.toString(), txtOpts);
-            posText.position.set(this.pos.x - this.size / 2, this.pos.y - 7);
+                posText = new PIXI.Text(this.hex.toString() + "\n" + this.position.toString(), txtOpts);
+            posText.position.set(this.position.x - this.size / 2, this.position.y - 7);
             this.cheatOverlay.addChild(posText);
 
             this.shape.addChild(this.cheatOverlay);

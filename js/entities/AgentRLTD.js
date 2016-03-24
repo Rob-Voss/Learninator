@@ -81,7 +81,7 @@
 
                                 let x = self.gridLocation.coords.bottom.right.x - (self.world.grid.cellWidth / 2),
                                     y = self.gridLocation.coords.bottom.right.y - (self.world.grid.cellHeight / 2);
-                                self.pos.set(x, y);
+                                self.position.set(x, y);
 
                                 self.nStepsCounter += 1;
                                 if (typeof obs.resetEpisode !== 'undefined') {
@@ -95,7 +95,7 @@
                                     self.nStepsCounter = 0;
 
                                     self.gridLocation = self.world.grid.getCellAt(0, 0);
-                                    self.pos.set(self.world.grid.cellWidth / 2, self.world.grid.cellHeight / 2);
+                                    self.position.set(self.world.grid.cellWidth / 2, self.world.grid.cellHeight / 2);
                                 }
                             }
                             break;
@@ -131,7 +131,7 @@
 
                 let x = this.gridLocation.coords.bottom.right.x - (this.world.grid.cellWidth / 2),
                     y = this.gridLocation.coords.bottom.right.y - (this.world.grid.cellHeight / 2);
-                this.pos.set(x, y);
+                this.position.set(x, y);
 
                 this.nStepsCounter += 1;
                 if (typeof obs.resetEpisode !== 'undefined') {
@@ -145,7 +145,7 @@
                     this.nStepsCounter = 0;
 
                     this.gridLocation = this.world.grid.getCellAt(0, 0);
-                    this.pos.set(this.world.grid.cellWidth / 2, this.world.grid.cellHeight / 2);
+                    this.position.set(this.world.grid.cellWidth / 2, this.world.grid.cellHeight / 2);
                 }
             } else {
                 this.post('act', this.state);

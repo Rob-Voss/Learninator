@@ -41,14 +41,14 @@ var FlotGraph = FlotGraph || {},
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
-                labelMargin: 5,
+                labelMargin: 10,
                 backgroundColor: {
                     colors: ["#FFF", "#e4f4f4"]
                 },
                 margin: {
-                    top: 5,
-                    bottom: 5,
-                    left: 5
+                    top: 10,
+                    bottom: 10,
+                    left: 10
                 }
             },
             xaxis: {
@@ -87,7 +87,7 @@ var FlotGraph = FlotGraph || {},
                 if (this.smoothReward[a] === null) {
                     this.smoothReward[a] = rew;
                 }
-                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
+                this.smoothReward[a] = this.smoothReward[a];// * 0.999 + rew * 0.001;
                 this.flott[a] += 1;
                 if (this.flott[a] === 50) {
                     for (let i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
@@ -102,8 +102,6 @@ var FlotGraph = FlotGraph || {},
                 if (typeof this.series[a] !== 'undefined') {
                     this.series[a].data = this.getFlotRewards(a);
                 }
-                // Clear them up since we've drawn them
-                this.agents[a].pts = [];
             }
 
             this.plot.setData(this.series);

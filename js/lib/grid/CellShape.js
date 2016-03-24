@@ -21,7 +21,7 @@
             this.height = cell.height;
             this.corners = cell.corners;
             this.fill = cheats;
-            this.pos = new Vec(this.corners[2].x - (this.width / 2), this.corners[2].y - (this.height / 2));
+            this.position = new Vec(this.corners[2].x - (this.width / 2), this.corners[2].y - (this.height / 2));
             this.color = 0xFFFFFF;
             this.walls = [];
             for (let c = 0; c < this.corners.length; c++) {
@@ -76,7 +76,7 @@
             this.cheatOverlay = new PIXI.Container();
 
             let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
-                posText = new PIXI.Text(this.cell.toString() + "\n" + this.pos.toString(), txtOpts);
+                posText = new PIXI.Text(this.cell.toString() + "\n" + this.position.toString(), txtOpts);
             posText.position.set(this.corners[0].x + this.width / 2, this.corners[0].y + this.height / 2 + 13);
             this.cheatOverlay.addChild(posText);
 

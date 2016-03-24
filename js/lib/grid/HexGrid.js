@@ -237,7 +237,7 @@ var Hex = Hex || {},
          * @returns {Object}
          */
         getGridLocation: function (entity) {
-            let hex = this.pixelToHex(entity.pos),
+            let hex = this.pixelToHex(entity.position),
                 cube = this.roundCube(this.axialToCube(hex)),
                 hexR = this.cubeToAxial(cube),
                 cell = this.getCellAt(hexR.q, hexR.r);

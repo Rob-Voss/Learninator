@@ -1,14 +1,15 @@
 (function (global) {
     "use strict";
 
-    class WaterWorld extends PhysicsWorld {
+    class WaterWorldPhys extends PhysicsWorld {
+
         /**
          * World object contains many agents and walls and food and stuff
          * @name WaterWorld
          * @extends World
          * @constructor
          *
-         * @returns {WaterWorld}
+         * @returns {WaterWorldPhys}
          */
         constructor() {
             let opts = {
@@ -93,12 +94,10 @@
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 
-            // super([], maze.walls, worldOpts, renderOpts);
-
             return this;
         }
     }
 
-    global.WaterWorld = WaterWorld;
+    global.WaterWorldPhys = WaterWorldPhys;
 
 }(this));

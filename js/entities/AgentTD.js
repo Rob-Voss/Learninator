@@ -169,21 +169,21 @@ var AgentTD = AgentTD || {},
          * @param smallWorld
          */
         move(world) {
-            this.oldPos = this.pos.clone();
+            this.oldPos = this.position.clone();
             this.oldAngle = this.angle;
 
             //Steer the agent according to outputs of wheel velocities
             let v = new Vec(0, this.radius / 2.0);
             v = v.rotate(this.oldAngle + Math.PI / 2);
             // Positions of wheel 1
-            let w1pos = this.pos.add(v),
+            let w1pos = this.position.add(v),
             // Positions of wheel 2
-                w2pos = this.pos.sub(v);
+                w2pos = this.position.sub(v);
 
-            let vv = this.pos.sub(w2pos);
+            let vv = this.position.sub(w2pos);
             vv = vv.rotate(-this.rot1);
 
-            let vv2 = this.pos.sub(w1pos);
+            let vv2 = this.position.sub(w1pos);
             vv2 = vv2.rotate(this.rot2);
 
             let newPos = w2pos.add(vv),
@@ -193,7 +193,7 @@ var AgentTD = AgentTD || {},
             newPos2.scale(0.5);
             let position = newPos.add(newPos2);
 
-            this.pos = position;
+            this.position = position;
 
             this.angle -= this.rot1;
             if (this.angle < 0) {
@@ -210,21 +210,21 @@ var AgentTD = AgentTD || {},
                     let collObj = this.collisions[i];
                     if (collObj.type === 0) {
                         // Wall
-                        this.pos = this.oldPos.clone();
-                        this.pos.vx = 0;
-                        this.pos.vy = 0;
+                        this.position = this.oldPos.clone();
+                        this.position.vx = 0;
+                        this.position.vy = 0;
                     } else if (collObj.type === 1 || collObj.type === 2) {
                         // Noms or Gnars
                         this.digestionSignal += (collObj.type === 1) ? this.carrot : this.stick;
                         world.deleteEntity(collObj.id);
                     } else if (collObj.type === 3 || collObj.type === 4) {
                         // Other Agents
-                        this.pos.vx = collObj.target.vx;
-                        this.pos.vy = collObj.target.vy;
+                        this.position.vx = collObj.target.vx;
+                        this.position.vy = collObj.target.vy;
                         if (world.population.has(collObj.id)){
                             let entity = world.population.get(collObj.id);
-                            entity.pos.vy = collObj.entity.vy;
-                            entity.pos.vy = collObj.entity.vy;
+                            entity.position.vy = collObj.entity.vy;
+                            entity.position.vy = collObj.entity.vy;
                         }
                     }
                 }
@@ -235,34 +235,34 @@ var AgentTD = AgentTD || {},
                 bottom = world.height - this.radius,
                 left = world.width - (world.width - this.radius),
                 right = world.width - this.radius;
-            if (this.pos.x < left) {
-                this.pos.x = left;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.x < left) {
+                this.position.x = left;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.x > right) {
-                this.pos.x = right;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.x > right) {
+                this.position.x = right;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.y < top) {
-                this.pos.y = top;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.y < top) {
+                this.position.y = top;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.y > bottom) {
-                this.pos.y = bottom;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.y > bottom) {
+                this.position.y = bottom;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
             this.direction = Utility.getDirection(this.angle);
 
             if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
                 this.sprite.rotation = this.angle * 0.01745329252;
             }
 

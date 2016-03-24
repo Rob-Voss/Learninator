@@ -24,51 +24,35 @@
         constructor(type, body) {
             let typeOf = typeof type;
             this.id = Utility.guid();
-            this.age = 0;
-            this.body = body;
-            this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
-            this.body.label = this.id;
             this.type = (typeOf === 'string') ? entityTypes.indexOf(type) : type || 1;
             this.typeName = entityTypes[this.type];
             this.name = (this.name === undefined) ? entityTypes[this.type] : this.name;
-            this.action = Common.choose([0, 1, 2, 3]);
+            this.age = 0;
+            this.body = body;
+            this.body.label = this.name;
+            this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
 
             return this;
         }
 
-        draw() {
+        draw(world) {
 
         }
 
         move() {
-            let v = {x: 0, y: 0};
-            switch (this.action) {
-                case 0: // Left
-                    v.x += -0.95;
-                    break;
-                case 1: // Right
-                    v.x += 0.95;
-                    break;
-                case 2: // Up
-                    v.y += -0.95;
-                    break;
-                case 3: // Down
-                    v.y += 0.95;
-                    break;
-            }
-            v.x *= 0.005;
-            v.y *= 0.005;
-
-            Body.applyForce(this.body, this.body.position, v);
+            Body.applyForce(this.body, this.body.position, {
+                x: Common.random(-1, 1) * 0.0025,
+                y: Common.random(-1, 1) * 0.0025
+            });
         }
 
         /**
          * Do work son
          */
-        tick() {
+        tick(world) {
             this.age += 1;
             this.move();
-            
+
             return this;
         }
     }

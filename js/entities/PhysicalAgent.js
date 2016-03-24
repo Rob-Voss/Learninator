@@ -146,7 +146,6 @@
                 this.eyes[ae].sense(world);
             }
         }
-
         /**
          * Agent's chance to learn
          * @returns {PhysicalAgent}
@@ -182,7 +181,7 @@
          * Tick the agent
          * @returns {PhysicalAgent}
          */
-        tick() {
+        tick(world) {
             // Let the agents behave in the world based on their input
             this.act();
 
@@ -244,13 +243,26 @@
             context.stroke();
 
             for (let i = 0; i < collisions.length; i++) {
-                let collision = collisions[i],
-                    entity = world.population.get(collision.bodyA.label);
-                if (entity && collision.bodyA.id !== this.body.id) {
+                let collision = collisions[i];
+                if (collision.bodyA.id !== this.body.id) {
                     this.v.x = collision.bodyA.velocity.x;
                     this.v.y = collision.bodyA.velocity.y;
-                    this.sensedType = entity.type;
-                    context.rect(collision.bodyA.position.x - 4.5, collision.bodyA.position.y - 4.5, 18, 18);
+                    switch (collision.bodyA.label) {
+                        case 'Gnar':
+                            this.sensedType = 2;
+                            break;
+                        case 'Nom':
+                            this.sensedType = 1;
+                            break;
+                        case 'Wall':
+                            this.sensedType = 0;
+                            break;
+                        default:
+                            this.sensedType = -1;
+                            break;
+
+                    }
+                    context.rect(collision.bodyA.position.x - 5, collision.bodyA.position.y - 5, 10, 10);
                 }
             }
 

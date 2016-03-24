@@ -56,8 +56,8 @@
             }
 
             this.id = Utility.guid();
-            this.pos = position;
-            this.angle = this.pos.getAngle();
+            this.position = position;
+            this.angle = this.position.getAngle();
             this.radius = Utility.getOpt(opts, 'radius', undefined);
             this.width = Utility.getOpt(opts, 'width', undefined);
             this.height = Utility.getOpt(opts, 'height', undefined);
@@ -75,7 +75,7 @@
             this.age = 0;
 
             // Remember the old position and angle
-            this.oldPos = this.pos.clone();
+            this.oldPos = this.position.clone();
             this.oldAngle = 0;
 
             this.rot1 = 0.0;
@@ -93,7 +93,7 @@
                 this.sprite.width = this.width;
                 this.sprite.height = this.height;
                 this.sprite.anchor.set(0.5, 0.5);
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
                 this.sprite.addChild(this.cheatsContainer);
                 entity = this.sprite;
             } else {
@@ -154,31 +154,31 @@
                 let textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
 
                 this.gridText = new PIXI.Text(textG, fontOpts);
-                this.gridText.position.set(this.pos.x + this.radius, this.pos.y - (this.radius * 2));
+                this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
                 this.cheatsContainer.addChild(this.gridText);
             }
 
             // If cheats are on then show the entities position and velocity
-            if (this.cheats.pos && this.posText === undefined) {
-                let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
-                    textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
+            if (this.cheats.position && this.posText === undefined) {
+                let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                    textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
 
                 this.posText = new PIXI.Text(textP + textV, fontOpts);
-                this.posText.position.set(this.pos.x + this.radius, this.pos.y - this.radius);
+                this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
                 this.cheatsContainer.addChild(this.posText);
             }
 
             // If cheats are on then show the entities name
             if (this.cheats.name && this.nameText === undefined) {
                 this.nameText = new PIXI.Text(this.name, fontOpts);
-                this.nameText.position.set(this.pos.x + this.radius, this.pos.y + this.radius);
+                this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
                 this.cheatsContainer.addChild(this.nameText);
             }
 
             // If cheats are on then show the entities id
             if (this.cheats.id && this.idText === undefined) {
                 this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
-                this.idText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
+                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
                 this.cheatsContainer.addChild(this.idText);
             }
 
@@ -198,7 +198,7 @@
                 }
                 gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
                 gridText.text = '(' + this.gridLocation.toString() + ')';
-                gridText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius));
+                gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
             } else {
                 if (this.gridText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.gridText);
@@ -208,15 +208,15 @@
             }
 
             // If cheats are on then show the entities position and velocity
-            if (this.cheats.pos) {
+            if (this.cheats.position) {
                 if (this.posText === undefined) {
                     this.addCheats();
                 }
-                let textP = ' Pos(' + this.pos.x + ', ' + this.pos.y + ')',
-                    textV = ' Vel(' + Utility.flt2str(this.pos.vx, 4) + ', ' + Utility.flt2str(this.pos.vy, 4) + ')';
+                let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                    textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
                 posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
                 posText.text = textP + textV;
-                posText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 1));
+                posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
             } else {
                 if (this.posText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.posText);
@@ -231,7 +231,7 @@
                     this.addCheats();
                 }
                 nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-                nameText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 2));
+                nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
             } else {
                 if (this.nameText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.nameText);
@@ -246,7 +246,7 @@
                     this.addCheats();
                 }
                 idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-                idText.position.set(this.pos.x + this.radius, this.pos.y + (this.radius * 3));
+                idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
             } else {
                 if (this.idText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.idText);
@@ -264,12 +264,12 @@
          */
         draw() {
             if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
             } else {
                 this.shape.clear();
                 this.shape.lineStyle(1, 0x000000);
                 this.shape.beginFill(this.color);
-                this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
+                this.shape.drawCircle(this.position.x, this.position.y, this.radius);
                 this.shape.endFill();
             }
 
@@ -285,10 +285,10 @@
          * @returns {Entity}
          */
         move(world) {
-            this.oldPos = this.pos.clone();
-            this.angle = this.pos.getAngle();
-            this.direction = Utility.getDirection(this.pos.angle);
-            this.pos.advance();
+            this.oldPos = this.position.clone();
+            this.angle = this.position.getAngle();
+            this.direction = Utility.getDirection(this.position.angle);
+            this.position.advance();
 
             if (world.check(this)) {
                 for (let i = 0; i < this.collisions.length; i++) {
@@ -297,19 +297,19 @@
                         let entity = world.population.get(collisionObj.id);
                         // Wall
                         if (collisionObj.type === 0) {
-                            let between = this.pos.vectorBetween(this.pos, collisionObj.vecI),
+                            let between = this.position.vectorBetween(this.position, collisionObj.vecI),
                             // Get the vector that points out from the surface the circle is bouncing on.
                                 bounceLineNormal = between.unitVector(),
                             // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
-                                dot = this.pos.vx * bounceLineNormal.x + this.pos.vy * bounceLineNormal.y;
+                                dot = this.position.vx * bounceLineNormal.x + this.position.vy * bounceLineNormal.y;
 
-                            this.pos.vx -= 2 * dot * bounceLineNormal.x;
-                            this.pos.vy -= 2 * dot * bounceLineNormal.y;
+                            this.position.vx -= 2 * dot * bounceLineNormal.x;
+                            this.position.vy -= 2 * dot * bounceLineNormal.y;
                         } else if (collisionObj.type === 1 || collisionObj.type === 2) {
-                            this.pos.vx = collisionObj.target.vx;
-                            this.pos.vy = collisionObj.target.vy;
-                            entity.pos.vx = collisionObj.entity.vx;
-                            entity.pos.vy = collisionObj.entity.vy;
+                            this.position.vx = collisionObj.target.vx;
+                            this.position.vy = collisionObj.target.vy;
+                            entity.position.vx = collisionObj.entity.vx;
+                            entity.position.vy = collisionObj.entity.vy;
                         }
                     }
                 }
@@ -320,29 +320,29 @@
                 bottom = world.height - this.radius,
                 left = world.width - (world.width - this.radius),
                 right = world.width - this.radius;
-            if (this.pos.x < left) {
-                this.pos.x = left;
-                this.pos.vx *= -1;
+            if (this.position.x < left) {
+                this.position.x = left;
+                this.position.vx *= -1;
             }
 
-            if (this.pos.x > right) {
-                this.pos.x = right;
-                this.pos.vx *= -1;
+            if (this.position.x > right) {
+                this.position.x = right;
+                this.position.vx *= -1;
             }
 
-            if (this.pos.y < top) {
-                this.pos.y = top;
-                this.pos.vy *= -1;
+            if (this.position.y < top) {
+                this.position.y = top;
+                this.position.vy *= -1;
             }
 
-            if (this.pos.y > bottom) {
-                this.pos.y = bottom;
-                this.pos.vy *= -1;
+            if (this.position.y > bottom) {
+                this.position.y = bottom;
+                this.position.vy *= -1;
             }
 
 
             if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
             }
 
             return this;
@@ -350,15 +350,13 @@
 
         /**
          * Do work son
-         * @param {Object} world
+         * @param {World} world
          * @returns {Entity}
          */
         tick(world) {
             this.age += 1;
 
-            if (this.moving) {
-                this.move(world);
-            }
+            this.move(world);
 
             return this;
         }
@@ -386,7 +384,7 @@
         onDragMove() {
             if (this.dragging) {
                 let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
-                this.pos.set(newPosition.x, newPosition.y);
+                this.position.set(newPosition.x, newPosition.y);
             }
 
             return this;
@@ -401,7 +399,7 @@
             this.alpha = 1;
             this.dragging = false;
             let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
-            this.pos.set(newPosition.x, newPosition.y);
+            this.position.set(newPosition.x, newPosition.y);
 
             // set the interaction data to null
             this.data = null;

@@ -61,8 +61,8 @@ var AgentRLDQN = AgentRLDQN || {},
             }
 
             // proprioception and orientation
-            inputArray[ne + 0] = this.pos.vx;
-            inputArray[ne + 1] = this.pos.vy;
+            inputArray[ne + 0] = this.position.vx;
+            inputArray[ne + 1] = this.position.vy;
 
             if (!this.worker) {
                 this.action = this.brain.act(inputArray);
@@ -79,11 +79,12 @@ var AgentRLDQN = AgentRLDQN || {},
          */
         learn() {
             this.lastReward = this.digestionSignal;
-            // this.pts.push(this.digestionSignal);
+            this.pts.push(this.digestionSignal);
 
             if (!this.worker) {
                 this.brain.learn(this.digestionSignal);
                 this.epsilon = this.brain.epsilon;
+                this.digestionSignal = 0;
             } else {
                 this.post('learn', this.digestionSignal);
             }

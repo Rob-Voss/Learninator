@@ -44,7 +44,7 @@
 
         // Title text
         this.titleText = new PIXI.Text(this.displayTitle, {font: "12px Arial", fill: "#FFFFFF", align: "left"});
-        this.titleText.pos.set(this.displayX + contentMargin, this.displayY + contentMargin);
+        this.titleText.position.set(this.displayX + contentMargin, this.displayY + contentMargin);
         this.addChild(this.titleText);
 
         for (var r = 0; r < this.displayRows; r++) {
@@ -54,7 +54,7 @@
                     colH = (this.displayHeight / this.displayRows) / 2,
                     x = margin + 6 + c * colW,
                     y = margin + 6 + titleMargin + r * colH;
-                textObj.pos.set(x, y);
+                textObj.position.set(x, y);
                 this.addChild(textObj);
             }
         }

@@ -732,7 +732,7 @@ var GridWorld = GridWorld || {},
                         agent.brain.resetEpisode();
 
                         agent.gridLocation = self.grid.getCellAt(0, 0);
-                        agent.pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        agent.position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
                         self.state = self.startState();
 
                         // record the reward achieved
@@ -745,7 +745,7 @@ var GridWorld = GridWorld || {},
                         agent.gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
                         let x = agent.gridLocation.corners[2].x - (self.grid.cellWidth / 2),
                             y = agent.gridLocation.corners[2].y - (self.grid.cellHeight / 2);
-                        agent.pos.set(x, y);
+                        agent.position.set(x, y);
                     }
                 }
 

@@ -41,14 +41,14 @@
                     y: rendererOpts.width - radius
                 },
                 ball = new PIXI.Graphics();
-            ball.pos = new Vec(p1.x, p1.y, vx, vy);
+            ball.position = new Vec(p1.x, p1.y, vx, vy);
             ball.radius = radius;
             ball.elasticity = elasticity;
 
             renderer.backgroundColor = 0xFFFFFF;
 
             // Put the renderer on screen in the corner
-            renderer.view.style.pos = "absolute";
+            renderer.view.style.position = "absolute";
             renderer.view.style.top = "0px";
             renderer.view.style.left = "0px";
 
@@ -79,14 +79,14 @@
                 ball.clear();
                 ball.lineStyle(1, 0x000000);
                 ball.beginFill(0x000000);
-                ball.drawCircle(ball.pos.x, ball.pos.y, ball.radius);
+                ball.drawCircle(ball.position.x, ball.position.y, ball.radius);
                 ball.endFill();
 
-                ball.pos.vy += gravity;
-                if ((ball.pos.y + ball.radius) > rendererOpts.height) {
-                    ball.pos.vy = -(ball.pos.vy) * ball.elasticity;
+                ball.position.vy += gravity;
+                if ((ball.position.y + ball.radius) > rendererOpts.height) {
+                    ball.position.vy = -(ball.position.vy) * ball.elasticity;
                 }
-                ball.pos.advance();
+                ball.position.advance();
                 renderer.render(stage);
                 requestAnimationFrame(animate);
             }
@@ -118,15 +118,15 @@
                 context.strokeStyle = '#000000';
                 context.strokeRect(1, 1, theCanvas.width - 2, theCanvas.height - 2);
 
-                ball.pos.vy += gravity;
-                if ((ball.pos.y + ball.radius) > theCanvas.height) {
-                    ball.pos.vy = -(ball.pos.vy) * ball.elasticity;
+                ball.position.vy += gravity;
+                if ((ball.position.y + ball.radius) > theCanvas.height) {
+                    ball.position.vy = -(ball.position.vy) * ball.elasticity;
                 }
-                ball.pos.advance();
+                ball.position.advance();
 
                 context.fillStyle = "#000000";
                 context.beginPath();
-                context.arc(ball.pos.x, ball.pos.y, ball.radius, 0, Math.PI * 2, true);
+                context.arc(ball.position.x, ball.position.y, ball.radius, 0, Math.PI * 2, true);
                 context.closePath();
                 context.fill();
             }

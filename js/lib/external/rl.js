@@ -1506,7 +1506,7 @@ var RL = {};
         },
         /**
          *
-         * @param slist
+         * @param {Array} slist
          * @returns {Number|number}
          */
         act: function (slist) {

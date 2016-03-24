@@ -87,12 +87,12 @@
             if (this.eyes === undefined) {
                 this.eyes = [];
                 for (let k = 0; k < this.numEyes; k++) {
-                    this.eyes.push(new Eye(k * 0.21, this.pos, this.range, this.proximity));
+                    this.eyes.push(new Eye(k * 0.21, this.position, this.range, this.proximity));
                 }
             }
 
             this.action = null;
-            this.angle = this.pos.angle;
+            this.angle = this.position.angle;
             this.avgReward = 0;
             this.lastReward = 0;
             this.digestionSignal = 0.0;
@@ -114,18 +114,18 @@
          */
         draw() {
             if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
             } else {
                 this.shape.clear();
                 this.shape.lineStyle(1, 0x000000);
                 this.shape.beginFill(this.color);
-                this.shape.drawCircle(this.pos.x, this.pos.y, this.radius);
+                this.shape.drawCircle(this.position.x, this.position.y, this.radius);
                 this.shape.endFill();
 
-                let aEyeX = this.pos.x + 20 * Math.sin(this.angle),
-                    aEyeY = this.pos.y + 20 * Math.cos(this.angle);
+                let aEyeX = this.position.x + 20 * Math.sin(this.angle),
+                    aEyeY = this.position.y + 20 * Math.cos(this.angle);
                 this.shape.lineStyle(2, 0xFF0000, 2);
-                this.shape.moveTo(this.pos.x, this.pos.y);
+                this.shape.moveTo(this.position.x, this.position.y);
                 this.shape.lineTo(aEyeX, aEyeY);
             }
 
@@ -146,30 +146,30 @@
          */
         move(world) {
             let speed = 1;
-            this.oldPos = this.pos.clone();
+            this.oldPos = this.position.clone();
             this.digestionSignal = 0;
 
             // Execute agent's desired action
             switch (this.action) {
                 case 0: // Left
-                    this.pos.vx += -speed;
+                    this.position.vx += -speed;
                     break;
                 case 1: // Right
-                    this.pos.vx += speed;
+                    this.position.vx += speed;
                     break;
                 case 2: // Up
-                    this.pos.vy += -speed;
+                    this.position.vy += -speed;
                     break;
                 case 3: // Down
-                    this.pos.vy += speed;
+                    this.position.vy += speed;
                     break;
             }
 
             // Forward the agent by velocity
-            this.pos.vx *= 0.95;
-            this.pos.vy *= 0.95;
-            this.pos.advance();
-            this.angle = this.pos.angle;
+            this.position.vx *= 0.95;
+            this.position.vy *= 0.95;
+            this.position.advance();
+            this.angle = this.position.angle;
             this.direction = Utility.getDirection(this.angle);
 
             if (world.check(this)) {
@@ -179,19 +179,19 @@
                         let entity = world.population.get(collisionObj.id);
                         if (collisionObj.type === 0) {
                             // Wall
-                            this.pos = this.oldPos.clone();
-                            this.pos.vx = 0;
-                            this.pos.vy = 0;
+                            this.position = this.oldPos.clone();
+                            this.position.vx = 0;
+                            this.position.vy = 0;
                         } else if (collisionObj.type === 1 || collisionObj.type === 2) {
                             // Noms or Gnars
                             this.digestionSignal += (collisionObj.type === 1) ? this.carrot : this.stick;
                             world.deleteEntity(entity.id);
                         } else if (collisionObj.type === 3 || collisionObj.type === 4) {
                             // Other Agents
-                            this.pos.vx = collisionObj.target.vx;
-                            this.pos.vy = collisionObj.target.vy;
-                            entity.pos.vy = collisionObj.entity.vy;
-                            entity.pos.vy = collisionObj.entity.vy;
+                            this.position.vx = collisionObj.target.vx;
+                            this.position.vy = collisionObj.target.vy;
+                            entity.position.vy = collisionObj.entity.vy;
+                            entity.position.vy = collisionObj.entity.vy;
                         }
                     }
                 }
@@ -202,32 +202,32 @@
                 bottom = world.height - this.radius,
                 left = world.width - (world.width - this.radius),
                 right = world.width - this.radius;
-            if (this.pos.x < left) {
-                this.pos.x = left;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.x < left) {
+                this.position.x = left;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.x > right) {
-                this.pos.x = right;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.x > right) {
+                this.position.x = right;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.y < top) {
-                this.pos.y = top;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.y < top) {
+                this.position.y = top;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
-            if (this.pos.y > bottom) {
-                this.pos.y = bottom;
-                this.pos.vx = 0;
-                this.pos.vy = 0;
+            if (this.position.y > bottom) {
+                this.position.y = bottom;
+                this.position.vx = 0;
+                this.position.vy = 0;
             }
 
             if (this.useSprite) {
-                this.sprite.position.set(this.pos.x, this.pos.y);
+                this.sprite.position.set(this.position.x, this.position.y);
             }
 
             return this;

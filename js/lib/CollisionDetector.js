@@ -49,9 +49,9 @@
                 } else if (entity.v1 !== undefined && target.radius !== undefined) {
                     // Is it an entity versus a wall?
                     collisionObj = self.lineCircleCollide(entity, target);
-                    // collisionObj = self.circleLineCollide(entity, target.pos, target.radius);
-                    // collisionObj = self.lineIntersect(target.oldPos, target.pos, entity.v2, entity.v1, target.radius);
-                    // collisionObj = self.linePointIntersect(entity.v1, entity.v2, target.pos, target.radius);
+                    // collisionObj = self.circleLineCollide(entity, target.position, target.radius);
+                    // collisionObj = self.lineIntersect(target.oldPos, target.position, entity.v2, entity.v1, target.radius);
+                    // collisionObj = self.linePointIntersect(entity.v1, entity.v2, target.position, target.radius);
                 }
 
                 if (collisionObj) {
@@ -99,19 +99,19 @@
          */
         this.circleCircleCollide = function (entity, target) {
             let collisionObj,
-                collPtX = ((entity.pos.x * target.radius) + (target.pos.x * entity.radius)) / (entity.radius + target.radius),
-                collPtY = ((entity.pos.y * target.radius) + (target.pos.y * entity.radius)) / (entity.radius + target.radius),
-                xDist = target.pos.x - entity.pos.x,
-                yDist = target.pos.y - entity.pos.y,
-                distFrom = target.pos.distanceTo(entity.pos),
+                collPtX = ((entity.position.x * target.radius) + (target.position.x * entity.radius)) / (entity.radius + target.radius),
+                collPtY = ((entity.position.y * target.radius) + (target.position.y * entity.radius)) / (entity.radius + target.radius),
+                xDist = target.position.x - entity.position.x,
+                yDist = target.position.y - entity.position.y,
+                distFrom = target.position.distanceTo(entity.position),
                 radiusDist = target.radius + entity.radius,
                 distSquared = xDist * xDist + yDist * yDist;
 
             // Check the squared distances instead of the the distances,
             // same result, but avoids a square root.
             if (distFrom <= radiusDist) {
-                var xVelocity = entity.pos.vx - target.pos.vx,
-                    yVelocity = entity.pos.vy - target.pos.vy,
+                var xVelocity = entity.position.vx - target.position.vx,
+                    yVelocity = entity.position.vy - target.position.vy,
                     dotProduct = xDist * xVelocity + yDist * yVelocity;
 
                 // Neat vector maths, used for checking if the objects are moving towards one another.
@@ -127,14 +127,14 @@
                         vecI = new Vec(collPtX, collPtY);
                     collisionObj = {
                         vecI: vecI,
-                        distance: target.pos.distanceTo(vecI),
+                        distance: target.position.distanceTo(vecI),
                         target: {
-                            vx: target.pos.vx + collisionWeightA * xCollision,
-                            vy: target.pos.vy + collisionWeightA * yCollision
+                            vx: target.position.vx + collisionWeightA * xCollision,
+                            vy: target.position.vy + collisionWeightA * yCollision
                         },
                         entity: {
-                            vx: entity.pos.vx - collisionWeightB * xCollision,
-                            vy: entity.pos.vy - collisionWeightB * yCollision
+                            vx: entity.position.vx - collisionWeightB * xCollision,
+                            vy: entity.position.vy - collisionWeightB * yCollision
                         }
                     };
 
@@ -219,8 +219,8 @@
                 y1 = line.v1.y,
                 x2 = line.v2.x,
                 y2 = line.v2.y,
-                cx = circle.pos.x,
-                cy = circle.pos.y,
+                cx = circle.position.x,
+                cy = circle.position.y,
             // vector distance
                 dx = x2 - x1,
                 dy = y2 - y1,
@@ -252,18 +252,18 @@
             let cos = Math.cos(line.rotation),
                 sin = Math.sin(line.rotation),
             //get position of ball, relative to line
-                gx1 = circle.pos.x - line.v1.x,
-                gy1 = circle.pos.y - line.v1.y,
+                gx1 = circle.position.x - line.v1.x,
+                gy1 = circle.position.y - line.v1.y,
             //rotate coordinates
                 gy2 = cos * gy1 - sin * gx1,
             //rotate velocity
-                vy1 = cos * circle.pos.vy - sin * circle.pos.vx;
+                vy1 = cos * circle.position.vy - sin * circle.position.vx;
             //perform bounce with rotated values
             if (gy2 > -circle.radius && gy2 < vy1) {
                 //rotate coordinates
                 let gx2 = cos * gx1 + sin * gy1,
                 //rotate velocity
-                    vx1 = cos * circle.pos.vx + sin * circle.pos.vy;
+                    vx1 = cos * circle.position.vx + sin * circle.position.vy;
                 gy2 = -circle.radius;
                 vy1 *= -0.6;
                 //rotate everything back
@@ -363,8 +363,8 @@
             if (circle.radius === 0) {
                 return false;
             }
-            var dx = circle.pos.x - point.x,
-                dy = circle.pos.y - point.y,
+            var dx = circle.position.x - point.x,
+                dy = circle.position.y - point.y,
                 collided = dx * dx + dy * dy <= circle.radius * circle.radius;
 
             return collided;
@@ -408,7 +408,7 @@
             if (entities) {
                 for (let [id, entity] of entities.entries()) {
                     if (entity.type !== 0) {
-                        var iResult = this.linePointIntersect(v1, v2, entity.pos, entity.radius);
+                        var iResult = this.linePointIntersect(v1, v2, entity.position, entity.radius);
                         if (iResult) {
                             iResult.target = entity;
                             if (!minRes) {

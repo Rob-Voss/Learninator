@@ -95,7 +95,7 @@ var Brain = Brain || {},
          * @constructor
          */
         constructor(pos) {
-            this.pos = pos;
+            this.position = pos;
             this.dir = Utility.randf(0, 2 * Math.PI);
             this.id = 'merps';
             this.s1 = 0;  // Food sense eye 1
