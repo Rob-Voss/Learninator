@@ -1,44 +1,45 @@
 (function (global) {
     "use strict";
 
-    /**
-     * Options for the Agent
-     * @typedef {Object} agentOpts
-     * @property {boolean} worker - Is the Agent a Web Worker
-     * @property {string} brainType - The type of Brain to use
-     * @property {cheatOpts} cheats - The cheats to display
-     * @property {brainOpts} spec - The brain options
-     * @property {envObject} env - The environment
-     */
-
-    /**
-     * The env object is the representation of the environment
-     * @typedef {Object} envObject
-     * @property {number} numTypes - The number of types the Agent can sense
-     * @property {number} numEyes - The number of the Agent's eyes
-     * @property {number} range - The range of the eyes
-     * @property {number} proximity - The proximity range of the eyes
-     * @property {number} numActions - The number of actions the agent can perform
-     * @property {number} numStates - The number of states
-     * @property {number} getMaxNumActions - function that returns the numActions value
-     * @property {number} getNumStates - function that returns the numStates value
-     */
-
-    /**
-     * The options for the Agents brain
-     * @typedef {Object} brainOpts
-     * @property {string} update - qlearn | sarsa
-     * @property {number} gamma - Discount factor [0, 1]
-     * @property {number} epsilon - Initial epsilon for epsilon-greedy policy [0, 1]
-     * @property {number} alpha - Value function learning rate
-     * @property {number} experienceAddEvery - Number of time steps before we add another experience to replay memory
-     * @property {number} experienceSize - Size of experience
-     * @property {number} learningStepsPerIteration - Number of steps to go through during one tick
-     * @property {number} tdErrorClamp - For robustness
-     * @property {number} numHiddenUnits - Number of neurons in hidden layer
-     */
-
     class Agent extends Entity {
+
+        /**
+         * Options for the Agent
+         * @typedef {Object} agentOpts
+         * @property {boolean} worker - Is the Agent a Web Worker
+         * @property {string} brainType - The type of Brain to use
+         * @property {cheatOpts} cheats - The cheats to display
+         * @property {brainOpts} spec - The brain options
+         * @property {envObject} env - The environment
+         */
+
+        /**
+         * The env object is the representation of the environment
+         * @typedef {Object} envObject
+         * @property {number} numTypes - The number of types the Agent can sense
+         * @property {number} numEyes - The number of the Agent's eyes
+         * @property {number} range - The range of the eyes
+         * @property {number} proximity - The proximity range of the eyes
+         * @property {number} numActions - The number of actions the agent can perform
+         * @property {number} numStates - The number of states
+         * @property {number} getMaxNumActions - function that returns the numActions value
+         * @property {number} getNumStates - function that returns the numStates value
+         */
+
+        /**
+         * The options for the Agents brain
+         * @typedef {Object} brainOpts
+         * @property {string} update - qlearn | sarsa
+         * @property {number} gamma - Discount factor [0, 1]
+         * @property {number} epsilon - Initial epsilon for epsilon-greedy policy [0, 1]
+         * @property {number} alpha - Value function learning rate
+         * @property {number} experienceAddEvery - Number of time steps before we add another experience to replay memory
+         * @property {number} experienceSize - Size of experience
+         * @property {number} learningStepsPerIteration - Number of steps to go through during one tick
+         * @property {number} tdErrorClamp - For robustness
+         * @property {number} numHiddenUnits - Number of neurons in hidden layer
+         */
+
         /**
          * Initialize the Agent
          * @name Agent

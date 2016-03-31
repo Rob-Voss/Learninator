@@ -31,7 +31,7 @@
          * @param {Entity} target
          */
         this.check = function (target) {
-            var region, collisionObj, self = this;
+            var region, collisionObj = {}, self = this;
             target.collisions = [];
 
             /**
@@ -48,10 +48,7 @@
                     collisionObj = self.circleCircleCollide(entity, target);
                 } else if (entity.v1 !== undefined && target.radius !== undefined) {
                     // Is it an entity versus a wall?
-                    collisionObj = self.lineCircleCollide(entity, target);
-                    // collisionObj = self.circleLineCollide(entity, target.position, target.radius);
-                    // collisionObj = self.lineIntersect(target.oldPos, target.position, entity.v2, entity.v1, target.radius);
-                    // collisionObj = self.linePointIntersect(entity.v1, entity.v2, target.position, target.radius);
+                    collisionObj = self.circleLineCollide(entity, target.position, target.radius);
                 }
 
                 if (collisionObj) {

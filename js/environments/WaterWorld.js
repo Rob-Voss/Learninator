@@ -1,7 +1,7 @@
 (function (global) {
     "use strict";
 
-    class WaterWorld extends PhysicsWorld {
+    class WaterWorld extends World {
         /**
          * World object contains many agents and walls and food and stuff
          * @name WaterWorld
@@ -11,7 +11,7 @@
          * @returns {WaterWorld}
          */
         constructor() {
-            let opts = {
+            let renderOpts = {
                     antialiasing: true,
                     autoResize: false,
                     resizable: false,
@@ -53,14 +53,14 @@
                     }
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
+                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts),
+                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
                 ],
                 maze = new Maze({
                     xCount: 5,
                     yCount: 2,
-                    width: opts.width,
-                    height: opts.height,
+                    width: renderOpts.width,
+                    height: renderOpts.height,
                     closed: false,
                     cheats: false
                 }),
@@ -89,12 +89,8 @@
                     }
                 };
 
-            super(agents, maze.walls, worldOpts, opts);
+            super(agents, maze.walls, worldOpts, renderOpts);
             // this.agents[0].load('zoo/wateragent.json');
-            // this.agents[1].load('zoo/wateragent.json');
-
-            // super([], maze.walls, worldOpts, renderOpts);
-
             return this;
         }
     }

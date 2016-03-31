@@ -68,6 +68,7 @@
             // Draw the agent's line of sights
             this.shape.moveTo(this.position.x, this.position.y);
             this.shape.lineTo(aEyeX, aEyeY);
+            this.shape.endFill();
         }
 
         /**

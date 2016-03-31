@@ -79,7 +79,6 @@ var AgentRLDQN = AgentRLDQN || {},
          */
         learn() {
             this.lastReward = this.digestionSignal;
-            this.pts.push(this.digestionSignal);
 
             if (!this.worker) {
                 this.brain.learn(this.digestionSignal);

@@ -2,213 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CH5EX8: Balls With Friction</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <link href="css/styles.css" rel="stylesheet" type="text/css">
 
-    <script src="js/lib/external/modernizr.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.9/pixi.js"></script>
+    <script src="https://cdn.rawgit.com/schteppe/poly-decomp.js/master/build/decomp.js"></script>
+    <script src="js/lib/external/matter.js"></script>
+    <script src="js/lib/MatterEngine.js"></script>
+    <script src="js/lib/CustomPixiFactories.js"></script>
+    <script src="js/lib/RenderPixi.js"></script>
+
     <script type="text/javascript">
-        window.addEventListener('load', eventWindowLoaded, false);
-        function eventWindowLoaded() {
-            canvasApp();
-        }
+        setTimeout(function () {
+            var background, canvasId, engine, height, seed, width;
+            seed = 5625463739;
+            canvasId = 'canvasContainer';
+            width = 800;
+            height = 800;
+            background = '#333';
+            engine = MatterEngine.create(canvasId, {
+                width: width,
+                height: height,
+                background: background,
+                wireframes: false
+            });
 
-        function canvasSupport() {
-            return Modernizr.canvas;
-        }
-
-        function canvasApp() {
-            if (!canvasSupport()) {
-                return;
-            }
-
-            function drawScreen() {
-                context.fillStyle = '#EEEEEE';
-                context.fillRect(0, 0, theCanvas.width, theCanvas.height);
-                //Box
-                context.strokeStyle = '#000000';
-                context.strokeRect(1, 1, theCanvas.width - 2, theCanvas.height - 2);
-
-                update();
-                testWalls();
-                collide();
-                render();
-            }
-
-            function update() {
-                var ball;
-                for (var i = 0; i < balls.length; i++) {
-                    ball = balls[i];
-                    //Friction
-                    ball.velocityx = ball.velocityx - ( ball.velocityx * friction);
-                    ball.velocityy = ball.velocityy - ( ball.velocityy * friction);
-
-                    ball.nextx = (ball.x += ball.velocityx);
-                    ball.nexty = (ball.y += ball.velocityy);
-                }
-            }
-
-            function testWalls() {
-                var ball;
-
-                for (var i = 0; i < balls.length; i++) {
-                    ball = balls[i];
-
-                    if (ball.nextx + ball.radius > theCanvas.width) {
-                        ball.velocityx = ball.velocityx * -1;
-                        ball.nextx = theCanvas.width - ball.radius;
-                    } else if (ball.nextx - ball.radius < 0) {
-                        ball.velocityx = ball.velocityx * -1;
-                        ball.nextx = ball.radius;
-                    } else if (ball.nexty + ball.radius > theCanvas.height) {
-                        ball.velocityy = ball.velocityy * -1;
-                        ball.nexty = theCanvas.height - ball.radius;
-                    } else if (ball.nexty - ball.radius < 0) {
-                        ball.velocityy = ball.velocityy * -1;
-                        ball.nexty = ball.radius;
-                    }
-                }
-            }
-
-            function render() {
-                var ball;
-
-                context.fillStyle = "#000000";
-                for (var i = 0; i < balls.length; i++) {
-                    ball = balls[i];
-                    ball.x = ball.nextx;
-                    ball.y = ball.nexty;
-
-                    context.beginPath();
-                    context.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2, true);
-                    context.closePath();
-                    context.fill();
-                }
-            }
-
-            function collide() {
-                var ball,
-                    testBall;
-                for (var i = 0; i < balls.length; i++) {
-                    ball = balls[i];
-                    for (var j = i + 1; j < balls.length; j++) {
-                        testBall = balls[j];
-                        if (hitTestCircle(ball, testBall)) {
-                            collideBalls(ball, testBall);
-                        }
-                    }
-                }
-            }
-
-            function hitTestCircle(ball1, ball2) {
-                var retval = false,
-                    dx = ball1.nextx - ball2.nextx,
-                    dy = ball1.nexty - ball2.nexty,
-                    distance = (dx * dx + dy * dy);
-                if (distance <= (ball1.radius + ball2.radius) * (ball1.radius + ball2.radius)) {
-                    retval = true;
-                }
-                return retval;
-            }
-
-            function collideBalls(ball1, ball2) {
-                var dx = ball1.nextx - ball2.nextx,
-                    dy = ball1.nexty - ball2.nexty,
-                    collisionAngle = Math.atan2(dy, dx),
-                    speed1 = Math.sqrt(ball1.velocityx * ball1.velocityx + ball1.velocityy * ball1.velocityy),
-                    speed2 = Math.sqrt(ball2.velocityx * ball2.velocityx + ball2.velocityy * ball2.velocityy),
-                    direction1 = Math.atan2(ball1.velocityy, ball1.velocityx),
-                    direction2 = Math.atan2(ball2.velocityy, ball2.velocityx),
-                    velocityx_1 = speed1 * Math.cos(direction1 - collisionAngle),
-                    velocityy_1 = speed1 * Math.sin(direction1 - collisionAngle),
-                    velocityx_2 = speed2 * Math.cos(direction2 - collisionAngle),
-                    velocityy_2 = speed2 * Math.sin(direction2 - collisionAngle),
-                    final_velocityx_1 = ((ball1.mass - ball2.mass) * velocityx_1 + (ball2.mass + ball2.mass) * velocityx_2) / (ball1.mass + ball2.mass),
-                    final_velocityx_2 = ((ball1.mass + ball1.mass) * velocityx_1 + (ball2.mass - ball1.mass) * velocityx_2) / (ball1.mass + ball2.mass),
-                    final_velocityy_1 = velocityy_1,
-                    final_velocityy_2 = velocityy_2;
-
-                ball1.velocityx = Math.cos(collisionAngle) * final_velocityx_1 + Math.cos(collisionAngle + Math.PI / 2) * final_velocityy_1;
-                ball1.velocityy = Math.sin(collisionAngle) * final_velocityx_1 + Math.sin(collisionAngle + Math.PI / 2) * final_velocityy_1;
-                ball2.velocityx = Math.cos(collisionAngle) * final_velocityx_2 + Math.cos(collisionAngle + Math.PI / 2) * final_velocityy_2;
-                ball2.velocityy = Math.sin(collisionAngle) * final_velocityx_2 + Math.sin(collisionAngle + Math.PI / 2) * final_velocityy_2;
-
-                ball1.nextx = (ball1.nextx += ball1.velocityx);
-                ball1.nexty = (ball1.nexty += ball1.velocityy);
-                ball2.nextx = (ball2.nextx += ball2.velocityx);
-                ball2.nexty = (ball2.nexty += ball2.velocityy);
-            }
-
-            var numBalls = 50,
-                maxSize = 12,
-                minSize = 3,
-                maxSpeed = maxSize + 5,
-                balls = new Array(),
-                tempBall,
-                tempX,
-                tempY,
-                tempSpeed,
-                tempAngle,
-                tempRadius,
-                tempRadians,
-                tempvelocityx,
-                tempvelocityy,
-                friction = .01;
-
-            theCanvas = document.getElementById('canvasOne');
-            context = theCanvas.getContext('2d');
-            for (var i = 0; i < numBalls; i++) {
-                tempRadius = Math.floor(Math.random() * maxSize) + minSize;
-                var placeOK = false;
-                while (!placeOK) {
-                    tempX = tempRadius * 3 + (Math.floor(Math.random() * theCanvas.width) - tempRadius * 3);
-                    tempY = tempRadius * 3 + (Math.floor(Math.random() * theCanvas.height) - tempRadius * 3);
-                    tempSpeed = maxSpeed - tempRadius;
-                    tempAngle = Math.floor(Math.random() * 360);
-                    tempRadians = tempAngle * Math.PI / 180;
-                    tempvelocityx = Math.cos(tempRadians) * tempSpeed;
-                    tempvelocityy = Math.sin(tempRadians) * tempSpeed;
-
-                    tempBall = {
-                        x: tempX,
-                        y: tempY,
-                        radius: tempRadius,
-                        speed: tempSpeed,
-                        angle: tempAngle,
-                        velocityx: tempvelocityx,
-                        velocityy: tempvelocityy,
-                        mass: tempRadius * 8,
-                        nextx: tempX,
-                        nexty: tempY
-                    };
-                    placeOK = canStartHere(tempBall);
-                }
-                balls.push(tempBall);
-            }
-
-            function canStartHere(ball) {
-                var retval = true;
-                for (var i = 0; i < balls.length; i++) {
-                    if (hitTestCircle(ball, balls[i])) {
-                        retval = false;
-                    }
-                }
-                return retval;
-            }
-
-            setInterval(drawScreen, 33);
-        }
+            return engine.loadScene(seed, MainSceneFactory, {
+                canvasId: canvasId,
+                width: width,
+                height: height
+            });
+        }, 0);
     </script>
-
 </head>
 <body>
-<div id="container" style="position: absolute; top: 50px; left: 50px;">
-    <canvas id="canvasOne" width="500" height="500">
-        Your browser does not support the HTML 5 Canvas.
-    </canvas>
-</div>
+<div id="canvasContainer"></div>
 </body>
 </html>
 

@@ -75,7 +75,6 @@ var FlotGraph = FlotGraph || {},
     FlotGraph.prototype = {
         /**
          * Graph the agent rewards
-         * @returns {World}
          */
         graphRewards: function () {
             for (let a = 0, ac = this.agents.length; a < ac; a++) {
@@ -87,7 +86,7 @@ var FlotGraph = FlotGraph || {},
                 if (this.smoothReward[a] === null) {
                     this.smoothReward[a] = rew;
                 }
-                this.smoothReward[a] = this.smoothReward[a];// * 0.999 + rew * 0.001;
+                this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
                 this.flott[a] += 1;
                 if (this.flott[a] === 50) {
                     for (let i = 0, hl = this.smoothRewardHistory[a].length; i <= hl; i++) {
@@ -106,8 +105,6 @@ var FlotGraph = FlotGraph || {},
 
             this.plot.setData(this.series);
             this.plot.draw();
-
-            return this;
         },
         /**
          * zip rewards into flot data

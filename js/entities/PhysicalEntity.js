@@ -23,22 +23,33 @@
          */
         constructor(type, body) {
             let typeOf = typeof type;
+            this.age = 0;
+            this.body = body;
             this.id = Utility.guid();
             this.type = (typeOf === 'string') ? entityTypes.indexOf(type) : type || 1;
             this.typeName = entityTypes[this.type];
             this.name = (this.name === undefined) ? entityTypes[this.type] : this.name;
-            this.age = 0;
-            this.body = body;
             this.body.label = this.name;
             this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
+            this.force = {
+                x: Common.random(-1, 1) * 0.0025,
+                y: Common.random(-1, 1) * 0.0025
+            };
 
             return this;
         }
 
+        /**
+         *
+         * @param {World} world
+         */
         draw(world) {
 
         }
 
+        /**
+         *
+         */
         move() {
             Body.applyForce(this.body, this.body.position, {
                 x: Common.random(-1, 1) * 0.0025,
@@ -48,9 +59,12 @@
 
         /**
          * Do work son
+         * @param {World} world
+         * @returns {PhysicalEntity}
          */
         tick(world) {
             this.age += 1;
+            this.draw(world);
             this.move();
 
             return this;

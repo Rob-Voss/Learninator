@@ -17,6 +17,7 @@ button, input, optgroup, select, textarea {
 }
 
 .game-container {
+    background: white;
     height: 100%; /* The 'html, body' styles above can be removed if you want to use a fixed height here (ie. 800px) */
     text-align: center; /* Horizontally align text elements to centre */
     font-size: 0; /* Remove whitespace between elements (ie. a space between a word) */
@@ -27,10 +28,6 @@ button, input, optgroup, select, textarea {
     content: ''; /* Required attribute of pseudo-element */
     width: 0; /* Force it to have no width */
     height: 100%; /* Make full height of container */
-}
-
-.game-container .world {
-    background: white;
 }
 
 .game-container:after, .game-container .world {

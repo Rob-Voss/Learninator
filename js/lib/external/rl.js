@@ -1438,7 +1438,7 @@ var RL = {};
      */
     DQNAgent.prototype = {
         reset: function () {
-            this.nh = this.numHiddenUnits; // numer of hidden units
+            this.nh = this.numHiddenUnits; // number of hidden units
             this.ns = this.env.getNumStates();
             this.na = this.env.getMaxNumActions();
 

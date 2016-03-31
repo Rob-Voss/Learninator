@@ -2,145 +2,113 @@ var Utility        = Utility || {},
     PhysicalAgent  = PhysicalAgent || {},
     PhysicalEntity = PhysicalEntity || {};
 
+// Matter aliases
+var Engine          = Matter.Engine,
+    World           = Matter.World,
+    Bodies          = Matter.Bodies,
+    Body            = Matter.Body,
+    Bounds          = Matter.Bounds,
+    Composite       = Matter.Composite,
+    Composites      = Matter.Composites,
+    Common          = Matter.Common,
+    Constraint      = Matter.Constraint,
+    Events          = Matter.Events,
+    MouseConstraint = Matter.MouseConstraint,
+    Mouse           = Matter.Mouse,
+    Pairs           = Matter.Pairs,
+    Query           = Matter.Query,
+    Runner          = Matter.Runner,
+    RenderPixi      = Matter.RenderPixi,
+    Svg             = Matter.Svg,
+    Vector          = Matter.Vector,
+    Vertices        = Matter.Vertices,
+    container       = document.body.querySelector('.game-container'),
+    defaultCategory = 0x0001,
+    redCategory     = 0x0002,
+    greenCategory   = 0x0004,
+    blueCategory    = 0x0008,
+    redColor        = '#C44D58',
+    blueColor       = '#4ECDC4',
+    greenColor      = '#C7F464',
+    engineOpts      = {
+        enabled: true,
+        enableSleeping: false,
+        metrics: {
+            extended: true
+        },
+        world: {
+            gravity: {
+                y: 0,
+                x: 0
+            }
+        },
+        render: {
+            element: container,
+            controller: RenderPixi,
+            options: {
+                background: '#000',
+                enabled: true,
+                wireframes: false,
+                wireframeBackground: '#222',
+                showAngleIndicator: true,
+                showAxes: false,
+                showSleeping: false,
+                showBounds: false,
+                showBroadphase: false,
+                showCollisions: true,
+                showConvexHulls: false,
+                showDebug: false,
+                showIds: false,
+                showInternalEdges: false,
+                showPositions: false,
+                showShadows: false,
+                showSeparations: false,
+                showVelocity: false,
+                showVertexNumbers: false
+            }
+        }
+    },
+    entityOpts      = {
+        radius: 10,
+        collision: true,
+        interactive: false,
+        useSprite: false,
+        moving: true,
+        cheats: {
+            gridLocation: false,
+            position: false,
+            name: false,
+            id: false
+        }
+    },
+    entityAgentOpts = {
+        radius: 10,
+        collision: true,
+        interactive: false,
+        useSprite: false,
+        moving: false,
+        cheats: {
+            gridLocation: false,
+            position: false,
+            name: false,
+            id: false
+        }
+    };
+
+// MatterTools aliases
+if (window.MatterTools) {
+    var MatterTools  = window.MatterTools,
+        useTools     = true,
+        Gui          = MatterTools.Gui,
+        Inspector    = MatterTools.Inspector,
+        useInspector = window.location.hash.indexOf('-inspect') !== -1,
+        isMobile     = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
+}
+
 (function (global) {
     "use strict";
 
-    // Matter aliases
-    var Engine          = Matter.Engine,
-        World           = Matter.World,
-        Bodies          = Matter.Bodies,
-        Body            = Matter.Body,
-        Bounds          = Matter.Bounds,
-        Composite       = Matter.Composite,
-        Composites      = Matter.Composites,
-        Common          = Matter.Common,
-        Constraint      = Matter.Constraint,
-        Events          = Matter.Events,
-        MouseConstraint = Matter.MouseConstraint,
-        Mouse           = Matter.Mouse,
-        Pairs           = Matter.Pairs,
-        Query           = Matter.Query,
-        Runner          = Matter.Runner,
-        RenderPixi      = Matter.RenderPixi,
-        Svg             = Matter.Svg,
-        Vector          = Matter.Vector,
-        Vertices        = Matter.Vertices,
-        container       = document.body.querySelector('.canvas-container'),
-        defaultCategory = 0x0001,
-        redCategory     = 0x0002,
-        greenCategory   = 0x0004,
-        blueCategory    = 0x0008,
-        redColor        = '#C44D58',
-        blueColor       = '#4ECDC4',
-        greenColor      = '#C7F464';
-
-    // MatterTools aliases
-    if (window.MatterTools) {
-        var MatterTools  = window.MatterTools,
-            useTools     = true,
-            Gui          = MatterTools.Gui,
-            Inspector    = MatterTools.Inspector,
-            useInspector = window.location.hash.indexOf('-inspect') !== -1,
-            isMobile     = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
-    }
-
-    var engineOpts      = {
-            enabled: true,
-            enableSleeping: false,
-            metrics: {
-                extended: true
-            },
-            world: {
-                gravity: {
-                    y: 0,
-                    x: 0
-                }
-            },
-            render: {
-                element: container,
-                controller: RenderPixi,
-                options: {
-                    background: '#000',
-                    enabled: true,
-                    wireframes: false,
-                    wireframeBackground: '#222',
-                    showAngleIndicator: true,
-                    showAxes: false,
-                    showSleeping: false,
-                    showBounds: false,
-                    showBroadphase: false,
-                    showCollisions: true,
-                    showConvexHulls: false,
-                    showDebug: false,
-                    showIds: false,
-                    showInternalEdges: false,
-                    showPositions: false,
-                    showShadows: false,
-                    showSeparations: false,
-                    showVelocity: false,
-                    showVertexNumbers: false
-                }
-            }
-        },
-        entityOpts      = {
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            moving: true,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                name: false,
-                id: false
-            }
-        },
-        entityAgentOpts = {
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            moving: false,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                name: false,
-                id: false
-            }
-        };
-
     class PhysicsWorld {
-
-        /**
-         * The flags for what to display for 'cheats'
-         * Show the QuadTree overlay, show the grid overlay, show the wall's numbers
-         * @typedef {Object} cheatsOpts
-         * @property {boolean} quad - Show the Quadtree overlay
-         * @property {boolean} grid - Show the Grid overlay
-         * @property {boolean} walls - Show the Wall numbers
-         */
-
-        /**
-         * Options for the World that define the width/height
-         * @typedef {Object} worldOpts
-         * @property {number} simSpeed - The speed of the simulation
-         * @property {cdOpts} collision - The collision definition
-         * @property {cheatsOpts} cheats - The cheats definition
-         */
-
-        /**
-         * Options for the World renderer
-         * @typedef {Object} renderOpts
-         * @property [view] {HTMLCanvasElement} the canvas to use as a view, optional
-         * @property [transparent=false] {boolean} If the render view is transparent, default false
-         * @property [antialias=false] {boolean} sets antialias (only applicable in chrome at the moment)
-         * @property [preserveDrawingBuffer=false] {boolean} enables drawing buffer preservation, enable this if you
-         *      need to call toDataUrl on the webgl context
-         * @property [resolution=1] {number} the resolution of the renderer, retina would be 2
-         * @property [noWebGL=false] {boolean} prevents selection of WebGL renderer, even if such is present
-         * @property {number} width - The width
-         * @property {number} height - The height
-         */
 
         /**
          * Make a World
@@ -181,6 +149,7 @@ var Utility        = Utility || {},
 
             this.engine = Engine.create(container, engineOpts);
             this.canvas = this.engine.render.canvas;
+
             this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
             this.renderer.backgroundColor = 0xFFFFFF;
 
@@ -192,15 +161,15 @@ var Utility        = Utility || {},
 
             document.body.querySelector('.game-container').appendChild(this.renderer.view);
 
-            // if (useTools) {
-            //     this.useInspector = useInspector;
-            //     this.isMobile = isMobile;
-            //     // create a Matter.Gui
-            //     this.gui = Gui.create(this.engine);
-            //     this.initControls(this.gui);
-            //     Gui.update(this.gui);
-            //
-            // }
+            if (useTools) {
+                this.useInspector = useInspector;
+                this.isMobile = isMobile;
+                // create a Matter.Gui
+                this.gui = Gui.create(this.engine);
+                this.initControls(this.gui);
+                Gui.update(this.gui);
+
+            }
 
             // Ground
             var buffer   = 2,
@@ -217,12 +186,6 @@ var Utility        = Utility || {},
             World.addBody(this.engine.world, Bodies.rectangle(this.width / 2, this.height, this.width * buffer, buffer, wallOpts));
 
             this.populate(worldOpts);
-
-            this.grid = Utility.getOpt(worldOpts, 'grid', false);
-            if (this.grid) {
-                this.cellsContainer = this.grid.getGrid();
-                this.stage.addChild(this.cellsContainer);
-            }
 
             if (document.getElementById('flotreward')) {
                 this.rewards = new FlotGraph(this.agents);
@@ -268,8 +231,6 @@ var Utility        = Utility || {},
                 self.renderer.render(self.stage);
                 requestAnimationFrame(animate);
             }
-
-            this.runner = Engine.run(this.engine);
 
             return this;
         }
@@ -483,7 +444,6 @@ var Utility        = Utility || {},
          * @returns {PhysicsWorld}
          */
         tick() {
-            this.updatePopulation();
             this.clock++;
 
             for (let [id, entity] of this.population.entries()) {
