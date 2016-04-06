@@ -22,18 +22,19 @@
          * @returns {PhysicalEntity}
          */
         constructor(type, body) {
-            let typeOf = typeof type;
-            this.age = 0;
-            this.body = body;
             this.id = Utility.guid();
-            this.type = (typeOf === 'string') ? entityTypes.indexOf(type) : type || 1;
+            this.type = (typeof type === 'string') ? entityTypes.indexOf(type) : type || 1;
+            this.name = entityTypes[this.type];
+            this.color = hexStyles[this.type];
             this.typeName = entityTypes[this.type];
-            this.name = (this.name === undefined) ? entityTypes[this.type] : this.name;
+            this.body = body;
             this.body.label = this.name;
             this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
+            this.age = 0;
+            this.speed = 1;
             this.force = {
-                x: Common.random(-1, 1) * 0.0025,
-                y: Common.random(-1, 1) * 0.0025
+                x: Common.random(-this.speed, this.speed) * 0.0025,
+                y: Common.random(-this.speed, this.speed) * 0.0025
             };
 
             return this;
@@ -41,30 +42,18 @@
 
         /**
          *
-         * @param {World} world
-         */
-        draw(world) {
-
-        }
-
-        /**
-         *
          */
         move() {
-            Body.applyForce(this.body, this.body.position, {
-                x: Common.random(-1, 1) * 0.0025,
-                y: Common.random(-1, 1) * 0.0025
-            });
+            Body.applyForce(this.body, this.body.position, this.force);
         }
 
         /**
          * Do work son
-         * @param {World} world
+         * @param {Matter.Engine} engine
          * @returns {PhysicalEntity}
          */
-        tick(world) {
+        tick(engine) {
             this.age += 1;
-            this.draw(world);
             this.move();
 
             return this;

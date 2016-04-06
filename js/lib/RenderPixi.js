@@ -10,27 +10,27 @@ var RenderPixi = {};
 (function () {
 
     // Matter aliases
-    var Engine          = Matter.Engine,
-        World           = Matter.World,
-        Bodies          = Matter.Bodies,
-        Body            = Matter.Body,
-        Bounds          = Matter.Bounds,
-        Composite       = Matter.Composite,
-        Composites      = Matter.Composites,
-        Common          = Matter.Common,
-        Constraint      = Matter.Constraint,
-        Events          = Matter.Events,
+    var Engine = Matter.Engine,
+        World = Matter.World,
+        Bodies = Matter.Bodies,
+        Body = Matter.Body,
+        Bounds = Matter.Bounds,
+        Composite = Matter.Composite,
+        Composites = Matter.Composites,
+        Common = Matter.Common,
+        Constraint = Matter.Constraint,
+        Events = Matter.Events,
         MouseConstraint = Matter.MouseConstraint,
-        Mouse           = Matter.Mouse,
-        Pairs           = Matter.Pairs,
-        Query           = Matter.Query,
-        Runner          = Matter.Runner,
-        Svg             = Matter.Svg,
-        Vector          = Matter.Vector,
-        Vertices        = Matter.Vertices;
+        Mouse = Matter.Mouse,
+        Pairs = Matter.Pairs,
+        Query = Matter.Query,
+        Runner = Matter.Runner,
+        Svg = Matter.Svg,
+        Vector = Matter.Vector,
+        Vertices = Matter.Vertices;
 
     /**
-     * Creates a new Pixi.js Canvas renderer (primitives in WebGL seem to leak memory in pixi.js)
+     * Creates a new Pixi.js WebGL renderer
      * @method create
      * @param {object} options
      * @return {RenderPixi} A new renderer
@@ -66,7 +66,7 @@ var RenderPixi = {};
             }
         };
 
-        var render      = Common.extend(defaults, options),
+        var render = Common.extend(defaults, options),
             transparent = !render.options.wireframes && render.options.background === 'transparent';
 
         // init pixi
@@ -77,7 +77,7 @@ var RenderPixi = {};
             backgroundColor: options.background
         };
 
-        render.renderer = render.renderer || new PIXI.CanvasRenderer(render.options.width, render.options.height, render.pixiOptions);
+        render.renderer = render.renderer || new PIXI.autoDetectRenderer(render.options.width, render.options.height, render.pixiOptions);
         render.container = render.container || new PIXI.Container();
         render.spriteContainer = render.spriteContainer || new PIXI.Container();
         render.canvas = render.canvas || render.renderer.view;
@@ -124,7 +124,7 @@ var RenderPixi = {};
      * @param {RenderPixi} render
      */
     RenderPixi.clear = function (render) {
-        var container       = render.container,
+        var container = render.container,
             spriteContainer = render.spriteContainer;
 
         // clear stage container
@@ -146,9 +146,9 @@ var RenderPixi = {};
 
         // set background sprite
         render.sprites['bg-0'] = bgSprite;
-        if (bgSprite){
+        if (bgSprite) {
             container.addChildAt(bgSprite, 0);
-}
+        }
         // add sprite batch back into container
         render.container.addChild(render.spriteContainer);
 
@@ -168,7 +168,7 @@ var RenderPixi = {};
      */
     RenderPixi.setBackground = function (render, background) {
         if (render.currentBackground !== background) {
-            var isColor  = background.indexOf && background.indexOf('#') !== -1,
+            var isColor = background.indexOf && background.indexOf('#') !== -1,
                 bgSprite = render.sprites['bg-0'];
 
             if (isColor) {
@@ -177,7 +177,7 @@ var RenderPixi = {};
                 render.renderer.backgroundColor = color;
 
                 // remove background sprite if existing
-                if (bgSprite){
+                if (bgSprite) {
                     render.container.removeChild(bgSprite);
                 }
             } else {
@@ -199,17 +199,17 @@ var RenderPixi = {};
     /**
      * Description
      * @method world
-     * @param {engine} engine
+     * @param {Matter.Engine} engine
      */
     RenderPixi.world = function (engine) {
-        var render         = engine.render,
-            world          = engine.world,
-            renderer       = render.renderer,
-            container      = render.container,
-            options        = render.options,
-            bodies         = Composite.allBodies(world),
+        var render = engine.render,
+            world = engine.world,
+            renderer = render.renderer,
+            container = render.container,
+            options = render.options,
+            bodies = Composite.allBodies(world),
             allConstraints = Composite.allConstraints(world),
-            constraints    = [],
+            constraints = [],
             i;
 
         if (options.wireframes) {
@@ -219,12 +219,13 @@ var RenderPixi = {};
         }
 
         // handle bounds
-        var boundsWidth  = render.bounds.max.x - render.bounds.min.x,
+        var boundsWidth = render.bounds.max.x - render.bounds.min.x,
             boundsHeight = render.bounds.max.y - render.bounds.min.y,
             boundsScaleX = boundsWidth / render.options.width,
             boundsScaleY = boundsHeight / render.options.height;
 
         if (options.hasBounds) {
+            world.bounds = render.bounds;
             // Hide bodies that are not in view
             for (i = 0; i < bodies.length; i++) {
                 var body = bodies[i];
@@ -233,20 +234,25 @@ var RenderPixi = {};
 
             // filter out constraints that are not in view
             for (i = 0; i < allConstraints.length; i++) {
-                var constraint  = allConstraints[i],
-                    bodyA       = constraint.bodyA,
-                    bodyB       = constraint.bodyB,
+                var constraint = allConstraints[i],
+                    bodyA = constraint.bodyA,
+                    bodyB = constraint.bodyB,
                     pointAWorld = constraint.pointA,
                     pointBWorld = constraint.pointB;
 
-                if (bodyA) pointAWorld = Vector.add(bodyA.position, constraint.pointA);
-                if (bodyB) pointBWorld = Vector.add(bodyB.position, constraint.pointB);
+                if (bodyA) {
+                    pointAWorld = Vector.add(bodyA.position, constraint.pointA);
+                }
+                if (bodyB) {
+                    pointBWorld = Vector.add(bodyB.position, constraint.pointB);
+                }
 
-                if (!pointAWorld || !pointBWorld)
+                if (!pointAWorld || !pointBWorld) {
                     continue;
-
-                if (Bounds.contains(render.bounds, pointAWorld) || Bounds.contains(render.bounds, pointBWorld))
+                }
+                if (Bounds.contains(render.bounds, pointAWorld) || Bounds.contains(render.bounds, pointBWorld)) {
                     constraints.push(constraint);
+                }
             }
 
             // transform the view
@@ -256,38 +262,36 @@ var RenderPixi = {};
             constraints = allConstraints;
         }
 
-        /*
-         for (i = 0; i < bodies.length; i++)
-         RenderPixi.body(engine, bodies[i]);
-
-         for (i = 0; i < constraints.length; i++)
-         RenderPixi.constraint(engine, constraints[i]);
-         */
-
+        for (i = 0; i < bodies.length; i++) {
+            RenderPixi.body(engine, bodies[i]);
+        }
+        for (i = 0; i < constraints.length; i++) {
+            RenderPixi.constraint(engine, constraints[i]);
+        }
         renderer.render(container);
     };
 
     /**
      * Description
      * @method constraint
-     * @param {engine} engine
+     * @param {Matter.Engine} engine
      * @param {constraint} constraint
      */
     RenderPixi.constraint = function (engine, constraint) {
-        var render           = engine.render,
-            bodyA            = constraint.bodyA,
-            bodyB            = constraint.bodyB,
-            pointA           = constraint.pointA,
-            pointB           = constraint.pointB,
-            container        = render.container,
+        var render = engine.render,
+            bodyA = constraint.bodyA,
+            bodyB = constraint.bodyB,
+            pointA = constraint.pointA,
+            pointB = constraint.pointB,
+            container = render.container,
             constraintRender = constraint.render,
-            primitiveId      = 'c-' + constraint.id,
-            primitive        = render.primitives[primitiveId];
+            primitiveId = 'c-' + constraint.id,
+            primitive = render.primitives[primitiveId];
 
         // initialise constraint primitive if not existing
-        if (!primitive){
+        if (!primitive) {
             primitive = render.primitives[primitiveId] = new PIXI.Graphics();
-}
+        }
         // don't render if constraint does not have two end points
         if (!constraintRender.visible || !constraint.pointA || !constraint.pointB) {
             primitive.clear();
@@ -295,9 +299,9 @@ var RenderPixi = {};
         }
 
         // add to scene graph if not already there
-        if (Common.indexOf(container.children, primitive) === -1){
+        if (Common.indexOf(container.children, primitive) === -1) {
             container.addChild(primitive);
-}
+        }
         // render the constraint on every update, since they can change dynamically
         primitive.clear();
         primitive.beginFill(0, 0);
@@ -321,29 +325,29 @@ var RenderPixi = {};
     /**
      * Description
      * @method body
-     * @param {engine} engine
-     * @param {body} body
+     * @param {Matter.Engine} engine
+     * @param {Matter.Body} body
      */
     RenderPixi.body = function (engine, body) {
-        var render     = engine.render,
+        var render = engine.render,
             bodyRender = body.render;
 
-        if (!bodyRender.visible){
+        if (!bodyRender.visible) {
             return;
-}
+        }
         if (bodyRender.sprite && bodyRender.sprite.texture) {
-            var spriteId        = 'b-' + body.id,
-                sprite          = render.sprites[spriteId],
+            var spriteId = 'b-' + body.id,
+                sprite = render.sprites[spriteId],
                 spriteContainer = render.spriteContainer;
 
             // initialise body sprite if not existing
-            if (!sprite){
+            if (!sprite) {
                 sprite = render.sprites[spriteId] = _createBodySprite(render, body);
-}
+            }
             // add to scene graph if not already there
-            if (Common.indexOf(spriteContainer.children, sprite) === -1){
+            if (Common.indexOf(spriteContainer.children, sprite) === -1) {
                 spriteContainer.addChild(sprite);
-}
+            }
             // update body sprite
             sprite.position.x = body.position.x;
             sprite.position.y = body.position.y;
@@ -352,8 +356,8 @@ var RenderPixi = {};
             sprite.scale.y = bodyRender.sprite.yScale || 1;
         } else {
             var primitiveId = 'b-' + body.id,
-                primitive   = render.primitives[primitiveId],
-                container   = render.container;
+                primitive = render.primitives[primitiveId],
+                container = render.container;
 
             // initialise body primitive if not existing
             if (!primitive) {
@@ -361,14 +365,15 @@ var RenderPixi = {};
                 primitive.initialAngle = body.angle;
             }
 
-            // add to scene graph if not already there
-            if (Common.indexOf(container.children, primitive) === -1){
-                container.addChild(primitive);
-}
             // update body primitive
             primitive.position.x = body.position.x;
             primitive.position.y = body.position.y;
             primitive.rotation = body.angle - primitive.initialAngle;
+
+            // add to scene graph if not already there
+            if (Common.indexOf(container.children, primitive) === -1) {
+                container.addChild(primitive);
+            }
         }
     };
 
@@ -377,14 +382,14 @@ var RenderPixi = {};
      * @method _createBodySprite
      * @private
      * @param {RenderPixi} render
-     * @param {body} body
+     * @param {Matter.Body} body
      * @return {PIXI.Sprite} sprite
      */
     var _createBodySprite = function (render, body) {
-        var bodyRender  = body.render,
+        var bodyRender = body.render,
             texturePath = bodyRender.sprite.texture,
-            texture     = _getTexture(render, texturePath),
-            sprite      = new PIXI.Sprite(texture);
+            texture = _getTexture(render, texturePath),
+            sprite = new PIXI.Sprite(texture);
 
         sprite.anchor.x = body.render.sprite.xOffset;
         sprite.anchor.y = body.render.sprite.yOffset;
@@ -397,17 +402,17 @@ var RenderPixi = {};
      * @method _createBodyPrimitive
      * @private
      * @param {RenderPixi} render
-     * @param {body} body
+     * @param {Matter.Body} body
      * @return {PIXI.Graphics} graphics
      */
     var _createBodyPrimitive = function (render, body) {
-        var bodyRender                    = body.render,
-            options                       = render.options,
-            primitive                     = new PIXI.Graphics(),
-            fillStyle                     = Common.colorToNumber(bodyRender.fillStyle),
-            strokeStyle                   = Common.colorToNumber(bodyRender.strokeStyle),
-            strokeStyleIndicator          = Common.colorToNumber(bodyRender.strokeStyle),
-            strokeStyleWireframe          = Common.colorToNumber('#bbb'),
+        var bodyRender = body.render,
+            options = render.options,
+            primitive = new PIXI.Graphics(),
+            fillStyle = Common.colorToNumber(bodyRender.fillStyle),
+            strokeStyle = Common.colorToNumber(bodyRender.strokeStyle),
+            strokeStyleIndicator = Common.colorToNumber(bodyRender.strokeStyle),
+            strokeStyleWireframe = Common.colorToNumber('#bbb'),
             strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C'),
             part;
 
@@ -426,13 +431,10 @@ var RenderPixi = {};
             }
 
             primitive.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-
             for (var j = 1; j < part.vertices.length; j++) {
                 primitive.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
             }
-
             primitive.lineTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-
             primitive.endFill();
 
             // angle indicator
@@ -453,6 +455,37 @@ var RenderPixi = {};
             }
         }
 
+        if (body.label === 'Agent') {
+            let graphic = new PIXI.Graphics();
+            graphic.clear();
+            graphic.position = body.position;
+            for (let i = 0; i < body.entity.numEyes; i++) {
+                let eye = body.entity.eyes[i],
+                    eyeEnd = Vector.create(
+                        body.position.x + body.entity.range * Math.sin(body.angle + eye.angle),
+                        body.position.y + body.entity.range * Math.cos(body.angle + eye.angle)
+                    ),
+                    type = eye.sensed.type,
+                    edible = (type === 1 || type === 2);
+
+                // Draw the sight line
+                graphic.moveTo(body.position.x, body.position.y);
+                if (edible) {
+                    let color = (type === 2) ? 0xFF0000 : 0x00FF00;
+                    graphic.lineStyle(1, color);
+                    graphic.lineTo(eye.sensed.position.x, eye.sensed.position.y);
+                    // Show a little box
+                    graphic.beginFill(1, color);
+                    graphic.drawRect(eye.sensed.position.x - 5, eye.sensed.position.y - 5, 10, 10);
+                    graphic.endFill();
+                } else {
+                    graphic.lineStyle(1, 0xFFFFFF);
+                    graphic.lineTo(eyeEnd.x, eyeEnd.y);
+                }
+                graphic.endFill();
+            }
+            primitive.addChild(graphic);
+        }
         return primitive;
     };
 
@@ -467,9 +500,9 @@ var RenderPixi = {};
     var _getTexture = function (render, imagePath) {
         var texture = render.textures[imagePath];
 
-        if (!texture)
+        if (!texture) {
             texture = render.textures[imagePath] = PIXI.Texture.fromImage(imagePath);
-
+        }
         return texture;
     };
 

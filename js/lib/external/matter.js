@@ -8859,7 +8859,7 @@
         /**
          * Description
          * @method world
-         * @param {engine} engine
+         * @param {Matter.Engine} engine
          */
         RenderPixi.world = function(engine) {
             var render = engine.render,
@@ -8929,7 +8929,7 @@
         /**
          * Description
          * @method constraint
-         * @param {engine} engine
+         * @param {Matter.Engine} engine
          * @param {constraint} constraint
          */
         RenderPixi.constraint = function(engine, constraint) {
@@ -8980,8 +8980,8 @@
         /**
          * Description
          * @method body
-         * @param {engine} engine
-         * @param {body} body
+         * @param {Matter.Engine} engine
+         * @param {Matter.Body} body
          */
         RenderPixi.body = function(engine, body) {
             var render = engine.render,
@@ -9036,7 +9036,7 @@
          * @method _createBodySprite
          * @private
          * @param {RenderPixi} render
-         * @param {body} body
+         * @param {Matter.Body} body
          * @return {PIXI.Sprite} sprite
          */
         var _createBodySprite = function(render, body) {
@@ -9056,7 +9056,7 @@
          * @method _createBodyPrimitive
          * @private
          * @param {RenderPixi} render
-         * @param {body} body
+         * @param {Matter.Body} body
          * @return {PIXI.Graphics} graphics
          */
         var _createBodyPrimitive = function(render, body) {

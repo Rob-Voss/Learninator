@@ -1,5 +1,11 @@
-var FireballFactory, MainSceneFactory, PlatformFactory, FlameFactory,
+var AgentFactory, FireballFactory, MainSceneFactory, PlatformFactory, FlameFactory,
     Utility = Utility || {};
+
+// Matter aliases
+var Engine          = Matter.Engine,
+    World           = Matter.World,
+    Bodies          = Matter.Bodies,
+    Common          = Matter.Common;
 
 (function () {
 
@@ -114,215 +120,6 @@ var FireballFactory, MainSceneFactory, PlatformFactory, FlameFactory,
         }
     };
 
-    MainSceneFactory = {
-        /**
-         *
-         * @param {number} seed
-         * @param {Matter.Engine} engine
-         * @returns {*|{children: Array, update: state.update, addMatter: state.addMatter, addMouseEvents: state.addMouseEvents, matter: Object}}
-         */
-        create: function (seed, engine) {
-            var state;
-            state = MatterEngine.SceneFactory.create(MainSceneFactory, engine);
-            state.addMatter(MainSceneFactory.createPlatforms(engine.render.container));
-            state.addMatter(MainSceneFactory.createFireballs(engine.render.container));
-
-            return state;
-        },
-        /**
-         *
-         */
-        update: function () {
-        },
-        /**
-         * Add new agents
-         * @parameter {number} number
-         * @returns {MatterWorld}
-         */
-        createAgents: function (container, number = 1) {
-            let agents = [];
-            for (let k = 0; k < number; k++) {
-                agents.push(MainSceneFactory.createAgent(container));
-            }
-
-            return agents;
-        },
-        /**
-         *
-         * @param container
-         * @returns {*[]}
-         */
-        createFireballs: function (container) {
-            let flames = [];
-            for (let i = 0; i < 10; i++) {
-                flames.push(MainSceneFactory.createFireball(container,
-                    Matter.Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
-                    Matter.Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
-                    Matter.Common.choose([0xff0000, 0xff5500, 0xffff00, 0x00ff00, 0x0000ff, 0xff00ff]))
-                );
-            }
-
-            return flames;
-        },
-        /**
-         *
-         * @param container
-         * @returns {*[]}
-         */
-        createPlatforms: function (container) {
-            return [
-                MainSceneFactory.createPlatform(container, 200, 240, 150, 30, 12),
-                MainSceneFactory.createPlatform(container, 10, 330, 100, 30, 32),
-                MainSceneFactory.createPlatform(container, 200, 450, 300, 30, -4),
-                MainSceneFactory.createPlatform(container, 200, 640, 250, 30, 4)
-            ];
-        },
-        /**
-         *
-         * @param container
-         * @returns {x}
-         */
-        createAgent: function (container) {
-            var agentOpts = {
-                    brainType: 'RLDQN',
-                    worker: false,
-                    numEyes: 30,
-                    numTypes: 5,
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
-                    range: 120,
-                    proximity: 120
-                },
-                matterOpts = {
-                    friction: 0,
-                    frictionAir: Utility.randf(0.0, 0.9),
-                    frictionStatic: 0,
-                    restitution: 0,
-                    density: Utility.randf(0.001, 0.01)
-                },
-                x = Utility.randi(10, this.width - 10),
-                y = Utility.randi(10, this.height - 10),
-                color = Common.shadeColor('#4ECDC4', -20),
-                agent = AgentFactory.create(x, y, color, agentOpts, matterOpts);
-
-            container.addChild(agent.graphics);
-
-            return agent;
-        },
-        /**
-         *
-         * @param container
-         * @param x
-         * @param y
-         * @param width
-         * @param height
-         * @param rotationDeg
-         * @returns {x|*}
-         */
-        createPlatform: function (container, x, y, width, height, rotationDeg) {
-            var platform = PlatformFactory.create(x, y, width, height, rotationDeg * Math.PI / 180);
-            container.addChild(platform.graphics);
-
-            return platform;
-        },
-        /**
-         *
-         * @param container
-         * @param x
-         * @param y
-         * @param color
-         * @returns {x|*}
-         */
-        createFireball: function (container, x, y, color) {
-            var fireball = FireballFactory.create(x, y, color);
-            container.addChild(fireball.graphics);
-
-            return fireball;
-        },
-
-        /**
-         * Add new entities
-         * @parameter {number} number
-         * @returns {MatterWorld}
-         */
-        addEntities: function (container, number = 1) {
-            // Populating the world
-            for (let k = 0; k < number; k++) {
-                let body, entity,
-                    entityOpt = {
-                        chamfer: {
-                            radius: 0
-                        },
-                        collisionFilter: {
-                            category: 0,
-                            mask: wallCategory | agentCategory | gnarCategory | nomCategory
-                        },
-                        position: {
-                            x: Utility.randi(10, this.width - 10),
-                            y: Utility.randi(10, this.height - 10)
-                        },
-                        friction: 0,
-                        frictionAir: Utility.randf(0.0, 0.9),
-                        frictionStatic: 0,
-                        restitution: 0,
-                        density: Utility.randf(0.001, 0.01)
-                    },
-                    type      = Utility.randi(1, 3);
-                if (type === 1) {
-                    entityOpt.collisionFilter.category = nomCategory;
-                    entityOpt.render = {
-                        strokeStyle: Common.shadeColor(redColor, -20),
-                        fillStyle: redColor
-                    };
-                    body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
-                } else {
-                    entityOpt.collisionFilter.category = gnarCategory;
-                    entityOpt.chamfer.radius = 30;
-                    entityOpt.render = {
-                        strokeStyle: Common.shadeColor(greenColor, -20),
-                        fillStyle: greenColor
-                    };
-                    body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
-                }
-                entity = new PhysicalEntity(type, body);
-
-                Body.set(body, 'entity', entity);
-                World.add(this.world, body);
-            }
-
-            return this;
-        },
-
-        /**
-         * Add walls
-         */
-        addWalls: function () {
-            // Ground
-            var buffer   = 5,
-                wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall'};
-            // Left
-            World.addBody(this.world, Bodies.rectangle(buffer, this.height / 2, 2, this.height, wallOpts));
-            // Top
-            World.addBody(this.world, Bodies.rectangle(this.width / 2, buffer, this.width, 2, wallOpts));
-            // Right
-            World.addBody(this.world, Bodies.rectangle(this.width - buffer, this.height / 2, 2, this.height, wallOpts));
-            // Bottom
-            World.addBody(this.world, Bodies.rectangle(this.width / 2, this.height - buffer, this.width, 2, wallOpts));
-        }
-
-    };
-
     AgentFactory = {
         /**
          *
@@ -331,38 +128,28 @@ var FireballFactory, MainSceneFactory, PlatformFactory, FlameFactory,
          * @param {string} color
          * @param {object} agentOpts
          * @param {object} matterOpts
-         * @returns {{x: Object, y: Object, color: *, graphics: (i.Graphics|b.Graphics|c.Graphics), update: update, position: Vec}}
+         * @returns {{x: Object, y: Object, color: *, agent: AgentRLDQN, graphics: (i.Graphics|b.Graphics|c.Graphics), update: state.update, vertices: *, matterOptions: *}}
          */
         create: function (x, y, color, agentOpts, matterOpts) {
-            var graphics = new PIXI.Graphics;
-            graphics.position.x = x;
-            graphics.position.y = y;
+            var radius = 10,
+                body = Bodies.fromVertices(x, y, MatterEngine.Utils.createOrb(radius), matterOpts);
+            agentOpts.radius = radius;
 
-            return {
-                x: x,
-                y: y,
-                color: color,
-                graphics: graphics,
-                update: function (options) {
-                    return AgentFactory.update(state, options);
-                },
-                position: graphics.position
+            return state = {
+                matterBody: body,
+                agent: new PhysicalAgent(body, agentOpts),
+                update: function () {
+                    return AgentFactory.update(state);
+                }
             };
         },
-        create: function (x, y, color, agentOpts, matterOpts) {
-            var radius = 10,
-                graphics = new PIXI.Container(),
-                state = {
-                    x: x,
-                    y: y,
-                    color: color,
-                    graphics: graphics,
-                    update: function () {
-                        return AgentFactory.update(state);
-                    },
-                    matterOptions: matterOpts
-                };
-            state.graphics.addChild(state.graphics);
+        /**
+         *
+         * @param state
+         * @returns {*}
+         */
+        update: function (state) {
+            state.agent.tick();
 
             return state;
         }
@@ -470,7 +257,7 @@ var FireballFactory, MainSceneFactory, PlatformFactory, FlameFactory,
          */
         create: function (x, y, color, particleCount) {
             var colorHex, graphics, radius, state;
-            if (particleCount == null) {
+            if (particleCount === null) {
                 particleCount = 10;
             }
             radius = 6;

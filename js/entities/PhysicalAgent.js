@@ -59,18 +59,21 @@
          * @returns {PhysicalAgent}
          */
         constructor(body, opts) {
-            this.id = Utility.guid();
+            this.id = 'agent-' + body.id;
+            this.body = body;
+            this.body.label = 'Agent';
+            this.radius = this.body.circleRadius;
+            this.speed = 1;
+            this.force = {x:0, y:0};
+            this.name = 'Physical Agent';
             this.age = 0;
             this.action = 0;
+            this.color = 0x0000FF;
             this.avgReward = 0;
             this.lastReward = 0;
             this.digestion = 0.0;
             this.epsilon = 0.000;
             this.brainState = {};
-            this.body = body;
-            this.body.label = 'Agent';
-            this.name = 'Physical Agent';
-            this.radius = this.body.circleRadius;
 
             // Just a text value for the brain type, also useful for worker posts
             this.brainType = Utility.getOpt(opts, 'brainType', 'TD');
@@ -93,11 +96,11 @@
             for (let k = 0; k < this.numEyes; k++) {
                 this.eyes.push({
                     angle: k * 0.21,
-                    sensed:{
+                    sensed: {
                         type: -1,
                         proximity: this.range,
-                        position: {x:0, y:0},
-                        velocity: {x:0, y:0}
+                        position: {x: 0, y: 0},
+                        velocity: {x: 0, y: 0}
                     }
                 });
             }
@@ -124,14 +127,12 @@
 
         /**
          * Agent's chance to act on the world
-         * @param {MatterWorld} world
+         * @param {Array} bodies
          * @returns {PhysicalAgent}
          */
         act(bodies) {
-            // in forward pass the agent simply behaves in the environment
-            let ne    = this.numEyes * this.numTypes,
+            let ne = this.numEyes * this.numTypes,
                 input = new Array(this.numStates);
-            // Loop through the eyes and check the walls and nearby entities
             for (let i = 0; i < this.numEyes; i++) {
                 // Check for Ray collisions
                 let eye = this.eyes[i],
@@ -145,27 +146,27 @@
                     type: -1,
                     proximity: this.range,
                     position: eyeEnd,
-                    velocity: {x:0, y:0}
+                    velocity: {x: 0, y: 0}
                 };
 
                 // Loop through the Ray collisions and record what the eyes saw
                 for (let ic = 0; ic < collisions.length; ic++) {
-                    let collision = collisions[ic],
-                        type = entityTypes.indexOf(collision.bodyA.label);
+                    let collision = collisions[ic];
                     if (collision.bodyA.id !== this.body.id) {
-                        let dx = this.body.position.x - collision.bodyA.position.x,
-                            dy = this.body.position.y - collision.bodyA.position.y,
-                            distance = Math.sqrt(dx * dx + dy * dy);
+                        let dx = this.body.position.x - collision.body.position.x,
+                            dy = this.body.position.y - collision.body.position.y,
+                            distance = Math.sqrt(dx * dx + dy * dy),
+                            type = entityTypes.indexOf(collision.bodyA.label);
 
                         eye.sensed.type = type;
                         eye.sensed.proximity = distance;
-                        eye.sensed.position = collision.bodyA.position;
-                        eye.sensed.velocity = collision.bodyA.velocity;
+                        eye.sensed.position = collision.body.position;
+                        eye.sensed.velocity = collision.body.velocity;
                     }
                 }
 
                 // Populate the sensory input array
-                input[i * this.numTypes + 0] = 1.0; 
+                input[i * this.numTypes + 0] = 0.5;
                 input[i * this.numTypes + 1] = 1.0;
                 input[i * this.numTypes + 2] = 1.0;
                 input[i * this.numTypes + 3] = eye.sensed.velocity.x; // velocity information of the sensed target
@@ -189,7 +190,7 @@
         /**
          * Draw the rays for the eyes
          */
-        draw(world) {
+        draw(graphics) {
             // Loop through the eyes and check the walls and nearby entities
             for (let i = 0; i < this.numEyes; i++) {
                 let eye = this.eyes[i],
@@ -199,21 +200,16 @@
                     ),
                     type = eye.sensed.type;
                 // Draw the sight line
-                world.context.beginPath();
-                world.context.moveTo(this.body.position.x, this.body.position.y);
-                if (type !== 0) {
-                    world.context.lineTo(eye.sensed.position.x, eye.sensed.position.y);
-                } else {
-                    world.context.lineTo(eyeEnd.x, eyeEnd.y);
-                }
-                world.context.strokeStyle = (type > 0) ? '#fff' : '#555';
-                world.context.lineWidth = 0.5;
-                world.context.stroke();
+                graphics.lineStyle(1, 0xFFFFFF);
+                graphics.moveTo(this.body.position.x, this.body.position.y);
                 if (type > 0) {
+                    graphics.lineTo(eye.sensed.position.x, eye.sensed.position.y);
                     // Show a little box
-                    world.context.rect(eye.sensed.position.x - 5, eye.sensed.position.y - 5, 10, 10);
-                    world.context.fillStyle = (type === 2) ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 255, 0, 1)';
-                    world.context.fill();
+                    graphics.beginFill((type === 2) ? 0xFF0000 : 0x00FF00);
+                    graphics.drawRect(eye.sensed.position.x - 5, eye.sensed.position.y - 5, 10, 10);
+                    graphics.endFill();
+                } else {
+                    graphics.lineTo(eyeEnd.x, eyeEnd.y);
                 }
             }
         }
@@ -254,39 +250,34 @@
          *
          */
         move() {
-            let speed = 1, vx = 0, vy = 0;
-
             // Execute agent's desired action
             switch (this.action) {
                 case 0: // Left
-                    vx = -speed * 0.0025;
+                    this.force.x = -this.speed * 0.0025;
                     break;
                 case 1: // Right
-                    vx = speed * 0.0025;
+                    this.force.x = this.speed * 0.0025;
                     break;
                 case 2: // Up
-                    vy = -speed * 0.0025;
+                    this.force.y = -this.speed * 0.0025;
                     break;
                 case 3: // Down
-                    vy = speed * 0.0025;
+                    this.force.y = this.speed * 0.0025;
                     break;
             }
-            Body.applyForce(this.body, this.body.position, {x: vx, y: vy});
+            Body.applyForce(this.body, this.body.position, this.force);
         }
 
         /**
          * Tick the agent
          * @returns {PhysicalAgent}
          */
-        tick(bodies) {
+        tick(engine) {
             this.age += 1;
-
             // Let the agents behave in the world based on their input
-            this.act(bodies);
-
+            this.act(engine.world.bodies);
             // Move eet!
             this.move();
-
             // This is where the agents learn based on their actions on the environment
             this.learn();
 

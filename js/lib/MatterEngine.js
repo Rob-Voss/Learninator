@@ -22,38 +22,24 @@
         blueColor       = '#4ECDC4';
 
     class MatterEngine {
-
-        /**
-         *
-         * @param {number} seed
-         * @param {MainSceneFactory} sceneFactory
-         * @param {object} options
-         * @returns {{loadScene: state.loadScene}}
-         */
-        constructor(seed, sceneFactory, options) {
-            this.seed = seed;
-            this.sceneFactory = sceneFactory;
-            this.options = options;
-            this.canvas = container;
+        constructor(options) {
             this.engine = Engine.create({
-                render: {
-                    element: this.canvas,
-                    controller: RenderPixi,
-                    options: this.options
-                }
-            });
-            this.scene = this.sceneFactory.create(this.seed, this.engine);
+                    render: {
+                        element: container,
+                        controller: RenderPixi,
+                        options: options
+                    }
+                });
+            this.scene = MatterEngine.SceneFactory.create(this.engine);
+            this.scene.addMatter(this.scene.createPlatforms());
+            this.scene.addMatter(this.scene.createFireballs());
 
             return this.draw();
         }
 
-        /**
-         *
-         * @returns {*}
-         */
         draw() {
-            var self = this;
-            this.timeDelta = 16;
+            var self = this,
+                timeDelta = 16;
             if (!this.scene) {
                 return;
             }
@@ -62,7 +48,7 @@
                 return self.draw();
             });
 
-            Engine.update(this.engine, this.timeDelta);
+            Engine.update(this.engine, timeDelta);
             this.scene.update();
 
             return this.engine.render.controller.world(this.engine);
@@ -70,46 +56,6 @@
     }
 
     MatterEngine.SceneFactory = {
-        /**
-         *
-         * @param childFactory
-         * @param engine
-         * @returns {{children: Array, update: update, addMatter: addMatter, addMouseEvents: addMouseEvents}}
-         */
-        create: function (childFactory, engine) {
-            this.engine = engine;
-            this.childFactory = childFactory;
-            this.children = [];
-
-            this.state = {
-                update: function () {
-                    return MatterEngine.SceneFactory.update();
-                },
-                addMatter: function (items) {
-                    return MatterEngine.SceneFactory.addMatter(items);
-                }
-            };
-
-            return this.state;
-        },
-        /**
-         *
-         * @returns {*}
-         */
-        update: function () {
-            var ref = this.children;
-            for (let i = 0, len = ref.length; i < len; i++) {
-                let child = ref[i];
-                child.update();
-            }
-
-            return this.childFactory.update(this.state);
-        },
-        /**
-         *
-         * @param {Array} items
-         * @returns {Array}
-         */
         addMatter: function (items) {
             var results = [];
             for (let i = 0, len = items.length; i < len; i++) {
@@ -123,16 +69,101 @@
             }
 
             return results;
+        },
+        create: function (engine) {
+            this.children = [];
+            this.engine = engine;
+
+            return this;
+        },
+        createAgents: function (number = 1) {
+            let agents = [];
+            for (let k = 0; k < number; k++) {
+                agents.push(this.createAgent());
+            }
+
+            return agents;
+        },
+        createAgent: function () {
+            let agentOpts = {
+                    brainType: 'RLDQN',
+                    worker: false,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numStates: 30 * 5,
+                    env: {
+                        getNumStates: function () {
+                            return 30 * 5;
+                        },
+                        getMaxNumActions: function () {
+                            return 4;
+                        },
+                        startState: function () {
+                            return 0;
+                        }
+                    },
+                    range: 120,
+                    proximity: 120
+                },
+                matterOpts = {
+                    friction: 0,
+                    frictionAir: Utility.randf(0.0, 0.9),
+                    frictionStatic: 0,
+                    restitution: 0,
+                    density: Utility.randf(0.001, 0.01)
+                },
+                x = Utility.randi(10, this.engine.render.bounds.max.x - 10),
+                y = Utility.randi(10, this.engine.render.bounds.max.y - 10),
+                color = Common.shadeColor(blueColor, -20),
+                agent = AgentFactory.create(x, y, color, agentOpts, matterOpts);
+
+            this.engine.render.container.addChild(agent.agent.shape);
+
+            return agent;
+        },
+        createFireballs: function (number = 1) {
+            let flames = [];
+            for (let i = 0; i < 10; i++) {
+                flames.push(this.createFireball(
+                    Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
+                    Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
+                    Common.choose([0xff0000, 0xff5500, 0xffff00, 0x00ff00, 0x0000ff, 0xff00ff]))
+                );
+            }
+
+            return flames;
+        },
+        createFireball: function (x, y, color) {
+            var fireball = FireballFactory.create(x, y, color);
+            this.engine.render.container.addChild(fireball.graphics);
+
+            return fireball;
+        },
+        createPlatforms: function (number = 1) {
+            return [
+                this.createPlatform(200, 240, 150, 30, 12),
+                this.createPlatform(10, 330, 100, 30, 32),
+                this.createPlatform(200, 450, 400, 30, -4),
+                this.createPlatform(200, 640, 250, 30, 4)
+            ];
+        },
+        createPlatform: function (x, y, width, height, rotationDeg) {
+            var platform = PlatformFactory.create(x, y, width, height, rotationDeg * Math.PI / 180);
+            this.engine.render.container.addChild(platform.graphics);
+
+            return platform;
+        },
+        update: function () {
+            for (let i = 0, len = this.children.length; i < len; i++) {
+                this.children[i].update();
+            }
+
+            return this;
         }
     };
 
     MatterEngine.Utils = {
-        /**
-         *
-         * @param {Array} vertices
-         * @param {number} rotationRad
-         * @returns {Array}
-         */
         rotateVertices: function (vertices, rotationRad) {
             var results = [];
             for (let i = 0, len = vertices.length; i < len; i++) {
@@ -146,12 +177,6 @@
 
             return results;
         },
-        /**
-         *
-         * @param {number} radius
-         * @param {number} edgeCount
-         * @returns {Array}
-         */
         createOrb: function (radius, edgeCount = 10) {
             var vertices = [];
             for (let index = 0, i = 0, ref = edgeCount; 0 <= ref ? i < ref : i > ref; index = 0 <= ref ? ++i : --i) {
