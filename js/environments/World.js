@@ -157,7 +157,7 @@
             this.stage = new PIXI.Container();
 
             // Actually place the renderer onto the page for display
-            document.body.querySelector('.game-container').appendChild(this.renderer.view);
+            document.body.querySelector('#game-container').appendChild(this.renderer.view);
 
             if (this.resizable) {
                 // Listen for and adapt to changes to the screen size, e.g.,

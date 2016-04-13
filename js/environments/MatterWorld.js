@@ -1,52 +1,52 @@
-var Utility        = Utility || {},
-    PhysicalAgent  = PhysicalAgent || {},
+var Utility = Utility || {},
+    PhysicalAgent = PhysicalAgent || {},
     PhysicalEntity = PhysicalEntity || {};
 
 (function (global) {
     "use strict";
 
     // Matter aliases
-    var Engine          = Matter.Engine,
-        World           = Matter.World,
-        Bodies          = Matter.Bodies,
-        Body            = Matter.Body,
-        Bounds          = Matter.Bounds,
-        Composite       = Matter.Composite,
-        Composites      = Matter.Composites,
-        Common          = Matter.Common,
-        Constraint      = Matter.Constraint,
-        Events          = Matter.Events,
+    var Engine = Matter.Engine,
+        World = Matter.World,
+        Bodies = Matter.Bodies,
+        Body = Matter.Body,
+        Bounds = Matter.Bounds,
+        Composite = Matter.Composite,
+        Composites = Matter.Composites,
+        Common = Matter.Common,
+        Constraint = Matter.Constraint,
+        Events = Matter.Events,
         MouseConstraint = Matter.MouseConstraint,
-        Mouse           = Matter.Mouse,
-        Pairs           = Matter.Pairs,
-        Query           = Matter.Query,
-        Runner          = Matter.Runner,
-        Svg             = Matter.Svg,
-        Vector          = Matter.Vector,
-        Vertices        = Matter.Vertices,
+        Mouse = Matter.Mouse,
+        Pairs = Matter.Pairs,
+        Query = Matter.Query,
+        Runner = Matter.Runner,
+        Svg = Matter.Svg,
+        Vector = Matter.Vector,
+        Vertices = Matter.Vertices,
 
-        // Canvas
-        container       = document.body.querySelector('#game-container'),
-        graphContainer  = document.body.querySelector('#flotreward'),
+    // Canvas
+        container = document.body.querySelector('#game-container'),
+        graphContainer = document.body.querySelector('#flotreward'),
 
-        // Collison Category Groups
-        wallCategory    = 0x0001,
-        nomCategory     = 0x0002,
-        gnarCategory    = 0x0004,
-        agentCategory   = 0x0008,
+    // Collison Category Groups
+        wallCategory = 0x0001,
+        nomCategory = 0x0002,
+        gnarCategory = 0x0004,
+        agentCategory = 0x0008,
 
-        // Collison Category Colors
-        redColor        = '#C44D58',
-        greenColor      = '#C7F464',
-        blueColor       = '#4ECDC4',
+    // Collison Category Colors
+        redColor = '#C44D58',
+        greenColor = '#C7F464',
+        blueColor = '#4ECDC4',
 
-        // Engine Options
-        engineOpts      = {
+    // Engine Options
+        engineOpts = {
             enabled: true,
             enableSleeping: false,
             constraintIterations: 2,
-            velocityIterations: 4,
-            positionIterations: 6,
+            positionIterations: 10,
+            velocityIterations: 10,
             metrics: {
                 extended: true
             },
@@ -59,12 +59,13 @@ var Utility        = Utility || {},
             },
             render: {
                 element: container,
-                controller: RenderPixi,
+                // controller: RenderPixi,
                 options: {
-                    background: '#000',
+                    background: '#585858',
+                    pixelRatio: 1,
                     enabled: true,
                     hasBounds: true,
-                    showAngleIndicator: true,
+                    showAngleIndicator: false,
                     showAxes: false,
                     showSleeping: false,
                     showBounds: false,
@@ -90,12 +91,12 @@ var Utility        = Utility || {},
 
     // MatterTools aliases
     if (window.MatterTools) {
-        var MatterTools  = window.MatterTools,
-            useTools     = true,
-            Gui          = MatterTools.Gui,
-            Inspector    = MatterTools.Inspector,
+        var MatterTools = window.MatterTools,
+            useTools = true,
+            Gui = MatterTools.Gui,
+            Inspector = MatterTools.Inspector,
             useInspector = window.location.hash.indexOf('-inspect') !== -1,
-            isMobile     = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
+            isMobile = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
     }
 
     class MatterWorld {
@@ -116,12 +117,9 @@ var Utility        = Utility || {},
             this.width = engineOpts.render.options.width = width;
             this.height = engineOpts.render.options.height = height;
             this.engine = Engine.create(container, engineOpts);
-            this.scene = MatterWorld.SceneFactory.create(this.engine);
             this.mouseConstraint = MouseConstraint.create(this.engine);
             this.engine.render.mouse = this.mouseConstraint.mouse;
-            World.add(this.engine.world, this.mouseConstraint);
-            this.canvas = this.engine.render.renderer.canvas;
-            this.context = this.engine.render.renderer.context;
+            this.runner = Engine.run(this.engine);
 
             if (useTools) {
                 this.useInspector = useInspector;
@@ -132,19 +130,17 @@ var Utility        = Utility || {},
                 Gui.update(this.gui);
             }
 
-            this.runner = Engine.run(this.engine);
-
             // this.addWalls();
             this.addAgents();
             // this.agents[0].load('zoo/wateragent.json');
             this.addEntities(50);
-            this.setEngineEvents();
             this.setCollisionEvents();
+            this.setEngineEvents();
             this.setWorldEvents();
 
             this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
 
-            return this.draw();
+            World.add(this.engine.world, this.mouseConstraint);
         }
 
         /**
@@ -177,13 +173,9 @@ var Utility        = Utility || {},
                         proximity: 120
                     },
                     entityOpt = {
-                        collisionFilter: {
-                            category: agentCategory,
-                            mask: wallCategory | gnarCategory | nomCategory
-                        },
                         position: {
-                            x: 10,
-                            y: 10
+                            x: 400,
+                            y: 400
                         },
                         render: {
                             strokeStyle: Common.shadeColor(blueColor, -20),
@@ -195,8 +187,8 @@ var Utility        = Utility || {},
                         restitution: 0,
                         density: Utility.randf(0.001, 0.01)
                     },
-                    body      = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
-                    entity    = new PhysicalAgent(body, agentOpts);
+                    body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
+                    entity = new PhysicalAgent(body, agentOpts);
 
                 Body.set(body, 'entity', entity);
                 this.addMatter([body]);
@@ -218,13 +210,6 @@ var Utility        = Utility || {},
             for (let k = 0; k < number; k++) {
                 let body, entity,
                     entityOpt = {
-                        chamfer: {
-                            radius: 0
-                        },
-                        collisionFilter: {
-                            category: 0,
-                            mask: wallCategory | agentCategory | gnarCategory | nomCategory
-                        },
                         position: {
                             x: Utility.randi(50, this.width - 50),
                             y: Utility.randi(50, this.height - 50)
@@ -235,22 +220,20 @@ var Utility        = Utility || {},
                         restitution: 0,
                         density: Utility.randf(0.001, 0.01)
                     },
-                    type      = Utility.randi(1, 3);
+                    type = Utility.randi(1, 3);
                 if (type === 1) {
-                    entityOpt.collisionFilter.category = nomCategory;
                     entityOpt.render = {
                         strokeStyle: Common.shadeColor(redColor, -20),
-                        fillStyle: redColor,
-                        color: redColor
+                        fillStyle: redColor
                     };
                     body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
                 } else {
-                    entityOpt.collisionFilter.category = gnarCategory;
-                    entityOpt.chamfer.radius = 30;
+                    entityOpt.chamfer = {
+                        radius: 30
+                    };
                     entityOpt.render = {
                         strokeStyle: Common.shadeColor(greenColor, -20),
-                        fillStyle: greenColor,
-                        color: greenColor
+                        fillStyle: greenColor
                     };
                     body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
                 }
@@ -265,14 +248,11 @@ var Utility        = Utility || {},
         }
 
         /**
-         *
-         * @param items
+         * Add Bodies and Graphics to the scene
+         * @param {Array} items
          */
         addMatter(items) {
-            for (let i = 0, len = items.length; i < len; i++) {
-                let item = items[i];
-                World.add(this.engine.world, [item]);
-            }
+            World.add(this.engine.world, items);
         }
 
         /**
@@ -296,7 +276,7 @@ var Utility        = Utility || {},
                 graphics: new PIXI.Graphics(),
                 draw: function () {
                     this.graphics.clear();
-                    this.graphics.lineStyle(1, 0xFFFFFF, 1);
+                    this.graphics.lineStyle(1, 0xFF00FF, 1);
                     this.graphics.drawRect(this.x, this.y, this.width, this.height);
                     this.graphics.endFill();
                 }
@@ -342,24 +322,6 @@ var Utility        = Utility || {},
             });
 
             this.addMatter([bottom]);
-        }
-
-        /**
-         *
-         * @returns {*}
-         */
-        draw() {
-            var timeDelta = 16;
-            if (!this.scene) {
-                return;
-            }
-
-            requestAnimationFrame(() => {
-                return this.draw();
-            });
-            Engine.update(this.engine, timeDelta);
-
-            return this.engine.render.controller.world(this.engine);
         }
 
         /**
@@ -435,51 +397,32 @@ var Utility        = Utility || {},
             Events.on(this.engine, 'collisionStart', (event) => {
                 var pairs = event.pairs;
                 for (let q = 0; q < pairs.length; q++) {
-                    let pair  = pairs[q],
+                    let pair = pairs[q],
                         bodyA = Composite.get(this.engine.world, pair.bodyA.id, 'body'),
                         bodyB = Composite.get(this.engine.world, pair.bodyB.id, 'body');
                     if (bodyA && bodyB) {
-                        // let bodyAdata = `${bodyA.label} (${Math.round(bodyA.position.x)}:${Math.round(bodyA.position.y)})`,
-                        //     bodyBdata = `${bodyB.label} (${Math.round(bodyB.position.x)}:${Math.round(bodyB.position.y)})`;
-                        // console.log(`collisionStart ${bodyAdata}->${bodyBdata}`);
-                        // if (!bodyA.isStatic && !bodyB.isStatic) {
-                        //     let bodyBisEdible = (bodyB.label === 'Nom' || bodyB.label === 'Gnar'),
-                        //         bodyAisAgent  = (bodyA.label === 'Agent');
-                        //
-                        //     if (bodyAisAgent && bodyBisEdible) {
-                        //         bodyA.entity.digestion += bodyB.label === 'Nom' ? 1 : -1;
-                        //         World.remove(this.engine.world, bodyB);
-                        //         this.engine.render.container.removeChild(bodyB.entity.graphics);
-                        //     }
-                        // } else if (bodyA.isStatic || bodyB.isStatic) {
-                        //
-                        // }
+                        if (!bodyA.isStatic && !bodyB.isStatic) {
+                            if (bodyA.label === 'Agent') {
+                                bodyA.entity.digestion += bodyB.label === 'Nom' ? 1 : -1;
+                                World.remove(this.engine.world, bodyB);
+                            }
+                            if (bodyB.label === 'Agent') {
+                                bodyB.entity.digestion += bodyA.label === 'Nom' ? 1 : -1;
+                                World.remove(this.engine.world, bodyA);
+                            }
+                        }
+                    } else {
+                        console.log('Missing:' + (bodyA) ? 'bodyA' : 'bodyB');
                     }
                 }
             });
 
             Events.on(this.engine, 'collisionActive', (event) => {
                 var pairs = event.pairs;
-                for (let q = 0; q < pairs.length; q++) {
-                    let pair  = pairs[q],
-                        bodyA = Composite.get(this.engine.world, pair.bodyA.id, 'body'),
-                        bodyB = Composite.get(this.engine.world, pair.bodyB.id, 'body');//,
-                    //     bodyAdata = `${bodyA.label} (${Math.round(bodyA.position.x)}:${Math.round(bodyA.position.y)})`,
-                    //     bodyBdata = `${bodyB.label} (${Math.round(bodyB.position.x)}:${Math.round(bodyB.position.y)})`;
-                    // console.log(`collisionActive ${bodyAdata}->${bodyBdata}`);
-                }
             });
 
             Events.on(this.engine, 'collisionEnd', (event) => {
                 var pairs = event.pairs;
-                for (let q = 0; q < pairs.length; q++) {
-                    let pair  = pairs[q],
-                        bodyA = Composite.get(this.engine.world, pair.bodyA.id, 'body'),
-                        bodyB = Composite.get(this.engine.world, pair.bodyB.id, 'body');//,
-                    //     bodyAdata = `${bodyA.label} (${Math.round(bodyA.position.x)}:${Math.round(bodyA.position.y)})`,
-                    //     bodyBdata = `${bodyB.label} (${Math.round(bodyB.position.x)}:${Math.round(bodyB.position.y)})`;
-                    // console.log(`collisionEnd ${bodyAdata}->${bodyBdata}`);
-                }
             });
         }
 
@@ -497,26 +440,32 @@ var Utility        = Utility || {},
                             body.speed = body.entity.speed;
                         }
                         if (body.velocity.x <= -2 || body.velocity.x >= 2) {
-                            body.entity.force.x = body.entity.speed * 0.00025;
+                            let newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
+                            this.updateBody(body, body.position, newForce);
                         }
                         if (body.velocity.y <= -2 || body.velocity.y >= 2) {
-                            body.entity.force.y = body.entity.speed * 0.00025;
+                            let newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
+                            this.updateBody(body, body.position, newForce);
                         }
-                        if (body.position.x > this.engine.world.bounds.max.x) {
-                            body.position.x = this.engine.world.bounds.max.x - 1;
-                            body.entity.force.x = -body.entity.speed * 0.00025;
+                        if (body.position.x > this.engine.render.bounds.max.x - body.entity.radius) {
+                            let newPos = {x:body.position.x - body.entity.radius/2, y:body.position.y},
+                                newForce = {x:-body.entity.speed * 0.00025, y:body.entity.force.y};
+                            this.updateBody(body, newPos, newForce);
                         }
-                        if (body.position.x < this.engine.world.bounds.min.x) {
-                            body.position.x = this.engine.world.bounds.min.x + 1;
-                            body.entity.force.x = body.entity.speed * 0.00025;
+                        if (body.position.x < this.engine.render.bounds.min.x + body.entity.radius) {
+                            let newPos = {x:body.position.x + body.entity.radius/2, y:body.position.y},
+                                newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
+                            this.updateBody(body, newPos, newForce);
                         }
-                        if (body.position.y > this.engine.world.bounds.max.y) {
-                            body.position.y = this.engine.world.bounds.max.y - 1;
-                            body.entity.force.y = -body.entity.speed * 0.00025;
+                        if (body.position.y > this.engine.render.bounds.max.y - body.entity.radius) {
+                            let newPos = {x:body.position.x, y:body.position.y -body.entity.radius/2},
+                                newForce = {x:body.entity.force.x, y:-body.entity.speed * 0.00025};
+                            this.updateBody(body, newPos, newForce);
                         }
-                        if (body.position.y < this.engine.world.bounds.min.y) {
-                            body.position.y = this.engine.world.bounds.min.y + 1;
-                            body.entity.force.y = body.entity.speed * 0.00025;
+                        if (body.position.y < this.engine.render.bounds.min.y + body.entity.radius) {
+                            let newPos = {x:body.position.x, y:body.position.y + body.entity.radius/2},
+                                newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
+                            this.updateBody(body, newPos, newForce);
                         }
                     }
                 }
@@ -532,21 +481,7 @@ var Utility        = Utility || {},
             });
 
             Events.on(this.runner, 'afterTick', (event) => {
-                // let bodies = Composite.allBodies(this.engine.world);
-                // for (let i = 0; i < bodies.length; i++) {
-                //     var body = bodies[i];
-                //     if (!body.isStatic) {
-                //         if (body.speed > 2) {
-                //             body.speed = body.entity.speed;
-                //         }
-                //         if (body.velocity.x <= -2 || body.velocity.x >= 2) {
-                //             body.entity.force.x = body.speed * 0.0025;
-                //         }
-                //         if (body.velocity.y <= -2 || body.velocity.y >= 2) {
-                //             body.entity.force.y = body.speed * 0.0025;
-                //         }
-                //     }
-                // }
+
             });
 
             // Engine Update Events
@@ -555,7 +490,12 @@ var Utility        = Utility || {},
             });
 
             Events.on(this.runner, 'afterUpdate', (event) => {
-
+                let bodies = Composite.allBodies(this.engine.world),
+                    constraints = Composite.allConstraints(this.engine.world);
+                World.clear(this.engine.world);
+                Pairs.clear(this.engine.pairs);
+                World.add(this.engine.world, bodies);
+                World.add(this.engine.world, constraints);
             });
 
             // Render Events
@@ -564,136 +504,18 @@ var Utility        = Utility || {},
             });
 
             Events.on(this.runner, 'afterRender', (event) => {
-
+                for (let i = 0; i < this.agents.length; i++) {
+                    this.agents[i].draw(this.engine.render.context);
+                }
             });
         }
+
+        updateBody(body, position, force) {
+            // body.entity.shape.position = position;
+            body.entity.force = force;
+            Body.setPosition(body, {x:position.x, y:position.y});
+        }
     }
-
-    MatterWorld.SceneFactory = {
-        addMatter: function (items) {
-            for (let i = 0, len = items.length; i < len; i++) {
-                let item = items[i];
-                World.add(this.engine.world, [item]);
-                this.engine.render.container.addChild(item.entity.graphics);
-                this.children.push(item);
-            }
-
-            return this.children;
-        },
-        create: function (engine) {
-            this.children = [];
-            this.engine = engine;
-
-            return this;
-        },
-        createAgents: function (number = 1) {
-            let agents = [];
-            for (let k = 0; k < number; k++) {
-                agents.push(this.createAgent());
-            }
-
-            return agents;
-        },
-        createAgent: function () {
-            let agentOpts = {
-                    brainType: 'RLDQN',
-                    worker: false,
-                    numEyes: 30,
-                    numTypes: 5,
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
-                    range: 120,
-                    proximity: 120
-                },
-                matterOpts = {
-                    friction: 0,
-                    frictionAir: Utility.randf(0.0, 0.9),
-                    frictionStatic: 0,
-                    restitution: 0,
-                    density: Utility.randf(0.001, 0.01)
-                },
-                x = Utility.randi(10, this.engine.render.bounds.max.x - 10),
-                y = Utility.randi(10, this.engine.render.bounds.max.y - 10),
-                color = Common.shadeColor(blueColor, -20),
-                agent = AgentFactory.create(x, y, color, agentOpts, matterOpts);
-
-            this.engine.render.container.addChild(agent.agent.shape);
-
-            return agent;
-        },
-        createFireballs: function (number = 1) {
-            let flames = [];
-            for (let i = 0; i < 10; i++) {
-                flames.push(this.createFireball(
-                    Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
-                    Common.choose([14, 20, 28, 30, 34, 58, 124, 140, 154, 160, 170, 174]),
-                    Common.choose([0xff0000, 0xff5500, 0xffff00, 0x00ff00, 0x0000ff, 0xff00ff]))
-                );
-            }
-
-            return flames;
-        },
-        createFireball: function (x, y, color) {
-            var fireball = FireballFactory.create(x, y, color);
-            this.engine.render.container.addChild(fireball.graphics);
-
-            return fireball;
-        },
-        createPlatforms: function (number = 1) {
-            return [
-                this.createPlatform(200, 240, 150, 30, 12),
-                this.createPlatform(10, 330, 100, 30, 32),
-                this.createPlatform(200, 450, 400, 30, -4),
-                this.createPlatform(200, 640, 250, 30, 4)
-            ];
-        },
-        createPlatform: function (x, y, width, height, rotationDeg) {
-            var platform = PlatformFactory.create(x, y, width, height, rotationDeg * Math.PI / 180);
-            this.engine.render.container.addChild(platform.graphics);
-
-            return platform;
-        }
-    };
-
-    MatterWorld.Utils = {
-        rotateVertices: function (vertices, rotationRad) {
-            var results = [];
-            for (let i = 0, len = vertices.length; i < len; i++) {
-                let vertex = vertices[i],
-                    x      = vertex.x,
-                    y      = vertex.y;
-                vertex.x = x * Math.cos(rotationRad) - y * Math.sin(rotationRad);
-                vertex.y = x * Math.sin(rotationRad) + y * Math.cos(rotationRad);
-                results.push(vertex.y);
-            }
-
-            return results;
-        },
-        createOrb: function (radius, edgeCount = 10) {
-            var vertices = [];
-            for (let index = 0, i = 0, ref = edgeCount; 0 <= ref ? i < ref : i > ref; index = 0 <= ref ? ++i : --i) {
-                let angleRad = ((Math.PI * 2) / (edgeCount - 1)) * index,
-                    x        = Math.cos(angleRad) * radius,
-                    y        = Math.sin(angleRad) * radius;
-                vertices.push({
-                    x: x,
-                    y: y
-                });
-            }
-            return vertices;
-        }
-    };
     global.MatterWorld = MatterWorld;
 
 }(this));

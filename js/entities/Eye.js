@@ -53,8 +53,6 @@
                     this.shape.lineStyle(0.5, 0x0000FF, 1);
                     break;
                 default:
-                case -1:
-                case 0:
                     // Is it wall or nothing?
                     this.shape.lineStyle(0.5, 0x000000, 1);
                     break;
@@ -86,7 +84,7 @@
             result = world.sightCheck(this.position, this.maxPos, world.walls, world.population, agent.radius);
             if (result && result.target.id !== agent.id && result.distance <= this.maxRange) {
                 // eye collided with an entity
-                this.sensedProximity = result.vecI.distanceTo(this.position);
+                this.sensedProximity = result.distance;
                 this.sensedType = result.target.type;
                 if ('vx' in result.vecI) {
                     this.x = result.vecI.x;

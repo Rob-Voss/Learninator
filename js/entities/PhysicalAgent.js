@@ -94,15 +94,19 @@
             // The Agent's eyes
             this.eyes = [];
             for (let k = 0; k < this.numEyes; k++) {
-                this.eyes.push({
+                var eye = {
                     angle: k * 0.21,
                     sensed: {
                         type: -1,
                         proximity: this.range,
                         position: {x: 0, y: 0},
                         velocity: {x: 0, y: 0}
-                    }
-                });
+                    },
+                    maxPos: {x:0, y:0},
+                    shape: new PIXI.Graphics()
+                };
+                eye.shape.position = this.body.position;
+                this.eyes.push(eye);
             }
 
             // Set the brain options
@@ -140,7 +144,8 @@
                         this.body.position.x + this.range * Math.sin(this.body.angle + eye.angle),
                         this.body.position.y + this.range * Math.cos(this.body.angle + eye.angle)
                     ),
-                    collisions = Query.ray(bodies, this.body.position, eyeEnd);
+                    collisions = Query.ray(bodies, this.body.position, eyeEnd, 1);
+
                 // Reset our eye data
                 eye.sensed = {
                     type: -1,
@@ -154,12 +159,10 @@
                     let collision = collisions[ic];
                     if (collision.bodyA.id !== this.body.id) {
                         let dx = this.body.position.x - collision.body.position.x,
-                            dy = this.body.position.y - collision.body.position.y,
-                            distance = Math.sqrt(dx * dx + dy * dy),
-                            type = entityTypes.indexOf(collision.bodyA.label);
+                            dy = this.body.position.y - collision.body.position.y;
 
-                        eye.sensed.type = type;
-                        eye.sensed.proximity = distance;
+                        eye.sensed.type = entityTypes.indexOf(collision.bodyA.label);
+                        eye.sensed.proximity = Math.sqrt(dx * dx + dy * dy);
                         eye.sensed.position = collision.body.position;
                         eye.sensed.velocity = collision.body.velocity;
                     }
@@ -187,29 +190,50 @@
             return this;
         }
 
-        /**
-         * Draw the rays for the eyes
-         */
-        draw(graphics) {
-            // Loop through the eyes and check the walls and nearby entities
+        draw(context) {
             for (let i = 0; i < this.numEyes; i++) {
                 let eye = this.eyes[i],
-                    eyeEnd = Vector.create(
-                        this.body.position.x + this.range * Math.sin(this.body.angle + eye.angle),
-                        this.body.position.y + this.range * Math.cos(this.body.angle + eye.angle)
-                    ),
                     type = eye.sensed.type;
-                // Draw the sight line
-                graphics.lineStyle(1, 0xFFFFFF);
-                graphics.moveTo(this.body.position.x, this.body.position.y);
-                if (type > 0) {
-                    graphics.lineTo(eye.sensed.position.x, eye.sensed.position.y);
+
+                switch (type) {
+                    case 1:
+                        // It is noms
+                        context.strokeStyle = '#FF0000';
+                        break;
+                    case 2:
+                        // It is gnar gnar
+                        context.strokeStyle = '#00FF00';
+                        break;
+                    case 3:
+                    case 4:
+                    case 5:
+                        // Is it another Agent
+                        context.strokeStyle = '#0000FF';
+                        break;
+                    default:
+                        // Is it wall or nothing?
+                        context.strokeStyle = '#FFFFFF';
+                        break;
+                }
+
+                let eyeStartX = eye.shape.position.x + this.radius * Math.sin(this.body.angle + eye.angle),
+                    eyeStartY = eye.shape.position.y + this.radius * Math.cos(this.body.angle + eye.angle),
+                    eyeEndX = eye.shape.position.x + eye.sensed.proximity * Math.sin(this.body.angle + eye.angle),
+                    eyeEndY = eye.shape.position.y + eye.sensed.proximity * Math.cos(this.body.angle + eye.angle);
+                eye.position = Vector.create(eyeStartX, eyeStartY);
+                eye.maxPos = Vector.create(eyeEndX, eyeEndY);
+
+                // Draw the agent's line of sights
+                context.beginPath();
+                context.moveTo(eye.position.x, eye.position.y);
+                context.lineTo(eye.maxPos.x, eye.maxPos.y);
+                context.stroke();
+                if ((type === 2 || type === 1)) {
+                    let color = (type === 2) ? '#FF0000' : '#00FF00';
                     // Show a little box
-                    graphics.beginFill((type === 2) ? 0xFF0000 : 0x00FF00);
-                    graphics.drawRect(eye.sensed.position.x - 5, eye.sensed.position.y - 5, 10, 10);
-                    graphics.endFill();
-                } else {
-                    graphics.lineTo(eyeEnd.x, eyeEnd.y);
+                    context.rect(eye.sensed.position.x - 5, eye.sensed.position.y - 5, 10, 10);
+                    context.fillStyle = color;
+                    context.fill();
                 }
             }
         }

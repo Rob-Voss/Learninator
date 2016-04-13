@@ -10,27 +10,12 @@
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 </head>
 <body onload="start();">
-<div id="container">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-8">
-                <h2>
-                    Water World
-                    <small>Phys</small>
-                </h2>
-                <div class="game-container"></div>
-            </div>
-            <div class="col-md-4">
-                <div id="flotreward" style="width:800px; height: 400px;"></div>
-            </div>
-        </div>
-    </div>
-</div>
+<div id="game-container"></div>
 <script>
     var world = world || {};
 
     function start() {
-        world = new WaterWorldPhys();
+        world = new WaterWorldP2();
     }
 </script>
 
@@ -40,7 +25,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
 
-<script src="js/lib/external/matter.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/graphing/FlotGraph.js"></script>
@@ -49,10 +34,7 @@
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
 
-<script src="js/entities/PhysicalEntity.js"></script>
-<script src="js/entities/PhysicalAgent.js"></script>
-<script src="js/environments/MatterWorld.js"></script>
-<script src="js/environments/WaterWorldPhys.js"></script>
+<script src="js/environments/WaterWorldP2.js"></script>
 
 </body>
 </html>

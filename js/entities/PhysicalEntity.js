@@ -36,6 +36,11 @@
                 x: Common.random(-this.speed, this.speed) * 0.0025,
                 y: Common.random(-this.speed, this.speed) * 0.0025
             };
+            this.velocity = {
+                x: Common.random(-this.speed, this.speed) * 0.0025,
+                y: Common.random(-this.speed, this.speed) * 0.0025
+            };
+            Body.setVelocity(this.body, this.velocity);
 
             return this;
         }

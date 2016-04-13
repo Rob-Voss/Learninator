@@ -24,12 +24,12 @@
             this.angle = this.v2.angleBetween(this.v1);
             this.rotation = this.angle  * Math.PI / 180;
 
-            this.graphics = new PIXI.Graphics();
-            this.graphics.clear();
-            this.graphics.lineStyle(1, 0x000000, 1);
-            this.graphics.moveTo(this.v1.x, this.v1.y);
-            this.graphics.lineTo(this.v2.x, this.v2.y);
-            this.graphics.endFill();
+            this.shape = new PIXI.Graphics();
+            this.shape.clear();
+            this.shape.lineStyle(1, 0x000000, 1);
+            this.shape.moveTo(this.v1.x, this.v1.y);
+            this.shape.lineTo(this.v2.x, this.v2.y);
+            this.shape.endFill();
             if (cheats) {
                 this.cheatsContainer = new PIXI.Container();
                 let wallText = new PIXI.Text(this.id.substring(0, 10), {
@@ -45,7 +45,7 @@
 
                 wallText.position.set(this.position.x + addX, this.position.y + addY);
                 this.cheatsContainer.addChild(wallText);
-                this.graphics.addChild(this.cheatsContainer);
+                this.shape.addChild(this.cheatsContainer);
             }
 
             return this;
