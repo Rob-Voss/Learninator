@@ -158,14 +158,17 @@ var Hex = Hex || {},
         this.walls = [];
 
         this.cellsContainer = new PIXI.Container();
-        this.cells.forEach(function (cell) {
-            HexShape.call(cell, self.layout, self.tileSize, self.fill);
-            cell.population = [];
-            self.cellsContainer.addChild(cell.shape);
-            cell.walls.forEach(function (wall) {
+        let hs;
+        this.cells.forEach((cell) => {
+            hs = new HexShape(cell, self.layout, self.tileSize, self.fill);
+            cell.shape = hs;
+            self.cellsContainer.addChild(hs.shape);
+
+            hs.walls.forEach((wall) => {
                 self.walls.push(wall);
             });
         });
+
         this.mapCells();
 
         return this;
@@ -225,18 +228,29 @@ var Hex = Hex || {},
          * @param {Entity} entity
          * @returns {Object}
          */
+        getGrid: function () {
+            return this.cellsContainer;
+        },
+        /**
+         * Return the location of the entity within a grid
+         * @param {Entity} entity
+         * @returns {Object}
+         */
         getGridLocation: function (entity) {
-            let hex = this.pixelToHex(entity.pos.x, entity.pos.y),
-                q = Math.round(hex.q),
-                r = Math.round(hex.r);
-            let cell = this.getCellAt(q, r);
-            if (cell) {
-                entity.gridLocation = cell;
-            } else {
-                entity.gridLocation = hex;
-            }
+            let hex = this.pixelToHex(entity.position),
+                cube = this.roundCube(this.axialToCube(hex)),
+                hexR = this.cubeToAxial(cube),
+                cell = this.getCellAt(hexR.q, hexR.r);
 
-            return entity;
+            return cell;
+        },
+        /**
+         *
+         * @param hex
+         * @returns {*|Vec|Point}
+         */
+        hexToPixel: function(hex) {
+            return this.layout.hexToPixel(hex);
         },
         /**
          * Add the cells to a hash map
@@ -244,8 +258,6 @@ var Hex = Hex || {},
         mapCells: function () {
             let column, row, hex, self = this;
             this.cells.forEach(function (cell) {
-                let center = self.getCenterXY(cell);
-
                 // check q
                 column = self.map.get(cell.q);
                 if (!column) {
@@ -288,12 +300,11 @@ var Hex = Hex || {},
         },
         /**
          * Convert from pixel coords to axial
-         * @param {number} x
-         * @param {number} y
+         * @param {Vec} v
          * @returns {Hex}
          */
-        pixelToHex: function (x, y) {
-            return this.layout.pixelToHex(new Point(x, y));
+        pixelToHex: function (v) {
+            return this.layout.pixelToHex(new Point(v.x, v.y));
         },
         /**
          * Get something
@@ -433,16 +444,16 @@ var Hex = Hex || {},
         /**
          *
          * @param {Hex} hex
-         * @returns {Point}
+         * @returns {Vec}
          */
         hexToPixel: function (hex) {
             let m = this.orientation,
                 size = this.size,
                 offset = this.origin,
-                x = (m.f0 * hex.q + m.f1 * hex.r) * size.x,
-                y = (m.f2 * hex.q + m.f3 * hex.r) * size.y;
+                x = ((m.f0 * hex.q + m.f1 * hex.r) * size.x) + offset.x,
+                y = ((m.f2 * hex.q + m.f3 * hex.r) * size.y) + offset.y;
 
-            return new Point(x + offset.x, y + offset.y);
+            return new Vec(x, y);
         },
         /**
          *
@@ -473,15 +484,14 @@ var Hex = Hex || {},
         },
         /**
          *
-         * @param {Hex} hex
+         * @param {Point} p
          * @returns {Array}
          */
-        polygonCorners: function (hex) {
-            let corners = [],
-                center = this.hexToPixel(hex);
+        polygonCorners: function (p) {
+            let corners = [];
             for (let i = 0; i < 6; i++) {
                 let offset = this.hexCornerOffset(i);
-                corners.push(new Point(center.x + offset.x, center.y + offset.y));
+                corners.push(new Point(p.x + offset.x, p.y + offset.y));
             }
 
             return corners;

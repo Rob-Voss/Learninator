@@ -41,14 +41,14 @@ var FlotGraph = FlotGraph || {},
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
-                labelMargin: 5,
+                labelMargin: 10,
                 backgroundColor: {
                     colors: ["#FFF", "#e4f4f4"]
                 },
                 margin: {
-                    top: 5,
-                    bottom: 5,
-                    left: 5
+                    top: 10,
+                    bottom: 10,
+                    left: 10
                 }
             },
             xaxis: {
@@ -75,7 +75,6 @@ var FlotGraph = FlotGraph || {},
     FlotGraph.prototype = {
         /**
          * Graph the agent rewards
-         * @returns {World}
          */
         graphRewards: function () {
             for (let a = 0, ac = this.agents.length; a < ac; a++) {
@@ -102,14 +101,10 @@ var FlotGraph = FlotGraph || {},
                 if (typeof this.series[a] !== 'undefined') {
                     this.series[a].data = this.getFlotRewards(a);
                 }
-                // Clear them up since we've drawn them
-                this.agents[a].pts = [];
             }
 
             this.plot.setData(this.series);
             this.plot.draw();
-
-            return this;
         },
         /**
          * zip rewards into flot data

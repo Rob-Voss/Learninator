@@ -1,4 +1,4 @@
-<template>
+<div id="twitch-navbar">
     <style>
         body {
             padding-top: 15px;
@@ -209,24 +209,11 @@
         <span class="glyphicon glyphicon-chevron-right nav-open"></span>
         <span class="glyphicon glyphicon-chevron-left nav-close"></span>
     </button>
-</template>
-
+</div>
 <script>
-    var shadow = document.querySelector('#navigation').createShadowRoot();
-    shadow.appendChild(document.querySelector('template').content);
+    var me = document.currentScript.ownerDocument,
+        post = me.querySelector('#twitch-navbar'),
+        container = document.querySelector('#container');
 
-    $('.navbar-nav [data-toggle="tooltip"]').tooltip();
-    $('.navbar-twitch-toggle').on('click', function (event) {
-        event.preventDefault();
-        $('.navbar-twitch').toggleClass('open');
-    });
-
-    $('.nav-style-toggle').on('click', function (event) {
-        event.preventDefault();
-        var $current = $('.nav-style-toggle.disabled');
-        $(this).addClass('disabled');
-        $current.removeClass('disabled');
-        $('.navbar-twitch').removeClass('navbar-' + $current.data('type'));
-        $('.navbar-twitch').addClass('navbar-' + $(this).data('type'));
-    });
+    container.appendChild(post.cloneNode(true));
 </script>

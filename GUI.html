@@ -13,7 +13,6 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
     <link href="css/circle-menu.css" rel="stylesheet" type="text/css">
-    <link href="css/twitch-nav.css" rel="stylesheet" type="text/css">
 
     <script type="text/javascript">
         /**
@@ -26,8 +25,9 @@
                 theme = 'space',
                 width = 600,
                 height = 600,
-                rendererOptions = {
+                rendererOpts = {
                     antialiasing: false,
+                    resizable: false,
                     transparent: false,
                     resolution: window.devicePixelRatio,
                     autoResize: true
@@ -132,7 +132,7 @@
                             width: 120,
                             height: 29
                         }, {
-                            id: 'btnCancelShadow',
+                            id: 'btnCancel',
                             component: 'Button',
                             skin: 'ShadowButton',
                             text: 'Cancel',
@@ -143,7 +143,7 @@
                                 color: 'white'
                             }
                         }, {
-                            id: 'btnSaveShadow',
+                            id: 'btnSave',
                             component: 'Button',
                             skin: 'ShadowButton',
                             text: 'Save',
@@ -253,7 +253,7 @@
                             width: 120,
                             height: 29
                         }, {
-                            id: 'btnCancelGlass',
+                            id: 'btnCancel',
                             component: 'Button',
                             skin: 'GlassButton',
                             text: 'Cancel',
@@ -261,7 +261,7 @@
                             width: 100,
                             height: 29
                         }, {
-                            id: 'btnSaveGlass',
+                            id: 'btnSave',
                             component: 'Button',
                             skin: 'GlassButton',
                             text: 'Save',
@@ -326,10 +326,10 @@
 
             return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], function () {
                 var container = EZGUI.create(guiObj, theme);
-                EZGUI.components.btnSaveShadow.on('click', function (event) {
+                EZGUI.components.btnSave.on('click', function (event) {
                     container.visible = false;
                 });
-                EZGUI.components.btnCancelShadow.on('click', function (event) {
+                EZGUI.components.btnCancel.on('click', function (event) {
                     container.visible = false;
                 });
                 stage.addChild(container);
@@ -355,7 +355,7 @@
         function start() {
             // Create the canvas in which the game will show, and a
             // generic container for all the graphical objects
-            renderer = PIXI.autoDetectRenderer(width, height, rendererOptions);
+            renderer = PIXI.autoDetectRenderer(width, height, rendererOpts);
             renderer.backgroundColor = 0xCCDDFF;
             // Round the pixels
             //this.renderer.roundPixels = true;
@@ -384,111 +384,37 @@
             requestAnimationFrame(animate);
         }
     </script>
+    <link rel="import" href="templates/twitch-nav.html">
 </head>
 <body onload="start();">
+<div id="container">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="game-container">
 
-<!-- Twitch style navbar -->
-<div class="navbar navbar-inverse navbar-twitch" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">
-                <span class="small-nav"> <span class="logo">D.IO</span> </span>
-                <span class="full-nav"> Digerati.IO - Learninator </span>
-            </a>
-        </div>
-        <div class="">
-            <ul class="nav navbar-nav">
-                <li class="active">
-                    <a href="index.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="Home">
-                                <i class="fa fa-home"></i>
-                            </span>
-                        <span class="full-nav"> Home </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorldEX.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld EX">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld EX </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorldGA.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld GA">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld GA </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="MazeWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="MazeWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> MazeWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="PuckWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="PuckWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> PuckWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="GridWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="GridWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> GridWorld </span>
-                    </a>
-                </li>
-            </ul>
-        </div><!--/.nav-collapse -->
-    </div>
-</div>
-<button type="button" class="btn btn-default btn-xs navbar-twitch-toggle">
-    <span class="glyphicon glyphicon-chevron-right nav-open"></span>
-    <span class="glyphicon glyphicon-chevron-left nav-close"></span>
-</button>
+                    <!-- Circle Menu -->
+                    <div id="click-open">
+                        <ul class="menu" id="main-menu">
+                            <li><a href="#"></a></li>
+                            <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
+                            <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
+                            <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
+                            <li>
+                                <ul class="menu" id="sub-menu">
+                                    <li><a href="#"></a></li>
+                                    <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
+                                    <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
+                                    <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#" alt="Item 4" title="Item 4">4</a></li>
+                            <li><a href="#" alt="Item 5" title="Item 5">5</a></li>
+                            <li><a href="#" alt="Item 6" title="Item 6">6</a></li>
+                        </ul>
+                    </div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="game-container">
-
-                <!-- Circle Menu -->
-                <div id="click-open">
-                    <ul class="menu" id="main-menu">
-                        <li><a href="#"></a></li>
-                        <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
-                        <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
-                        <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
-                        <li>
-                            <ul class="menu" id="sub-menu">
-                                <li><a href="#"></a></li>
-                                <li><a href="#" alt="Item 1" title="Item 1">1</a></li>
-                                <li><a href="#" alt="Item 2" title="Item 2">2</a></li>
-                                <li><a href="#" alt="Item 3" title="Item 3">3</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="#" alt="Item 4" title="Item 4">4</a></li>
-                        <li><a href="#" alt="Item 5" title="Item 5">5</a></li>
-                        <li><a href="#" alt="Item 6" title="Item 6">6</a></li>
-                    </ul>
                 </div>
-
             </div>
         </div>
     </div>

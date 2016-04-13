@@ -117,7 +117,7 @@ var Interactions = Interactions || {};
             offset.y += _this.stylePaddingTop + _this.styleBorderTop + _this.htmlTop;
 
             // We return a Vec with x and y defined
-            _this.mouse.pos = new Vec(event.pageX - offset.x, event.pageY - offset.y);
+            _this.mouse.position = new Vec(event.pageX - offset.x, event.pageY - offset.y);
             Utility.getGridLocation(_this.mouse, _this.grid, _this.vW, _this.vH);
             _this.mouse.offset = new Vec(offset.x, offset.y);
             _this.mouse.button = event.button;
@@ -138,8 +138,8 @@ var Interactions = Interactions || {};
                 if (entity && entity.contains !== undefined && entity.contains(event, _this.mouse)) {
                     _this.selection = entity;
                     if (_this.mouse.button === 0) {
-                        var offX = _this.mouse.pos.x - _this.selection.pos.x,
-                            offY = _this.mouse.pos.y - _this.selection.pos.y;
+                        var offX = _this.mouse.position.x - _this.selection.position.x,
+                            offY = _this.mouse.position.y - _this.selection.position.y;
 
                         _this.dragoff = new Vec(offX, offY);
                         _this.dragging = true;
@@ -160,8 +160,8 @@ var Interactions = Interactions || {};
                 if (agent.contains !== undefined && agent.contains(event, _this.mouse)) {
                     _this.selection = agent;
                     if (_this.mouse.button === 0) {
-                        var offX = _this.mouse.pos.x - _this.selection.pos.x,
-                            offY = _this.mouse.pos.y - _this.selection.pos.y;
+                        var offX = _this.mouse.position.x - _this.selection.position.x,
+                            offY = _this.mouse.position.y - _this.selection.position.y;
 
                         _this.dragoff = new Vec(offX, offY);
                         _this.dragging = true;
@@ -190,10 +190,10 @@ var Interactions = Interactions || {};
         function mouseMove(event) {
             if (_this.selection) {
                 if (_this.dragoff.x !== 0 && _this.dragoff.y !== 0) {
-                    var offX = _this.mouse.pos.x - _this.dragoff.x,
-                        offY = _this.mouse.pos.y - _this.dragoff.y;
+                    var offX = _this.mouse.position.x - _this.dragoff.x,
+                        offY = _this.mouse.position.y - _this.dragoff.y;
 
-                    _this.selection.pos = new Vec(offX, offY);
+                    _this.selection.position = new Vec(offX, offY);
                     _this.selection.sprite.position.x = offX;
                     _this.selection.sprite.position.y = offY;
                     _this.dragging = true;
@@ -220,10 +220,10 @@ var Interactions = Interactions || {};
         function mouseUp(event) {
             if (_this.selection && _this.dragging) {
                 // Set the selection new position
-                var offX = _this.mouse.pos.x - _this.dragoff.x,
-                    offY = _this.mouse.pos.y - _this.dragoff.y;
+                var offX = _this.mouse.position.x - _this.dragoff.x,
+                    offY = _this.mouse.position.y - _this.dragoff.y;
 
-                _this.selection.pos = new Vec(offX, offY);
+                _this.selection.position = new Vec(offX, offY);
                 _this.selection.sprite.position.x = offX;
                 _this.selection.sprite.position.y = offY;
                 _this.dragging = false;

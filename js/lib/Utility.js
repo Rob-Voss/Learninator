@@ -246,6 +246,9 @@ var Utility = Utility || {};
      * @returns {string}
      */
     Utility.getDirection = function (angle) {
+        if (angle < 0) {
+            angle = -angle;
+        }
         let directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
             octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
         return directions[octant];

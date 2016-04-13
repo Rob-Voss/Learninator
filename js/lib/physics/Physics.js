@@ -46,7 +46,7 @@ var Phys = Phys || {},
                 let closest = Trig.pointOnLineClosestToCircle(entity, wall),
 
                 // Get the distance between the closest point and the center of the circle.
-                    circleToLineDistance = entity.pos.distanceTo(closest),
+                    circleToLineDistance = Trig.distance(entity.position, closest),
                     intersecting = circleToLineDistance < entity.radius;
 
                 // Return true if distance is less than the radius.
@@ -110,7 +110,7 @@ var Phys = Phys || {},
 
                 // Pick a line end and create a vector that represents the
                 // imaginary line between the end and the circle.
-                    lineEndToCircleVector = Trig.vectorBetween(lineEndPoint1, entity.pos),
+                    lineEndToCircleVector = Trig.vectorBetween(lineEndPoint1, entity.position),
 
                 // Get a dot product of the vector between the line end and circle, and
                 // the line vector.  (See the `dotProduct()` function for a
@@ -152,14 +152,14 @@ var Phys = Phys || {},
              * @param {Entity} entity
              */
             applyGravity: function (entity) {
-                entity.pos.vy += 0.06;
+                entity.position.vy += 0.06;
             },
             /**
              * Adds the velocity of the circle to its center.
              * @param {Entity} entity
              */
             moveCircle: function (entity) {
-                entity.pos.advance();
+                entity.position.advance();
             },
             /**
              * Assumes `line` is intersecting `circle` and bounces `circle` off `line`.
@@ -171,10 +171,10 @@ var Phys = Phys || {},
                 let bounceLineNormal = Phys.bounceLineNormal(entity, wall),
 
                 // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
-                    dot = Trig.dotProduct(entity.pos, bounceLineNormal);
+                    dot = Trig.dotProduct(entity.position, bounceLineNormal);
 
-                entity.pos.vx -= 2 * dot * bounceLineNormal.x;
-                entity.pos.vy -= 2 * dot * bounceLineNormal.y;
+                entity.position.vx -= 2 * dot * bounceLineNormal.x;
+                entity.position.vy -= 2 * dot * bounceLineNormal.y;
 
                 // Move the circle until it has cleared the line.
                 // This stops the circle getting stuck in the line.
@@ -196,7 +196,7 @@ var Phys = Phys || {},
                 // the line.  If the circle is hitting the end of the line, the
                 // vector will point from the end to the center of the circle.
                 let pointClosest = Trig.pointOnLineClosestToCircle(entity, wall),
-                    circleToClosestPointOnLineVector = Trig.vectorBetween(pointClosest, entity.pos),
+                    circleToClosestPointOnLineVector = Trig.vectorBetween(pointClosest, entity.position),
                     unitVector = Trig.unitVector(circleToClosestPointOnLineVector);
 
                 // Make the normal a unit vector and return it.

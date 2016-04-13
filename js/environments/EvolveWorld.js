@@ -36,7 +36,7 @@ var EvolveWorld = EvolveWorld || {},
             // Select an agent with mouse click
             for (var i =0; i < self.agents.length; i++) {
                 var a = self.agents[i],
-                    d = Math.sqrt(Math.pow(a.pos.x - x, 2) + Math.pow(a.pos.y - y, 2));
+                    d = Math.sqrt(Math.pow(a.position.x - x, 2) + Math.pow(a.position.y - y, 2));
                 if (d < 3 * a.radius) {
                     // That's a hit! Let's select this one and deselect all others
                     var newset = !a.selected, j;
@@ -147,7 +147,7 @@ var EvolveWorld = EvolveWorld || {},
         this.ctx.fillStyle = 'rgb(100,230,100)';
         for (let i = 0; i < this.food.length; i++) {
             let f = this.food[i];
-            drawCircle(f.pos.x, f.pos.y, 10);
+            drawCircle(f.position.x, f.position.y, 10);
         }
 
         // Draw all agents
@@ -162,7 +162,7 @@ var EvolveWorld = EvolveWorld || {},
                 y2 = Math.sin(a2) * a.eyeLength;
 
             this.ctx.save();
-            this.ctx.translate(a.pos.x, a.pos.y);
+            this.ctx.translate(a.position.x, a.position.y);
             this.ctx.rotate(a.dir - Math.PI / 2);
 
             // Draw the lines to eyes
@@ -239,23 +239,23 @@ var EvolveWorld = EvolveWorld || {},
             let a = this.agents[i],
             // Move agent
                 vel = new Vec((a.boost + a.speed) * Math.cos(a.dir), (a.boost + a.speed) * Math.sin(a.dir));
-            a.pos.plusEq(vel);
+            a.position.plusEq(vel);
 
             // Enforce boundary conditions: wrap around if necessary
-            if (a.pos.x < 0) {
-                a.pos.x = this.width;
+            if (a.position.x < 0) {
+                a.position.x = this.width;
             }
 
-            if (a.pos.x > this.width) {
-                a.pos.x = 0;
+            if (a.position.x > this.width) {
+                a.position.x = 0;
             }
 
-            if (a.pos.y < 0) {
-                a.pos.y = this.height;
+            if (a.position.y < 0) {
+                a.position.y = this.height;
             }
 
-            if (a.pos.y > this.height) {
-                a.pos.y = 0;
+            if (a.position.y > this.height) {
+                a.position.y = 0;
             }
 
             // Agent gets more hungry
@@ -278,7 +278,7 @@ var EvolveWorld = EvolveWorld || {},
                 if (i == j) {
                     continue;
                 }
-                let d = Math.sqrt(Math.pow(a.pos.x - a2.pos.x, 2) + Math.pow(a.pos.y - a2.pos.y, 2)),
+                let d = Math.sqrt(Math.pow(a.position.x - a2.position.x, 2) + Math.pow(a.position.y - a2.position.y, 2)),
                     overlap = a2.radius * 2 - d;
                 if (overlap > 0 && d > 1) {
                     // One agent pushes on another proportional to his boost.
@@ -289,10 +289,10 @@ var EvolveWorld = EvolveWorld || {},
                     }
                     let ff2 = (overlap * aggression) / d,
                         ff1 = (overlap * (1 - aggression)) / d;
-                    a2.pos.x += (a2.pos.x - a.pos.x) * ff2;
-                    a2.pos.y += (a2.pos.y - a.pos.y) * ff2;
-                    a.pos.x -= (a2.pos.x - a.pos.x) * ff1;
-                    a.pos.y -= (a2.pos.x - a.pos.x) * ff1;
+                    a2.position.x += (a2.position.x - a.position.x) * ff2;
+                    a2.position.y += (a2.position.y - a.position.y) * ff2;
+                    a.position.x -= (a2.position.x - a.position.x) * ff1;
+                    a.position.y -= (a2.position.x - a.position.x) * ff1;
                 }
             }
         }
@@ -306,7 +306,7 @@ var EvolveWorld = EvolveWorld || {},
 
             for (let j = 0; j < this.food.length; j++) {
                 var f = this.food[j],
-                    d2 = Math.sqrt(Math.pow(a.pos.x - f.pos.x, 2) + Math.pow(a.pos.y - f.pos.y, 2));
+                    d2 = Math.sqrt(Math.pow(a.position.x - f.position.x, 2) + Math.pow(a.position.y - f.position.y, 2));
                 if (d2 < a.radius) {
                     a.rep += this.foodGain;
                     a.health += this.foodGain;
@@ -318,13 +318,13 @@ var EvolveWorld = EvolveWorld || {},
 
                 if (d2 < a.radius * 10) { // For efficiency, don't even bother if it's too far
                     // Compute position of both eyes in world coordinates
-                    var x1 = a.pos.x + a.eyeLength * Math.cos(a.dir - a.eyeDistance),
-                        y1 = a.pos.y + a.eyeLength * Math.sin(a.dir - a.eyeDistance),
-                        x2 = a.pos.x + a.eyeLength * Math.cos(a.dir + a.eyeDistance),
-                        y2 = a.pos.y + a.eyeLength * Math.sin(a.dir + a.eyeDistance);
+                    var x1 = a.position.x + a.eyeLength * Math.cos(a.dir - a.eyeDistance),
+                        y1 = a.position.y + a.eyeLength * Math.sin(a.dir - a.eyeDistance),
+                        x2 = a.position.x + a.eyeLength * Math.cos(a.dir + a.eyeDistance),
+                        y2 = a.position.y + a.eyeLength * Math.sin(a.dir + a.eyeDistance);
 
-                    a.s1 += a.eyeMultiplier * Math.exp(-a.eyeSensitivity * (Math.pow(x1 - f.pos.x, 2) + Math.pow(y1 - f.pos.y, 2)));
-                    a.s2 += a.eyeMultiplier * Math.exp(-a.eyeSensitivity * (Math.pow(x2 - f.pos.x, 2) + Math.pow(y2 - f.pos.y, 2)));
+                    a.s1 += a.eyeMultiplier * Math.exp(-a.eyeSensitivity * (Math.pow(x1 - f.position.x, 2) + Math.pow(y1 - f.position.y, 2)));
+                    a.s2 += a.eyeMultiplier * Math.exp(-a.eyeSensitivity * (Math.pow(x2 - f.position.x, 2) + Math.pow(y2 - f.position.y, 2)));
                 }
             }
         }
@@ -389,7 +389,7 @@ var EvolveWorld = EvolveWorld || {},
             // Reset the replication count
             a.rep = 0;
             // New random spot to spawn
-            anew.pos = new Vec(a.pos.x + Utility.randf(-30, 30), a.pos.y + Utility.randf(-30, 30));
+            anew.position = new Vec(a.position.x + Utility.randf(-30, 30), a.position.y + Utility.randf(-30, 30));
             // Mutate from the last brain
             anew.brain.mutateFrom(a.brain);
             anew.mutation += 1 + a.mutation;

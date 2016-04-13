@@ -22,7 +22,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
      *
      * API:
      * tree.insert() accepts arrays or single items every item must have a
-     * .pos.x, .pos.y, .width, and .height property.
+     * .position.x, .position.y, .width, and .height property.
      * if they don't, the tree will break.
      *
      * tree.retrieve(selector, callback) calls the callback for all objects that are in
@@ -67,10 +67,17 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
 
             // returns a fresh node object
             return {
+                id: Utility.guid(),
                 x: x, // top left point
                 y: y, // top right point
                 width: width, // width
                 height: height, // height
+                corners: [
+                    new Point(x, y),
+                    new Point(x + width, y),
+                    new Point(x + width, y + height),
+                    new Point(x, y + height)
+                ],
                 depth: depth, // depth level of the node
                 items: items,
 
@@ -82,7 +89,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                  */
                 retrieve: function (item, callback, instance) {
                     for (let i = 0, il = items.length; i < il; ++i) {
-                        (instance) ? callback.call(instance, items[i]) : callback(items[i]);
+                        (instance) ? callback.call(instance, [items[i]]) : callback(items[i]);
                     }
                     // check if node has subnodes
                     if (nodes.length) {
@@ -134,42 +141,42 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                         hD = this.height / 2;
                     if (item.radius !== undefined) {
                         // Left
-                        if (item.pos.x < this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 return TOP_LEFT;
                             }
-                            if (item.pos.y + item.radius >= this.y + hD) {
+                            if (item.position.y + item.radius >= this.y + hD) {
                                 return BOTTOM_LEFT;
                             }
                             return PARENT;
                         }
                         // Right
-                        if (item.pos.x + item.radius >= this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x + item.radius >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 return TOP_RIGHT;
                             }
-                            if (item.pos.y + item.radius >= this.y + hD) {
+                            if (item.position.y + item.radius >= this.y + hD) {
                                 return BOTTOM_RIGHT;
                             }
                             return PARENT;
                         }
                     } else {
                         // Left
-                        if (item.pos.x + item.width < this.x + wD) {
-                            if (item.pos.y + item.height < this.y + hD) {
+                        if (item.position.x  < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 return TOP_LEFT;
                             }
-                            if (item.pos.y >= this.y + hD) {
+                            if (item.position.y + item.height / 2 >= this.y + hD) {
                                 return BOTTOM_LEFT;
                             }
                             return PARENT;
                         }
                         // Right
-                        if (item.pos.x >= this.x + wD) {
-                            if (item.pos.y + item.height < this.y + hD) {
+                        if (item.position.x + item.width / 2 >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 return TOP_RIGHT;
                             }
-                            if (item.pos.y >= this.y + hD) {
+                            if (item.position.y + item.height / 2 >= this.y + hD) {
                                 return BOTTOM_RIGHT;
                             }
                             return PARENT;
@@ -189,39 +196,39 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                         hD = this.height / 2;
                     if (item.radius !== undefined) {
                         // Left
-                        if (item.pos.x < this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 callback(TOP_LEFT);
                             }
-                            if (item.pos.y + item.radius >= this.y + hD) {
+                            if (item.position.y + item.radius >= this.y + hD) {
                                 callback(BOTTOM_LEFT);
                             }
                         }
                         // Right
-                        if (item.pos.x + item.radius >= this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x + item.radius >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 callback(TOP_RIGHT);
                             }
-                            if (item.pos.y + item.radius >= this.y + hD) {
+                            if (item.position.y + item.radius >= this.y + hD) {
                                 callback(BOTTOM_RIGHT);
                             }
                         }
                     } else {
                         // Left
-                        if (item.pos.x < this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x < this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 callback(TOP_LEFT);
                             }
-                            if (item.pos.y + item.height >= this.y + hD) {
+                            if (item.position.y + item.height / 2 >= this.y + hD) {
                                 callback(BOTTOM_LEFT);
                             }
                         }
                         // Right
-                        if (item.pos.x + item.width >= this.x + wD) {
-                            if (item.pos.y < this.y + hD) {
+                        if (item.position.x + item.width / 2 >= this.x + wD) {
+                            if (item.position.y < this.y + hD) {
                                 callback(TOP_RIGHT);
                             }
-                            if (item.pos.y + item.height >= this.y + hD) {
+                            if (item.position.y + item.height / 2 >= this.y + hD) {
                                 callback(BOTTOM_RIGHT);
                             }
                         }

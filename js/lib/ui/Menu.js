@@ -48,8 +48,8 @@
 
     Menu.prototype.addMenuButton = function (text, x, y, obj, callback) {
         var button = new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"});
-        button.pos.x = x;
-        button.pos.y = y;
+        button.position.x = x;
+        button.position.y = y;
         button.interactive = true;
         button.buttonMode = true;
         button.hitArea = new PIXI.Rectangle(x, y, button.width, button.height);

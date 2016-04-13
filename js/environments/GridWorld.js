@@ -96,10 +96,10 @@ var GridWorld = GridWorld || {},
                     useSprite: false,
                     worker: false,
                     cheats: {
-                        gridLocation: false,
-                        position: false,
                         id: false,
-                        name: true
+                        name: true,
+                        gridLocation: false,
+                        position: false
                     }
                 })
         ];
@@ -507,10 +507,10 @@ var GridWorld = GridWorld || {},
                     this.pas[s][a] = pa;
 
                     g.append('line')
-                        .attr('x1', lx1 - 1)
-                        .attr('y1', ly1 - 1)
-                        .attr('x2', lx2 - 1)
-                        .attr('y2', ly2 - 1)
+                        .attr('x1', (lx1 !== 0) ? lx1 - 1 : 0)
+                        .attr('y1', (ly1 !== 0) ? ly1 - 1 : 0)
+                        .attr('x2', (lx2 !== 0) ? lx2 - 1 : 0)
+                        .attr('y2', (ly2 !== 0) ? ly2 - 1 : 0)
                         .attr('stroke', 'red')
                         .attr('stroke-width', '2');
                 }
@@ -732,7 +732,7 @@ var GridWorld = GridWorld || {},
                         agent.brain.resetEpisode();
 
                         agent.gridLocation = self.grid.getCellAt(0, 0);
-                        agent.pos.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
+                        agent.position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
                         self.state = self.startState();
 
                         // record the reward achieved
@@ -745,7 +745,7 @@ var GridWorld = GridWorld || {},
                         agent.gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
                         let x = agent.gridLocation.corners[2].x - (self.grid.cellWidth / 2),
                             y = agent.gridLocation.corners[2].y - (self.grid.cellHeight / 2);
-                        agent.pos.set(x, y);
+                        agent.position.set(x, y);
                     }
                 }
 

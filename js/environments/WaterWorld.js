@@ -1,60 +1,33 @@
-var WaterWorld = WaterWorld || {},
-    Maze = Maze || {},
-    Utility = Utility || {},
-    Vec = Vec || {},
-    World = World || {};
-
 (function (global) {
     "use strict";
 
-    /**
-     * World object contains many agents and walls and food and stuff
-     * @name WaterWorld
-     * @extends World
-     * @constructor
-     *
-     * @returns {WaterWorld}
-     */
-    function WaterWorld() {
-        this.width = 800;
-        this.height = 800;
-
-        this.mazeOptions = {
-            xCount: 4,
-            yCount: 3,
-            width: this.width,
-            height: this.height,
-            closed: true
-        };
-        this.maze = new Maze(this.mazeOptions);
-        this.grid = this.maze.grid;
-        this.walls = this.maze.walls;
-
-        this.cheats = {
-            quad: false,
-            grid: false,
-            walls: false
-        };
-
-        this.numEntities = 50;
-        this.entityOpts = {
-            radius: 10,
-            collision: true,
-            interactive: false,
-            useSprite: false,
-            movingEntities: true,
-            cheats: {
-                gridLocation: false,
-                position: false,
-                id: false,
-                name: false
-            }
-        };
-
-        this.agents = [
-            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
-                {
+    class WaterWorld extends World {
+        /**
+         * World object contains many agents and walls and food and stuff
+         * @name WaterWorld
+         * @extends World
+         * @constructor
+         *
+         * @returns {WaterWorld}
+         */
+        constructor() {
+            let renderOpts = {
+                    antialiasing: true,
+                    autoResize: false,
+                    resizable: false,
+                    transparent: false,
+                    resolution: 1,///window.devicePixelRatio,
+                    noWebGL: false,
+                    width: 800,
+                    height: 800
+                },
+                agentOpts = {
                     brainType: 'RLDQN',
+                    worker: false,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numStates: 30 * 5,
                     env: {
                         getNumStates: function () {
                             return 30 * 5;
@@ -66,10 +39,6 @@ var WaterWorld = WaterWorld || {},
                             return 0;
                         }
                     },
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    numEyes: 30,
-                    numTypes: 5,
                     range: 120,
                     proximity: 120,
                     radius: 10,
@@ -77,58 +46,54 @@ var WaterWorld = WaterWorld || {},
                     interactive: false,
                     useSprite: false,
                     cheats: {
+                        id: true,
+                        name: false,
                         gridLocation: false,
-                        position: false,
-                        id: false,
-                        name: false
-                    },
-                    worker: false
+                        position: false
+                    }
+                },
+                agents = [
+                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts),
+                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
+                ],
+                maze = new Maze({
+                    xCount: 5,
+                    yCount: 2,
+                    width: renderOpts.width,
+                    height: renderOpts.height,
+                    closed: false,
+                    cheats: false
                 }),
-            new AgentRLDQN(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
-                {
-                    brainType: 'RLDQN',
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    numEyes: 30,
-                    numTypes: 5,
-                    range: 120,
-                    proximity: 120,
-                    radius: 10,
-                    collision: true,
-                    interactive: false,
-                    useSprite: false,
+                worldOpts = {
+                    grid: maze.grid,
+                    simSpeed: 1,
                     cheats: {
-                        gridLocation: false,
-                        position: false,
-                        id: false,
-                        name: false
+                        brute: false,
+                        quad: false,
+                        grid: true,
+                        walls: false
                     },
-                    worker: false
-                })
-        ];
-        this.numAgents = this.agents.length;
-        this.simSpeed = 1;
+                    numEntities: 20,
+                    entityOpts: {
+                        radius: 10,
+                        collision: true,
+                        interactive: true,
+                        useSprite: false,
+                        moving: true,
+                        cheats: {
+                            id: false,
+                            name: false,
+                            gridLocation: false,
+                            position: false
+                        }
+                    }
+                };
 
-        this.cellsContainer = this.grid.getGrid();
-
-        World.call(this);
-
-        return this;
+            super(agents, maze.walls, worldOpts, renderOpts);
+            // this.agents[0].load('zoo/wateragent.json');
+            return this;
+        }
     }
-
-    WaterWorld.prototype = Object.create(World.prototype);
-    WaterWorld.prototype.constructor = World;
 
     global.WaterWorld = WaterWorld;
 

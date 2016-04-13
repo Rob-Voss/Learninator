@@ -11,7 +11,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
-    <link href="css/twitch-nav.css" rel="stylesheet" type="text/css">
 
     <script>
         var world = world || {};
@@ -20,92 +19,21 @@
             world = new HexWorld();
         }
     </script>
+    <link rel="import" href="/templates/twitch-nav.html">
 </head>
 <body onload="start();">
-<div class="navbar navbar-inverse navbar-twitch" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">
-                <span class="small-nav"> <span class="logo">D.IO</span> </span>
-                <span class="full-nav"> Digerati.IO - Learninator </span>
-            </a>
-        </div>
-        <div class="">
-            <ul class="nav navbar-nav">
-                <li class="active">
-                    <a href="index.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="Home">
-                                <i class="fa fa-home"></i>
-                            </span>
-                        <span class="full-nav"> Home </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorldEX.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld EX">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld EX </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="WaterWorldGA.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="WaterWorld GA">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> WaterWorld GA </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="MazeWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="MazeWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> MazeWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="PuckWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="PuckWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> PuckWorld </span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="GridWorld.html">
-                            <span class="small-nav" data-toggle="tooltip" data-placement="right" title="GridWorld">
-                                <i class="fa fa-globe"></i>
-                            </span>
-                        <span class="full-nav"> GridWorld </span>
-                    </a>
-                </li>
-            </ul>
-        </div><!--/.nav-collapse -->
-    </div>
-</div>
-<button type="button" class="btn btn-default btn-xs navbar-twitch-toggle">
-    <span class="glyphicon glyphicon-chevron-right nav-open"></span>
-    <span class="glyphicon glyphicon-chevron-left nav-close"></span>
-</button>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8">
-            <h2>
-                Hex World
-                <small>Funsies</small>
-            </h2>
-            <div class="game-container"></div>
-        </div>
-        <div class="col-md-4">
+<div id="container">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <h2>
+                    Hex World
+                    <small>Funsies</small>
+                </h2>
+                <div class="game-container"></div>
+            </div>
+            <div class="col-md-4">
+            </div>
         </div>
     </div>
 </div>
@@ -117,20 +45,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
 
+<script src="js/lib/external/rl.js"></script>
+
+<script src="js/lib/Point.js"></script>
 <script src="js/lib/physics/Physics.js"></script>
 <script src="js/lib/Utility.js"></script>
-<script src="js/lib/Hex.js"></script>
-<script src="js/lib/Cube.js"></script>
-<script src="js/lib/HexGrid.js"></script>
+<script src="js/lib/grid/Hex.js"></script>
+<script src="js/lib/grid/HexShape.js"></script>
+<script src="js/lib/grid/Cube.js"></script>
+<script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/Vec.js"></script>
+<script src="js/lib/Wall.js"></script>
 <script src="js/lib/Array.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 
 <script src="js/entities/Entity.js"></script>
+<script src="js/entities/Eye.js"></script>
+<script src="js/entities/Agent.js"></script>
+<script src="js/entities/AgentRLDQN.js"></script>
 
 <script src="js/environments/World.js"></script>
 <script src="js/environments/HexWorld.js"></script>
+
 </body>
 </html>

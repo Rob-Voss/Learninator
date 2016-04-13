@@ -4,7 +4,6 @@ html, body {
     /* Needed if you want to use height: 100% within the body tag */
     padding-top: 15px;
     padding-left: 65px;
-    overflow: hidden;
 }
 
 * {
@@ -13,17 +12,12 @@ html, body {
     box-sizing: border-box;
 }
 
-#flotreward {
-    width: 600px;
-    height: 300px;
-    margin-top: 60px;
-}
-
 button, input, optgroup, select, textarea {
     color: black;
 }
 
 .game-container {
+    background: white;
     height: 100%; /* The 'html, body' styles above can be removed if you want to use a fixed height here (ie. 800px) */
     text-align: center; /* Horizontally align text elements to centre */
     font-size: 0; /* Remove whitespace between elements (ie. a space between a word) */
@@ -34,12 +28,6 @@ button, input, optgroup, select, textarea {
     content: ''; /* Required attribute of pseudo-element */
     width: 0; /* Force it to have no width */
     height: 100%; /* Make full height of container */
-}
-
-.game-container .world {
-    width: 600px; /* Your game width */
-    height: 600px; /* Your game height */
-    background: white;
 }
 
 .game-container:after, .game-container .world {

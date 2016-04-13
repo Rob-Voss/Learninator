@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link href="css/style.css">
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+</head>
+<body id="body">
+<h1>Random Imgur</h1>
+
+<p id="info"></p>
+<ul id="images"></ul>
+<p>
+    <button id="random">Show me more!</button>
+</p>
+<script type='text/javascript'>
+    $(window).load(function () {
+        var Imgur = {
+            fetch: function (num) {
+                var self = this;
+                self.total = num;
+                self.done = 0;
+                self.failures = 0;
+                self.start = +new Date;
+
+                $('#images').empty();
+                for (var x = 0; x < num; x++) {
+                    self.hunt(function (id) {
+                        self.done++;
+                        var img = "<li id='"+id+"_li'><a href='https://imgur.com/" + id + "'>";
+                        img = img + "<img crossOrigin='anonymous' id='"+id+"' src='https://i.imgur.com/" + id + "s.png' height='200' width='200' />";
+                        img = img + "</a></li>";
+                        $('#images').prepend(img);
+                        self.update();
+                    });
+                }
+            },
+            update: function () {
+                var interval = new Date - this.start;
+
+                function speed(v) {
+                    return (~~(v / interval * 1e5)) / 100;
+                };
+
+                $('#info').html((this.done < this.total ? "Loading.. " + this.done + "/" + this.total + " (" + this.failures + " failures" + ") " : "Done. ") + "[" + speed(this.failures + this.done) + " req/s - " + speed(this.done) + " img/s]");
+            },
+
+            hunt: function (cb) {
+                var self = this,
+                    id = self.random(5),
+                    img = new Image;
+                self.update();
+                img.src = "https://imgur.com/" + id + "s.png";
+
+                img.onload = function () {
+                    if (img.width == 161 && img.height == 81) {
+                        // assume this is an imgur error image, and retry.
+                        fail();
+                    } else {
+                        cb(id);
+                        nude.load(id);
+                        nude.scan(function(result){
+                            if(result) {
+                                console.log(id+' Nude');
+                            }
+                        });
+                    }
+                };
+
+                img.onerror = fail; // no escape.
+                function fail() {
+                    self.failures++;
+                    self.update();
+                    self.hunt(cb);
+                };
+            },
+
+            random: function (len) {
+                var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+                return len ? chars.charAt(~~(Math.random() * chars.length)) + this.random(len - 1) : "";
+            }
+        };
+
+        $('#random').bind('click', function (e) {
+            Imgur.fetch(50);
+        });
+    });
+</script>
+<script type="text/javascript" src="js/lib/external/nude.js"></script>
+<script type='text/javascript' src='js/lib/external/noworker.nude.js'></script>
+</body>
+</html>
