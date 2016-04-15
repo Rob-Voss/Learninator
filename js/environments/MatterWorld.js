@@ -119,7 +119,9 @@ var Utility = Utility || {},
             this.engine = Engine.create(container, engineOpts);
             this.mouseConstraint = MouseConstraint.create(this.engine);
             this.engine.render.mouse = this.mouseConstraint.mouse;
+            World.add(this.engine.world, this.mouseConstraint);
             this.runner = Engine.run(this.engine);
+            this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
 
             if (useTools) {
                 this.useInspector = useInspector;
@@ -133,14 +135,11 @@ var Utility = Utility || {},
             // this.addWalls();
             this.addAgents();
             // this.agents[0].load('zoo/wateragent.json');
-            this.addEntities(50);
+            this.addEntities(30);
             this.setCollisionEvents();
             this.setEngineEvents();
             this.setWorldEvents();
 
-            this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
-
-            World.add(this.engine.world, this.mouseConstraint);
         }
 
         /**
@@ -411,18 +410,16 @@ var Utility = Utility || {},
                                 World.remove(this.engine.world, bodyA);
                             }
                         }
-                    } else {
-                        console.log('Missing:' + (bodyA) ? 'bodyA' : 'bodyB');
                     }
                 }
             });
 
             Events.on(this.engine, 'collisionActive', (event) => {
-                var pairs = event.pairs;
+                // var pairs = event.pairs;
             });
 
             Events.on(this.engine, 'collisionEnd', (event) => {
-                var pairs = event.pairs;
+                // var pairs = event.pairs;
             });
         }
 
@@ -436,37 +433,39 @@ var Utility = Utility || {},
                 for (let i = 0; i < bodies.length; i++) {
                     let body = bodies[i];
                     if (!body.isStatic) {
+                        let maxX = this.engine.render.bounds.max.x - body.entity.radius,
+                            maxY = this.engine.render.bounds.max.y - body.entity.radius,
+                            minX = this.engine.render.bounds.min.x + body.entity.radius,
+                            minY = this.engine.render.bounds.min.y + body.entity.radius,
+                            spdAdj = body.entity.speed * 0.00025,
+                            newPos = {x:body.position.x, y:body.position.y},
+                            newForce = {x:body.entity.force.x, y:body.entity.force.y};
                         if (body.speed > 2) {
                             body.speed = body.entity.speed;
                         }
                         if (body.velocity.x <= -2 || body.velocity.x >= 2) {
-                            let newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, body.position, newForce);
+                            newForce.x = spdAdj;
                         }
                         if (body.velocity.y <= -2 || body.velocity.y >= 2) {
-                            let newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
-                            this.updateBody(body, body.position, newForce);
+                            newForce.y = spdAdj;
                         }
-                        if (body.position.x > this.engine.render.bounds.max.x - body.entity.radius) {
-                            let newPos = {x:body.position.x - body.entity.radius/2, y:body.position.y},
-                                newForce = {x:-body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.x > maxX) {
+                            newPos.x = body.position.x - body.entity.radius/2;
+                            newForce.x = -spdAdj;
                         }
-                        if (body.position.x < this.engine.render.bounds.min.x + body.entity.radius) {
-                            let newPos = {x:body.position.x + body.entity.radius/2, y:body.position.y},
-                                newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.x < minX) {
+                            newPos.x = body.position.x + body.entity.radius/2;
+                            newForce.x = spdAdj;
                         }
-                        if (body.position.y > this.engine.render.bounds.max.y - body.entity.radius) {
-                            let newPos = {x:body.position.x, y:body.position.y -body.entity.radius/2},
-                                newForce = {x:body.entity.force.x, y:-body.entity.speed * 0.00025};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.y > maxY) {
+                            newPos.y = body.position.y -body.entity.radius/2;
+                            newForce.y = -spdAdj;
                         }
-                        if (body.position.y < this.engine.render.bounds.min.y + body.entity.radius) {
-                            let newPos = {x:body.position.x, y:body.position.y + body.entity.radius/2},
-                                newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.y < minY) {
+                            newPos.y = body.position.y + body.entity.radius/2;
+                            newForce.y = spdAdj;
                         }
+                        this.updateBody(body, newPos, newForce);
                     }
                 }
             });
@@ -513,7 +512,7 @@ var Utility = Utility || {},
         updateBody(body, position, force) {
             // body.entity.shape.position = position;
             body.entity.force = force;
-            Body.setPosition(body, {x:position.x, y:position.y});
+            Body.setPosition(body, {x: position.x, y: position.y});
         }
     }
     global.MatterWorld = MatterWorld;
