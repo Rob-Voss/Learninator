@@ -12,6 +12,65 @@ var Utility = Utility || {};
     let retV = false,
         vVal = 0.0;
 
+    Utility.arrContains = function (arr, elt) {
+        for (var i = 0, n = arr.length; i < n; i++) {
+            if (arr[i] === elt) return true;
+        }
+        return false;
+    };
+
+    // return max and min of a given non-empty array.
+    Utility.maxmin = function (w) {
+        if (w.length === 0) {
+            return {};
+        } // ... ;s
+        var maxv = w[0];
+        var minv = w[0];
+        var maxi = 0;
+        var mini = 0;
+        var n = w.length;
+        for (var i = 1; i < n; i++) {
+            if (w[i] > maxv) {
+                maxv = w[i];
+                maxi = i;
+            }
+            if (w[i] < minv) {
+                minv = w[i];
+                mini = i;
+            }
+        }
+        return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv: maxv - minv};
+    };
+
+    // create random permutation of numbers, in range [0...n-1]
+    Utility.randperm = function (n) {
+        var i = n,
+            j = 0,
+            temp;
+        var array = [];
+        for (var q = 0; q < n; q++)array[q] = q;
+        while (i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        return array;
+    };
+    
+    // sample from list lst according to probabilities in list probs
+    // the two lists are of same size, and probs adds up to 1
+    Utility.weightedSample = function (lst, probs) {
+        var p = randf(0, 1.0);
+        var cumprob = 0.0;
+        for (var k = 0, n = lst.length; k < n; k++) {
+            cumprob += probs[k];
+            if (p < cumprob) {
+                return lst[k];
+            }
+        }
+    };
+
     /**
      * Convert an RGB to Hex color value
      * @param {number} R
@@ -247,7 +306,7 @@ var Utility = Utility || {};
      */
     Utility.getDirection = function (angle) {
         if (angle < 0) {
-            angle = -angle;
+            angle += 360;
         }
         let directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
             octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;

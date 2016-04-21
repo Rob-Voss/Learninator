@@ -160,13 +160,13 @@
                 Puck World
                 <small>Funsies</small>
             </h2>
-            <div class="game-container">
+            <div id="game-container">
                 <div id="draw"></div>
             </div>
         </div>
         <div class="col-md-6">
             Average reward graph (high is good)
-            <div id="flotreward"></div>
+            <div id="flotreward" style="width:600px; height: 400px;"></div>
         </div>
     </div>
     <div class="row">
@@ -312,7 +312,6 @@ Speaking of high-dimensional continuous action spaces, this is what Policy Gradi
 
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
-<script src="js/entities/AgentRLDQN.js"></script>
 
 <script src="js/environments/PuckWorld.js"></script>
 

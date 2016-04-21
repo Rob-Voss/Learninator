@@ -17,12 +17,11 @@
             this.type = 0;
             this.v1 = v1;
             this.v2 = v2;
-            this.position = this.v2.pointBetween(this.v1, 50);
             this.width = (this.v2.x - this.v1.x <= 0) ? 2 : this.v2.x - this.v1.x;
             this.height = (this.v2.y - this.v1.y <= 0) ? 2 : this.v2.y - this.v1.y;
             this.len = this.v2.distanceTo(this.v1);
             this.angle = this.v2.angleBetween(this.v1);
-            this.rotation = this.angle  * Math.PI / 180;
+            this.rotation = this.angle * Math.PI / 180;
 
             this.shape = new PIXI.Graphics();
             this.shape.clear();
@@ -43,7 +42,7 @@
                 wallText.anchor.x = wallText.anchor.y = 0.5;
                 wallText.rotation = ((angle === 180) ? 0 : angle) * Math.PI / 180;
 
-                wallText.position.set(this.position.x + addX, this.position.y + addY);
+                wallText.position.set(this.v1.x + addX, this.v1.y + addY);
                 this.cheatsContainer.addChild(wallText);
                 this.shape.addChild(this.cheatsContainer);
             }

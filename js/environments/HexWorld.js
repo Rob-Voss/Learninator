@@ -22,23 +22,11 @@
                     height: 600
                 },
                 agentOpts = {
-                    brainType: 'RLDQN',
+                    brainType: 'RL.DQNAgent',
                     worker: false,
                     numEyes: 30,
                     numTypes: 5,
                     numActions: 4,
-                    numStates: 30 * 5,
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
                     range: 120,
                     proximity: 120,
                     radius: 10,
@@ -53,8 +41,8 @@
                     }
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
+                    new Agent(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
+                    new Agent(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
                 ],
                 gridOptions = {
                     width: opts.width,

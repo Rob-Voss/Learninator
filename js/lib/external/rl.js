@@ -1063,6 +1063,7 @@ var RL = {};
             }
         }
     };
+    RL.DPAgent = DPAgent;
 
     /**
      * QAgent uses TD (Q-Learning, SARSA)
@@ -1342,9 +1343,9 @@ var RL = {};
             // but this should be okay because their envModelS should simply be -1
             // as initialized, so they will never be predicted to point to any state
             // because they will never be observed, and hence never be added to the model
-            for (var si = 0; si < this.ns; si++) {
-                for (var ai = 0; ai < this.na; ai++) {
-                    var siai = ai * this.ns + si;
+            for (let si = 0; si < this.ns; si++) {
+                for (let ai = 0; ai < this.na; ai++) {
+                    let siai = ai * this.ns + si;
                     if (this.envModelS[siai] === s) {
                         // this state leads to s, add it to priority queue
                         this.pq[siai] += u;
@@ -1353,29 +1354,29 @@ var RL = {};
             }
         },
         /**
-         * Set policy at s to be the action that achieves max_a Q(s,a) first find the maxy Q values
+         * Set policy at s to be the action that achieves max_a Q(s,a)
+         * first find the maxy Q values
          * @param s
          */
         updatePolicy: function (s) {
             var poss = this.env.allowedActions(s),
-                qMax, nMax,
+                qMax = 0.0, nMax = 0.0,
                 qs = [],
                 pSum = 0.0;
-            for (var i = 0, n = poss.length; i < n; i++) {
-                var a = poss[i],
+            for (let i = 0, n = poss.length; i < n; i++) {
+                let a = poss[i],
                     qVal = this.Q[a * this.ns + s];
                 qs.push(qVal);
                 if (i === 0 || qVal > qMax) {
                     qMax = qVal;
                     nMax = 1;
-                }
-                else if (qVal === qMax) {
+                } else if (qVal === qMax) {
                     nMax += 1;
                 }
             }
             // now update the policy smoothly towards the argmaxy actions
-            for (var i = 0, n = poss.length; i < n; i++) {
-                var a = poss[i],
+            for (let i = 0, n = poss.length; i < n; i++) {
+                let a = poss[i],
                     target = (qs[i] === qMax) ? 1.0 / nMax : 0.0,
                     ix = a * this.ns + s;
                 if (this.smoothPolicyUpdate) {
@@ -1389,13 +1390,14 @@ var RL = {};
             }
             if (this.smoothPolicyUpdate) {
                 // renomalize P if we're using smooth policy updates
-                for (var i = 0, n = poss.length; i < n; i++) {
-                    var a = poss[i];
+                for (let i = 0, n = poss.length; i < n; i++) {
+                    let a = poss[i];
                     this.P[a * this.ns + s] /= pSum;
                 }
             }
         }
     };
+    RL.TDAgent = TDAgent;
 
     /**
      *
@@ -1595,6 +1597,7 @@ var RL = {};
             return this.tdError;
         }
     };
+    RL.DQNAgent = DQNAgent;
 
     /**
      * buggy implementation, doesnt work...
@@ -1796,6 +1799,7 @@ var RL = {};
             this.r0 = r1; // store for next update
         }
     };
+    RL.SimpleReinforceAgent = SimpleReinforceAgent;
 
     /**
      * buggy implementation as well, doesn't work
@@ -1956,6 +1960,7 @@ var RL = {};
             this.r0 = r1; // store for next update
         }
     };
+    RL.RecurrentReinforceAgent = RecurrentReinforceAgent;
 
     /**
      * Buggy implementation as well, doesn't work
@@ -2136,6 +2141,7 @@ var RL = {};
             this.r0 = r1; // store for next update
         }
     };
+    RL.DeterministPG = DeterministPG;
 
     /**
      * chromosome implementation using an array of floats
@@ -2249,6 +2255,7 @@ var RL = {};
             pushGeneToNetwork(net, this.gene);
         }
     };
+    RL.Chromosome = Chromosome;
 
     /**
      * Counts the number of weights and biases in the network
@@ -2543,6 +2550,7 @@ var RL = {};
             return bestFitness;
         }
     };
+    RL.GATrainer = GATrainer;
 
     /**
      * A variant of ESP network implemented population of N sub neural nets, each to
@@ -2685,6 +2693,7 @@ var RL = {};
             }
         }
     };
+    RL.ESPNet = ESPNet;
 
     /**
      * An implementation of a variation of Enforced Sub Population neuro evolution algorithm
@@ -2982,15 +2991,11 @@ var RL = {};
             return bestFitness;
         }
     };
+    RL.ESPTrainer = ESPTrainer;
 
-    var _DQNAgent,
-        _DPAgent,
-        _TDAgent,
-        _GATrainer,
-        _ESPTrainer,
-        _ESPNet;
+    var _Agent;
 
-    self.onmessage = function (e) {
+    self.onmessage = (e) => {
         var data = e.data,
             actionIndex;
         if (data.cmd === 'init') {
@@ -3003,236 +3008,68 @@ var RL = {};
             });
             var oOpts = JSON.parse(data.input.opts);
         }
-
-        switch (data.target) {
-            // DQN
-            case 'DQN':
+        var brain = data.target.split('.');
+        switch (brain[0]) {
+            // RL
+            case 'RL':
                 switch (data.cmd) {
                     case 'init':
-                        _DQNAgent = new RL.DQNAgent(oEnv, oOpts);
+                        _Agent = new brain[0][brain[1]](oEnv, oOpts);
 
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'init',
                             msg: 'complete',
-                            input: _DQNAgent.toJSON()
+                            input: _Agent.toJSON()
                         });
                         break;
                     case 'act':
-                        actionIndex = _DQNAgent.act(data.input);
+                        actionIndex = _Agent.act(data.input);
 
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'act',
                             msg: 'complete',
                             input: actionIndex
                         });
                         break;
                     case 'load':
-                        if (_DQNAgent.brain.learning === false) {
-                            _DQNAgent.epsilon = 0.05;
-                            _DQNAgent.alpha = 0;
+                        if (_Agent.brain.learning === false) {
+                            _Agent.epsilon = 0.05;
+                            _Agent.alpha = 0;
                         }
-                        _DQNAgent.fromJSON(JSON.parse(data.input));
+                        _Agent.fromJSON(JSON.parse(data.input));
 
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'load',
                             msg: 'complete',
-                            input: _DQNAgent.toJSON()
+                            input: _Agent.toJSON()
                         });
                         break;
                     case 'learn':
-                        _DQNAgent.learn(data.input);
+                        _Agent.learn(data.input);
 
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'learn',
                             msg: 'complete',
-                            input: _DQNAgent.toJSON()
+                            input: _Agent.toJSON()
                         });
                         break;
                     case 'save':
                         self.postMessage({
                             cmd: 'save',
                             msg: 'complete',
-                            input: _DQNAgent.toJSON()
+                            input: _Agent.toJSON()
                         });
                         break;
                     case 'stop':
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'stop',
                             msg: 'complete',
-                            input: _DQNAgent.toJSON()
+                            input: _Agent.toJSON()
                         });
                         close(); // Terminates the worker.
                         break;
                     default:
-                        self.postMessage({
-                            cmd: 'error',
-                            msg: 'Unknown command: ' + data.cmd
-                        });
-                }
-                break;
-            // DP
-            case 'DP':
-                switch (data.cmd) {
-                    case 'init':
-                        _DPAgent = new RL.DPAgent(oEnv, oOpts);
-
-                        self.postMessage({
-                            cmd: 'init',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'act':
-                        actionIndex = _DPAgent.act(data.input);
-
-                        self.postMessage({
-                            cmd: 'act',
-                            msg: 'complete',
-                            input: actionIndex
-                        });
-                        break;
-                    case 'learn':
-                        _DPAgent.learn(data.input);
-
-                        self.postMessage({
-                            cmd: 'learn',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'stop':
-                        self.postMessage({
-                            cmd: 'stop',
-                            msg: 'complete'
-                        });
-                        close(); // Terminates the worker.
-                        break;
-                    default:
-                        self.postMessage({
-                            cmd: 'error',
-                            msg: 'Unknown command: ' + data.cmd
-                        });
-                }
-                break;
-            // TDTrainer
-            case 'TD':
-                switch (data.cmd) {
-                    case 'init':
-                        _TDAgent = new RL.TDAgent(oEnv, oOpts);
-
-                        self.postMessage({
-                            cmd: 'init',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'act':
-                        actionIndex = _TDAgent.act(data.input);
-
-                        self.postMessage({
-                            cmd: 'act',
-                            msg: 'complete',
-                            input: actionIndex
-                        });
-                        break;
-                    case 'learn':
-                        _TDAgent.learn(data.input);
-
-                        self.postMessage({
-                            cmd: 'learn',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'stop':
-                        self.postMessage({
-                            cmd: 'stop',
-                            msg: 'complete'
-                        });
-                        close(); // Terminates the worker.
-                        break;
-                    default:
-                        self.postMessage({
-                            cmd: 'error',
-                            msg: 'Unknown command: ' + data.cmd
-                        });
-                }
-                break;
-            // GA
-            case 'GA':
-                switch (data.cmd) {
-                    case 'init':
-                        _GATrainer = new RL.GATrainer(oEnv, oOpts);
-
-                        self.postMessage({
-                            cmd: 'init',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'act':
-                        actionIndex = _GATrainer.act(data.input);
-
-                        self.postMessage({
-                            cmd: 'act',
-                            msg: 'complete',
-                            input: actionIndex
-                        });
-                        break;
-                    case 'learn':
-                        _GATrainer.learn(data.input);
-
-                        self.postMessage({
-                            cmd: 'learn',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'stop':
-                        self.postMessage({
-                            cmd: 'stop',
-                            msg: 'complete'
-                        });
-                        close(); // Terminates the worker.
-                        break;
-                    default:
-                        self.postMessage({
-                            cmd: 'error',
-                            msg: 'Unknown command: ' + data.cmd
-                        });
-                }
-                break;
-            // ESP
-            case 'ESP':
-                switch (data.cmd) {
-                    case 'init':
-                        _ESPTrainer = new RL.ESPTrainer(oEnv, oOpts);
-
-                        self.postMessage({
-                            cmd: 'init',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'act':
-                        actionIndex = _ESPTrainer.act(data.input);
-
-                        self.postMessage({
-                            cmd: 'act',
-                            msg: 'complete',
-                            input: actionIndex
-                        });
-                        break;
-                    case 'learn':
-                        _ESPTrainer.learn(data.input);
-
-                        self.postMessage({
-                            cmd: 'learn',
-                            msg: 'complete'
-                        });
-                        break;
-                    case 'stop':
-                        self.postMessage({
-                            cmd: 'stop',
-                            msg: 'complete'
-                        });
-                        close(); // Terminates the worker.
-                        break;
-                    default:
-                        self.postMessage({
+                        this.postMessage({
                             cmd: 'error',
                             msg: 'Unknown command: ' + data.cmd
                         });
@@ -3244,32 +3081,10 @@ var RL = {};
 // exports
     if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
         module.exports = {
-            // GA plugin
-            Chromosome: Chromosome,
-            ESPNet: ESPNet,
-            ESPTrainer: ESPTrainer,
-            GATrainer: GATrainer,
-
-            // Agents
-            DPAgent: DPAgent,
-            TDAgent: TDAgent,
-            DQNAgent: DQNAgent
+            RL: RL
         };
     } else {
-        // GA plugin
-        global.Chromosome = Chromosome;
-        global.ESPNet = ESPNet;
-        global.ESPTrainer = ESPTrainer;
-        global.GATrainer = GATrainer;
-
-        // Agents
-        global.DPAgent = DPAgent;
-        global.TDAgent = TDAgent;
-        global.DQNAgent = DQNAgent;
-
-//  global.SimpleReinforceAgent = SimpleReinforceAgent;
-//  global.RecurrentReinforceAgent = RecurrentReinforceAgent;
-//  global.DeterministPG = DeterministPG;
+        global.RL = RL;
     }
 
 })(RL);

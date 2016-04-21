@@ -418,7 +418,7 @@ var RenderPixi = {};
             RenderPixi.grid(engine, engine.broadphase, renderer.context);
         }
         if (options.showDebug) {
-            RenderPixi.debug(engine, context);
+            RenderPixi.debug(engine, renderer.context);
         }
         if (options.hasBounds) {
             // revert view transforms

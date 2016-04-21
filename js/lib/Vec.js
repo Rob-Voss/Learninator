@@ -25,7 +25,8 @@
             this.vy = vy;
             this.ax = ax;
             this.ay = ay;
-            this.angle = this.getAngle();
+            this.angle = Math.atan2(y, x);
+            this.direction = 0;
 
             return this;
         }
@@ -68,53 +69,66 @@
          * This will add the velocity x,y to the position x,y
          * @returns {Vec}
          */
-        advance() {
+        advance(speed) {
+            let oldPos = this.clone();
             this.x += this.vx;
             this.y += this.vy;
-
-            this.angle = this.getAngle();
+            this.angle = Math.atan2(this.y, this.x);
+            this.ax = speed * Math.cos(this.angle);
+            this.ay = speed * Math.sin(this.angle);
+            this.direction = oldPos.angleBetween(this);
 
             return this;
         }
 
         /**
          * This will add the velocity x,y to the position x,y
-         * @param {number} angle
+         * @param {number} angle in radians
          * @param {number} speed
          * @returns {Vec}
          */
         advanceAtAngle(angle, speed) {
-            let radians = angle * toRadian;
-            this.vx = Math.cos(radians) * speed;
-            this.vy = Math.sin(radians) * speed;
+            let oldPos = this.clone();
+            this.vx = speed * Math.cos(angle);
+            this.vy = speed * Math.sin(angle);
             this.x += this.vx;
             this.y += this.vy;
-
-            this.angle = this.getAngle();
+            this.angle = Math.atan2(this.y, this.x);
+            this.ax = speed * Math.cos(this.angle);
+            this.ay = speed * Math.sin(this.angle);
+            this.direction = oldPos.angleBetween(this);
 
             return this;
         }
 
         /**
          * Get the angle of this Vec
+         *       90
+         *       ^
+         * 180 <-|-> 0/360
+         *       v
+         *       270
+         * @param {boolean} inDegree
          * @returns {number}
          */
-        getAngle() {
-            return Math.atan2(this.y, this.x) * toDegree;
+        getAngle(inDegree = false) {
+            this.angle = Math.atan2(this.y, this.x);
+
+            return (inDegree) ? this.angle * toDegree : this.angle;
         }
 
         /**
          * Calculate angle between any two vectors.
          * @param {Vec} v First vec
+         * @param {boolean} inDegree
          * @return {number} Angle between vectors.
          */
-        angleBetween(v) {
+        angleBetween(v, inDegree = false) {
             let v1 = this.clone(),
                 v2 = v.clone(),
-                y = v2.sub(v1).y,
-                x = v2.sub(v1).x;
+                angle = Math.atan2(v2.sub(v1).y, v2.sub(v1).x);
 
-            return Math.atan2(y, x) * toDegree;
+            return (inDegree) ? angle * toDegree : angle;
         }
 
         /**
@@ -420,14 +434,6 @@
         }
 
         /**
-         * Get the angle of this Vec
-         * @returns {number}
-         */
-        radians() {
-            return this.angle() * toRadian;
-        }
-
-        /**
          * Reflect this vector on an arbitrary axis.
          * @param {Vec} axis The vector representing the axis.
          * @return {Vec} Returns itself.
@@ -559,6 +565,9 @@
          * @return {Vec}
          */
         sub(v) {
+            if (typeof v === 'undefined') {
+                console.log("Can't sub a vector that is not a vector.");
+            }
             return new Vec(this.x - v.x, this.y - v.y);
         }
 

@@ -158,7 +158,7 @@
          * @returns {Entity}
          */
         getGridLocation(entity) {
-            if (entity.type !== undefined) {
+            if (entity.type !== undefined && entity.type !== 0) {
                 return this.pixelToCell(entity.position.x, entity.position.y);
             }
         }

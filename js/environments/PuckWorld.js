@@ -1,5 +1,5 @@
 var PuckWorld = PuckWorld || {},
-    AgentRLDQN = AgentRLDQN || {},
+    Agent = Agent || {},
     Utility = Utility || {},
     Vec = Vec || {};
 
@@ -26,22 +26,8 @@ var PuckWorld = PuckWorld || {},
         this.pause = false;
 
         this.agents = [
-            new AgentRLDQN(new Vec(300, 300), {
-                brainType: 'RLDQN',
-                env: {
-                    getMaxNumActions: function () {
-                        return self.getMaxNumActions();
-                    },
-                    getNumStates: function () {
-                        return self.getNumStates();
-                    },
-                    getState: function () {
-                        return self.getState();
-                    },
-                    reset: function () {
-                        return self.reset();
-                    }
-                },
+            new Agent(new Vec(300, 300), {
+                brainType: 'RL.DQNAgent',
                 numActions: 4,
                 numStates: 0,
                 numEyes: 0,

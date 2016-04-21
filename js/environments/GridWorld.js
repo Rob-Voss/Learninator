@@ -17,21 +17,6 @@ var GridWorld = GridWorld || {},
      */
     function GridWorld() {
         let self = this;
-        this.rs = {};
-        this.trs = {};
-        this.tvs = {};
-        this.pas = {};
-        this.selected = -1;
-        this.Rarr = null;
-        this.Aarr = null;
-        this.sid = -1;
-        this.action = null;
-        this.state = 0;
-        this.stepsPerTick = 1;
-        this.nStepsHistory = [];
-        this.pause = false;
-        this.numItems = 0;
-
         this.maze = new Maze({
             xCount: 10,
             yCount: 10,
@@ -44,11 +29,26 @@ var GridWorld = GridWorld || {},
         this.gH = this.grid.yCount;
         this.gW = this.grid.xCount;
         this.gS = this.grid.yCount * this.grid.xCount;
-        this.cs = this.grid.cellWidth;  // cell size
+        // cell size
+        this.cs = this.grid.cellWidth;
+        this.rs = {};
+        this.trs = {};
+        this.tvs = {};
+        this.pas = {};
+        this.selected = -1;
+        this.Rarr = null;
+        this.Aarr = [];
+        this.sid = -1;
+        this.action = null;
+        this.state = 0;
+        this.stepsPerTick = 1;
+        this.nStepsHistory = [];
+        this.pause = false;
+        this.numItems = 0;
         this.agents = [
-            new AgentRLTD(new Vec(50, 50),
+            new Agent(new Vec(50, 50),
                 {
-                    brainType: 'RLTD',
+                    brainType: 'RL.TDAgent',
                     env: {
                         allowedActions: function (s) {
                             return self.allowedActions(s);
@@ -97,13 +97,14 @@ var GridWorld = GridWorld || {},
                     worker: false,
                     cheats: {
                         id: false,
-                        name: true,
+                        name: false,
                         gridLocation: false,
                         position: false
                     }
                 })
         ];
 
+        this.reset();
         this.initGrid();
         this.drawGrid();
         this.initFlot();
@@ -167,8 +168,8 @@ var GridWorld = GridWorld || {},
             .attr('cy', sy * this.cs + this.cs / 2);
 
         // updates the grid with current state of world/agent
-        for (var y = 0; y < this.gH; y++) {
-            for (var x = 0; x < this.gH; x++) {
+        for (var x = 0; x < this.gW; x++) {
+            for (var y = 0; y < this.gH; y++) {
                 var xcoord = x * this.cs,
                     ycoord = y * this.cs,
                     r = 255,
@@ -377,8 +378,8 @@ var GridWorld = GridWorld || {},
             gh = this.gH, // height in cells
             gw = this.gW, // width in cells
             gs = this.gW * this.gH, // total number of cells
-            w = 600,
-            h = 600,
+            w = this.gW * this.cs,
+            h = this.gH * this.cs,
             svg = d3elt.append('svg')
                 .attr('width', w)
                 .attr('height', h)
@@ -711,29 +712,28 @@ var GridWorld = GridWorld || {},
      *
      */
     GridWorld.prototype.tick = function () {
-        let self = this;
-        if (self.sid === -1) {
-            self.sid = setInterval(function () {
-                for (let k = 0; k < self.stepsPerTick; k++) {
+        if (this.sid === -1) {
+            this.sid = setInterval(() => {
+                for (let k = 0; k < this.stepsPerTick; k++) {
                     // ask agent for an action
-                    let agent = self.agents[0],
-                        a = agent.brain.act(self.state),
+                    let agent = this.agents[0],
+                        a = agent.brain.act(this.state),
                     // run it through environment dynamics
-                        obs = self.sampleNextState(self.state, a);
+                        obs = this.sampleNextState(this.state, a);
 
                     // allow opportunity for the agent to learn
                     agent.brain.learn(obs.r);
                     // evolve environment to next state
-                    self.state = obs.ns;
+                    this.state = obs.ns;
 
                     agent.nStepsCounter += 1;
                     if (typeof obs.resetEpisode !== 'undefined') {
                         agent.score += 1;
                         agent.brain.resetEpisode();
 
-                        agent.gridLocation = self.grid.getCellAt(0, 0);
-                        agent.position.set(self.grid.cellWidth / 2, self.grid.cellHeight / 2);
-                        self.state = self.startState();
+                        agent.gridLocation = this.grid.getCellAt(0, 0);
+                        agent.position.set(this.grid.cellWidth / 2, this.grid.cellHeight / 2);
+                        this.state = this.startState();
 
                         // record the reward achieved
                         if (agent.nStepsHistory.length >= agent.nflot) {
@@ -742,21 +742,20 @@ var GridWorld = GridWorld || {},
                         agent.nStepsHistory.push(agent.nStepsCounter);
                         agent.nStepsCounter = 0;
                     } else {
-                        agent.gridLocation = self.grid.getCellAt(self.sToX(self.state), self.sToY(self.state));
-                        let x = agent.gridLocation.corners[2].x - (self.grid.cellWidth / 2),
-                            y = agent.gridLocation.corners[2].y - (self.grid.cellHeight / 2);
+                        agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+                        let x = agent.gridLocation.corners[2].x - (this.grid.cellWidth / 2),
+                            y = agent.gridLocation.corners[2].y - (this.grid.cellHeight / 2);
                         agent.position.set(x, y);
                     }
                 }
 
-                self.drawGrid();
+                this.drawGrid();
             }, 20);
         } else {
-            clearInterval(self.sid);
-            self.sid = -1;
+            clearInterval(this.sid);
+            this.sid = -1;
         }
     };
-
     global.GridWorld = GridWorld;
 
 }(this));

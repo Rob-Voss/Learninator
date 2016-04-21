@@ -31,7 +31,7 @@
          * @param {Entity} target
          */
         this.check = function (target) {
-            var region, collisionObj = {}, self = this;
+            var region, self = this;
             target.collisions = [];
 
             /**
@@ -39,35 +39,32 @@
              * @param {Entity} entity
              */
             function checkIt(entity) {
+                let collisionObj = false;
                 if (entity === target) {
                     return;
                 }
-                // If both entities have a radius
-                if (entity.radius !== undefined && target.radius !== undefined) {
-                    // Use the circle collision check
+
+                if (target.maxPos !== undefined && entity.type !== 0) {
+                    collisionObj = self.circleLineCollide({v1: target.minPos, v2: target.maxPos}, entity.position, entity.radius);
+                } else if (target.maxPos !== undefined && entity.type === 0) {
+                    collisionObj = self.lineIntersect(target.minPos, target.maxPos, entity.v1, entity.v2);
+                } else if (entity.type !== 0 && target.type !== 0) {
                     collisionObj = self.circleCircleCollide(entity, target);
-                } else if (entity.v1 !== undefined && target.radius !== undefined) {
-                    // Is it an entity versus a wall?
-                    collisionObj = self.circleLineCollide(entity, target.position, target.radius);
+                } else if (target.type !== 0 && entity.type === 0) {
+                    collisionObj = self.linePointIntersect(entity.v1, entity.v2, target.position, target.radius);
                 }
 
                 if (collisionObj) {
+                    collisionObj.entity = entity;
                     collisionObj.id = entity.id;
                     collisionObj.type = entity.type;
                     target.collisions.push(collisionObj);
-
-                    return collisionObj;
                 }
-                // Nada so return
-                return;
             }
 
             switch (this.cdType) {
             case 'quad':
                 region = this.tree.retrieve(target, checkIt);
-                if (region) {
-                    console.log('Region:' + region);
-                }
                 break;
             case 'grid':
                 if (target.gridLocation) {
@@ -180,101 +177,12 @@
                 result.pY = u2;
                 result.vecIs = [vI1, vI2];
                 result.vecI = vI1.pointBetween(vI2, 50);
+                result.vecI.vx = v0.vx;
+                result.vecI.vy = v0.vy;
                 result.distance = v0.distanceTo(result.vecI);
             }
 
             return result;
-        };
-
-        /**
-         * Check for a collison between a line and circle
-         * @param {Wall} line
-         * @param {Entity} circle
-         * @param {Object} nearest
-         * @returns {boolean}
-         */
-        this.lineCircleCollide = function (line, circle, nearest) {
-            let tmp = {x: 0, y: 0},
-                collisionObj = {x: 0, y: 0, vx: 0, vy: 0};
-            //check to see if start or end points lie within circle
-            if (this.pointCircleCollide(line.v1, circle)) {
-                if (nearest) {
-                    nearest.x = line.v1.x;
-                    nearest.y = line.v1.y;
-                }
-                return true;
-            }
-            if (this.pointCircleCollide(line.v2, circle)) {
-                if (nearest) {
-                    nearest.x = line.v2.x;
-                    nearest.y = line.v2.y;
-                }
-                return true;
-            }
-
-            var x1 = line.v1.x,
-                y1 = line.v1.y,
-                x2 = line.v2.x,
-                y2 = line.v2.y,
-                cx = circle.position.x,
-                cy = circle.position.y,
-            // vector distance
-                dx = x2 - x1,
-                dy = y2 - y1,
-            // vector lc
-                lcx = cx - x1,
-                lcy = cy - y1,
-            // vector lc
-                lcx2 = cx - x2,
-                lcy2 = cy - y2,
-            // project lc onto d, resulting in vector p
-                dLen2 = dx * dx + dy * dy, //len2 of d
-                px = dx,
-                py = dy;
-            if (dLen2 > 0) {
-                let dp = (lcx * dx + lcy * dy) / dLen2,
-                    dp2 = (lcx2 * dx + lcy2 * dy) / dLen2;
-                px *= dp;
-                py *= dp;
-            }
-
-            if (!nearest) {
-                nearest = tmp;
-            }
-            nearest.x = x1 + px;
-            nearest.y = y1 + py;
-
-            //len2 of p
-            let pLen2 = px * px + py * py;
-            let cos = Math.cos(line.rotation),
-                sin = Math.sin(line.rotation),
-            //get position of ball, relative to line
-                gx1 = circle.position.x - line.v1.x,
-                gy1 = circle.position.y - line.v1.y,
-            //rotate coordinates
-                gy2 = cos * gy1 - sin * gx1,
-            //rotate velocity
-                vy1 = cos * circle.position.vy - sin * circle.position.vx;
-            //perform bounce with rotated values
-            if (gy2 > -circle.radius && gy2 < vy1) {
-                //rotate coordinates
-                let gx2 = cos * gx1 + sin * gy1,
-                //rotate velocity
-                    vx1 = cos * circle.position.vx + sin * circle.position.vy;
-                gy2 = -circle.radius;
-                vy1 *= -0.6;
-                //rotate everything back
-                gx1 = cos * gx2 - sin * gy2;
-                gy1 = cos * gy2 + sin * gx2;
-                collisionObj.vecI = new Vec(line.v1.x + gx1, line.v1.y + gy1, cos * vx1 - sin * vy1, cos * vy1 + sin * vx1);
-            }
-            //check collision
-            let collided = this.pointCircleCollide(nearest, circle) && (pLen2 <= dLen2) && ((px * dx + py * dy) >= 0);
-
-            if (collided) {
-                return collisionObj;
-            }
-            return false;
         };
 
         /**
@@ -289,8 +197,7 @@
             let l = pathV2.sub(pathV1),
                 ls = pathV1.sub(lineV1),
                 es = lineV2.sub(lineV1),
-                denom = es.y * l.x - es.x * l.y,
-                collisionObj;
+                denom = es.y * l.x - es.x * l.y;
 
             if (denom === 0.0) {
                 // They be parallel lines if it be this yar!
@@ -302,14 +209,11 @@
                 vecI = new Vec(pathV1.x + pX * l.x, pathV1.y + pX * l.y);
 
             if (pX > 0.0 && pX < 1.0 && pY > 0.0 && pY < 1.0) {
-                // Intersection point
-                collisionObj = {
+                return {
                     vecI: vecI,
                     vecX: pX,
-                    distance: pathV2.distanceTo(vecI)
+                    distance: pathV1.distanceTo(vecI)
                 };
-
-                return collisionObj;
             }
         };
 
@@ -318,10 +222,10 @@
          * @param {Vec} v1 From position
          * @param {Vec} v2 To position
          * @param {Vec} v0 Target position
-         * @param {Number} rad Target radius
+         * @param {Number} radius Target radius
          * @returns {{vecI: Vec, vecX: number, distance: number}|boolean}
          */
-        this.linePointIntersect = function (v1, v2, v0, rad) {
+        this.linePointIntersect = function (v1, v2, v0, radius) {
             // Create a perpendicular vector
             var x = v2.y - v1.y,
                 y = v2.x - v1.x,
@@ -331,7 +235,7 @@
                 d = Math.abs(y * xDiff - yDiff * x);
 
             d = d / v.length();
-            if (d > rad * rad) {
+            if (d > radius * radius) {
                 return false;
             }
 
@@ -342,11 +246,12 @@
                 vecX = (Math.abs(y) > Math.abs(x)) ? (vecI.x - v1.x) / (y) : (vecI.y - v1.y) / (x);
 
             if (vecX > 0.0 && vecX < 1.0) {
-                return  {
+                let result = {
                     vecI: vecI,
                     vecX: vecX,
                     distance: v0.distanceTo(vecI)
                 };
+                return result;
             }
         };
 
@@ -362,7 +267,8 @@
             }
             var dx = circle.position.x - point.x,
                 dy = circle.position.y - point.y,
-                collided = dx * dx + dy * dy <= circle.radius * circle.radius;
+                collided = dx * dx + dy * dy <= circle.radius * circle.radius,
+                distance = circle.position.distanceTo(point);
 
             return collided;
         };
@@ -384,8 +290,8 @@
             // Collide with walls
             if (walls) {
                 for (var i = 0, wl = walls.length; i < wl; i++) {
-                    var wall = walls[i],
-                        wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
+                    var wall = walls[i];
+                    wResult = this.lineIntersect(v1, v2, wall.v1, wall.v2);
                     if (wResult) {
                         wResult.target = wall;
                         if (!minRes) {
@@ -405,7 +311,7 @@
             if (entities) {
                 for (let [id, entity] of entities.entries()) {
                     if (entity.type !== 0) {
-                        var iResult = this.linePointIntersect(v1, v2, entity.position, entity.radius);
+                        iResult = this.circleLineCollide({v1:v1,v2:v2}, entity.position, entity.radius);
                         if (iResult) {
                             iResult.target = entity;
                             if (!minRes) {

@@ -29,13 +29,13 @@ var Utility = Utility || {},
         container = document.body.querySelector('#game-container'),
         graphContainer = document.body.querySelector('#flotreward'),
 
-    // Collison Category Groups
+    // Collision Category Groups
         wallCategory = 0x0001,
         nomCategory = 0x0002,
         gnarCategory = 0x0004,
         agentCategory = 0x0008,
 
-    // Collison Category Colors
+    // Collision Category Colors
         redColor = '#C44D58',
         greenColor = '#C7F464',
         blueColor = '#4ECDC4',
@@ -213,11 +213,11 @@ var Utility = Utility || {},
                             x: Utility.randi(50, this.width - 50),
                             y: Utility.randi(50, this.height - 50)
                         },
-                        friction: 0,
+                        friction: 0.1,
                         frictionAir: Utility.randf(0.0, 0.9),
-                        frictionStatic: 0,
-                        restitution: 0,
-                        density: Utility.randf(0.001, 0.01)
+                        frictionStatic: 0.5,
+                        restitution: 1,
+                        density: Utility.randf(0.005, 0.01)
                     },
                     type = Utility.randi(1, 3);
                 if (type === 1) {

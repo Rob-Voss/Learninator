@@ -22,9 +22,8 @@
                     height: 600
                 },
                 agents = [
-                    new AgentTD(new Vec(1, 1), {
-                        brainType: 'TD',
-                        env: JSON.stringify({}),
+                    new Agent(new Vec(1, 1), {
+                        brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
                         numTypes: 3,
                         range: 85,
@@ -41,9 +40,8 @@
                             id: false
                         }
                     }),
-                    new AgentTD(new Vec(1, 1), {
-                        brainType: 'TD',
-                        env: JSON.stringify({}),
+                    new Agent(new Vec(1, 1), {
+                        brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
                         numTypes: 3,
                         range: 85,
@@ -80,20 +78,7 @@
                         grid: true,
                         walls: false
                     },
-                    numEntities: 30,
-                    entityOpts: {
-                        radius: 10,
-                        collision: true,
-                        interactive: true,
-                        useSprite: false,
-                        movingEntities: false,
-                        cheats: {
-                            id: false,
-                            name: false,
-                            gridLocation: false,
-                            position: false
-                        }
-                    }
+                    numEntities: 30
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);

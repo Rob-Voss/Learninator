@@ -56,31 +56,45 @@
             }
 
             this.id = Utility.guid();
+            this.options = opts || {
+                    radius: 10,
+                    collision: true,
+                    interactive: false,
+                    useSprite: false,
+                    moving: true,
+                    cheats: {
+                        name: false,
+                        id: false,
+                        direction: false,
+                        gridLocation: false,
+                        position: false
+                    }
+                };
+            // Remember the old position and angle
             this.position = position;
-            this.angle = this.position.getAngle();
-            this.radius = Utility.getOpt(opts, 'radius', undefined);
-            this.width = Utility.getOpt(opts, 'width', undefined);
-            this.height = Utility.getOpt(opts, 'height', undefined);
-            this.size = this.radius || this.width;
-            this.interactive = Utility.getOpt(opts, 'interactive', false);
-            this.collision = Utility.getOpt(opts, 'collision', true);
-            this.moving = Utility.getOpt(opts, 'moving', false);
-            this.useSprite = Utility.getOpt(opts, 'useSprite', false);
+            this.oldPosition = this.position.clone();
+            this.oldAngle = this.position.angle;
 
-            this.cheats = Utility.getOpt(opts, 'cheats', false);
-            this.gridLocation = {};
-            this.cleanUp = false;
-            this.direction = Utility.getDirection(this.angle);
+            this.radius = Utility.getOpt(this.options, 'radius', undefined);
+            this.width = Utility.getOpt(this.options, 'width', undefined);
+            this.height = Utility.getOpt(this.options, 'height', undefined);
+            this.size = this.radius * 2 || this.width;
+            this.interactive = Utility.getOpt(this.options, 'interactive', false);
+            this.collision = Utility.getOpt(this.options, 'collision', true);
+            this.moving = Utility.getOpt(this.options, 'moving', false);
+            this.useSprite = Utility.getOpt(this.options, 'useSprite', false);
+
+            this.cheats = Utility.getOpt(this.options, 'cheats', false);
+            this.direction = Utility.getDirection(this.position.getAngle(true));
 
             this.age = 0;
-
-            // Remember the old position and angle
-            this.oldPos = this.position.clone();
-            this.oldAngle = 0;
-
+            this.speed = 1;
+            this.force = new Vec(0, 0);
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.collisions = [];
+            this.gridLocation = {};
+            this.cleanUp = false;
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
@@ -182,6 +196,13 @@
                 this.cheatsContainer.addChild(this.idText);
             }
 
+            // If cheats are on then show the entities id
+            if (this.cheats.direction && this.directionText === undefined) {
+                this.directionText = new PIXI.Text(this.direction, fontOpts);
+                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                this.cheatsContainer.addChild(this.directionText);
+            }
+
             return this;
         }
 
@@ -190,7 +211,7 @@
          * @returns {Entity}
          */
         updateCheats() {
-            let posText, gridText, nameText, idText;
+            let posText, gridText, nameText, idText, directionText;
             // If cheats are on then show the entities grid location and x,y coords
             if (this.cheats.gridLocation) {
                 if (this.gridText === undefined) {
@@ -255,6 +276,22 @@
                 }
             }
 
+            // If cheats are on then show the entities direction
+            if (this.cheats.direction) {
+                if (this.directionText === undefined) {
+                    this.addCheats();
+                }
+                directionText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.directionText));
+                directionText.text = this.direction;
+                directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
+            } else {
+                if (this.directionText !== undefined) {
+                    let index = this.cheatsContainer.getChildIndex(this.directionText);
+                    this.cheatsContainer.removeChildAt(index);
+                    this.directionText = undefined;
+                }
+            }
+
             return this;
         }
 
@@ -271,6 +308,15 @@
                 this.shape.beginFill(this.color);
                 this.shape.drawCircle(this.position.x, this.position.y, this.radius);
                 this.shape.endFill();
+                if (this.cheats.direction) {
+                    let dirV = new Vec(
+                        this.position.x + this.radius * Math.sin(this.position.direction),
+                        this.position.y + this.radius * Math.cos(this.position.direction)
+                    );
+                    this.shape.lineStyle(2, 0x000000, 2);
+                    this.shape.moveTo(this.position.x, this.position.y);
+                    this.shape.lineTo(dirV.x, dirV.y);
+                }
             }
 
             if (this.cheats) {
@@ -284,66 +330,75 @@
          * Move around
          * @returns {Entity}
          */
-        move(world) {
-            this.oldPos = this.position.clone();
-            this.angle = this.position.getAngle();
-            this.direction = Utility.getDirection(this.position.angle);
-            this.position.advance();
+        move() {
+            this.oldPosition = this.position.clone();
+            this.oldAngle = this.position.angle;
 
-            if (world.check(this)) {
-                for (let i = 0; i < this.collisions.length; i++) {
-                    let collisionObj = this.collisions[i];
-                    if (world.population.has(collisionObj.id)) {
-                        let entity = world.population.get(collisionObj.id);
-                        // Wall
-                        if (collisionObj.type === 0) {
-                            let between = this.position.vectorBetween(this.position, collisionObj.vecI),
+            for (let i = 0; i < this.collisions.length; i++) {
+                let collisionObj = this.collisions[i];
+                if (collisionObj.distance <= this.radius) {
+                    switch (collisionObj.type) {
+                        case 0:
+                            // Wall
                             // Get the vector that points out from the surface the circle is bouncing on.
-                                bounceLineNormal = between.unitVector(),
+                            let bounceLineNormal = this.position.vectorBetween(this.position, collisionObj.vecI).unitVector(),
                             // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
                                 dot = this.position.vx * bounceLineNormal.x + this.position.vy * bounceLineNormal.y;
 
-                            this.position.vx -= 2 * dot * bounceLineNormal.x;
-                            this.position.vy -= 2 * dot * bounceLineNormal.y;
-                        } else if (collisionObj.type === 1 || collisionObj.type === 2) {
-                            this.position.vx = collisionObj.target.vx;
-                            this.position.vy = collisionObj.target.vy;
-                            entity.position.vx = collisionObj.entity.vx;
-                            entity.position.vy = collisionObj.entity.vy;
-                        }
+                            this.force.x -= 2 * dot * bounceLineNormal.x;
+                            this.force.y -= 2 * dot * bounceLineNormal.y;
+
+                            if (this.force.x > 2 || this.force.y > 2 || this.force.x < -2 || this.force.y < -2) {
+                                this.force.scale(0.095);
+                            }
+                            break;
+                        case 1:
+                        case 2:
+                            // Noms or Gnars
+                            this.force.x = collisionObj.target.vx;
+                            this.force.y = collisionObj.target.vy;
+                            break;
+                        case 3:
+                        case 4:
+                            break;
                     }
                 }
             }
 
-            // Handle boundary conditions.. bounce Agent
-            let top = world.height - (world.height - this.radius),
-                bottom = world.height - this.radius,
-                left = world.width - (world.width - this.radius),
-                right = world.width - this.radius;
-            if (this.position.x < left) {
-                this.position.x = left;
-                this.position.vx *= -1;
+            // Execute entity's desired action
+            this.action = (this.age % 1600) ? Utility.randi(0, 4) : this.action;
+            switch (this.action) {
+                case 0: // Left
+                    this.force.x += -this.speed * 0.095;
+                    break;
+                case 1: // Right
+                    this.force.x += this.speed * 0.095;
+                    break;
+                case 2: // Up
+                    this.force.y += -this.speed * 0.095;
+                    break;
+                case 3: // Down
+                    this.force.y += this.speed * 0.095;
+                    break;
+                // case 4: // Down
+                //     this.force.y += this.speed * 0.95;
+                //     break;
+                // case 5: // Down
+                //     this.force.y += this.speed * 0.95;
+                //     break;
+                // case 6: // Down
+                //     this.force.y += this.speed * 0.95;
+                //     break;
+                // case 7: // Down
+                //     this.force.y += this.speed * 0.95;
+                //     break;
             }
 
-            if (this.position.x > right) {
-                this.position.x = right;
-                this.position.vx *= -1;
-            }
-
-            if (this.position.y < top) {
-                this.position.y = top;
-                this.position.vy *= -1;
-            }
-
-            if (this.position.y > bottom) {
-                this.position.y = bottom;
-                this.position.vy *= -1;
-            }
-
-
-            if (this.useSprite) {
-                this.sprite.position.set(this.position.x, this.position.y);
-            }
+            // Forward the agent by force
+            this.position.vx = this.force.x;
+            this.position.vy = this.force.y;
+            this.position.advance(this.speed);
+            this.direction = Utility.getDirection(this.position.direction);
 
             return this;
         }
@@ -353,10 +408,9 @@
          * @param {World} world
          * @returns {Entity}
          */
-        tick(world) {
+        tick() {
             this.age += 1;
-
-            this.move(world);
+            this.move();
 
             return this;
         }
