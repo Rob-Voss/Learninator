@@ -26,9 +26,10 @@
             this.shape = new PIXI.Graphics();
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000, 1);
-            this.shape.moveTo(this.v1.x, this.v1.y);
-            this.shape.lineTo(this.v2.x, this.v2.y);
+            this.shape.drawRect(this.v1.x, this.v1.y, this.width, this.height);
             this.shape.endFill();
+            this.bounds = this.shape.getBounds();
+
             if (cheats) {
                 this.cheatsContainer = new PIXI.Container();
                 let wallText = new PIXI.Text(this.id.substring(0, 10), {
@@ -45,6 +46,9 @@
                 wallText.position.set(this.v1.x + addX, this.v1.y + addY);
                 this.cheatsContainer.addChild(wallText);
                 this.shape.addChild(this.cheatsContainer);
+                this.shape.lineStyle(1, 0xFF0000, 1);
+                this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                this.shape.endFill();
             }
 
             return this;

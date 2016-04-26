@@ -61,19 +61,20 @@
                     collision: true,
                     interactive: false,
                     useSprite: false,
-                    moving: true,
+                    moving: false,
                     cheats: {
-                        name: false,
                         id: false,
+                        name: false,
                         direction: false,
-                        gridLocation: false,
-                        position: false
+                        position: false,
+                        gridLocation: false
                     }
                 };
             // Remember the old position and angle
             this.position = position;
             this.oldPosition = this.position.clone();
             this.oldAngle = this.position.angle;
+            this.force = new Vec(0, 0);
 
             this.radius = Utility.getOpt(this.options, 'radius', undefined);
             this.width = Utility.getOpt(this.options, 'width', undefined);
@@ -89,7 +90,6 @@
 
             this.age = 0;
             this.speed = 1;
-            this.force = new Vec(0, 0);
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.collisions = [];
@@ -113,6 +113,17 @@
             } else {
                 this.shape = new PIXI.Graphics();
                 this.shape.addChild(this.cheatsContainer);
+
+                this.shape.clear();
+                this.shape.beginFill(this.color);
+                this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+                this.shape.endFill();
+                this.bounds = this.shape.getBounds();
+                if (this.cheats.bounds) {
+                    this.shape.lineStyle(1, 0xFF0000, 1);
+                    this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                    this.shape.endFill();
+                }
                 entity = this.shape;
             }
 
@@ -304,10 +315,16 @@
                 this.sprite.position.set(this.position.x, this.position.y);
             } else {
                 this.shape.clear();
-                this.shape.lineStyle(1, 0x000000);
                 this.shape.beginFill(this.color);
                 this.shape.drawCircle(this.position.x, this.position.y, this.radius);
                 this.shape.endFill();
+                this.bounds = this.shape.getBounds();
+                if (this.cheats.bounds) {
+                    this.shape.lineStyle(1, 0xFF0000, 1);
+                    this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                    this.shape.endFill();
+                }
+
                 if (this.cheats.direction) {
                     let dirV = new Vec(
                         this.position.x + this.radius * Math.sin(this.position.direction),
@@ -331,24 +348,21 @@
          * @returns {Entity}
          */
         move() {
-            this.oldPosition = this.position.clone();
-            this.oldAngle = this.position.angle;
-
             for (let i = 0; i < this.collisions.length; i++) {
                 let collisionObj = this.collisions[i];
                 if (collisionObj.distance <= this.radius) {
-                    switch (collisionObj.type) {
+                    switch (collisionObj.entity.type) {
                         case 0:
                             // Wall
                             // Get the vector that points out from the surface the circle is bouncing on.
-                            let bounceLineNormal = this.position.vectorBetween(this.position, collisionObj.vecI).unitVector(),
+                            let bounceLineNormal = Vec.vectorBetween(this.position, collisionObj.vecI).unitVector(),
                             // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
                                 dot = this.position.vx * bounceLineNormal.x + this.position.vy * bounceLineNormal.y;
 
                             this.force.x -= 2 * dot * bounceLineNormal.x;
                             this.force.y -= 2 * dot * bounceLineNormal.y;
 
-                            if (this.force.x > 2 || this.force.y > 2 || this.force.x < -2 || this.force.y < -2) {
+                            if (this.force.x > 3 || this.force.y > 3 || this.force.x < -3 || this.force.y < -3) {
                                 this.force.scale(0.095);
                             }
                             break;
@@ -394,7 +408,10 @@
                 //     break;
             }
 
-            // Forward the agent by force
+            // Forward the Entity by force
+            this.oldPosition = this.position.clone();
+            this.oldAngle = this.position.angle;
+
             this.position.vx = this.force.x;
             this.position.vy = this.force.y;
             this.position.advance(this.speed);
@@ -410,7 +427,10 @@
          */
         tick() {
             this.age += 1;
-            this.move();
+            this.draw();
+            if (this.moving) {
+                this.move();
+            }
 
             return this;
         }

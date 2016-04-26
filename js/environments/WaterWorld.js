@@ -16,7 +16,7 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,//window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
                     width: 600,
                     height: 600
@@ -39,15 +39,16 @@
                         direction: false,
                         name: false,
                         gridLocation: false,
-                        position: false
+                        position: false,
+                        bounds: false
                     }
                 },
                 agents = [
-                    new Agent(new Vec(Utility.randi(3, renderOpts.width - 1), Utility.randi(3, renderOpts.height - 1)), agentOpts),
-                    new Agent(new Vec(Utility.randi(3, renderOpts.width - 1), Utility.randi(3, renderOpts.height - 1)), agentOpts)
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
                 maze = new Maze({
-                    xCount: 2,
+                    xCount: 3,
                     yCount: 3,
                     width: renderOpts.width,
                     height: renderOpts.height,
@@ -59,6 +60,7 @@
                     simSpeed: 1,
                     collision: {
                         type: 'brute'
+                        // type: 'grid'
                     },
                     cheats: {
                         brute: false,
@@ -66,7 +68,7 @@
                         grid: false,
                         walls: false
                     },
-                    numEntities: 10,
+                    numEntities: 20,
                     entityOpts: {
                         radius: 10,
                         collision: true,
@@ -78,13 +80,15 @@
                             direction: false,
                             name: false,
                             gridLocation: false,
-                            position: false
+                            position: false,
+                            bounds: false
                         }
                     }
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);
             // this.agents[0].load('zoo/wateragent.json');
+            // this.agents[1].load('zoo/wateragent.json');
             return this;
         }
     }

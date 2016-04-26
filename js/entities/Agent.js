@@ -110,20 +110,7 @@
             if (this.eyes === undefined) {
                 this.eyes = [];
                 for (let k = 0; k < this.numEyes; k++) {
-                    let angle = k * 0.21;
-                    let eye = {
-                        angle: angle,
-                        range: this.range,
-                        sensed: {
-                            type: -1,
-                            proximity: this.proximity,
-                            position: new Vec(0, 0),
-                            velocity: new Vec(0, 0)
-                        },
-                        minPos: new Vec(this.position.x + this.radius * Math.sin(angle), this.position.y + this.radius * Math.cos(angle)),
-                        maxPos: new Vec(this.position.x + this.range * Math.sin(angle), this.position.y + this.range * Math.cos(angle)),
-                        shape: new PIXI.Graphics()
-                    };
+                    let eye = new Eye(k * 0.21, this);
                     this.eyes.push(eye);
                 }
             }
@@ -156,17 +143,18 @@
             // in forward pass the agent simply behaves in the environment
             let ne = this.numEyes * this.numTypes,
                 inputArray = new Array(this.numStates);
-            for (let i = 0; i < this.numEyes; i++) {
-                let eye = this.eyes[i];
-                inputArray[i * this.numTypes] = 1.0;
-                inputArray[i * this.numTypes + 1] = 1.0;
-                inputArray[i * this.numTypes + 2] = 1.0;
-                inputArray[i * this.numTypes + 3] = eye.sensed.velocity.x; // velocity information of the sensed target
-                inputArray[i * this.numTypes + 4] = eye.sensed.velocity.y;
+            for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
+                let eye = this.eyes[ae];
+                eye.sense(this);
+                inputArray[ae * this.numTypes] = 1.0;
+                inputArray[ae * this.numTypes + 1] = 1.0;
+                inputArray[ae * this.numTypes + 2] = 1.0;
+                inputArray[ae * this.numTypes + 3] = eye.sensed.velocity.x; // velocity information of the sensed target
+                inputArray[ae * this.numTypes + 4] = eye.sensed.velocity.y;
                 if (eye.sensed.type !== -1) {
                     // sensedType is 0 for wall, 1 for food and 2 for poison.
                     // lets do a 1-of-k encoding into the input array
-                    inputArray[i * this.numTypes + eye.sensed.type] = eye.sensed.proximity / eye.range; // normalize to [0,1]
+                    inputArray[ae * this.numTypes + eye.sensed.type] = eye.sensed.proximity / eye.range; // normalize to [0,1]
                 }
             }
 
@@ -189,47 +177,9 @@
          */
         draw() {
             super.draw();
-
             // Loop through the eyes and check the walls and nearby entities
-            if (this.eyes !== undefined) {
-                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
-                    let eyeStartX = this.position.x + this.radius * Math.sin(this.position.angle + this.eyes[ae].angle),
-                        eyeStartY = this.position.y + this.radius * Math.cos(this.position.angle + this.eyes[ae].angle),
-                        eyeEndX = this.position.x + this.eyes[ae].sensed.proximity * Math.sin(this.position.angle + this.eyes[ae].angle),
-                        eyeEndY = this.position.y + this.eyes[ae].sensed.proximity * Math.cos(this.position.angle + this.eyes[ae].angle);
-                    this.eyes[ae].minPos = new Vec(eyeStartX, eyeStartY);
-                    this.eyes[ae].maxPos = new Vec(eyeEndX, eyeEndY);
-
-                    this.eyes[ae].shape.clear();
-                    this.eyes[ae].shape.moveTo(this.eyes[ae].minPos.x, this.eyes[ae].minPos.y);
-                    switch (this.eyes[ae].sensed.type) {
-                        case 1:
-                            // It is noms
-                            this.eyes[ae].shape.lineStyle(0.5, 0xFF0000, 1);
-                            break;
-                        case 2:
-                            // It is gnar gnar
-                            this.eyes[ae].shape.lineStyle(0.5, 0x00FF00, 1);
-                            break;
-                        case 3:
-                        case 4:
-                        case 5:
-                            // Is it another Agent
-                            this.eyes[ae].shape.lineStyle(0.5, 0x0000FF, 1);
-                            break;
-                        default:
-                            // Is it wall or nothing?
-                            this.eyes[ae].shape.lineStyle(0.5, 0x000000, 1);
-                            break;
-                    }
-
-                    this.eyes[ae].shape.lineTo(this.eyes[ae].maxPos.x, this.eyes[ae].maxPos.y);
-                    this.eyes[ae].shape.endFill();
-                }
-            }
-
-            if (this.cheats) {
-                this.updateCheats();
+            for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
+                this.eyes[ae].draw(this);
             }
 
             return this;
@@ -241,13 +191,28 @@
          */
         learn() {
             this.lastReward = this.digestionSignal;
+            if (this.digestionSignal > 1) {
+                console.log('digestionSignal is greater than 1');
+            }
+            // var proximity_reward = 0.0;
+            // var num_eyes = this.eyes.length;
+            // for(var i=0;i<num_eyes;i++) {
+            //   var e = this.eyes[i];
+            //   // agents dont like to see walls, especially up close
+            //   proximity_reward += e.sensed_type === 0 ? e.sensed_proximity/e.max_range : 1.0;
+            // }
+            // proximity_reward = proximity_reward/num_eyes;
+            // reward += proximity_reward;
+
+            //var forward_reward = 0.0;
+            //if(this.actionix === 0) forward_reward = 1;
 
             if (!this.worker) {
-                this.brain.learn(this.digestionSignal);
+                this.brain.learn(this.lastReward);
                 this.epsilon = this.brain.epsilon;
                 this.digestionSignal = 0;
             } else {
-                this.post('learn', this.digestionSignal);
+                this.post('learn', this.lastReward);
             }
 
             return this;
@@ -256,24 +221,24 @@
         /**
          * Load a pre-trained agent
          * @param {String} file
+         * @returns {Agent}
          */
         load(file) {
-            let self = this;
             $.getJSON(file, (data) => {
-                if (!self.worker) {
-                    if (self.brain.valueNet !== undefined) {
-                        self.brain.valueNet.fromJSON(data);
+                if (!this.worker) {
+                    if (this.brain.valueNet !== undefined) {
+                        this.brain.valueNet.fromJSON(data);
                     } else {
-                        self.brain.fromJSON(data);
+                        this.brain.fromJSON(data);
                     }
-                    self.brain.epsilon = 0.05;
-                    self.brain.alpha = 0;
+                    this.brain.epsilon = 0.05;
+                    this.brain.alpha = 0;
                 } else {
-                    self.post('load', JSON.stringify(data));
+                    this.post('load', JSON.stringify(data));
                 }
             });
 
-            return self;
+            return this;
         }
 
         /**
@@ -281,18 +246,15 @@
          * @returns {Agent}
          */
         move() {
-            this.oldPosition = this.position.clone();
-            this.oldAngle = this.position.angle;
-
             for (let i = 0; i < this.collisions.length; i++) {
                 let collisionObj = this.collisions[i];
                 if (collisionObj.distance <= this.radius) {
-                    switch (collisionObj.type) {
+                    switch (collisionObj.entity.type) {
                         case 0:
                             // Wall
-                            // this.position = this.oldPosition;
-                            // this.force.x = 0;
-                            // this.force.y = 0;
+                            this.position = this.oldPosition;
+                            this.force.x = 0;
+                            this.force.y = 0;
                             break;
                         case 1:
                             // Noms
@@ -330,7 +292,10 @@
                     break;
             }
 
-            // Forward the agent by force
+            // Forward the Agent by force
+            this.oldPosition = this.position.clone();
+            this.oldAngle = this.position.angle;
+
             this.position.vx = this.force.x;
             this.position.vy = this.force.y;
             this.position.advance(this.speed);
@@ -341,6 +306,7 @@
 
         /**
          * Reset or set up the Agent
+         * @returns {Agent}
          */
         reset() {
             var brain = this.brainType.split('.');
@@ -401,7 +367,8 @@
         }
 
         /**
-         *
+         * Save the brain state
+         * @returns {Agent}
          */
         save() {
             if (!this.worker) {
@@ -409,43 +376,16 @@
             } else {
                 this.post('save');
             }
+
+            return this;
         }
 
         /**
          * Tick the agent
-         * @param {World} world
+         * @returns {Agent}
          */
         tick() {
-            if (this.eyes !== undefined) {
-                for (let ae = 0, ne = this.eyes.length; ae < ne; ae++) {
-                    // Reset our eye data
-                    this.eyes[ae].sensed = {
-                        type: -1,
-                        proximity: this.eyes[ae].range,
-                        position: this.eyes[ae].maxPos,
-                        velocity: new Vec(0, 0)
-                    };
-
-                    for (let i = 0; i < this.eyes[ae].collisions.length; i++) {
-                        let collisionObj = this.eyes[ae].collisions[i];
-                        if (collisionObj.distance <= this.eyes[ae].range &&
-                            collisionObj.id !== this.id) {
-                            this.eyes[ae].sensed.type = collisionObj.type;
-                            this.eyes[ae].sensed.proximity = collisionObj.distance;
-                            this.eyes[ae].sensed.position.x = collisionObj.vecI.x;
-                            this.eyes[ae].sensed.position.y = collisionObj.vecI.y;
-                            if ('vx' in collisionObj.vecI) {
-                                this.eyes[ae].sensed.velocity.x = collisionObj.vecI.vx;
-                                this.eyes[ae].sensed.velocity.y = collisionObj.vecI.vy;
-                            } else {
-                                this.eyes[ae].sensed.velocity = new Vec(0, 0);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
+            this.draw();
             // Let the agents behave in the world based on their input
             this.act();
 
@@ -457,6 +397,7 @@
                 // actions on the environment
                 this.learn();
             }
+
 
             return this;
         }

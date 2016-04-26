@@ -16,7 +16,7 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,///window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
                     width: 600,
                     height: 600
@@ -25,7 +25,9 @@
                     new Agent(new Vec(1, 1), {
                         brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
+                        numStates: 0,
                         numTypes: 3,
+                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -43,7 +45,9 @@
                     new Agent(new Vec(1, 1), {
                         brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
+                        numStates: 0,
                         numTypes: 3,
+                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -61,7 +65,7 @@
                 ],
                 maze = new Maze({
                     xCount: 4,
-                    yCount: 2,
+                    yCount: 3,
                     width: renderOpts.width,
                     height: renderOpts.height,
                     closed: false,
@@ -71,11 +75,11 @@
                     grid: maze.grid,
                     simSpeed: 1,
                     collision: {
-                        type: 'grid'
+                        type: 'brute'
                     },
                     cheats: {
                         quad: false,
-                        grid: true,
+                        grid: false,
                         walls: false
                     },
                     numEntities: 30

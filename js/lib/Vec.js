@@ -503,7 +503,7 @@
         /**
          * Scale the Vector
          * @param {number} scale
-         * @returns {undefined}
+         * @returns {Vec}
          */
         scale(scale) {
             this.x *= scale;
@@ -611,22 +611,20 @@
         unitVector() {
             return this.divideScalar(this.length());
         }
-
-        /**
-         * Get a Vec between this Vec and another
-         * @param {Vec} v1
-         * @param {Vec} v2
-         * @return {Vec} .
-         */
-        vectorBetween(v1, v2) {
-            let x = v2.x - v1.x,
-                y = v2.y - v1.y;
-
-            return new Vec(x, y);
-        }
-
     }
 
+    /**
+     * Get a Vec between this Vec and another
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @return {Vec} .
+     */
+    Vec.vectorBetween = function (v1, v2) {
+        let x = v2.x - v1.x,
+            y = v2.y - v1.y;
+
+        return new Vec(x, y);
+    };
     global.Vec = Vec;
 
 }(this));

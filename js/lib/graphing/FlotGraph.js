@@ -83,7 +83,7 @@ var FlotGraph = FlotGraph || {},
                 if (this.display !== undefined) {
                     this.display.updateItem(a, '[' + agent.id.substring(0, 4) + '] Avg: ' + agent.avgReward + ' Epsi: ' + agent.epsilon);
                 }
-                if (this.smoothReward[a] === null) {
+                if (this.smoothReward[a] === undefined || this.smoothReward[a] === null) {
                     this.smoothReward[a] = rew;
                 }
                 this.smoothReward[a] = this.smoothReward[a] * 0.999 + rew * 0.001;
@@ -98,7 +98,7 @@ var FlotGraph = FlotGraph || {},
                         this.flott[a] = 0;
                     }
                 }
-                if (typeof this.series[a] !== 'undefined') {
+                if (this.series[a] !== undefined) {
                     this.series[a].data = this.getFlotRewards(a);
                 }
             }
@@ -113,7 +113,7 @@ var FlotGraph = FlotGraph || {},
          */
         getFlotRewards: function (a) {
             var res = [];
-            if (this.smoothRewardHistory[a] === null) {
+            if (this.smoothRewardHistory[a] === undefined || this.smoothRewardHistory[a] === null) {
                 this.smoothRewardHistory[a] = [];
             }
 
@@ -124,7 +124,6 @@ var FlotGraph = FlotGraph || {},
             return res;
         }
     };
-
     global.FlotGraph = FlotGraph;
 
 }(this));

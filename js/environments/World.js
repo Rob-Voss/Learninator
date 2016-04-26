@@ -48,15 +48,15 @@
         constructor(agents, walls, worldOpts, renderOpts) {
             var self = this;
             this.rendererOpts = renderOpts || {
-                    antialiasing: false,
-                    autoResize: false,
-                    resolution: window.devicePixelRatio,
-                    resizable: false,
-                    transparent: false,
-                    noWebGL: true,
-                    width: 600,
-                    height: 600
-                };
+                antialiasing: false,
+                autoResize: false,
+                resolution: window.devicePixelRatio,
+                resizable: false,
+                transparent: false,
+                noWebGL: true,
+                width: 600,
+                height: 600
+            };
 
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
@@ -85,11 +85,11 @@
 
             // Walls if they were sent or 4 if not
             this.walls = walls || [
-                    new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
-                    new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
-                    new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
-                    new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
-                ];
+                new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
+                new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
+                new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
+                new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
+            ];
 
             // Get agents
             this.agents = agents || [];
@@ -156,8 +156,8 @@
             this.ticker = PIXI.ticker.shared;
             this.ticker.autoStart = false;
             this.ticker.stop();
-            this.lastTime = new Date().getTime() / 1000;
 
+            this.lastTime = new Date().getTime() / 1000;
             function animate(timestamp) {
                 var timeSinceLast,
                     now = new Date().getTime() / 1000;
@@ -165,13 +165,11 @@
                     timeSinceLast = now - self.lastTime;
                     self.lastTime = now;
                     self.tick(timeSinceLast);
-                    self.draw(timeSinceLast);
                     self.ticker.update(timestamp);
                 }
                 self.renderer.render(self.stage);
                 requestAnimationFrame(animate);
             }
-
             this.ticker.start();
             requestAnimationFrame(animate);
 
@@ -204,11 +202,11 @@
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let x = Utility.randi(5, this.width - 10),
-                    y = Utility.randi(5, this.height - 10),
+                let x = Utility.randi(this.entityAgentOpts.radius, this.width - this.entityAgentOpts.radius),
+                    y = Utility.randi(this.entityAgentOpts.radius, this.height - this.entityAgentOpts.radius),
                     vx = Math.random() * 5 - 2.5,
                     vy = Math.random() * 5 - 2.5,
-                    entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy)),
+                    entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
                     entity = entityAgent.shape || entityAgent.sprite;
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
                     entity.addChild(entityAgent.eyes[ei].shape);
@@ -233,11 +231,11 @@
             // Populating the world
             for (let k = 0; k < number; k++) {
                 let type = Utility.randi(1, 3),
-                    x = Utility.randi(2, this.width - 1),
-                    y = Utility.randi(2, this.height - 1),
+                    x = Utility.randi(this.entityOpts.radius, this.width - this.entityOpts.radius),
+                    y = Utility.randi(this.entityOpts.radius, this.height - this.entityOpts.radius),
                     vx = Utility.randf(-3, 3),
                     vy = Utility.randf(-3, 3),
-                    entity = new Entity(type, new Vec(x, y, vx, vy));
+                    entity = new Entity(type, new Vec(x, y, vx, vy), this.entityOpts);
 
                 this.populationContainer.addChild(entity.shape || entity.sprite);
                 this.population.set(entity.id, entity);
@@ -305,28 +303,13 @@
 
             // Walls
             this.addWalls();
-
             // Population of Agents for the environment
             this.addAgents();
-
             // Population of Agents that are considered 'smart' entities for the environment
             this.addEntityAgents();
-
             // Add the entities
             this.addEntities(this.numEntities);
-
             this.stage.addChild(this.populationContainer);
-
-            return this;
-        }
-
-        /**
-         * Set up the collision detection
-         * @param {Object} collision
-         * @returns {World}
-         */
-        setCollisionDetection(collision) {
-            CollisionDetector.apply(this, [collision]);
 
             return this;
         }
@@ -343,12 +326,9 @@
                 if (entity.type !== 0) {
                     // Check them for collisions
                     this.check(entity);
-
-                    if (entity.eyes !== undefined) {
-                        // Loop through the eyes and check the walls and nearby entities
-                        for (let ae = 0, ne = entity.eyes.length; ae < ne; ae++) {
-                            this.check(entity.eyes[ae]);
-                        }
+                    // Loop through the eyes and check the walls and nearby entities
+                    for (let ae = 0, ne = entity.numEyes; ae < ne; ae++) {
+                        this.check(entity.eyes[ae]);
                     }
 
                     // Tick them
@@ -383,7 +363,6 @@
                     if (entity.useSprite) {
                         entity.sprite.position.set(entity.position.x, entity.position.y);
                     }
-
                     if (entity.cleanUp === true || ((entity.type === 2 || entity.type === 1) && entity.age > 5000)) {
                         this.deleteEntity(entity.id);
                     } else if (entity.type === 2 || entity.type === 1) {
@@ -400,7 +379,6 @@
             return this;
         }
     }
-
     global.World = World;
 
 }(this));

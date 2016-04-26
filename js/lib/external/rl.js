@@ -1577,9 +1577,9 @@ var RL = {};
             // want: Q(s,a) = r + gamma * max_a' Q(s',a')
                 qMax = r0 + this.gamma * tMat.w[R.maxI(tMat.w)],
             // now predict so use backProp
-                pred = this.forwardQ(this.net, s0, true),
+                predict = this.forwardQ(this.net, s0, true),
                 clamp = this.tdErrorClamp;
-            this.tdError = pred.w[a0] - qMax;
+            this.tdError = predict.w[a0] - qMax;
             if (Math.abs(this.tdError) > clamp) {  // huber loss to robustify
                 if (this.tdError > clamp) {
                     this.tdError = clamp;
@@ -1588,7 +1588,7 @@ var RL = {};
                     this.tdError = -clamp;
                 }
             }
-            pred.dw[a0] = this.tdError;
+            predict.dw[a0] = this.tdError;
             this.lastG.backward(); // compute gradients on net params
 
             // update net

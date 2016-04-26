@@ -4,22 +4,20 @@
 (function (global) {
     "use strict";
 
-    /**
-     * Options for the Grid
-     * @typedef {Object} gridOpts
-     * @param {number} xCount - The horizontal Cell count
-     * @param {number} yCount - The vertical Cell count
-     * @param {number} width - The width
-     * @param {number} height - The height
-     */
-
     class Grid {
+
         /**
          * Grid
          * @name Grid
          * @constructor
          *
-         * @param {gridOpts} opts - The options for the Grid
+         * @param {object} opts - The options for the Grid
+         * @param {number} opts.xCount - The horizontal Cell count
+         * @param {number} opts.yCount - The vertical Cell count
+         * @param {number} opts.width - The width
+         * @param {number} opts.height - The height
+         * @param {boolean} opts.cheats - The display flag
+         * @param {number} opts.buffer - The buffer
          * @returns {Grid}
          */
         constructor(opts) {
@@ -109,7 +107,7 @@
          * Get a Cell at a specific point
          * @param {number} x
          * @param {number} y
-         * @returns {Cell}
+         * @returns {Cell|boolean}
          */
         getCellAt(x, y) {
             let column = this.map.get(x),
@@ -155,11 +153,15 @@
         /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
-         * @returns {Entity}
+         * @returns {Cell|Array}
          */
         getGridLocation(entity) {
             if (entity.type !== undefined && entity.type !== 0) {
                 return this.pixelToCell(entity.position.x, entity.position.y);
+            } else if (entity.type === 0) {
+                let first = this.pixelToCell(entity.bounds.x, entity.bounds.y),
+                    second = this.pixelToCell(entity.bounds.x + entity.bounds.width, entity.bounds.y + entity.bounds.height);
+                return (first) ? first : second;
             }
         }
 
@@ -228,10 +230,10 @@
         pixelToCell(x, y) {
             var foundCell = false;
             this.cells.some((cell) => {
-                let inIt = x >= cell.corners[0].x
-                    && x <= cell.corners[2].x
-                    && y >= cell.corners[0].y
-                    && y <= cell.corners[2].y;
+                let inIt = x >= cell.corners[0].x &&
+                    x <= cell.corners[2].x &&
+                    y >= cell.corners[0].y &&
+                    y <= cell.corners[2].y;
                 if (inIt) {
                     foundCell = cell;
                 }
@@ -254,7 +256,7 @@
         /**
          * Returns all neighbors of this Cell that aren't separated by an edge
          * @param {Cell} c
-         * @returns {boolean}
+         * @returns {Array}
          */
         unvisitedNeighbors(c) {
             var unv;

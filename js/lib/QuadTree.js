@@ -38,8 +38,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
      * @constructor
      */
     var QuadTree = function (args) {
-        var node,
-            TOP_LEFT = 0,
+        var TOP_LEFT = 0,
             TOP_RIGHT = 1,
             BOTTOM_LEFT = 2,
             BOTTOM_RIGHT = 3,
@@ -61,7 +60,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
          * @param {number} maxDepth
          * @returns {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
          */
-        node = function (x, y, width, height, depth, maxChildren, maxDepth) {
+        var node = function (x, y, width, height, depth, maxChildren, maxDepth) {
             var items = [], // holds all items
                 nodes = []; // holds all child nodes
 
@@ -133,50 +132,29 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
 
                 /**
                  * Find a node the item should be inserted in.
-                 * @param {Array|Object} item
+                 * @param {Entity} item
                  * @returns {number}
                  */
                 findInsertNode: function (item) {
                     let wD = this.width / 2,
                         hD = this.height / 2;
-                    if (item.radius !== undefined) {
+                    if (item.bounds !== undefined) {
                         // Left
-                        if (item.position.x < this.x + wD) {
-                            if (item.position.y < this.y + hD) {
+                        if (item.bounds.x < this.x + wD) {
+                            if (item.bounds.y < this.y + hD) {
                                 return TOP_LEFT;
                             }
-                            if (item.position.y + item.radius >= this.y + hD) {
+                            if (item.bounds.y + item.bounds.height >= this.y + hD) {
                                 return BOTTOM_LEFT;
                             }
                             return PARENT;
                         }
                         // Right
-                        if (item.position.x + item.radius >= this.x + wD) {
-                            if (item.position.y < this.y + hD) {
+                        if (item.bounds.x + item.width >= this.x + wD) {
+                            if (item.bounds.y < this.y + hD) {
                                 return TOP_RIGHT;
                             }
-                            if (item.position.y + item.radius >= this.y + hD) {
-                                return BOTTOM_RIGHT;
-                            }
-                            return PARENT;
-                        }
-                    } else {
-                        // Left
-                        if (item.position.x  < this.x + wD) {
-                            if (item.position.y < this.y + hD) {
-                                return TOP_LEFT;
-                            }
-                            if (item.position.y + item.height / 2 >= this.y + hD) {
-                                return BOTTOM_LEFT;
-                            }
-                            return PARENT;
-                        }
-                        // Right
-                        if (item.position.x + item.width / 2 >= this.x + wD) {
-                            if (item.position.y < this.y + hD) {
-                                return TOP_RIGHT;
-                            }
-                            if (item.position.y + item.height / 2 >= this.y + hD) {
+                            if (item.bounds.y + item.bounds.height >= this.y + hD) {
                                 return BOTTOM_RIGHT;
                             }
                             return PARENT;
@@ -188,47 +166,28 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                 /**
                  * Finds the regions that the item overlaps with, see constants defined
                  * above. The callback is called for every region the item overlaps.
-                 * @param {Array|Object} item
+                 * @param {Entity} item
                  * @param {Function} callback
                  */
                 findOverlappingNodes: function (item, callback) {
                     let wD = this.width / 2,
                         hD = this.height / 2;
-                    if (item.radius !== undefined) {
+                    if (item.bounds !== undefined) {
                         // Left
-                        if (item.position.x < this.x + wD) {
-                            if (item.position.y < this.y + hD) {
+                        if (item.bounds.x < this.x + wD) {
+                            if (item.bounds.y < this.y + hD) {
                                 callback(TOP_LEFT);
                             }
-                            if (item.position.y + item.radius >= this.y + hD) {
+                            if (item.bounds.y + item.bounds.height >= this.y + hD) {
                                 callback(BOTTOM_LEFT);
                             }
                         }
                         // Right
-                        if (item.position.x + item.radius >= this.x + wD) {
-                            if (item.position.y < this.y + hD) {
+                        if (item.bounds.x + item.bounds.width >= this.x + wD) {
+                            if (item.bounds.y < this.y + hD) {
                                 callback(TOP_RIGHT);
                             }
-                            if (item.position.y + item.radius >= this.y + hD) {
-                                callback(BOTTOM_RIGHT);
-                            }
-                        }
-                    } else {
-                        // Left
-                        if (item.position.x < this.x + wD) {
-                            if (item.position.y < this.y + hD) {
-                                callback(TOP_LEFT);
-                            }
-                            if (item.position.y + item.height / 2 >= this.y + hD) {
-                                callback(BOTTOM_LEFT);
-                            }
-                        }
-                        // Right
-                        if (item.position.x + item.width / 2 >= this.x + wD) {
-                            if (item.position.y < this.y + hD) {
-                                callback(TOP_RIGHT);
-                            }
-                            if (item.position.y + item.height / 2 >= this.y + hD) {
+                            if (item.position.y + item.bounds.height >= this.y + hD) {
                                 callback(BOTTOM_RIGHT);
                             }
                         }
@@ -322,7 +281,6 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
             }
         };
     };
-
     global.QuadTree = QuadTree;
 
 }(this));

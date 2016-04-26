@@ -121,7 +121,6 @@ var Utility = Utility || {},
             this.engine.render.mouse = this.mouseConstraint.mouse;
             World.add(this.engine.world, this.mouseConstraint);
             this.runner = Engine.run(this.engine);
-            this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
 
             if (useTools) {
                 this.useInspector = useInspector;
@@ -132,7 +131,7 @@ var Utility = Utility || {},
                 Gui.update(this.gui);
             }
 
-            // this.addWalls();
+            this.addWalls();
             this.addAgents();
             // this.agents[0].load('zoo/wateragent.json');
             this.addEntities(30);
@@ -140,6 +139,7 @@ var Utility = Utility || {},
             this.setEngineEvents();
             this.setWorldEvents();
 
+            this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
         }
 
         /**
@@ -151,23 +151,11 @@ var Utility = Utility || {},
             // Populating the world
             for (let k = 0; k < number; k++) {
                 let agentOpts = {
-                        brainType: 'RLDQN',
                         worker: false,
                         numEyes: 30,
                         numTypes: 5,
                         numActions: 4,
-                        numStates: 30 * 5,
-                        env: {
-                            getNumStates: function () {
-                                return 30 * 5;
-                            },
-                            getMaxNumActions: function () {
-                                return 4;
-                            },
-                            startState: function () {
-                                return 0;
-                            }
-                        },
+                        numProprioception: 2,
                         range: 120,
                         proximity: 120
                     },
@@ -260,17 +248,17 @@ var Utility = Utility || {},
         addWalls() {
             // Ground
             var buffer = 5,
-                width = 2,
                 wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall'},
-                left = Bodies.rectangle(buffer, this.height / 2, width, this.height, wallOpts),
-                top = Bodies.rectangle(this.width / 2, buffer, this.width, width, wallOpts),
-                right = Bodies.rectangle(this.width - buffer, this.height / 2, width, this.height, wallOpts),
-                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width, width, wallOpts);
+                left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height, wallOpts),
+                top = Bodies.rectangle(this.width / 2, buffer, this.width, buffer, wallOpts),
+                right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height, wallOpts),
+                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width, buffer, wallOpts);
 
             Body.set(left, 'entity', {
+                type: 0,
                 x: left.position.x,
                 y: buffer,
-                width: width,
+                width: buffer,
                 height: this.height,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
@@ -281,10 +269,11 @@ var Utility = Utility || {},
                 }
             });
             Body.set(top, 'entity', {
+                type: 0,
                 x: buffer,
                 y: top.position.y,
                 width: this.width,
-                height: width,
+                height: buffer,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
                     this.graphics.clear();
@@ -294,9 +283,10 @@ var Utility = Utility || {},
                 }
             });
             Body.set(right, 'entity', {
+                type: 0,
                 x: right.position.x,
                 y: buffer,
-                width: width,
+                width: buffer,
                 height: this.height,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
@@ -307,10 +297,11 @@ var Utility = Utility || {},
                 }
             });
             Body.set(bottom, 'entity', {
+                type: 0,
                 x: buffer,
                 y: bottom.position.y,
                 width: this.width,
-                height: width,
+                height: buffer,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
                     this.graphics.clear();
@@ -320,7 +311,7 @@ var Utility = Utility || {},
                 }
             });
 
-            this.addMatter([bottom]);
+            this.addMatter([left, top, right, bottom]);
         }
 
         /**
@@ -506,6 +497,10 @@ var Utility = Utility || {},
                 for (let i = 0; i < this.agents.length; i++) {
                     this.agents[i].draw(this.engine.render.context);
                 }
+                if (this.rewards) {
+                    this.rewards.graphRewards();
+                }
+
             });
         }
 

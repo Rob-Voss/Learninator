@@ -44,15 +44,15 @@
 <div id="container">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-4">
-                <div id="flotreward" style="width:600px; height: 400px;"></div>
-            </div>
             <div class="col-md-8">
                 <h2>
                     Maze World
                     <small>Funsies</small>
                 </h2>
                 <div id="game-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="flotreward" style="width:600px; height: 400px;"></div>
             </div>
         </div>
     </div>
@@ -62,7 +62,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
 
 <script src="js/lib/external/convnet.js"></script>
 
@@ -75,7 +75,6 @@
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
-<script src="js/lib/Wall.js"></script>
 <script src="js/lib/Array.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
@@ -86,6 +85,8 @@
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
 
+<script src="js/entities/Wall.js"></script>
+<script src="js/entities/Eye.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 

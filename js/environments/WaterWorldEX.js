@@ -8,11 +8,11 @@ var WaterWorldEX = WaterWorldEX || {},
     class WaterWorldEX extends World {
         /**
          * World object contains many agents and walls and food and stuff
-         * @name WaterWorld
+         * @name WaterWorldEX
          * @extends World
          * @constructor
          *
-         * @returns {WaterWorld}
+         * @returns {WaterWorldEX}
          */
         constructor() {
             let renderOpts = {
@@ -25,22 +25,11 @@ var WaterWorldEX = WaterWorldEX || {},
                     height: 600
                 },
                 agentOpts = {
-                    brainType: 'RLDQN',
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
+                    brainType: 'RL.DQNAgent',
                     numActions: 4,
-                    numStates: 30 * 5,
                     numEyes: 30,
                     numTypes: 5,
+                    numPriopreception: 2,
                     range: 120,
                     proximity: 120,
                     radius: 10,
@@ -56,8 +45,8 @@ var WaterWorldEX = WaterWorldEX || {},
                     worker: false
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
                 maze = new Maze({
                     xCount: 1,
@@ -84,48 +73,38 @@ var WaterWorldEX = WaterWorldEX || {},
                         collision: true,
                         interactive: false,
                         useSprite: false,
-                        movingEntities: true,
+                        moving: true,
                         cheats: {
-                            gridLocation: false,
-                            position: false,
+                            id: false,
+                            direction: false,
                             name: false,
-                            id: true
+                            gridLocation: false,
+                            position: false
                         }
                     },
                     numEntityAgents: 2,
                     entityAgentOpts: {
-                        brainType: 'RLDQN',
-                        env: Utility.stringify({
-                            getNumStates: function () {
-                                return 8 * 5;
-                            },
-                            getMaxNumActions: function () {
-                                return 4;
-                            },
-                            startState: function () {
-                                return 0;
-                            }
-                        }),
-                        numActions: 4,
-                        numStates: 8 * 5,
-                        numEyes: 8,
-                        numTypes: 5,
+                        brainType: 'RL.DQNAgent',
+                        worker: false,
                         range: 85,
                         proximity: 85,
-                        radius: 20,
+                        radius: 10,
+                        numEyes: 6,
+                        numTypes: 5,
+                        numActions: 5,
+                        numProprioception: 2,
                         collision: true,
                         interactive: false,
                         useSprite: false,
-                        movingEntities: true,
                         cheats: {
-                            gridLocation: false,
-                            position: false,
+                            id: false,
+                            direction: false,
                             name: false,
-                            id: true
+                            gridLocation: false,
+                            position: false
                         }
                     }
                 };
-
             super(agents, maze.walls, worldOpts, renderOpts);
 
             this.agents[0].load('zoo/wateragent.json');

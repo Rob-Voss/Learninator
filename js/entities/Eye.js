@@ -2,40 +2,54 @@
     "use strict";
 
     class Eye {
+
         /**
-         * Eye sensor has a maximum range and senses entities and walls
-         * @param angle
-         * @param range
-         * @returns {Eye}
          * @name Eye
          * @constructor
+         *
+         * Eye sensor has a maximum range and senses entities and walls
+         * @param {number} angle
+         * @param {Agent} agent
+         * @returns {Eye}
          */
-        constructor(angle, position = new Vec(0, 0), range = 85) {
+        constructor(angle, agent) {//position = new Vec(0, 0), range = 85, proximity = 85) {
             this.angle = angle;
-            this.maxRange = range;
-            this.position = position;
-            this.minPos = new Vec(this.position.x * Math.sin(this.angle), this.position.y * Math.cos(this.angle));
-            this.maxPos = new Vec(this.position.x + this.maxRange * Math.sin(this.angle), this.position.y + this.maxRange * Math.cos(this.angle));
-            this.collisions = [];
+            this.position = agent.position;
+            this.proximity = agent.proximity;
+            this.range = agent.range;
+            this.shape = new PIXI.Graphics();
+            this.v1 = new Vec(
+                agent.position.x + agent.radius * Math.sin(agent.position.angle + angle),
+                agent.position.y + agent.radius * Math.cos(agent.position.angle + angle)
+            );
+            this.v2 = new Vec(
+                this.v1.x + agent.range * Math.sin(agent.position.angle + angle),
+                this.v1.y + agent.range * Math.cos(agent.position.angle + angle)
+            );
             this.sensed = {
                 type: -1,
-                proximity: this.maxRange,
-                position: this.maxPos,
+                position: this.v2,
+                proximity: this.proximity,
                 velocity: new Vec(0, 0)
             };
-
-            // PIXI graphics
-            this.shape = new PIXI.Graphics();
+            this.collisions = [];
 
             return this;
         }
 
         /**
          * Draw the lines for the eyes
-         * @param agent
          */
-        draw() {
+        draw(agent) {
+            let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.position.angle + this.angle),
+                eyeStartY = agent.position.y + agent.radius * Math.cos(agent.position.angle + this.angle),
+                eyeEndX = eyeStartX + this.sensed.proximity * Math.sin(agent.position.angle + this.angle),
+                eyeEndY = eyeStartY + this.sensed.proximity * Math.cos(agent.position.angle + this.angle);
+
+            this.v1 = new Vec(eyeStartX, eyeStartY);
+            this.v2 = new Vec(eyeEndX, eyeEndY);
             this.shape.clear();
+            this.shape.moveTo(eyeStartX, eyeStartY);
             switch (this.sensed.type) {
                 case 1:
                     // It is noms
@@ -56,51 +70,58 @@
                     this.shape.lineStyle(0.5, 0x000000, 1);
                     break;
             }
-
-            // Draw the agent's line of sights
-            this.shape.moveTo(this.position.x, this.position.y);
-            this.shape.lineTo(this.sensed.position.x, this.sensed.position.y);
+            this.shape.lineTo(eyeEndX, eyeEndY);
             this.shape.endFill();
         }
 
         /**
          * Sense the surroundings
-         * @param agent
+         * @param {Agent} agent
          */
         sense(agent) {
-            let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-                eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-                eyeEndX = agent.position.x + this.maxRange * Math.sin(agent.angle + this.angle),
-                eyeEndY = agent.position.y + this.maxRange * Math.cos(agent.angle + this.angle);
-            this.position = new Vec(eyeStartX, eyeStartY);
-            this.minPos = new Vec(eyeStartX, eyeStartY);
-            this.maxPos = new Vec(eyeEndX, eyeEndY);
+            let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.position.angle + this.angle),
+                eyeStartY = agent.position.y + agent.radius * Math.cos(agent.position.angle + this.angle),
+                eyeEndX = eyeStartX + this.range * Math.sin(agent.position.angle + this.angle),
+                eyeEndY = eyeStartY + this.range * Math.cos(agent.position.angle + this.angle);
+            this.v1 = new Vec(eyeStartX, eyeStartY);
+            this.v2 = new Vec(eyeEndX, eyeEndY);
 
             // Reset our eye data
             this.sensed = {
                 type: -1,
-                proximity: this.maxRange,
-                position: this.maxPos,
+                position: this.v2,
+                proximity: this.range,
                 velocity: new Vec(0, 0)
             };
 
-            for (let i = 0; i < this.collisions.length; i++) {
-                let collisionObj = this.collisions[i],
-                    distance = collisionObj.distance;
-                if (distance <= this.maxRange && collisionObj.id !== agent.id) {
-                    this.sensed.type = collisionObj.type;
-                    this.sensed.proximity = collisionObj.distance;
-                    this.sensed.position.x = collisionObj.vecI.x;
-                    this.sensed.position.y = collisionObj.vecI.y;
-                    if ('vx' in collisionObj.vecI) {
-                        this.sensed.velocity.x = collisionObj.vecI.vx;
-                        this.sensed.velocity.y = collisionObj.vecI.vy;
-                    } else {
-                        this.sensed.velocity = new Vec(0, 0);
+            if (this.collisions.length > 1) {
+                let closeObj;
+                for (let i = 0; i < this.collisions.length; i++) {
+                    if (closeObj === undefined) {
+                        closeObj = this.collisions[i];
                     }
-                    break;
+                    closeObj = (this.collisions[i].distance <= closeObj.distance) ? this.collisions[i] : closeObj;
+                }
+                this.collisions = [closeObj];
+            }
+
+            for (let i = 0; i < this.collisions.length; i++) {
+                let closeObj = this.collisions[i];
+                if (closeObj !== undefined && closeObj.id !== agent.id) {
+                    if (closeObj.distance <= this.range) {
+                        this.sensed.type = closeObj.entity.type;
+                        this.sensed.proximity = closeObj.distance;
+                        this.sensed.position = closeObj.vecI;
+                        if ('vx' in closeObj.vecI) {
+                            this.sensed.velocity.x = closeObj.vecI.vx;
+                            this.sensed.velocity.y = closeObj.vecI.vy;
+                        } else {
+                            this.sensed.velocity = new Vec(0, 0);
+                        }
+                    }
                 }
             }
+
         }
     }
     global.Eye = Eye;
