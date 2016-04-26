@@ -3006,7 +3006,7 @@ dat.GUI = dat.gui.GUI = function(css, saveDialogueContents, styleSheet, controll
     }
   };
 }(), dat.color.toString, dat.utils.common), dat.color.interpret, dat.utils.common), dat.utils.requestAnimationFrame = function() {
-  return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback, element) {
+  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback, element) {
     window.setTimeout(callback, 1e3 / 60);
   };
 }(), dat.dom.CenteredDiv = function(dom, common) {

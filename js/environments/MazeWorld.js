@@ -16,17 +16,18 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,///window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
                     width: 600,
                     height: 600
                 },
                 agents = [
-                    new AgentTD(new Vec(1, 1), {
-                        brainType: 'TD',
-                        env: JSON.stringify({}),
+                    new Agent(new Vec(1, 1), {
+                        brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
+                        numStates: 0,
                         numTypes: 3,
+                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -41,11 +42,12 @@
                             id: false
                         }
                     }),
-                    new AgentTD(new Vec(1, 1), {
-                        brainType: 'TD',
-                        env: JSON.stringify({}),
+                    new Agent(new Vec(1, 1), {
+                        brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
+                        numStates: 0,
                         numTypes: 3,
+                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -63,7 +65,7 @@
                 ],
                 maze = new Maze({
                     xCount: 4,
-                    yCount: 2,
+                    yCount: 3,
                     width: renderOpts.width,
                     height: renderOpts.height,
                     closed: false,
@@ -73,27 +75,14 @@
                     grid: maze.grid,
                     simSpeed: 1,
                     collision: {
-                        type: 'grid'
+                        type: 'brute'
                     },
                     cheats: {
                         quad: false,
-                        grid: true,
+                        grid: false,
                         walls: false
                     },
-                    numEntities: 30,
-                    entityOpts: {
-                        radius: 10,
-                        collision: true,
-                        interactive: true,
-                        useSprite: false,
-                        movingEntities: false,
-                        cheats: {
-                            id: false,
-                            name: false,
-                            gridLocation: false,
-                            position: false
-                        }
-                    }
+                    numEntities: 30
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);

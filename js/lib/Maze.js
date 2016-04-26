@@ -9,8 +9,12 @@
      * @typedef {Object} mazeOpts
      * @property {number} opts.xCount - The horizontal Cell count
      * @property {number} opts.yCount - The vertical Cell count
-     * @property {number} width - The width
-     * @property {number} height - The height
+     * @property {number} opts.width - The width
+     * @property {number} opts.height - The height
+     * @property {boolean} opts.cheats - Show info about Maze
+     * @property {boolean} opts.closed - Whether the maze is closed or not
+     * @property {number} opts.buffer - The buffer in pixels to use
+     * @property {Grid} opts.grid - The Grid
      */
 
     /**
@@ -28,7 +32,7 @@
         this.height = Utility.getOpt(opts, 'height', 600);
         this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.closed = Utility.getOpt(opts, 'closed', false);
-        this.buffer = Utility.getOpt(opts, 'buffer', 2);
+        this.buffer = Utility.getOpt(opts, 'buffer', 0);
         this.grid = Utility.getOpt(opts, 'grid', new Grid(opts));
         this.cellWidth = (this.width - this.buffer) / this.xCount;
         this.cellHeight = (this.height - this.buffer) / this.yCount;
@@ -59,9 +63,11 @@
          * Draw it
          * @returns {Maze}
          */
-        draw: function (closed) {
+        draw: function () {
             this.generate();
-            this.drawBorders(closed);
+            if (this.closed) {
+                this.drawBorders();
+            }
             this.drawMaze();
 
             return this;
@@ -113,7 +119,7 @@
          * @returns {Maze}
          */
         drawMaze: function () {
-            let grid = this.grid,
+            var grid = this.grid,
                 drawnEdges = [],
                 x1, y1, x2, y2,
                 v, topV, leftV, rightV, bottomV;
@@ -181,13 +187,6 @@
             this.recurse(initialCell);
 
             return this;
-        },
-        /**
-         * Return the Graph's Cells
-         * @returns {Array}
-         */
-        graphCells: function () {
-            return this.grid.cells;
         },
         /**
          * Recurse through a Cell's neighbors
@@ -267,7 +266,6 @@
             return this.walls;
         }
     };
-
     global.Maze = Maze;
 
 }(this));

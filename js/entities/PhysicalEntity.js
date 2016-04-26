@@ -29,6 +29,7 @@
             this.typeName = entityTypes[this.type];
             this.body = body;
             this.body.label = this.name;
+            this.position = this.body.position;
             this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
             this.age = 0;
             this.speed = 1;
@@ -50,14 +51,14 @@
          */
         move() {
             Body.applyForce(this.body, this.body.position, this.force);
+            this.position = this.body.position;
         }
 
         /**
          * Do work son
-         * @param {Matter.Engine} engine
          * @returns {PhysicalEntity}
          */
-        tick(engine) {
+        tick() {
             this.age += 1;
             this.move();
 

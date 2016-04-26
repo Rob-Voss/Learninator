@@ -16,49 +16,40 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,///window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
-                    width: 800,
-                    height: 800
+                    width: 600,
+                    height: 600
                 },
                 agentOpts = {
-                    brainType: 'RLDQN',
+                    brainType: 'RL.DQNAgent',
                     worker: false,
-                    numEyes: 30,
-                    numTypes: 5,
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
                     range: 120,
                     proximity: 120,
                     radius: 10,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numProprioception: 2,
                     collision: true,
                     interactive: false,
                     useSprite: false,
                     cheats: {
-                        id: true,
+                        id: false,
+                        direction: false,
                         name: false,
                         gridLocation: false,
-                        position: false
+                        position: false,
+                        bounds: false
                     }
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, renderOpts.width - 2), Utility.randi(3, renderOpts.height - 2)), agentOpts)
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
                 maze = new Maze({
-                    xCount: 5,
-                    yCount: 2,
+                    xCount: 3,
+                    yCount: 3,
                     width: renderOpts.width,
                     height: renderOpts.height,
                     closed: false,
@@ -67,10 +58,14 @@
                 worldOpts = {
                     grid: maze.grid,
                     simSpeed: 1,
+                    collision: {
+                        type: 'brute'
+                        // type: 'grid'
+                    },
                     cheats: {
                         brute: false,
                         quad: false,
-                        grid: true,
+                        grid: false,
                         walls: false
                     },
                     numEntities: 20,
@@ -82,15 +77,18 @@
                         moving: true,
                         cheats: {
                             id: false,
+                            direction: false,
                             name: false,
                             gridLocation: false,
-                            position: false
+                            position: false,
+                            bounds: false
                         }
                     }
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);
             // this.agents[0].load('zoo/wateragent.json');
+            // this.agents[1].load('zoo/wateragent.json');
             return this;
         }
     }

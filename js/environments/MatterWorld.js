@@ -29,13 +29,13 @@ var Utility = Utility || {},
         container = document.body.querySelector('#game-container'),
         graphContainer = document.body.querySelector('#flotreward'),
 
-    // Collison Category Groups
+    // Collision Category Groups
         wallCategory = 0x0001,
         nomCategory = 0x0002,
         gnarCategory = 0x0004,
         agentCategory = 0x0008,
 
-    // Collison Category Colors
+    // Collision Category Colors
         redColor = '#C44D58',
         greenColor = '#C7F464',
         blueColor = '#4ECDC4',
@@ -119,6 +119,7 @@ var Utility = Utility || {},
             this.engine = Engine.create(container, engineOpts);
             this.mouseConstraint = MouseConstraint.create(this.engine);
             this.engine.render.mouse = this.mouseConstraint.mouse;
+            World.add(this.engine.world, this.mouseConstraint);
             this.runner = Engine.run(this.engine);
 
             if (useTools) {
@@ -130,17 +131,15 @@ var Utility = Utility || {},
                 Gui.update(this.gui);
             }
 
-            // this.addWalls();
+            this.addWalls();
             this.addAgents();
             // this.agents[0].load('zoo/wateragent.json');
-            this.addEntities(50);
+            this.addEntities(30);
             this.setCollisionEvents();
             this.setEngineEvents();
             this.setWorldEvents();
 
             this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
-
-            World.add(this.engine.world, this.mouseConstraint);
         }
 
         /**
@@ -152,23 +151,11 @@ var Utility = Utility || {},
             // Populating the world
             for (let k = 0; k < number; k++) {
                 let agentOpts = {
-                        brainType: 'RLDQN',
                         worker: false,
                         numEyes: 30,
                         numTypes: 5,
                         numActions: 4,
-                        numStates: 30 * 5,
-                        env: {
-                            getNumStates: function () {
-                                return 30 * 5;
-                            },
-                            getMaxNumActions: function () {
-                                return 4;
-                            },
-                            startState: function () {
-                                return 0;
-                            }
-                        },
+                        numProprioception: 2,
                         range: 120,
                         proximity: 120
                     },
@@ -214,11 +201,11 @@ var Utility = Utility || {},
                             x: Utility.randi(50, this.width - 50),
                             y: Utility.randi(50, this.height - 50)
                         },
-                        friction: 0,
+                        friction: 0.1,
                         frictionAir: Utility.randf(0.0, 0.9),
-                        frictionStatic: 0,
-                        restitution: 0,
-                        density: Utility.randf(0.001, 0.01)
+                        frictionStatic: 0.5,
+                        restitution: 1,
+                        density: Utility.randf(0.005, 0.01)
                     },
                     type = Utility.randi(1, 3);
                 if (type === 1) {
@@ -261,17 +248,17 @@ var Utility = Utility || {},
         addWalls() {
             // Ground
             var buffer = 5,
-                width = 2,
                 wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall'},
-                left = Bodies.rectangle(buffer, this.height / 2, width, this.height, wallOpts),
-                top = Bodies.rectangle(this.width / 2, buffer, this.width, width, wallOpts),
-                right = Bodies.rectangle(this.width - buffer, this.height / 2, width, this.height, wallOpts),
-                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width, width, wallOpts);
+                left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height, wallOpts),
+                top = Bodies.rectangle(this.width / 2, buffer, this.width, buffer, wallOpts),
+                right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height, wallOpts),
+                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width, buffer, wallOpts);
 
             Body.set(left, 'entity', {
+                type: 0,
                 x: left.position.x,
                 y: buffer,
-                width: width,
+                width: buffer,
                 height: this.height,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
@@ -282,10 +269,11 @@ var Utility = Utility || {},
                 }
             });
             Body.set(top, 'entity', {
+                type: 0,
                 x: buffer,
                 y: top.position.y,
                 width: this.width,
-                height: width,
+                height: buffer,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
                     this.graphics.clear();
@@ -295,9 +283,10 @@ var Utility = Utility || {},
                 }
             });
             Body.set(right, 'entity', {
+                type: 0,
                 x: right.position.x,
                 y: buffer,
-                width: width,
+                width: buffer,
                 height: this.height,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
@@ -308,10 +297,11 @@ var Utility = Utility || {},
                 }
             });
             Body.set(bottom, 'entity', {
+                type: 0,
                 x: buffer,
                 y: bottom.position.y,
                 width: this.width,
-                height: width,
+                height: buffer,
                 graphics: new PIXI.Graphics(),
                 draw: function () {
                     this.graphics.clear();
@@ -321,7 +311,7 @@ var Utility = Utility || {},
                 }
             });
 
-            this.addMatter([bottom]);
+            this.addMatter([left, top, right, bottom]);
         }
 
         /**
@@ -411,18 +401,16 @@ var Utility = Utility || {},
                                 World.remove(this.engine.world, bodyA);
                             }
                         }
-                    } else {
-                        console.log('Missing:' + (bodyA) ? 'bodyA' : 'bodyB');
                     }
                 }
             });
 
             Events.on(this.engine, 'collisionActive', (event) => {
-                var pairs = event.pairs;
+                // var pairs = event.pairs;
             });
 
             Events.on(this.engine, 'collisionEnd', (event) => {
-                var pairs = event.pairs;
+                // var pairs = event.pairs;
             });
         }
 
@@ -436,37 +424,39 @@ var Utility = Utility || {},
                 for (let i = 0; i < bodies.length; i++) {
                     let body = bodies[i];
                     if (!body.isStatic) {
+                        let maxX = this.engine.render.bounds.max.x - body.entity.radius,
+                            maxY = this.engine.render.bounds.max.y - body.entity.radius,
+                            minX = this.engine.render.bounds.min.x + body.entity.radius,
+                            minY = this.engine.render.bounds.min.y + body.entity.radius,
+                            spdAdj = body.entity.speed * 0.00025,
+                            newPos = {x:body.position.x, y:body.position.y},
+                            newForce = {x:body.entity.force.x, y:body.entity.force.y};
                         if (body.speed > 2) {
                             body.speed = body.entity.speed;
                         }
                         if (body.velocity.x <= -2 || body.velocity.x >= 2) {
-                            let newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, body.position, newForce);
+                            newForce.x = spdAdj;
                         }
                         if (body.velocity.y <= -2 || body.velocity.y >= 2) {
-                            let newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
-                            this.updateBody(body, body.position, newForce);
+                            newForce.y = spdAdj;
                         }
-                        if (body.position.x > this.engine.render.bounds.max.x - body.entity.radius) {
-                            let newPos = {x:body.position.x - body.entity.radius/2, y:body.position.y},
-                                newForce = {x:-body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.x > maxX) {
+                            newPos.x = body.position.x - body.entity.radius/2;
+                            newForce.x = -spdAdj;
                         }
-                        if (body.position.x < this.engine.render.bounds.min.x + body.entity.radius) {
-                            let newPos = {x:body.position.x + body.entity.radius/2, y:body.position.y},
-                                newForce = {x:body.entity.speed * 0.00025, y:body.entity.force.y};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.x < minX) {
+                            newPos.x = body.position.x + body.entity.radius/2;
+                            newForce.x = spdAdj;
                         }
-                        if (body.position.y > this.engine.render.bounds.max.y - body.entity.radius) {
-                            let newPos = {x:body.position.x, y:body.position.y -body.entity.radius/2},
-                                newForce = {x:body.entity.force.x, y:-body.entity.speed * 0.00025};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.y > maxY) {
+                            newPos.y = body.position.y -body.entity.radius/2;
+                            newForce.y = -spdAdj;
                         }
-                        if (body.position.y < this.engine.render.bounds.min.y + body.entity.radius) {
-                            let newPos = {x:body.position.x, y:body.position.y + body.entity.radius/2},
-                                newForce = {x:body.entity.force.x, y:body.entity.speed * 0.00025};
-                            this.updateBody(body, newPos, newForce);
+                        if (body.position.y < minY) {
+                            newPos.y = body.position.y + body.entity.radius/2;
+                            newForce.y = spdAdj;
                         }
+                        this.updateBody(body, newPos, newForce);
                     }
                 }
             });
@@ -507,13 +497,17 @@ var Utility = Utility || {},
                 for (let i = 0; i < this.agents.length; i++) {
                     this.agents[i].draw(this.engine.render.context);
                 }
+                if (this.rewards) {
+                    this.rewards.graphRewards();
+                }
+
             });
         }
 
         updateBody(body, position, force) {
             // body.entity.shape.position = position;
             body.entity.force = force;
-            Body.setPosition(body, {x:position.x, y:position.y});
+            Body.setPosition(body, {x: position.x, y: position.y});
         }
     }
     global.MatterWorld = MatterWorld;

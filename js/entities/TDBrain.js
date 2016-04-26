@@ -27,13 +27,13 @@
      * A Brain object does all the magic.
      * Over time it receives some inputs and some rewards and its job is to set
      * the outputs to maximize the expected reward
-     * @name TDBrain
+     * @name TDAgent
      * @constructor
      *
      * @param {brainOpts} opt
-     * @returns {TDBrain}
+     * @returns {TDAgent}
      */
-    function TDBrain(opts) {
+    function TDAgent(opts) {
         // In number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporalWindow times, and followed by current x
         // so to have no information from previous time step going into value function, set to 0.
@@ -175,7 +175,7 @@
      *
      * @type {{randomAction: Function, policy: Function, getNetInput: Function, forward: Function, backward: Function}}
      */
-    TDBrain.prototype = {
+    TDAgent.prototype = {
         /**
          * Returns a random action
          * In the future we can set some actions to be more or less likely
@@ -298,7 +298,7 @@
         /**
          * Learn
          * @param {number} reward
-         * @returns {TDBrain}
+         * @returns {TDAgent}
          */
         backward: function (reward) {
             this.latestReward = reward;
@@ -369,7 +369,7 @@
                             '../lib/Utility.js',
                             '../lib/Window.js'
                         );
-                        _TDBrain = new TDBrain(data.input);
+                        _TDBrain = new TDAgent(data.input);
                         self.postMessage({
                             cmd: 'init',
                             msg: 'complete'
@@ -419,7 +419,7 @@
         }
     };
 
-    global.TDBrain = TDBrain;
+    global.TDAgent = TDAgent;
 
 })
 (this);

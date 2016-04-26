@@ -1,140 +1,385 @@
-var convnetjs = convnetjs || {REVISION: 'ALPHA'};
+var convnetjs = convnetjs || {REVISION: 'ALPHA'},
+    Utility = Utility || {};
 (function (global) {
     "use strict";
 
-    // Random number utilities
-    var return_v = false;
-    var v_val = 0.0;
-    var gaussRandom = function () {
-        if (return_v) {
-            return_v = false;
-            return v_val;
-        }
-        var u = 2 * Math.random() - 1;
-        var v = 2 * Math.random() - 1;
-        var r = u * u + v * v;
-        if (r == 0 || r > 1) return gaussRandom();
-        var c = Math.sqrt(-2 * Math.log(r) / r);
-        v_val = v * c; // cache this
-        return_v = true;
-        return u * c;
-    }
-    var randf = function (a, b) {
-        return Math.random() * (b - a) + a;
-    }
-    var randi = function (a, b) {
-        return Math.floor(Math.random() * (b - a) + a);
-    }
-    var randn = function (mu, std) {
-        return mu + gaussRandom() * std;
+    // used utilities, make explicit local references
+    var arrUnique = Utility.arrUnique;
+    var arrContains = Utility.arrContains;
+    var zeros = Utility.zeros;
+    var randf = Utility.randf;
+    var randi = Utility.randi;
+    var randn = Utility.randn;
+    var maxmin = Utility.maxmin;
+    var randperm = Utility.randperm;
+    var weightedSample = Utility.weightedSample;
+    var getopt = Utility.getopt;
+
+    convnetjs.randf = randf;
+    convnetjs.randi = randi;
+    convnetjs.randn = randn;
+    convnetjs.zeros = zeros;
+    convnetjs.maxmin = maxmin;
+    convnetjs.randperm = randperm;
+    convnetjs.weightedSample = weightedSample;
+    convnetjs.arrUnique = arrUnique;
+    convnetjs.arrContains = arrContains;
+    convnetjs.getopt = getopt;
+
+    /**
+     * An agent is in state0 and does action0
+     * environment then assigns reward0 and provides the new state state1
+     * Experience nodes store all this information, which is used in the Q-learning update step
+     * @name Experience
+     * @constructor
+     *
+     * @param {number} state0
+     * @param {number} action0
+     * @param {number} reward0
+     * @param {number} state1
+     * @returns {Experience}
+     */
+    function Experience(state0, action0, reward0, state1) {
+        this.state0 = state0;
+        this.action0 = action0;
+        this.reward0 = reward0;
+        this.state1 = state1;
+
+        return this;
     }
 
-    // Array utilities
-    var zeros = function (n) {
-        if (typeof(n) === 'undefined' || isNaN(n)) {
-            return [];
-        }
-        if (typeof ArrayBuffer === 'undefined') {
-            // lacking browser support
-            var arr = new Array(n);
-            for (var i = 0; i < n; i++) {
-                arr[i] = 0;
+    /**
+     * A Brain object does all the magic.
+     * Over time it receives some inputs and some rewards and its job is to set
+     * the outputs to maximize the expected reward
+     * @name TDAgent
+     * @constructor
+     *
+     * @param {brainOpts} opt
+     * @returns {TDAgent}
+     */
+    function TDAgent(opts) {
+        // In number of time steps, of temporal memory
+        // the ACTUAL input to the net will be (x,a) temporalWindow times, and followed by current x
+        // so to have no information from previous time step going into value function, set to 0.
+        this.temporalWindow = Utility.getOpt(opts, 'temporalWindow', 1);
+        // Size of experience replay memory
+        this.experienceSize = Utility.getOpt(opts, 'experienceSize', 30000);
+        // Number of examples in experience replay memory before we begin learning
+        let learnThreshDefault = Math.floor(Math.min(this.experienceSize * 0.1, 1000));
+        this.startLearnThreshold = Utility.getOpt(opts, 'startLearnThreshold', learnThreshDefault);
+        // Gamma is a crucial parameter that controls how much plan-ahead the agent does. In [0,1]
+        this.gamma = Utility.getOpt(opts, 'gamma', 0.8);
+
+        // Number of steps we will learn for
+        this.learningStepsTotal = Utility.getOpt(opts, 'learningStepsTotal', 100000);
+        // How many steps of the above to perform only random actions (in the beginning)?
+        this.learningStepsBurnin = Utility.getOpt(opts, 'learningStepsBurnin', 3000);
+        // What epsilon value do we bottom out on? 0.0 => purely deterministic policy at end
+        this.epsilonMin = Utility.getOpt(opts, 'epsilonMin', 0.05);
+        // What epsilon to use at test time? (i.e. when learning is disabled)
+        this.epsilonTestTime = Utility.getOpt(opts, 'epsilonTestTime', 0.01);
+
+        this.numStates = Utility.getOpt(opts, 'numStates', 9 * 3);
+        this.numActions = Utility.getOpt(opts, 'numActions', 5);
+
+        // Advanced usage feature.
+        // Sometimes a random action should be biased towards some values
+        // for example in flappy bird, we may want to choose to not flap more often
+        // So if we had Left/Right/Up/Down for our actions and we wanted them
+        // to turn right more often we'd set our RADist to be [0.23, 0.31, 0.23, 0.23]
+        if (typeof opts.randomActionDistribution !== 'undefined') {
+            // This better sum to 1 by the way, and be of length this.numActions
+            this.randomActionDistribution = opts.randomActionDistribution;
+            if (this.randomActionDistribution.length !== this.numActions) {
+                console.log('TROUBLE. randomActionDistribution should be same length as numActions.');
             }
-            return arr;
+            let a = this.randomActionDistribution,
+                s = 0.0;
+            for (let k = 0; k < a.length; k++) {
+                s += a[k];
+            }
+            if (Math.abs(s - 1.0) > 0.0001) {
+                console.log('TROUBLE. randomActionDistribution should sum to 1!');
+            }
         } else {
-            return new Float64Array(n);
+            this.randomActionDistribution = [];
         }
-    }
 
-    var arrContains = function (arr, elt) {
-        for (var i = 0, n = arr.length; i < n; i++) {
-            if (arr[i] === elt) return true;
+        // States that go into neural net to predict optimal action
+        // look at x0, a0, x1, a1, x2, a2,...xt
+        // this letiable controls the size of that temporal window.
+        // Actions are encoded as 1-of-k hot vectors
+        this.netInputs = this.numStates * this.temporalWindow + this.numActions * this.temporalWindow + this.numStates;
+
+        // Must be at least 2, but if we want more context set it to be even more
+        this.windowSize = Math.max(this.temporalWindow, 2);
+        this.stateWindow = new Array(this.windowSize);
+        this.actionWindow = new Array(this.windowSize);
+        this.rewardWindow = new Array(this.windowSize);
+        this.netWindow = new Array(this.windowSize);
+
+        // Create [state -> value of all possible actions] modeling net for the value function
+        let layerDefs = [];
+        if (typeof opts.layerDefs !== 'undefined') {
+            // Advanced usage feature.
+            // Because size of the input to the network, and number of actions must check out.
+            // This is not very pretty Object Oriented programming but I can't see
+            // a way out of it :(
+            layerDefs = opts.layerDefs;
+            if (layerDefs.length < 2) {
+                console.log('TROUBLE! must have at least 2 layers');
+            }
+            if (layerDefs[0].type !== 'input') {
+                console.log('TROUBLE! first layer must be input layer!');
+            }
+            if (layerDefs[layerDefs.length - 1].type !== 'regression') {
+                console.log('TROUBLE! last layer must be input regression!');
+            }
+            if (layerDefs[0].out_depth * layerDefs[0].out_sx * layerDefs[0].out_sy !== this.netInputs) {
+                console.log('TROUBLE! Number of inputs must be numStates * temporalWindow + numActions * temporalWindow + numStates!');
+            }
+            if (layerDefs[layerDefs.length - 1].num_neurons !== this.numActions) {
+                console.log('TROUBLE! Number of regression neurons should be numActions!');
+            }
+        } else {
+            // Create a very simple neural net by default
+            layerDefs.push({
+                type: 'input',
+                out_sx: 1,
+                out_sy: 1,
+                out_depth: this.netInputs
+            });
+            if (typeof opts.hiddenLayerSizes !== 'undefined') {
+                // Allow user to specify this via the option, for convenience
+                let hl = opts.hiddenLayerSizes;
+                for (let q = 0; q < hl.length; q++) {
+                    layerDefs.push({
+                        type: 'fc',
+                        num_neurons: hl[q],
+                        activation: 'relu'
+                    }); // relu by default
+                }
+            }
+            layerDefs.push({
+                type: 'regression',
+                num_neurons: this.numActions
+            });
         }
-        return false;
-    }
+        this.valueNet = new convnetjs.Net();
+        this.valueNet.makeLayers(layerDefs);
 
-    var arrUnique = function (arr) {
-        var h = {}, output = [];
-        for (var i = 0, n = arr.length; i < n; i++) {
-            if (!h[arr[i]]) {
-                h[arr[i]] = true;
-                output.push(arr[i]);
+        // And finally we need a Temporal Difference Learning trainer!
+        let tdTrainerOptions = {
+            learning_rate: 0.01,
+            momentum: 0.0,
+            batch_size: 64,
+            l2_decay: 0.01
+        };
+        // Allow user to overwrite this
+        if (typeof opts.tdTrainerOptions !== 'undefined') {
+            tdTrainerOptions = opts.tdTrainerOptions;
+        }
+        this.tdTrainer = new convnetjs.SGDTrainer(this.valueNet, tdTrainerOptions);
+        // Controls exploration exploitation trade off. Should be annealed over time
+        this.epsilon = Utility.getOpt('epsilon', 1.0);
+        // Experience replay
+        this.experience = [];
+
+        // letious housekeeping letiables
+        this.age = 0; // incremented every backward()
+        this.forwardPasses = 0; // incremented every forward()
+        this.latestReward = 0;
+        this.lastInputArray = [];
+        this.averageRewardWindow = new Window(1000, 10);
+        this.averageLossWindow = new Window(1000, 10);
+        this.learning = true;
+    }
+    /**
+     *
+     * @type {{randomAction: Function, policy: Function, getNetInput: Function, forward: Function, backward: Function}}
+     */
+    TDAgent.prototype = {
+        /**
+         * Returns a random action
+         * In the future we can set some actions to be more or less likely
+         * at "rest"/default state.
+         * @returns {number}
+         */
+        randomAction: function () {
+            if (this.randomActionDistribution.length === 0) {
+                return Utility.randi(0, this.numActions);
+            } else {
+                // okay, lets do some fancier sampling:
+                let p = Utility.randf(0, 1.0),
+                    cumprob = 0.0;
+                for (let k = 0; k < this.numActions; k++) {
+                    cumprob += this.randomActionDistribution[k];
+                    if (p < cumprob) {
+                        return k;
+                    }
+                }
+            }
+        },
+        /**
+         * Compute the value of doing any action in this state and return the
+         * argmax action and its value
+         * @param {type} s
+         * @returns {Object}
+         */
+        policy: function (s) {
+            let sVol = new convnetjs.Vol(1, 1, this.netInputs);
+            sVol.w = s;
+
+            let actionValues = this.valueNet.forward(sVol),
+                maxK = 0,
+                maxVal = actionValues.w[0];
+            for (let k = 1; k < this.numActions; k++) {
+                if (actionValues.w[k] > maxVal) {
+                    maxK = k;
+                    maxVal = actionValues.w[k];
+                }
+            }
+
+            return {
+                action: maxK,
+                value: maxVal
+            };
+        },
+        /**
+         * Return s = (x,a,x,a,x,a,xt) state vector.
+         * It's a concatenation of last windowSize (x,a) pairs and current state x
+         * @param {type} xt
+         * @returns {Array}
+         */
+        getNetInput: function (xt) {
+            let w = [];
+            // Start with current state
+            w = w.concat(xt);
+            let n = this.windowSize;
+            // Now go backwards and append states and actions from history temporalWindow times
+            for (let k = 0; k < this.temporalWindow; k++) {
+                // State
+                w = w.concat(this.stateWindow[n - 1 - k]);
+                // Action encoded as 1-of-k indicator vector.
+                let action1ofk = new Array(this.numActions);
+                for (let q = 0; q < this.numActions; q++) {
+                    action1ofk[q] = 0.0;
+                }
+                // We scale it up a bit because we don't want weight regularization
+                // to undervalue this information, as it only exists once
+                action1ofk[this.actionWindow[n - 1 - k]] = 1.0 * this.numStates;
+                w = w.concat(action1ofk);
+            }
+            return w;
+        },
+        /**
+         * Compute forward (behavior) pass given the input neuron signals from body
+         * @param {Array} inputArray
+         * @returns {number}
+         */
+        act: function (inputArray) {
+            let netInput, action;
+            this.forwardPasses += 1;
+            this.lastInputArray = inputArray; // back this up
+
+            // Create network input
+            if (this.forwardPasses > this.temporalWindow) {
+                // We have enough to actually do something reasonable
+                netInput = this.getNetInput(inputArray);
+                if (this.learning) {
+                    // Compute epsilon for the epsilon-greedy policy
+                    this.epsilon = Math.min(1.0, Math.max(this.epsilonMin, 1.0 - (this.age - this.learningStepsBurnin) / (this.learningStepsTotal - this.learningStepsBurnin)));
+                } else {
+                    // Use test-time value
+                    this.epsilon = this.epsilonTestTime;
+                }
+                if (Utility.randf(0, 1) < this.epsilon) {
+                    // Choose a random action with epsilon probability
+                    action = this.randomAction();
+                } else {
+                    // Otherwise use our policy to make decision
+                    let maxAct = this.policy(netInput);
+                    action = maxAct.action;
+                }
+            } else {
+                // Pathological case that happens first few iterations
+                // before we accumulate windowSize inputs
+                netInput = [];
+                action = this.randomAction();
+            }
+
+            // Remember the state and action we took for backward pass
+            this.netWindow.shift();
+            this.netWindow.push(netInput);
+            this.stateWindow.shift();
+            this.stateWindow.push(inputArray);
+            this.actionWindow.shift();
+            this.actionWindow.push(action);
+
+            return action;
+        },
+        /**
+         * Learn
+         * @param {number} reward
+         * @returns {TDAgent}
+         */
+        learn: function (reward) {
+            this.latestReward = reward;
+            this.averageRewardWindow.add(reward);
+            this.rewardWindow.shift();
+            this.rewardWindow.push(reward);
+
+            if (this.learning) {
+                this.age += 1;
+
+                // It is time t+1 and we have to store (s_t, a_t, r_t, s_{t+1}) as new experience
+                // (given that an appropriate number of state measurements already exist, of course)
+                if (this.forwardPasses > this.temporalWindow + 1) {
+                    let e = new Experience(),
+                        n = this.windowSize;
+                    e.state0 = this.netWindow[n - 2];
+                    e.action0 = this.actionWindow[n - 2];
+                    e.reward0 = this.rewardWindow[n - 2];
+                    e.state1 = this.netWindow[n - 1];
+                    if (this.experience.length < this.experienceSize) {
+                        this.experience.push(e);
+                    } else {
+                        // Replace. finite memory!
+                        let ri = Utility.randi(0, this.experienceSize);
+                        this.experience[ri] = e;
+                    }
+                }
+
+                // Learn based on experience, once we have some samples to go on
+                // this is where the magic happens...
+                if (this.experience.length > this.startLearnThreshold) {
+                    let actionValueCost = 0.0;
+                    for (let k = 0; k < this.tdTrainer.batch_size; k++) {
+                        let randExp = Utility.randi(0, this.experience.length),
+                            exp = this.experience[randExp],
+                            x = new convnetjs.Vol(1, 1, this.netInputs);
+                        x.w = exp.state0;
+                        let maxAct = this.policy(exp.state1),
+                            rew = exp.reward0 + this.gamma * maxAct.value,
+                            yStruct = {
+                                dim: exp.action0,
+                                val: rew
+                            },
+                            loss = this.tdTrainer.train(x, yStruct);
+                        actionValueCost += loss.loss;
+                    }
+                    actionValueCost = actionValueCost / this.tdTrainer.batch_size;
+                    this.averageLossWindow.add(actionValueCost);
+                }
+
+                return this;
+            } else {
+                return;
             }
         }
-        return output;
-    }
-
-    // return max and min of a given non-empty array.
-    var maxmin = function (w) {
-        if (w.length === 0) {
-            return {};
-        } // ... ;s
-        var maxv = w[0];
-        var minv = w[0];
-        var maxi = 0;
-        var mini = 0;
-        var n = w.length;
-        for (var i = 1; i < n; i++) {
-            if (w[i] > maxv) {
-                maxv = w[i];
-                maxi = i;
-            }
-            if (w[i] < minv) {
-                minv = w[i];
-                mini = i;
-            }
-        }
-        return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv: maxv - minv};
-    }
-
-    // create random permutation of numbers, in range [0...n-1]
-    var randperm = function (n) {
-        var i = n,
-            j = 0,
-            temp;
-        var array = [];
-        for (var q = 0; q < n; q++)array[q] = q;
-        while (i--) {
-            j = Math.floor(Math.random() * (i + 1));
-            temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
-        return array;
-    }
-
-    // sample from list lst according to probabilities in list probs
-    // the two lists are of same size, and probs adds up to 1
-    var weightedSample = function (lst, probs) {
-        var p = randf(0, 1.0);
-        var cumprob = 0.0;
-        for (var k = 0, n = lst.length; k < n; k++) {
-            cumprob += probs[k];
-            if (p < cumprob) {
-                return lst[k];
-            }
-        }
-    }
-
-    // syntactic sugar function for getting default parameter values
-    var getopt = function (opt, field_name, default_value) {
-        return typeof opt[field_name] !== 'undefined' ? opt[field_name] : default_value;
-    }
-
-    global.randf = randf;
-    global.randi = randi;
-    global.randn = randn;
-    global.zeros = zeros;
-    global.maxmin = maxmin;
-    global.randperm = randperm;
-    global.weightedSample = weightedSample;
-    global.arrUnique = arrUnique;
-    global.arrContains = arrContains;
-    global.getopt = getopt;
-
-})(convnetjs);
-(function (global) {
-    "use strict";
+    };
+    convnetjs.TDAgent = TDAgent;
 
     // Vol is the basic building block of all data in a net.
     // it is essentially just a 3D volume of numbers, with a
@@ -152,8 +397,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.depth = sx.length;
             // we have to do the following copy because we want to use
             // fast typed arrays, not an ordinary javascript array
-            this.w = global.zeros(this.depth);
-            this.dw = global.zeros(this.depth);
+            this.w = Utility.zeros(this.depth);
+            this.dw = Utility.zeros(this.depth);
             for (var i = 0; i < this.depth; i++) {
                 this.w[i] = sx[i];
             }
@@ -163,15 +408,15 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.sy = sy;
             this.depth = depth;
             var n = sx * sy * depth;
-            this.w = global.zeros(n);
-            this.dw = global.zeros(n);
+            this.w = Utility.zeros(n);
+            this.dw = Utility.zeros(n);
             if (typeof c === 'undefined') {
                 // weight normalization is done to equalize the output
                 // variance of every neuron, otherwise neurons with a lot
                 // of incoming connections have outputs of larger variance
                 var scale = Math.sqrt(1.0 / (sx * sy * depth));
                 for (var i = 0; i < n; i++) {
-                    this.w[i] = global.randn(0.0, scale);
+                    this.w[i] = Utility.randn(0.0, scale);
                 }
             } else {
                 for (var i = 0; i < n; i++) {
@@ -180,7 +425,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             }
         }
     }
-
     Vol.prototype = {
         get: function (x, y, d) {
             var ix = ((this.sx * y) + x) * this.depth + d;
@@ -249,20 +493,15 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.depth = json.depth;
 
             var n = this.sx * this.sy * this.depth;
-            this.w = global.zeros(n);
-            this.dw = global.zeros(n);
+            this.w = Utility.zeros(n);
+            this.dw = Utility.zeros(n);
             // copy over the elements.
             for (var i = 0; i < n; i++) {
                 this.w[i] = json.w[i];
             }
         }
     }
-
-    global.Vol = Vol;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.Vol = Vol;
 
     // Volume utilities
     // intended for use with data augmentation
@@ -272,8 +511,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
     var augment = function (V, crop, dx, dy, fliplr) {
         // note assumes square outputs of size crop x crop
         if (typeof(fliplr) === 'undefined') var fliplr = false;
-        if (typeof(dx) === 'undefined') var dx = global.randi(0, V.sx - crop);
-        if (typeof(dy) === 'undefined') var dy = global.randi(0, V.sy - crop);
+        if (typeof(dx) === 'undefined') var dx = Utility.randi(0, V.sx - crop);
+        if (typeof(dy) === 'undefined') var dy = Utility.randi(0, V.sy - crop);
 
         // randomly sample a crop in the input volume
         var W;
@@ -305,6 +544,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         }
         return W;
     }
+    convnetjs.augment = augment;
 
     // img is a DOM element that contains a loaded image
     // returns a Vol of size (W, H, 4). 4 is for RGBA
@@ -363,14 +603,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
         return x;
     }
-
-    global.augment = augment;
-    global.img_to_vol = img_to_vol;
-
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.img_to_vol = img_to_vol;
 
     // This file contains all layers that do dot products with input,
     // but usually in a different connectivity pattern and weight sharing
@@ -452,7 +685,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
             // compute gradient wrt weights, biases and input data
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
+            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
             for (var d = 0; d < this.out_depth; d++) {
                 var f = this.filters[d];
                 var x = -this.pad;
@@ -542,6 +775,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.biases.fromJSON(json.biases);
         }
     }
+    convnetjs.ConvLayer = ConvLayer;
 
     var FullyConnLayer = function (opt) {
         var opt = opt || {};
@@ -568,7 +802,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         }
         this.biases = new Vol(1, 1, this.out_depth, bias);
     }
-
     FullyConnLayer.prototype = {
         forward: function (V, is_training) {
             this.in_act = V;
@@ -588,7 +821,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         },
         backward: function () {
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out the gradient in input Vol
+            V.dw = Utility.zeros(V.w.length); // zero out the gradient in input Vol
 
             // compute gradient wrt weights and data
             for (var i = 0; i < this.out_depth; i++) {
@@ -648,14 +881,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.biases.fromJSON(json.biases);
         }
     }
-
-    global.ConvLayer = ConvLayer;
-    global.FullyConnLayer = FullyConnLayer;
-
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.FullyConnLayer = FullyConnLayer;
 
     var PoolLayer = function (opt) {
 
@@ -678,10 +904,9 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
         this.layer_type = 'pool';
         // store switches for x,y coordinates for where the max comes from, for each output neuron
-        this.switchx = global.zeros(this.out_sx * this.out_sy * this.out_depth);
-        this.switchy = global.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.switchx = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.switchy = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
     }
-
     PoolLayer.prototype = {
         forward: function (V, is_training) {
             this.in_act = V;
@@ -730,7 +955,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             // pooling layers have no parameters, so simply compute
             // gradient wrt data here
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
             var A = this.out_act; // computed in forward pass
 
             var n = 0;
@@ -775,18 +1000,11 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.stride = json.stride;
             this.in_depth = json.in_depth;
             this.pad = typeof json.pad !== 'undefined' ? json.pad : 0; // backwards compatibility
-            this.switchx = global.zeros(this.out_sx * this.out_sy * this.out_depth); // need to re-init these appropriately
-            this.switchy = global.zeros(this.out_sx * this.out_sy * this.out_depth);
+            this.switchx = Utility.zeros(this.out_sx * this.out_sy * this.out_depth); // need to re-init these appropriately
+            this.switchy = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
         }
     }
-
-    global.PoolLayer = PoolLayer;
-
-})(convnetjs);
-
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.PoolLayer = PoolLayer;
 
     var InputLayer = function (opt) {
         var opt = opt || {};
@@ -823,12 +1041,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
-
-    global.InputLayer = InputLayer;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.InputLayer = InputLayer;
 
     // Layers that implement a loss. Currently these are the layers that
     // can initiate a backward() pass. In future we probably want a more
@@ -849,7 +1062,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_sy = 1;
         this.layer_type = 'softmax';
     }
-
     SoftmaxLayer.prototype = {
         forward: function (V, is_training) {
             this.in_act = V;
@@ -864,7 +1076,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             }
 
             // compute exponentials (carefully to not blow up)
-            var es = global.zeros(this.out_depth);
+            var es = Utility.zeros(this.out_depth);
             var esum = 0.0;
             for (var i = 0; i < this.out_depth; i++) {
                 var e = Math.exp(as[i] - amax);
@@ -886,7 +1098,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
 
             for (var i = 0; i < this.out_depth; i++) {
                 var indicator = i === y ? 1.0 : 0.0;
@@ -917,6 +1129,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.num_inputs = json.num_inputs;
         }
     }
+    convnetjs.SoftmaxLayer = SoftmaxLayer;
 
     // implements an L2 regression cost layer,
     // so penalizes \sum_i(||x_i - y_i||^2), where x is its input
@@ -931,7 +1144,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_sy = 1;
         this.layer_type = 'regression';
     }
-
     RegressionLayer.prototype = {
         forward: function (V, is_training) {
             this.in_act = V;
@@ -943,7 +1155,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
             var loss = 0.0;
             if (y instanceof Array || y instanceof Float64Array) {
                 for (var i = 0; i < this.out_depth; i++) {
@@ -982,6 +1194,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.num_inputs = json.num_inputs;
         }
     }
+    convnetjs.RegressionLayer = RegressionLayer;
 
     var SVMLayer = function (opt) {
         var opt = opt || {};
@@ -993,7 +1206,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_sy = 1;
         this.layer_type = 'svm';
     }
-
     SVMLayer.prototype = {
         forward: function (V, is_training) {
             this.in_act = V;
@@ -1004,7 +1216,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = global.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
 
             var yscore = x.w[y]; // score of ground truth
             var margin = 1.0;
@@ -1044,16 +1256,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.num_inputs = json.num_inputs;
         }
     }
+    convnetjs.SVMLayer = SVMLayer;
 
-    global.RegressionLayer = RegressionLayer;
-    global.SoftmaxLayer = SoftmaxLayer;
-    global.SVMLayer = SVMLayer;
-
-})(convnetjs);
-
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
 
     // Implements ReLU nonlinearity elementwise
     // x -> max(0, x)
@@ -1083,7 +1287,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 if (V2.w[i] <= 0) V.dw[i] = 0; // threshold
                 else V.dw[i] = V2.dw[i];
@@ -1107,6 +1311,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
+    convnetjs.ReluLayer = ReluLayer;
 
     // Implements Sigmoid nnonlinearity elementwise
     // x -> 1/(1+e^(-x))
@@ -1137,7 +1342,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 var v2wi = V2.w[i];
                 V.dw[i] = v2wi * (1.0 - v2wi) * V2.dw[i];
@@ -1161,6 +1366,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
+    convnetjs.SigmoidLayer = SigmoidLayer;
 
     // Implements Maxout nnonlinearity that computes
     // x -> max(x)
@@ -1178,7 +1384,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_depth = Math.floor(opt.in_depth / this.group_size);
         this.layer_type = 'maxout';
 
-        this.switches = global.zeros(this.out_sx * this.out_sy * this.out_depth); // useful for backprop
+        this.switches = Utility.zeros(this.out_sx * this.out_sy * this.out_depth); // useful for backprop
     }
     MaxoutLayer.prototype = {
         forward: function (V, is_training) {
@@ -1234,7 +1440,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = this.out_depth;
-            V.dw = global.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
 
             // pass the gradient through the appropriate switch
             if (this.out_sx === 1 && this.out_sy === 1) {
@@ -1274,9 +1480,10 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.out_sy = json.out_sy;
             this.layer_type = json.layer_type;
             this.group_size = json.group_size;
-            this.switches = global.zeros(this.group_size);
+            this.switches = Utility.zeros(this.group_size);
         }
     }
+    convnetjs.MaxoutLayer = MaxoutLayer;
 
     // a helper function, since tanh is not yet part of ECMAScript. Will be in v6.
     function tanh(x) {
@@ -1311,7 +1518,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 var v2wi = V2.w[i];
                 V.dw[i] = (1.0 - v2wi * v2wi) * V2.dw[i];
@@ -1335,17 +1542,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
-
-    global.TanhLayer = TanhLayer;
-    global.MaxoutLayer = MaxoutLayer;
-    global.ReluLayer = ReluLayer;
-    global.SigmoidLayer = SigmoidLayer;
-
-})(convnetjs);
-
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.TanhLayer = TanhLayer;
 
     // An inefficient dropout layer
     // Note this is not most efficient implementation since the layer before
@@ -1362,7 +1559,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.out_depth = opt.in_depth;
         this.layer_type = 'dropout';
         this.drop_prob = typeof opt.drop_prob !== 'undefined' ? opt.drop_prob : 0.5;
-        this.dropped = global.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.dropped = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
     }
     DropoutLayer.prototype = {
         forward: function (V, is_training) {
@@ -1396,7 +1593,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             var V = this.in_act; // we need to set dw of this
             var chain_grad = this.out_act;
             var N = V.w.length;
-            V.dw = global.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 if (!(this.dropped[i])) {
                     V.dw[i] = chain_grad.dw[i]; // copy over the gradient
@@ -1423,13 +1620,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.drop_prob = json.drop_prob;
         }
     }
-
-
-    global.DropoutLayer = DropoutLayer;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.DropoutLayer = DropoutLayer;
 
     // a bit experimental layer for now. I think it works but I'm not 100%
     // the gradient check is a bit funky. I'll look into this a bit later.
@@ -1488,7 +1679,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         backward: function () {
             // evaluate gradient wrt data
             var V = this.in_act; // we need to set dw of this
-            V.dw = global.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
             var A = this.out_act; // computed in forward pass
 
             var n2 = Math.floor(this.n / 2);
@@ -1541,13 +1732,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
-
-
-    global.LocalResponseNormalizationLayer = LocalResponseNormalizationLayer;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.LocalResponseNormalizationLayer = LocalResponseNormalizationLayer;
 
     // transforms x-> [x, x_i*x_j forall i,j]
     // so the fully connected layer afters will essentially be doing tensor multiplies
@@ -1590,7 +1775,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         },
         backward: function () {
             var V = this.in_act;
-            V.dw = global.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
             var V2 = this.out_act;
             var N = this.out_depth;
             var Ni = V.depth;
@@ -1628,20 +1813,13 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.layer_type = json.layer_type;
         }
     }
-
-
-    global.QuadTransformLayer = QuadTransformLayer;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.QuadTransformLayer = QuadTransformLayer;
 
     // Net manages a set of layers
     // For now constraints: Simple linear order of layers, first layer input last layer a cost layer
     var Net = function (options) {
         this.layers = [];
     }
-
     Net.prototype = {
 
         // takes a list of layer definitions and creates the network layer objects
@@ -1734,46 +1912,46 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
 
                 switch (def.type) {
                     case 'fc':
-                        this.layers.push(new global.FullyConnLayer(def));
+                        this.layers.push(new convnetjs.FullyConnLayer(def));
                         break;
                     case 'lrn':
-                        this.layers.push(new global.LocalResponseNormalizationLayer(def));
+                        this.layers.push(new convnetjs.LocalResponseNormalizationLayer(def));
                         break;
                     case 'dropout':
-                        this.layers.push(new global.DropoutLayer(def));
+                        this.layers.push(new convnetjs.DropoutLayer(def));
                         break;
                     case 'input':
-                        this.layers.push(new global.InputLayer(def));
+                        this.layers.push(new convnetjs.InputLayer(def));
                         break;
                     case 'softmax':
-                        this.layers.push(new global.SoftmaxLayer(def));
+                        this.layers.push(new convnetjs.SoftmaxLayer(def));
                         break;
                     case 'regression':
-                        this.layers.push(new global.RegressionLayer(def));
+                        this.layers.push(new convnetjs.RegressionLayer(def));
                         break;
                     case 'conv':
-                        this.layers.push(new global.ConvLayer(def));
+                        this.layers.push(new convnetjs.ConvLayer(def));
                         break;
                     case 'pool':
-                        this.layers.push(new global.PoolLayer(def));
+                        this.layers.push(new convnetjs.PoolLayer(def));
                         break;
                     case 'relu':
-                        this.layers.push(new global.ReluLayer(def));
+                        this.layers.push(new convnetjs.ReluLayer(def));
                         break;
                     case 'sigmoid':
-                        this.layers.push(new global.SigmoidLayer(def));
+                        this.layers.push(new convnetjs.SigmoidLayer(def));
                         break;
                     case 'tanh':
-                        this.layers.push(new global.TanhLayer(def));
+                        this.layers.push(new convnetjs.TanhLayer(def));
                         break;
                     case 'maxout':
-                        this.layers.push(new global.MaxoutLayer(def));
+                        this.layers.push(new convnetjs.MaxoutLayer(def));
                         break;
                     case 'quadtransform':
-                        this.layers.push(new global.QuadTransformLayer(def));
+                        this.layers.push(new convnetjs.QuadTransformLayer(def));
                         break;
                     case 'svm':
-                        this.layers.push(new global.SVMLayer(def));
+                        this.layers.push(new convnetjs.SVMLayer(def));
                         break;
                     default:
                         console.log('ERROR: UNRECOGNIZED LAYER TYPE!');
@@ -1846,59 +2024,53 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                 var t = Lj.layer_type;
                 var L;
                 if (t === 'input') {
-                    L = new global.InputLayer();
+                    L = new convnetjs.InputLayer();
                 }
                 if (t === 'relu') {
-                    L = new global.ReluLayer();
+                    L = new convnetjs.ReluLayer();
                 }
                 if (t === 'sigmoid') {
-                    L = new global.SigmoidLayer();
+                    L = new convnetjs.SigmoidLayer();
                 }
                 if (t === 'tanh') {
-                    L = new global.TanhLayer();
+                    L = new convnetjs.TanhLayer();
                 }
                 if (t === 'dropout') {
-                    L = new global.DropoutLayer();
+                    L = new convnetjs.DropoutLayer();
                 }
                 if (t === 'conv') {
-                    L = new global.ConvLayer();
+                    L = new convnetjs.ConvLayer();
                 }
                 if (t === 'pool') {
-                    L = new global.PoolLayer();
+                    L = new convnetjs.PoolLayer();
                 }
                 if (t === 'lrn') {
-                    L = new global.LocalResponseNormalizationLayer();
+                    L = new convnetjs.LocalResponseNormalizationLayer();
                 }
                 if (t === 'softmax') {
-                    L = new global.SoftmaxLayer();
+                    L = new convnetjs.SoftmaxLayer();
                 }
                 if (t === 'regression') {
-                    L = new global.RegressionLayer();
+                    L = new convnetjs.RegressionLayer();
                 }
                 if (t === 'fc') {
-                    L = new global.FullyConnLayer();
+                    L = new convnetjs.FullyConnLayer();
                 }
                 if (t === 'maxout') {
-                    L = new global.MaxoutLayer();
+                    L = new convnetjs.MaxoutLayer();
                 }
                 if (t === 'quadtransform') {
-                    L = new global.QuadTransformLayer();
+                    L = new convnetjs.QuadTransformLayer();
                 }
                 if (t === 'svm') {
-                    L = new global.SVMLayer();
+                    L = new convnetjs.SVMLayer();
                 }
                 L.fromJSON(Lj);
                 this.layers.push(L);
             }
         }
     }
-
-
-    global.Net = Net;
-})(convnetjs);
-(function (global) {
-    "use strict";
-    var Vol = global.Vol; // convenience
+    convnetjs.Net = Net;
 
     var Trainer = function (net, options) {
 
@@ -1919,7 +2091,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         this.gsum = []; // last iteration gradients (used for momentum calculations)
         this.xsum = []; // used in adadelta
     }
-
     Trainer.prototype = {
         train: function (x, y) {
 
@@ -1947,9 +2118,9 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
                     // adagrad needs gsum
                     // adadelta needs gsum and xsum
                     for (var i = 0; i < pglist.length; i++) {
-                        this.gsum.push(global.zeros(pglist[i].params.length));
+                        this.gsum.push(Utility.zeros(pglist[i].params.length));
                         if (this.method === 'adadelta') {
-                            this.xsum.push(global.zeros(pglist[i].params.length));
+                            this.xsum.push(Utility.zeros(pglist[i].params.length));
                         } else {
                             this.xsum.push([]); // conserve memory
                         }
@@ -2026,26 +2197,10 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             }
         }
     }
+    convnetjs.Trainer = Trainer;
+    convnetjs.SGDTrainer = Trainer; // backwards compatibility
 
-    global.Trainer = Trainer;
-    global.SGDTrainer = Trainer; // backwards compatibility
-})(convnetjs);
-
-(function (global) {
-    "use strict";
-
-    // used utilities, make explicit local references
-    var randf = global.randf;
-    var randi = global.randi;
-    var Net = global.Net;
-    var Trainer = global.Trainer;
-    var maxmin = global.maxmin;
-    var randperm = global.randperm;
-    var weightedSample = global.weightedSample;
-    var getopt = global.getopt;
-    var arrUnique = global.arrUnique;
-
-    /*
+    /**
      A MagicNet takes data: a list of convnetjs.Vol(), and labels
      which for now are assumed to be class indeces 0..K. MagicNet then:
      - creates data folds for cross-validation
@@ -2106,7 +2261,6 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
             this.sampleCandidates();
         }
     };
-
     MagicNet.prototype = {
 
         // sets this.folds to a sampling of this.num_folds folds
@@ -2346,6 +2500,76 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'};
         }
 
     };
+    convnetjs.MagicNet = MagicNet;
 
-    global.MagicNet = MagicNet;
+    let _convnetjsAgent;
+    self.onmessage = (e) => {
+        let data = e.data;
+        switch (data.target) {
+            case 'TD':
+                switch (data.cmd) {
+                    case 'init':
+                        importScripts(
+                            '../Utility.js',
+                            '../Window.js'
+                        );
+                        _convnetjsAgent = new TDAgent(data.input);
+                        self.postMessage({
+                            cmd: 'init',
+                            msg: 'complete'
+                        });
+                        break;
+                    case 'load':
+                        _convnetjsAgent.valueNet.fromJSON(JSON.parse(data.input));
+                        _convnetjsAgent.learning = false;
+                        self.postMessage({
+                            cmd: 'load',
+                            msg: 'complete'
+                        });
+                        break;
+                    case 'act':
+                        let actionIndex = _convnetjsAgent.forward(data.input);
+                        self.postMessage({
+                            cmd: 'act',
+                            msg: 'complete',
+                            input: actionIndex
+                        });
+                        break;
+                    case 'learn':
+                        _convnetjsAgent.backward(data.input);
+
+                        // return the Average reward
+                        let avg = _convnetjsAgent.averageRewardWindow.getAverage().toFixed(2);
+                        self.postMessage({
+                            cmd: 'learn',
+                            msg: 'complete',
+                            input: avg
+                        });
+                        break;
+                    case 'stop':
+                        self.postMessage({
+                            cmd: 'stop',
+                            msg: 'complete'
+                        });
+                        close(); // Terminates the worker.
+                        break;
+                    default:
+                        self.postMessage({
+                            cmd: 'error',
+                            msg: 'Unknown command: ' + data.cmd
+                        });
+                }
+                break;
+        }
+    };
+
+// exports
+    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+        module.exports = {
+            convnetjs: convnetjs
+        };
+    } else {
+        global.convnetjs = convnetjs;
+    }
+
 })(this);

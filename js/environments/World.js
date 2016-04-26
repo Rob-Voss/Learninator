@@ -61,7 +61,7 @@
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
             this.resizable = this.rendererOpts.resizable;
-
+            this.ticker = 0;
             this.clock = 0;
             this.pause = false;
 
@@ -100,35 +100,11 @@
 
             // Entity options
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {
-                radius: 10,
-                collision: true,
-                interactive: false,
-                useSprite: false,
-                moving: true,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    name: false,
-                    id: false
-                }
-            });
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', null);
 
             // Entity Agent options
             this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {
-                radius: 10,
-                collision: true,
-                interactive: false,
-                useSprite: false,
-                moving: false,
-                cheats: {
-                    gridLocation: false,
-                    position: false,
-                    name: false,
-                    id: false
-                }
-            });
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', null);
 
             function resize() {
                 // Determine which screen dimension is most constrained
@@ -142,10 +118,7 @@
             // Create the canvas in which the game will show, and a
             // generic container for all the graphical objects
             this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
-            //this.renderer = PIXI.CanvasRenderer(this.width, this.height, this.rendererOpts);
             this.renderer.backgroundColor = 0xFFFFFF;
-            // Round the pixels
-            //this.renderer.roundPixels = true;
 
             // Put the renderer on screen in the corner
             this.renderer.view.style.pos = "absolute";
@@ -175,34 +148,29 @@
                 this.stage.addChild(this.cellsContainer);
             }
 
+            CollisionDetector.apply(this, [this.collision]);
+
             if (document.getElementById('flotreward')) {
                 this.rewards = new FlotGraph(this.agents);
             }
+            this.ticker = PIXI.ticker.shared;
+            this.ticker.autoStart = false;
+            this.ticker.stop();
 
-            function animate() {
+            this.lastTime = new Date().getTime() / 1000;
+            function animate(timestamp) {
+                var timeSinceLast,
+                    now = new Date().getTime() / 1000;
                 if (!self.pause) {
-                    let ticker = 0;
-                    switch (parseFloat(self.simSpeed)) {
-                        case 1:
-                            ticker = 1;
-                            break;
-                        case 2:
-                            ticker = 30;
-                            break;
-                        case 3:
-                            ticker = 60;
-                            break;
-                    }
-                    for (let k = 0; k < ticker; k++) {
-                        self.tick();
-                    }
+                    timeSinceLast = now - self.lastTime;
+                    self.lastTime = now;
+                    self.tick(timeSinceLast);
+                    self.ticker.update(timestamp);
                 }
                 self.renderer.render(self.stage);
                 requestAnimationFrame(animate);
             }
-
-            CollisionDetector.apply(this, [this.collision]);
-
+            this.ticker.start();
             requestAnimationFrame(animate);
 
             return this;
@@ -234,8 +202,8 @@
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let x = Utility.randi(5, this.width - 10),
-                    y = Utility.randi(5, this.height - 10),
+                let x = Utility.randi(this.entityAgentOpts.radius, this.width - this.entityAgentOpts.radius),
+                    y = Utility.randi(this.entityAgentOpts.radius, this.height - this.entityAgentOpts.radius),
                     vx = Math.random() * 5 - 2.5,
                     vy = Math.random() * 5 - 2.5,
                     entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
@@ -263,8 +231,8 @@
             // Populating the world
             for (let k = 0; k < number; k++) {
                 let type = Utility.randi(1, 3),
-                    x = Utility.randi(2, this.width - 2),
-                    y = Utility.randi(2, this.height - 2),
+                    x = Utility.randi(this.entityOpts.radius, this.width - this.entityOpts.radius),
+                    y = Utility.randi(this.entityOpts.radius, this.height - this.entityOpts.radius),
                     vx = Utility.randf(-3, 3),
                     vy = Utility.randf(-3, 3),
                     entity = new Entity(type, new Vec(x, y, vx, vy), this.entityOpts);
@@ -282,12 +250,10 @@
          */
         addWalls() {
             // Add the walls to the world
-            let wallsContainer = new PIXI.Container()
+            let wallsContainer = new PIXI.Container();
             this.walls.forEach((wall, id) => {
                 wallsContainer.addChild(wall.shape);
-                if (id > 3) {
-                    this.population.set(wall.id, wall);
-                }
+                this.population.set(wall.id, wall);
             });
             this.populationContainer.addChild(wallsContainer);
 
@@ -313,7 +279,7 @@
          * Draws the world
          * @returns {World}
          */
-        draw() {
+        draw(timeSinceLast) {
             for (let [id, entity] of this.population.entries()) {
                 if (entity.type !== 0) {
                     entity.draw();
@@ -337,28 +303,13 @@
 
             // Walls
             this.addWalls();
-
             // Population of Agents for the environment
             this.addAgents();
-
             // Population of Agents that are considered 'smart' entities for the environment
             this.addEntityAgents();
-
             // Add the entities
             this.addEntities(this.numEntities);
-
             this.stage.addChild(this.populationContainer);
-
-            return this;
-        }
-
-        /**
-         * Set up the collision detection
-         * @param {Object} collision
-         * @returns {World}
-         */
-        setCollisionDetection(collision) {
-            CollisionDetector.apply(this, [collision]);
 
             return this;
         }
@@ -367,22 +318,56 @@
          * Tick the environment
          * @returns {World}
          */
-        tick() {
+        tick(timeSinceLast) {
             this.updatePopulation();
-            this.clock++;
-
-            for (let [id, entity] of this.population.entries()) {
-                if (entity.type !== 0) {
-                    entity.tick(this);
-                }
-            }
 
             let popCount = 0;
             for (let [id, entity] of this.population.entries()) {
-                if (entity.cleanUp === true || ((entity.type === 2 || entity.type === 1) && entity.age > 5000)) {
-                    this.deleteEntity(entity.id);
-                } else if (entity.type === 2 || entity.type === 1) {
-                    popCount++;
+                if (entity.type !== 0) {
+                    // Check them for collisions
+                    this.check(entity);
+                    // Loop through the eyes and check the walls and nearby entities
+                    for (let ae = 0, ne = entity.numEyes; ae < ne; ae++) {
+                        this.check(entity.eyes[ae]);
+                    }
+
+                    // Tick them
+                    entity.tick();
+
+                    let top = this.height - (this.height - entity.radius),
+                        bottom = this.height - entity.radius,
+                        left = this.width - (this.width - entity.radius),
+                        right = this.width - entity.radius;
+
+                    // Tweak them
+                    if (entity.position.x < left) {
+                        entity.position.x = left;
+                        entity.force.x = entity.speed * 0.95;
+                    }
+
+                    if (entity.position.x > right) {
+                        entity.position.x = right;
+                        entity.force.x = -entity.speed * 0.95;
+                    }
+
+                    if (entity.position.y < top) {
+                        entity.position.y = top;
+                        entity.force.y = entity.speed * 0.95;
+                    }
+
+                    if (entity.position.y > bottom) {
+                        entity.position.y = bottom;
+                        entity.force.y = -entity.speed * 0.95;
+                    }
+
+                    if (entity.useSprite) {
+                        entity.sprite.position.set(entity.position.x, entity.position.y);
+                    }
+                    if (entity.cleanUp === true || ((entity.type === 2 || entity.type === 1) && entity.age > 5000)) {
+                        this.deleteEntity(entity.id);
+                    } else if (entity.type === 2 || entity.type === 1) {
+                        popCount++;
+                    }
                 }
             }
 
@@ -391,12 +376,9 @@
                 this.addEntities(this.numEntities - popCount);
             }
 
-            this.draw();
-
             return this;
         }
     }
-
     global.World = World;
 
 }(this));

@@ -11,54 +11,43 @@
          * @returns {HexWorld}
          */
         constructor() {
-            let opts = {
-                    antialiasing: true,
+            let renderOpts = {
+                    antialiasing: false,
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,///window.devicePixelRatio,
-                    noWebGL: false,
+                    resolution: window.devicePixelRatio,
                     width: 600,
                     height: 600
                 },
                 agentOpts = {
-                    brainType: 'RLDQN',
+                    brainType: 'RL.DQNAgent',
                     worker: false,
-                    numEyes: 30,
-                    numTypes: 5,
-                    numActions: 4,
-                    numStates: 30 * 5,
-                    env: {
-                        getNumStates: function () {
-                            return 30 * 5;
-                        },
-                        getMaxNumActions: function () {
-                            return 4;
-                        },
-                        startState: function () {
-                            return 0;
-                        }
-                    },
                     range: 120,
                     proximity: 120,
                     radius: 10,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numProprioception: 2,
                     collision: true,
                     interactive: false,
                     useSprite: false,
                     cheats: {
-                        id: true,
+                        id: false,
+                        direction: false,
                         name: false,
                         gridLocation: false,
                         position: false
                     }
                 },
                 agents = [
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts),
-                    new AgentRLDQN(new Vec(Utility.randi(3, opts.width - 2), Utility.randi(3, opts.height - 2)), agentOpts)
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
                 gridOptions = {
-                    width: opts.width,
-                    height: opts.height,
+                    width: renderOpts.width,
+                    height: renderOpts.height,
                     size: 2,
                     tileSize: 60,
                     tileSpacing: 0,
@@ -72,7 +61,7 @@
                        type: 'brute'
                     },
                     cheats: {
-                        brute: true,
+                        brute: false,
                         quad: false,
                         grid: false,
                         walls: false
@@ -83,17 +72,18 @@
                         collision: true,
                         interactive: true,
                         useSprite: false,
-                        movingEntities: true,
+                        moving: true,
                         cheats: {
-                            id: true,
+                            id: false,
                             name: false,
+                            direction: false,
                             gridLocation: false,
                             position: false
                         }
                     }
                 };
 
-            super(agents, grid.walls, worldOpts, opts);
+            super(agents, grid.walls, worldOpts, renderOpts);
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 

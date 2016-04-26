@@ -70,7 +70,7 @@ The optimal strategy of the agent is to cruise around, run away from green targe
                 Water World EXtreme
                 <small>Funsies</small>
             </h2>
-            <div class="game-container"></div>
+            <div id="game-container"></div>
         </div>
     </div>
 </div>
@@ -80,7 +80,7 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.8/pixi.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
 
 <script src="js/lib/external/rl.js"></script>
 
@@ -95,7 +95,6 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
-<script src="js/lib/Wall.js"></script>
 <script src="js/lib/Array.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/grid/Cell.js"></script>
@@ -105,15 +104,14 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
 
-<script src="js/entities/Eye.js"></script>
 <script src="js/entities/Entity.js"></script>
+<script src="js/entities/Eye.js"></script>
 <script src="js/entities/Agent.js"></script>
-<script src="js/entities/AgentRLDQN.js"></script>
 <script src="js/entities/EntityRLDQN.js"></script>
+<script src="js/entities/Wall.js"></script>
 
 <script src="js/environments/World.js"></script>
 <script src="js/environments/WaterWorldEX.js"></script>
-<script src="js/environments/WaterWorldGA.js"></script>
 
 </body>
 </html>
