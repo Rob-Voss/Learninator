@@ -1,4 +1,5 @@
-var Utility = Utility || {},
+var Matter = Matter || {},
+    Utility = Utility || {},
     PhysicalAgent = PhysicalAgent || {},
     PhysicalEntity = PhysicalEntity || {};
 
@@ -10,20 +11,13 @@ var Utility = Utility || {},
         World = Matter.World,
         Bodies = Matter.Bodies,
         Body = Matter.Body,
-        Bounds = Matter.Bounds,
-        Composite = Matter.Composite,
-        Composites = Matter.Composites,
         Common = Matter.Common,
-        Constraint = Matter.Constraint,
+        Composite = Matter.Composite,
         Events = Matter.Events,
         MouseConstraint = Matter.MouseConstraint,
         Mouse = Matter.Mouse,
-        Pairs = Matter.Pairs,
-        Query = Matter.Query,
-        Runner = Matter.Runner,
-        Svg = Matter.Svg,
+        Render = Matter.Render,
         Vector = Matter.Vector,
-        Vertices = Matter.Vertices,
 
     // Canvas
         container = document.body.querySelector('#game-container'),
@@ -50,46 +44,39 @@ var Utility = Utility || {},
             metrics: {
                 extended: true
             },
-            world: {
-                gravity: {
-                    x: 0,
-                    y: 0//,
-                    // isPoint: true
-                }
-            },
-            render: {
-                element: container,
-                // controller: RenderPixi,
-                options: {
-                    background: '#585858',
-                    pixelRatio: 1,
-                    enabled: true,
-                    hasBounds: true,
-                    showAngleIndicator: false,
-                    showAxes: false,
-                    showSleeping: false,
-                    showBounds: false,
-                    showBroadphase: false,
-                    showCollisions: false,
-                    showConvexHulls: false,
-                    showDebug: false,
-                    showIds: false,
-                    showInternalEdges: false,
-                    showPositions: false,
-                    showShadows: false,
-                    showSeparations: false,
-                    showVelocity: false,
-                    showVertexNumbers: false,
-                    wireframes: false,
-                    wireframeBackground: '#222'
-                }
-            },
             timing: {
                 timeScale: 1
             }
+        },
+        renderOpts = {
+            element: container,
+            // controller: RenderPixi,
+            options: {
+                background: '#585858',
+                pixelRatio: 1,
+                enabled: true,
+                hasBounds: true,
+                showAngleIndicator: false,
+                showAxes: false,
+                showSleeping: false,
+                showBounds: false,
+                showBroadphase: false,
+                showCollisions: false,
+                showConvexHulls: false,
+                showDebug: false,
+                showIds: false,
+                showInternalEdges: false,
+                showPositions: false,
+                showShadows: false,
+                showSeparations: false,
+                showVelocity: false,
+                showVertexNumbers: false,
+                wireframes: false,
+                wireframeBackground: '#222'
+            }
         };
 
-    // MatterTools aliases
+// MatterTools aliases
     if (window.MatterTools) {
         var MatterTools = window.MatterTools,
             useTools = true,
@@ -113,15 +100,19 @@ var Utility = Utility || {},
         constructor(width = 600, height = 600) {
             this.clock = 0;
             this.agents = [];
-
-            this.width = engineOpts.render.options.width = width;
-            this.height = engineOpts.render.options.height = height;
-            this.engine = Engine.create(container, engineOpts);
-            this.mouseConstraint = MouseConstraint.create(this.engine);
-            this.engine.render.mouse = this.mouseConstraint.mouse;
-            World.add(this.engine.world, this.mouseConstraint);
+            this.width = renderOpts.options.width = width;
+            this.height = renderOpts.options.height = height;
+            this.engine = renderOpts.engine = Engine.create(engineOpts);
+            this.render = Render.create(renderOpts);
             this.runner = Engine.run(this.engine);
+            this.engine.world.gravity = {x: 0, y: 0};
+            this.mouseConstraint = MouseConstraint.create(this.engine, {
+                element: this.render.canvas
+            });
+            this.render.mouse = this.mouseConstraint.mouse;
+            Render.run(this.render);
 
+            // World.add(this.engine.world, this.mouseConstraint);
             if (useTools) {
                 this.useInspector = useInspector;
                 this.isMobile = isMobile;
@@ -133,10 +124,9 @@ var Utility = Utility || {},
 
             this.addWalls();
             this.addAgents();
-            // this.agents[0].load('zoo/wateragent.json');
             this.addEntities(30);
-            this.setCollisionEvents();
             this.setEngineEvents();
+            this.setRunnerEvents();
             this.setWorldEvents();
 
             this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
@@ -198,8 +188,8 @@ var Utility = Utility || {},
                 let body, entity,
                     entityOpt = {
                         position: {
-                            x: Utility.randi(50, this.width - 50),
-                            y: Utility.randi(50, this.height - 50)
+                            x: Utility.randi(10, this.width - 10),
+                            y: Utility.randi(10, this.height - 10)
                         },
                         friction: 0.1,
                         frictionAir: Utility.randf(0.0, 0.9),
@@ -210,8 +200,8 @@ var Utility = Utility || {},
                     type = Utility.randi(1, 3);
                 if (type === 1) {
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(redColor, -20),
-                        fillStyle: redColor
+                        strokeStyle: Common.shadeColor(greenColor, -20),
+                        fillStyle: Common.shadeColor(greenColor, -20)
                     };
                     body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
                 } else {
@@ -219,8 +209,8 @@ var Utility = Utility || {},
                         radius: 30
                     };
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(greenColor, -20),
-                        fillStyle: greenColor
+                        strokeStyle: Common.shadeColor(redColor, -20),
+                        fillStyle: Common.shadeColor(redColor, -20)
                     };
                     body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
                 }
@@ -237,85 +227,104 @@ var Utility = Utility || {},
         /**
          * Add Bodies and Graphics to the scene
          * @param {Array} items
+         * @returns {MatterWorld}
          */
         addMatter(items) {
             World.add(this.engine.world, items);
+
+            return this;
         }
 
         /**
-         * Add walls
+         * Add walls to the world
+         * @returns {MatterWorld}
          */
         addWalls() {
             // Ground
             var buffer = 5,
                 wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall'},
-                left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height, wallOpts),
-                top = Bodies.rectangle(this.width / 2, buffer, this.width, buffer, wallOpts),
-                right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height, wallOpts),
-                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width, buffer, wallOpts);
+                left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height - (buffer * 2), wallOpts),
+                top = Bodies.rectangle(this.width / 2, buffer, this.width - (buffer * 2), buffer, wallOpts),
+                right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height - (buffer * 2), wallOpts),
+                bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width - (buffer * 2), buffer, wallOpts);
 
             Body.set(left, 'entity', {
                 type: 0,
                 x: left.position.x,
                 y: buffer,
                 width: buffer,
-                height: this.height,
-                graphics: new PIXI.Graphics(),
-                draw: function () {
-                    this.graphics.clear();
-                    this.graphics.lineStyle(1, 0xFF00FF, 1);
-                    this.graphics.drawRect(this.x, this.y, this.width, this.height);
-                    this.graphics.endFill();
-                }
+                height: this.height - (buffer * 2)
             });
             Body.set(top, 'entity', {
                 type: 0,
                 x: buffer,
                 y: top.position.y,
-                width: this.width,
-                height: buffer,
-                graphics: new PIXI.Graphics(),
-                draw: function () {
-                    this.graphics.clear();
-                    this.graphics.lineStyle(1, 0x00FFFF, 1);
-                    this.graphics.drawRect(this.x, this.y, this.width, this.height);
-                    this.graphics.endFill();
-                }
+                width: this.width - (buffer * 2),
+                height: buffer
             });
             Body.set(right, 'entity', {
                 type: 0,
                 x: right.position.x,
                 y: buffer,
                 width: buffer,
-                height: this.height,
-                graphics: new PIXI.Graphics(),
-                draw: function () {
-                    this.graphics.clear();
-                    this.graphics.lineStyle(1, 0xFFFF00, 1);
-                    this.graphics.drawRect(this.x, this.y, this.width, this.height);
-                    this.graphics.endFill();
-                }
+                height: this.height - (buffer * 2)
             });
             Body.set(bottom, 'entity', {
                 type: 0,
                 x: buffer,
                 y: bottom.position.y,
-                width: this.width,
-                height: buffer,
-                graphics: new PIXI.Graphics(),
-                draw: function () {
-                    this.graphics.clear();
-                    this.graphics.lineStyle(1, 0xFFFFFF, 1);
-                    this.graphics.drawRect(this.x, this.y, this.width, this.height);
-                    this.graphics.endFill();
-                }
+                width: this.width - (buffer * 2),
+                height: buffer
             });
 
             this.addMatter([left, top, right, bottom]);
+
+            return this;
+        }
+
+        /**
+         * Check the bounds
+         * @param {Matter.Body} body
+         */
+        checkBounds(body) {
+            let maxX = this.render.bounds.max.x - body.entity.radius,
+                maxY = this.render.bounds.max.y - body.entity.radius,
+                minX = this.render.bounds.min.x + body.entity.radius,
+                minY = this.render.bounds.min.y + body.entity.radius,
+                spdAdj = body.entity.speed * 0.00025,
+                newPos = Vector.create(body.position.x, body.position.y),
+                newForce = Vector.create(body.entity.force.x, body.entity.force.y);
+            if (body.speed > 2) {
+                body.speed = body.entity.speed;
+            }
+            if (body.velocity.x <= -2 || body.velocity.x >= 2) {
+                newForce.x = spdAdj;
+            }
+            if (body.velocity.y <= -2 || body.velocity.y >= 2) {
+                newForce.y = spdAdj;
+            }
+            if (body.position.x > maxX) {
+                newPos.x = body.position.x - body.entity.radius / 2;
+                newForce.x = -spdAdj;
+            }
+            if (body.position.x < minX) {
+                newPos.x = body.position.x + body.entity.radius / 2;
+                newForce.x = spdAdj;
+            }
+            if (body.position.y > maxY) {
+                newPos.y = body.position.y - body.entity.radius / 2;
+                newForce.y = -spdAdj;
+            }
+            if (body.position.y < minY) {
+                newPos.y = body.position.y + body.entity.radius / 2;
+                newForce.y = spdAdj;
+            }
+            this.updateBody(body, newPos, newForce);
         }
 
         /**
          * Set up the GUI for MatterTools
+         * @returns {MatterWorld}
          */
         initControls() {
             // need to add mouse constraint back in after gui clear or load is pressed
@@ -354,10 +363,13 @@ var Utility = Utility || {},
                     this.mouseConstraint.constraint.render.visible = true;
                 });
             }
+
+            return this;
         }
 
         /**
          * Set the events for the World to respond to remove/add
+         * @returns {MatterWorld}
          */
         setWorldEvents() {
             // Body Add Events
@@ -377,12 +389,15 @@ var Utility = Utility || {},
             Events.on(this.engine.world, 'afterRemove', (event) => {
                 this.addEntities();
             });
+
+            return this;
         }
 
         /**
          * Set the Engine's events during collisions
+         * @returns {MatterWorld}
          */
-        setCollisionEvents() {
+        setEngineEvents() {
             // Collision Events
             Events.on(this.engine, 'collisionStart', (event) => {
                 var pairs = event.pairs;
@@ -390,16 +405,10 @@ var Utility = Utility || {},
                     let pair = pairs[q],
                         bodyA = Composite.get(this.engine.world, pair.bodyA.id, 'body'),
                         bodyB = Composite.get(this.engine.world, pair.bodyB.id, 'body');
-                    if (bodyA && bodyB) {
-                        if (!bodyA.isStatic && !bodyB.isStatic) {
-                            if (bodyA.label === 'Agent') {
-                                bodyA.entity.digestion += bodyB.label === 'Nom' ? 1 : -1;
-                                World.remove(this.engine.world, bodyB);
-                            }
-                            if (bodyB.label === 'Agent') {
-                                bodyB.entity.digestion += bodyA.label === 'Nom' ? 1 : -1;
-                                World.remove(this.engine.world, bodyA);
-                            }
+                    if (bodyA && bodyB && !bodyA.isStatic && !bodyB.isStatic) {
+                        if (bodyA.label === 'Agent') {
+                            bodyA.entity.digestion += bodyB.label === 'Nom' ? 1 : -1;
+                            bodyB.entity.cleanUp = true;
                         }
                     }
                 }
@@ -407,107 +416,95 @@ var Utility = Utility || {},
 
             Events.on(this.engine, 'collisionActive', (event) => {
                 // var pairs = event.pairs;
+                // for (let q = 0; q < pairs.length; q++) {
+                //     let pair = pairs[q],
+                //         bodyA = Composite.get(this.engine.world, pair.bodyA.id, 'body'),
+                //         bodyB = Composite.get(this.engine.world, pair.bodyB.id, 'body');
+                //     if (bodyA && bodyB) {
+                //         if (!bodyA.isStatic && !bodyB.isStatic) {
+                //             World.remove(this.engine.world, bodyB);
+                //         }
+                //     }
+                // }
             });
 
             Events.on(this.engine, 'collisionEnd', (event) => {
-                // var pairs = event.pairs;
+                let bodies = Composite.allBodies(this.engine.world);
+                for (let i = 0; i < bodies.length; i++){
+                    let body = bodies[i];
+                    if (body.entity.cleanUp) {
+                        World.remove(this.engine.world, body);
+                    }
+                }
             });
+
+            return this;
         }
 
         /**
-         * Set the timing based events ticks/updates
+         * Set the Runner's events for updates
+         * @returns {MatterWorld}
          */
-        setEngineEvents() {
+        setRunnerEvents() {
             // Tick Events
             Events.on(this.runner, 'beforeTick', (event) => {
-                let bodies = Composite.allBodies(this.engine.world);
-                for (let i = 0; i < bodies.length; i++) {
-                    let body = bodies[i];
-                    if (!body.isStatic) {
-                        let maxX = this.engine.render.bounds.max.x - body.entity.radius,
-                            maxY = this.engine.render.bounds.max.y - body.entity.radius,
-                            minX = this.engine.render.bounds.min.x + body.entity.radius,
-                            minY = this.engine.render.bounds.min.y + body.entity.radius,
-                            spdAdj = body.entity.speed * 0.00025,
-                            newPos = {x:body.position.x, y:body.position.y},
-                            newForce = {x:body.entity.force.x, y:body.entity.force.y};
-                        if (body.speed > 2) {
-                            body.speed = body.entity.speed;
-                        }
-                        if (body.velocity.x <= -2 || body.velocity.x >= 2) {
-                            newForce.x = spdAdj;
-                        }
-                        if (body.velocity.y <= -2 || body.velocity.y >= 2) {
-                            newForce.y = spdAdj;
-                        }
-                        if (body.position.x > maxX) {
-                            newPos.x = body.position.x - body.entity.radius/2;
-                            newForce.x = -spdAdj;
-                        }
-                        if (body.position.x < minX) {
-                            newPos.x = body.position.x + body.entity.radius/2;
-                            newForce.x = spdAdj;
-                        }
-                        if (body.position.y > maxY) {
-                            newPos.y = body.position.y -body.entity.radius/2;
-                            newForce.y = -spdAdj;
-                        }
-                        if (body.position.y < minY) {
-                            newPos.y = body.position.y + body.entity.radius/2;
-                            newForce.y = spdAdj;
-                        }
-                        this.updateBody(body, newPos, newForce);
-                    }
-                }
+
             });
 
             Events.on(this.runner, 'tick', (event) => {
                 let bodies = Composite.allBodies(this.engine.world);
                 for (let i = 0; i < bodies.length; i++) {
                     if (!bodies[i].isStatic) {
-                        bodies[i].entity.tick(this.engine);
+                        bodies[i].entity.tick(bodies);
                     }
                 }
             });
 
-            Events.on(this.runner, 'afterTick', (event) => {
-
-            });
-
-            // Engine Update Events
             Events.on(this.runner, 'beforeUpdate', (event) => {
-
+                let bodies = Composite.allBodies(this.engine.world);
+                for (let i = 0; i < bodies.length; i++) {
+                    let body = bodies[i];
+                    if (!body.isStatic) {
+                        this.checkBounds(body);
+                    }
+                }
             });
 
             Events.on(this.runner, 'afterUpdate', (event) => {
-                let bodies = Composite.allBodies(this.engine.world),
-                    constraints = Composite.allConstraints(this.engine.world);
-                World.clear(this.engine.world);
-                Pairs.clear(this.engine.pairs);
-                World.add(this.engine.world, bodies);
-                World.add(this.engine.world, constraints);
-            });
-
-            // Render Events
-            Events.on(this.runner, 'beforeRender', (event) => {
 
             });
 
-            Events.on(this.runner, 'afterRender', (event) => {
+            Events.on(this.render, 'beforeRender', (event) => {
+
+            });
+
+            Events.on(this.render, 'afterRender', (event) => {
                 for (let i = 0; i < this.agents.length; i++) {
-                    this.agents[i].draw(this.engine.render.context);
+                    this.agents[i].draw(this.render.context);
                 }
+            });
+
+            Events.on(this.runner, 'afterTick', (event) => {
                 if (this.rewards) {
                     this.rewards.graphRewards();
                 }
-
             });
+
+            return this;
         }
 
+        /**
+         * Update the body with new position and force
+         * @param {Matter.Body} body
+         * @param {Matter.Vector} position
+         * @param {Matter.Vector} force
+         * @returns {MatterWorld}
+         */
         updateBody(body, position, force) {
-            // body.entity.shape.position = position;
             body.entity.force = force;
-            Body.setPosition(body, {x: position.x, y: position.y});
+            Body.setPosition(body, position);
+
+            return this;
         }
     }
     global.MatterWorld = MatterWorld;

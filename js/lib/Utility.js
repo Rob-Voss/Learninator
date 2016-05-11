@@ -307,8 +307,8 @@ var Utility = Utility || {};
 
     /**
      * Return a random Float within the range of a-b
-     * @param {Float} lo
-     * @param {Float} hi
+     * @param {number} lo
+     * @param {number} hi
      * @returns {number}
      */
     Utility.randf = function (lo, hi) {

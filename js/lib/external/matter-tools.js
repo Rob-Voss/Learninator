@@ -1,5 +1,5 @@
 /**
-* matter-tools-dev.min.js 0.5.0-dev 2015-05-24
+* matter-tools-dev.min.js 0.5.0-dev 2016-04-26
 * https://github.com/liabru/matter-tools
 * License: MIT
 */
@@ -10,7 +10,7 @@
   var Gui = {};
   (function() {
     var _isWebkit = "WebkitAppearance" in document.documentElement.style;
-    Gui.create = function(engine, options) {
+    Gui.create = function(engine, runner, render, options) {
       var _datGuiSupported = window.dat && window.localStorage;
       if (!_datGuiSupported) {
         console.log("Could not create GUI. Check dat.gui library is loaded first.");
@@ -19,6 +19,8 @@
       var datGui = new dat.GUI(options);
       var gui = {
         engine:engine,
+        runner:runner,
+        render:render,
         datGui:datGui,
         broadphase:"grid",
         broadphaseCache:{
@@ -98,7 +100,7 @@
       return clone;
     };
     var _initDatGui = function(gui) {
-      var engine = gui.engine, datGui = gui.datGui;
+      var engine = gui.engine, runner = gui.runner, datGui = gui.datGui;
       var funcs = {
         addBody:function() {
           _addBody(gui);
@@ -115,7 +117,7 @@
           Events.trigger(gui, "load");
         },
         inspect:function() {
-          if (!Inspector.instance) gui.inspector = Inspector.create(gui.engine);
+          if (!Inspector.instance) gui.inspector = Inspector.create(gui.engine, gui.runner, gui.render);
         },
         recordGif:function() {
           if (!gui.isRecording) {
@@ -151,22 +153,22 @@
           }, 5e3);
         }
       };
-      // var metrics = datGui.addFolder("Metrics");
-      // metrics.add(engine.timing, "fps").listen();
-      // if (engine.metrics.extended) {
-      //   metrics.add(engine.timing, "delta").listen();
-      //   metrics.add(engine.timing, "correction").listen();
-      //   metrics.add(engine.metrics, "bodies").listen();
-      //   metrics.add(engine.metrics, "collisions").listen();
-      //   metrics.add(engine.metrics, "pairs").listen();
-      //   metrics.add(engine.metrics, "broadEff").listen();
-      //   metrics.add(engine.metrics, "midEff").listen();
-      //   metrics.add(engine.metrics, "narrowEff").listen();
-      //   metrics.add(engine.metrics, "narrowReuse").listen();
-      //   metrics.close();
-      // } else {
-      //   metrics.open();
-      // }
+      var metrics = datGui.addFolder("Metrics");
+      metrics.add(runner, "fps").listen();
+      if (engine.metrics.extended) {
+        metrics.add(runner, "delta").listen();
+        metrics.add(runner, "correction").listen();
+        metrics.add(engine.metrics, "bodies").listen();
+        metrics.add(engine.metrics, "collisions").listen();
+        metrics.add(engine.metrics, "pairs").listen();
+        metrics.add(engine.metrics, "broadEff").listen();
+        metrics.add(engine.metrics, "midEff").listen();
+        metrics.add(engine.metrics, "narrowEff").listen();
+        metrics.add(engine.metrics, "narrowReuse").listen();
+        metrics.close();
+      } else {
+        metrics.open();
+      }
       var controls = datGui.addFolder("Add Body");
       controls.add(gui, "amount", 1, 5).step(1);
       controls.add(gui, "size", 5, 150).step(1);
@@ -194,49 +196,29 @@
       gravity.open();
       var physics = datGui.addFolder("Engine");
       physics.add(engine, "enableSleeping");
-      physics.add(gui, "broadphase", [ "grid", "bruteForce" ]).onFinishChange(function(value) {
-        engine.broadphase = gui.broadphaseCache[value];
-        Composite.setModified(engine.world, true, false, false);
-      });
       physics.add(engine.timing, "timeScale", 0, 1.2).step(.05).listen();
       physics.add(engine, "velocityIterations", 1, 10).step(1);
       physics.add(engine, "positionIterations", 1, 10).step(1);
-      physics.add(engine, "enabled");
+      physics.add(runner, "enabled");
       physics.open();
       var render = datGui.addFolder("Render");
-      render.add(gui, "renderer", [ "canvas", "webgl" ]).onFinishChange(function(value) {
-        _setRenderer(gui, value);
-      });
-      render.add(engine.render.options, "wireframes");
-      render.add(engine.render.options, "showDebug");
-      render.add(engine.render.options, "showPositions");
-      render.add(engine.render.options, "showBroadphase");
-      render.add(engine.render.options, "showBounds");
-      render.add(engine.render.options, "showVelocity");
-      render.add(engine.render.options, "showCollisions");
-      render.add(engine.render.options, "showSeparations");
-      render.add(engine.render.options, "showAxes");
-      render.add(engine.render.options, "showAngleIndicator");
-      render.add(engine.render.options, "showSleeping");
-      render.add(engine.render.options, "showIds");
-      render.add(engine.render.options, "showVertexNumbers");
-      render.add(engine.render.options, "showConvexHulls");
-      render.add(engine.render.options, "showInternalEdges");
-      render.add(engine.render.options, "enabled");
+      render.add(gui.render.options, "wireframes");
+      render.add(gui.render.options, "showDebug");
+      render.add(gui.render.options, "showPositions");
+      render.add(gui.render.options, "showBroadphase");
+      render.add(gui.render.options, "showBounds");
+      render.add(gui.render.options, "showVelocity");
+      render.add(gui.render.options, "showCollisions");
+      render.add(gui.render.options, "showSeparations");
+      render.add(gui.render.options, "showAxes");
+      render.add(gui.render.options, "showAngleIndicator");
+      render.add(gui.render.options, "showSleeping");
+      render.add(gui.render.options, "showIds");
+      render.add(gui.render.options, "showVertexNumbers");
+      render.add(gui.render.options, "showConvexHulls");
+      render.add(gui.render.options, "showInternalEdges");
+      render.add(gui.render.options, "enabled");
       render.open();
-    };
-    var _setRenderer = function(gui, rendererName) {
-      var engine = gui.engine, controller;
-      if (rendererName === "canvas") controller = Render;
-      if (rendererName === "webgl") controller = RenderPixi;
-      engine.render.element.removeChild(engine.render.canvas);
-      var options = engine.render.options;
-      engine.render = controller.create({
-        element:engine.render.element,
-        options:options
-      });
-      engine.render.options = options;
-      Events.trigger(gui, "setRenderer");
     };
     var _addBody = function(gui) {
       var engine = gui.engine;
@@ -260,8 +242,8 @@
       var engine = gui.engine;
       World.clear(engine.world, true);
       Engine.clear(engine);
-      var renderController = engine.render.controller;
-      if (renderController.clear) renderController.clear(engine.render);
+      var renderController = gui.render.controller;
+      if (renderController.clear) renderController.clear(gui.render);
       Events.trigger(gui, "clear");
     };
     var _initGif = function(gui) {
@@ -269,9 +251,9 @@
         return;
       }
       var engine = gui.engine, skipFrame = false;
-      Matter.Events.on(engine, "beforeTick", function(event) {
+      Matter.Events.on(gui.runner, "beforeTick", function(event) {
         if (gui.isRecording && !skipFrame) {
-          gui.gif.addFrame(engine.render.context, {
+          gui.gif.addFrame(gui.render.context, {
             copy:true,
             delay:25
           });
@@ -283,13 +265,15 @@
   var Inspector = {};
   (function() {
     var _key, _isWebkit = "WebkitAppearance" in document.documentElement.style, $body;
-    Inspector.create = function(engine, options) {
+    Inspector.create = function(engine, runner, render, options) {
       if (!jQuery || !$.fn.jstree || !window.key) {
         console.log("Could not create inspector. Check keymaster, jQuery, jsTree libraries are loaded first.");
         return;
       }
       var inspector = {
-        engine:engine,
+        engine:null,
+        runner:null,
+        render:null,
         isPaused:false,
         selected:[],
         selectStart:null,
@@ -319,7 +303,10 @@
       };
       inspector = Common.extend(inspector, options);
       Inspector.instance = inspector;
-      inspector.mouse = Mouse.create(engine.render.canvas);
+      inspector.engine = engine;
+      inspector.runner = runner;
+      inspector.render = render;
+      inspector.mouse = Mouse.create(inspector.render.canvas);
       inspector.mouseConstraint = MouseConstraint.create(engine, {
         mouse:inspector.mouse
       });
@@ -566,7 +553,7 @@
     };
     var _initEngineEvents = function(inspector) {
       var engine = inspector.engine, mouse = inspector.mouse, mousePosition = _getMousePosition(inspector), controls = inspector.controls;
-      Events.on(engine, "tick", function() {
+      Events.on(inspector.engine, "beforeUpdate", function() {
         mousePosition = _getMousePosition(inspector);
         var mouseDelta = mousePosition.x - inspector.mousePrevPosition.x, keyDelta = _key.isPressed("up") + _key.isPressed("right") - _key.isPressed("down") - _key.isPressed("left"), delta = mouseDelta + keyDelta;
         if (engine.world.isModified) {
@@ -672,8 +659,8 @@
           _updateSelectedMouseDownOffset(inspector);
         }
       });
-      Events.on(engine, "afterRender", function() {
-        var renderController = engine.render.controller, context = engine.render.context;
+      Events.on(inspector.render, "afterRender", function() {
+        var renderController = inspector.render.controller, context = inspector.render.context;
         if (renderController.inspector) renderController.inspector(inspector, context);
       });
     };
@@ -3006,7 +2993,7 @@ dat.GUI = dat.gui.GUI = function(css, saveDialogueContents, styleSheet, controll
     }
   };
 }(), dat.color.toString, dat.utils.common), dat.color.interpret, dat.utils.common), dat.utils.requestAnimationFrame = function() {
-  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback, element) {
+  return window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback, element) {
     window.setTimeout(callback, 1e3 / 60);
   };
 }(), dat.dom.CenteredDiv = function(dom, common) {

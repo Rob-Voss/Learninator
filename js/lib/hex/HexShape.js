@@ -73,10 +73,21 @@ var HexShape = HexShape || {};
                 }
             }
 
-            this.color = colorForHex(this.q, this.r, this.s);
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
-            this.draw();
+            this.shape.clear();
+            this.shape.lineStyle(1, 0x000000, 0.9);
+            this.shape.beginFill(this.color, 0.09);
+            for (let i = 0; i <= this.corners.length; i++) {
+                if (i === 0) {
+                    this.shape.moveTo(this.corners[i].x, this.corners[i].y);
+                } else if (i === 6) {
+                    this.shape.lineTo(this.corners[0].x, this.corners[0].y);
+                } else {
+                    this.shape.lineTo(this.corners[i].x, this.corners[i].y);
+                }
+            }
+            this.shape.endFill();
             this.bounds = this.shape.getBounds();
             this.shape
                 .on('mousedown', (event) => {

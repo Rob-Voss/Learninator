@@ -151,7 +151,7 @@
          * @param {Vec} pathV2 To position
          * @param {Vec} lineV1 Wall or Line start
          * @param {Vec} lineV2 Wall or Line end
-         * @returns {{vecI: Vec, vecX: number, distance: number}}
+         * @returns {{vecI: Vec, ua: number, ub: number}|boolean}
          */
         this.lineIntersect = function (pathV1, pathV2, lineV1, lineV2) {
             var denom = (lineV2.y - lineV1.y) * (pathV2.x - pathV1.x) - (lineV2.x - lineV1.x) * (pathV2.y - pathV1.y);

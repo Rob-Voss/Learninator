@@ -46,7 +46,31 @@
          * @returns {World}
          */
         constructor(agents, walls, worldOpts, renderOpts) {
-            var self = this;
+            this.agents = agents || [];
+            this.entityAgents = [];
+            this.numAgents = this.agents.length;
+
+            this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
+            this.collision = Utility.getOpt(worldOpts, 'collision', {
+                type: 'quad',
+                maxChildren: 10,
+                maxDepth: 30
+            });
+            this.cheats = Utility.getOpt(worldOpts, 'cheats', {
+                brute: false,
+                quad: false,
+                grid: false,
+                walls: false
+            });
+
+            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', null);
+
+            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', null);
+
+            this.grid = Utility.getOpt(worldOpts, 'grid', false);
+
             this.rendererOpts = renderOpts || {
                 antialiasing: false,
                 autoResize: false,
@@ -61,76 +85,53 @@
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
             this.resizable = this.rendererOpts.resizable;
-            this.ticker = 0;
             this.clock = 0;
             this.pause = false;
 
-            // The speed to run the simulation at
-            this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
-
-            // The collision detection type
-            this.collision = Utility.getOpt(worldOpts, 'collision', {
-                type: 'quad',
-                maxChildren: 10,
-                maxDepth: 30
-            });
-
-            // The cheats to display
-            this.cheats = Utility.getOpt(worldOpts, 'cheats', {
-                brute: false,
-                quad: false,
-                grid: false,
-                walls: false
-            });
-
-            // Walls if they were sent or 4 if not
-            this.walls = walls || [
-                new Wall(new Vec(0, 0), new Vec(this.width, 0), this.cheats.walls),
-                new Wall(new Vec(this.width, 0), new Vec(this.width, this.height), this.cheats.walls),
-                new Wall(new Vec(this.width, this.height), new Vec(0, this.height), this.cheats.walls),
-                new Wall(new Vec(0, this.height), new Vec(0, 0), this.cheats.walls)
-            ];
-
-            // Get agents
-            this.agents = agents || [];
-            this.entityAgents = [];
-
-            // Number of agents
-            this.numAgents = this.agents.length;
-
-            // Entity options
-            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', null);
-
-            // Entity Agent options
-            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', null);
-
-            function resize() {
-                // Determine which screen dimension is most constrained
-                let ratio = Math.min(window.innerWidth / self.width, window.innerHeight / self.height);
-                // Scale the view appropriately to fill that dimension
-                self.stage.scale.x = self.stage.scale.y = ratio;
-                // Update the renderer dimensions
-                self.renderer.resize(Math.ceil(self.width * ratio), Math.ceil(self.height * ratio));
-            }
-
-            // Create the canvas in which the game will show, and a
-            // generic container for all the graphical objects
             this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
             this.renderer.backgroundColor = 0xFFFFFF;
-
-            // Put the renderer on screen in the corner
             this.renderer.view.style.pos = "absolute";
             this.renderer.view.style.top = "0px";
             this.renderer.view.style.left = "0px";
 
-            // The stage is essentially a display list of all game objects
-            // for Pixi to render; it's used in resize(), so it must exist
             this.stage = new PIXI.Container();
+            this.populationContainer = new PIXI.Container();
+            this.population = new Map();
+
+            if (this.grid) {
+                this.cellsContainer = this.grid.getGrid();
+                this.stage.addChild(this.cellsContainer);
+            }
+
+            this.walls = walls;
+            this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats.walls));
+            this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats.walls));
+            this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats.walls));
+            this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats.walls));
 
             // Actually place the renderer onto the page for display
             document.body.querySelector('#game-container').appendChild(this.renderer.view);
+
+            var animate = (timestamp) => {
+                var timeSinceLast,
+                    now = new Date().getTime() / 1000;
+                if (!this.pause) {
+                    timeSinceLast = now - this.lastTime;
+                    this.lastTime = now;
+                    this.tick(timeSinceLast);
+                }
+                this.renderer.render(this.stage);
+                requestAnimationFrame(animate);
+            };
+
+            var resize = () => {
+                // Determine which screen dimension is most constrained
+                let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+                // Scale the view appropriately to fill that dimension
+                this.stage.scale.x = this.stage.scale.y = ratio;
+                // Update the renderer dimensions
+                this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
+            };
 
             if (this.resizable) {
                 // Listen for and adapt to changes to the screen size, e.g.,
@@ -140,38 +141,24 @@
                 // Size the renderer to fill the screen
                 resize();
             }
-            this.populate();
 
-            this.grid = Utility.getOpt(worldOpts, 'grid', false);
-            if (this.grid) {
-                this.cellsContainer = this.grid.getGrid();
-                this.stage.addChild(this.cellsContainer);
-            }
+            // Walls
+            this.addWalls();
+            // Population of Agents for the environment
+            this.addAgents();
+            // Population of Agents that are considered 'smart' entities for the environment
+            this.addEntityAgents();
+            // Add the entities
+            this.addEntities(this.numEntities);
+            this.stage.addChild(this.populationContainer);
 
             CollisionDetector.apply(this, [this.collision]);
 
+            this.lastTime = new Date().getTime() / 1000;
+            requestAnimationFrame(animate);
             if (document.getElementById('flotreward')) {
                 this.rewards = new FlotGraph(this.agents);
             }
-            this.ticker = PIXI.ticker.shared;
-            this.ticker.autoStart = false;
-            this.ticker.stop();
-
-            this.lastTime = new Date().getTime() / 1000;
-            function animate(timestamp) {
-                var timeSinceLast,
-                    now = new Date().getTime() / 1000;
-                if (!self.pause) {
-                    timeSinceLast = now - self.lastTime;
-                    self.lastTime = now;
-                    self.tick(timeSinceLast);
-                    self.ticker.update(timestamp);
-                }
-                self.renderer.render(self.stage);
-                requestAnimationFrame(animate);
-            }
-            this.ticker.start();
-            requestAnimationFrame(animate);
 
             return this;
         }
@@ -276,49 +263,10 @@
         }
 
         /**
-         * Draws the world
-         * @returns {World}
-         */
-        draw(timeSinceLast) {
-            for (let [id, entity] of this.population.entries()) {
-                if (entity.type !== 0) {
-                    entity.draw();
-                }
-            }
-
-            if (this.rewards) {
-                this.rewards.graphRewards();
-            }
-
-            return this;
-        }
-
-        /**
-         * Set up the population
-         * @returns {World}
-         */
-        populate() {
-            this.populationContainer = new PIXI.Container();
-            this.population = new Map();
-
-            // Walls
-            this.addWalls();
-            // Population of Agents for the environment
-            this.addAgents();
-            // Population of Agents that are considered 'smart' entities for the environment
-            this.addEntityAgents();
-            // Add the entities
-            this.addEntities(this.numEntities);
-            this.stage.addChild(this.populationContainer);
-
-            return this;
-        }
-
-        /**
          * Tick the environment
          * @returns {World}
          */
-        tick(timeSinceLast) {
+        tick() {
             this.updatePopulation();
 
             let popCount = 0;
@@ -374,6 +322,10 @@
             // If we have less then the number of Items allowed throw a random one in
             if (popCount < this.numEntities) {
                 this.addEntities(this.numEntities - popCount);
+            }
+
+            if (this.rewards) {
+                this.rewards.graphRewards();
             }
 
             return this;

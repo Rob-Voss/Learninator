@@ -1,10 +1,12 @@
-var AgentTD = AgentTD || {},
-    Agent = Agent || {};
+var Agent = Agent || {},
+    TDBrain = TDBrain || {},
+    AgentTD = AgentTD || {};
 
 (function (global) {
     "use strict";
 
     class AgentTD extends Agent {
+
         /**
          * Initialize the TD Agent
          * @name AgentTD
@@ -17,6 +19,8 @@ var AgentTD = AgentTD || {},
          */
         constructor(position, opts) {
             super(position, opts);
+            this.angle = 0;
+
             // Reward and Punishment
             this.carrot = +5;
             this.stick = -6;
@@ -94,23 +98,22 @@ var AgentTD = AgentTD || {},
         /**
          * Agent's chance to act on the world
          */
-        act(world) {
+        act() {
             // Create input to brain
             let inputArray = new Array(this.numEyes * this.numTypes);
             for (let i = 0; i < this.numEyes; i++) {
                 inputArray[i * this.numTypes] = 1.0;
                 inputArray[i * this.numTypes + 1] = 1.0;
                 inputArray[i * this.numTypes + 2] = 1.0;
-                if (this.eyes[i].sensedType !== -1) {
+                if (this.eyes[i].sensed.type !== -1) {
                     // sensedType is 0 for wall, 1 for food and 2 for poison lets do
                     // a 1-of-k encoding into the input array normalize to [0,1]
-                    inputArray[i * this.numTypes + this.eyes[i].sensedType] = this.eyes[i].sensedProximity / this.eyes[i].maxRange;
+                    inputArray[i * this.numTypes + this.eyes[i].sensed.type] = this.eyes[i].sensed.proximity / this.eyes[i].range;
                 }
             }
 
             if (!this.worker) {
                 // Get action from brain
-                this.previousActionIdx = this.actionIndex;
                 this.actionIndex = this.brain.forward(inputArray);
                 let action = this.actions[this.actionIndex];
 
@@ -137,8 +140,8 @@ var AgentTD = AgentTD || {},
             // Compute the reward
             for (let ei = 0; ei < this.numEyes; ei++) {
                 // Agents don't like to see walls, especially up close
-                let wallReward = this.eyes[ei].sensedProximity / this.eyes[ei].maxRange;
-                proximityReward += this.eyes[ei].sensedType === 0 ? wallReward : 1.0;
+                let wallReward = this.eyes[ei].sensed.proximity / this.eyes[ei].range;
+                proximityReward += this.eyes[ei].sensed.type === 0 ? wallReward : 1.0;
             }
 
             // Calculate the proximity reward
@@ -156,7 +159,7 @@ var AgentTD = AgentTD || {},
             // Pass to brain for learning
             if (!this.worker) {
                 this.brain.backward(reward);
-                this.pts.push(reward);
+                // this.pts.push(reward);
             } else {
                 this.post('learn', reward);
             }
@@ -166,34 +169,57 @@ var AgentTD = AgentTD || {},
 
         /**
          * Agent's chance to move in the world
-         * @param smallWorld
          */
-        move(world) {
-            this.oldPos = this.position.clone();
+        move() {
+            this.oldPosition = this.position.clone();
             this.oldAngle = this.angle;
 
+            for (let i = 0; i < this.collisions.length; i++) {
+                let collisionObj = this.collisions[i];
+                if (collisionObj.distance <= this.radius) {
+                    switch (collisionObj.entity.type) {
+                        case 0:
+                            // Wall
+                            this.position = this.oldPosition;
+                            this.force.x = 0;
+                            this.force.y = 0;
+                            break;
+                        case 1:
+                            // Noms
+                            this.digestionSignal += this.carrot;
+                            collisionObj.entity.cleanUp = true;
+                            break;
+                        case 2:
+                            // Gnars
+                            this.digestionSignal += this.stick;
+                            collisionObj.entity.cleanUp = true;
+                            break;
+                        case 3:
+                        case 4:
+                            // Other Agents
+                            this.force.x = collisionObj.target.vx;
+                            this.force.y = collisionObj.target.vy;
+                            break;
+                    }
+                }
+            }
+
             //Steer the agent according to outputs of wheel velocities
-            let v = new Vec(0, this.radius / 2.0);
-            v = v.rotate(this.oldAngle + Math.PI / 2);
+            let v = new Vec(0, this.radius / 2.0).rotate(this.oldAngle + Math.PI / 2);
+
             // Positions of wheel 1
             let w1pos = this.position.add(v),
             // Positions of wheel 2
                 w2pos = this.position.sub(v);
 
-            let vv = this.position.sub(w2pos);
-            vv = vv.rotate(-this.rot1);
-
-            let vv2 = this.position.sub(w1pos);
-            vv2 = vv2.rotate(this.rot2);
+            let vv = this.position.sub(w2pos).rotate(-this.rot1),
+                vv2 = this.position.sub(w1pos).rotate(this.rot2);
 
             let newPos = w2pos.add(vv),
                 newPos2 = w1pos.add(vv2);
-
             newPos.scale(0.5);
             newPos2.scale(0.5);
-            let position = newPos.add(newPos2);
-
-            this.position = position;
+            this.position = newPos.add(newPos2);
 
             this.angle -= this.rot1;
             if (this.angle < 0) {
@@ -203,60 +229,6 @@ var AgentTD = AgentTD || {},
             this.angle += this.rot2;
             if (this.angle > 2 * Math.PI) {
                 this.angle -= 2 * Math.PI;
-            }
-
-            if (world.check(this)) {
-                for (let i = 0; i < this.collisions.length; i++) {
-                    let collObj = this.collisions[i];
-                    if (collObj.type === 0) {
-                        // Wall
-                        this.position = this.oldPos.clone();
-                        this.position.vx = 0;
-                        this.position.vy = 0;
-                    } else if (collObj.type === 1 || collObj.type === 2) {
-                        // Noms or Gnars
-                        this.digestionSignal += (collObj.type === 1) ? this.carrot : this.stick;
-                        world.deleteEntity(collObj.id);
-                    } else if (collObj.type === 3 || collObj.type === 4) {
-                        // Other Agents
-                        this.position.vx = collObj.target.vx;
-                        this.position.vy = collObj.target.vy;
-                        if (world.population.has(collObj.id)){
-                            let entity = world.population.get(collObj.id);
-                            entity.position.vy = collObj.entity.vy;
-                            entity.position.vy = collObj.entity.vy;
-                        }
-                    }
-                }
-            }
-
-            // Handle boundary conditions.. bounce Agent
-            let top = world.height - (world.height - this.radius),
-                bottom = world.height - this.radius,
-                left = world.width - (world.width - this.radius),
-                right = world.width - this.radius;
-            if (this.position.x < left) {
-                this.position.x = left;
-                this.position.vx = 0;
-                this.position.vy = 0;
-            }
-
-            if (this.position.x > right) {
-                this.position.x = right;
-                this.position.vx = 0;
-                this.position.vy = 0;
-            }
-
-            if (this.position.y < top) {
-                this.position.y = top;
-                this.position.vx = 0;
-                this.position.vy = 0;
-            }
-
-            if (this.position.y > bottom) {
-                this.position.y = bottom;
-                this.position.vx = 0;
-                this.position.vy = 0;
             }
 
             this.direction = Utility.getDirection(this.angle);
@@ -272,7 +244,7 @@ var AgentTD = AgentTD || {},
         reset() {
             let _this = this;
             if (!this.worker) {
-                this.brain = new TDBrain(this.brainOpts);
+                this.brain = TDBrain(this.brainOpts);
             } else {
                 this.post = function (cmd, input) {
                     this.brain.postMessage({target: 'TD', cmd: cmd, input: input});
@@ -322,7 +294,6 @@ var AgentTD = AgentTD || {},
             }
         }
     }
-
     global.AgentTD = AgentTD;
 
 }(this));

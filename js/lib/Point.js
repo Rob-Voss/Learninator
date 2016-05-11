@@ -2,6 +2,7 @@
     "use strict";
 
     class Point {
+
         /**
          * Simple Point
          * @name Point

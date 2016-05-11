@@ -27,13 +27,13 @@
      * A Brain object does all the magic.
      * Over time it receives some inputs and some rewards and its job is to set
      * the outputs to maximize the expected reward
-     * @name TDAgent
+     * @name TDBrain
      * @constructor
      *
-     * @param {brainOpts} opt
-     * @returns {TDAgent}
+     * @param {brainOpts} opts
+     * @returns {TDBrain}
      */
-    function TDAgent(opts) {
+    function TDBrain(opts) {
         // In number of time steps, of temporal memory
         // the ACTUAL input to the net will be (x,a) temporalWindow times, and followed by current x
         // so to have no information from previous time step going into value function, set to 0.
@@ -175,7 +175,7 @@
      *
      * @type {{randomAction: Function, policy: Function, getNetInput: Function, forward: Function, backward: Function}}
      */
-    TDAgent.prototype = {
+    TDBrain.prototype = {
         /**
          * Returns a random action
          * In the future we can set some actions to be more or less likely
@@ -298,10 +298,9 @@
         /**
          * Learn
          * @param {number} reward
-         * @returns {TDAgent}
+         * @returns {TDBrain}
          */
         backward: function (reward) {
-            this.latestReward = reward;
             this.averageRewardWindow.add(reward);
             this.rewardWindow.shift();
             this.rewardWindow.push(reward);
@@ -351,7 +350,7 @@
 
                 return this;
             } else {
-                return;
+                return this;
             }
         }
     };
@@ -369,7 +368,7 @@
                             '../lib/Utility.js',
                             '../lib/Window.js'
                         );
-                        _TDBrain = new TDAgent(data.input);
+                        _TDBrain = new TDBrain(data.input);
                         self.postMessage({
                             cmd: 'init',
                             msg: 'complete'
@@ -419,7 +418,7 @@
         }
     };
 
-    global.TDAgent = TDAgent;
+    global.TDAgent = TDBrain;
 
 })
 (this);

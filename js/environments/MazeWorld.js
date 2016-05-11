@@ -22,12 +22,10 @@
                     height: 600
                 },
                 agents = [
-                    new Agent(new Vec(1, 1), {
+                    new AgentTD(new Vec(1, 1), {
                         brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
-                        numStates: 0,
                         numTypes: 3,
-                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -36,18 +34,18 @@
                         interactive: false,
                         useSprite: false,
                         cheats: {
+                            id: false,
+                            name: false,
+                            direction: false,
                             gridLocation: false,
                             position: false,
-                            name: false,
-                            id: false
+                            bounds: false
                         }
                     }),
-                    new Agent(new Vec(1, 1), {
+                    new AgentTD(new Vec(1, 1), {
                         brainType: 'convnetjs.TDAgent',
                         numEyes: 9,
-                        numStates: 0,
                         numTypes: 3,
-                        numProprioception: 0,
                         range: 85,
                         proximity: 85,
                         radius: 10,
@@ -56,10 +54,12 @@
                         interactive: false,
                         useSprite: false,
                         cheats: {
+                            id: false,
+                            name: false,
+                            direction: false,
                             gridLocation: false,
                             position: false,
-                            name: false,
-                            id: false
+                            bounds: false
                         }
                     })
                 ],
@@ -78,15 +78,31 @@
                         type: 'brute'
                     },
                     cheats: {
+                        brute: false,
                         quad: false,
                         grid: false,
                         walls: false
                     },
-                    numEntities: 30
+                    numEntities: 30,
+                    entityOpts: {
+                        radius: 10,
+                        collision: true,
+                        interactive: true,
+                        useSprite: false,
+                        moving: false,
+                        cheats: {
+                            id: false,
+                            name: false,
+                            direction: false,
+                            gridLocation: false,
+                            position: false,
+                            bounds: false
+                        }
+                    }
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);
-            this.agents[0].load('zoo/mazeagent.json');
+            // this.agents[0].load('zoo/mazeagent.json');
 
             return this;
         }

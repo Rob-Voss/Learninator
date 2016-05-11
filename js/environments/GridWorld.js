@@ -173,7 +173,7 @@ var GridWorld = GridWorld || {},
             for (var y = 0; y < this.gH; y++) {
                 var xcoord = x * this.cs,
                     ycoord = y * this.cs,
-                    r = 255,
+                    rd = 255,
                     g = 255,
                     b = 255,
                     s = this.xyToS(x, y),
@@ -196,16 +196,16 @@ var GridWorld = GridWorld || {},
                 var ms = 100;
                 if (vv > 0) {
                     g = 255;
-                    r = 255 - vv * ms;
+                    rd = 255 - vv * ms;
                     b = 255 - vv * ms;
                 }
                 if (vv < 0) {
                     g = 255 + vv * ms;
-                    r = 255;
+                    rd = 255;
                     b = 255 + vv * ms;
                 }
 
-                var vcolor = 'rgb(' + Math.floor(r) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
+                var vcolor = 'rgb(' + Math.floor(rd) + ',' + Math.floor(g) + ',' + Math.floor(b) + ')',
                     rcolor = "",
                 // update colors of rectangles based on value
                     r = this.rs[s];
@@ -509,10 +509,10 @@ var GridWorld = GridWorld || {},
                     this.pas[s][a] = pa;
 
                     g.append('line')
-                        .attr('x1', (lx1 !== 0) ? lx1 - 1 : 0)
-                        .attr('y1', (ly1 !== 0) ? ly1 - 1 : 0)
-                        .attr('x2', (lx2 !== 0) ? lx2 - 1 : 0)
-                        .attr('y2', (ly2 !== 0) ? ly2 - 1 : 0)
+                        .attr('x1', (lx1 > 0) ? lx1 - 1 : 0)
+                        .attr('y1', (ly1 > 0) ? ly1 - 1 : 0)
+                        .attr('x2', (lx2 > 0) ? lx2 - 1 : 0)
+                        .attr('y2', (ly2 > 0) ? ly2 - 1 : 0)
                         .attr('stroke', 'red')
                         .attr('stroke-width', '2');
                 }

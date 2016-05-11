@@ -45,10 +45,6 @@
             this.shape = new PIXI.Graphics();
             this.shape.interactive = true;
             this.shape.color = this.color;
-            this.shape.clear();
-            this.shape.lineStyle(0.5, 0xFFFFFF, 0);
-            this.shape.drawRect(this.corners[0].x, this.corners[0].y, this.width, this.height);
-            this.shape.endFill();
             this.bounds = this.shape.getBounds();
             this.shape
                 .on('mousedown', (event) => {

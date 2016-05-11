@@ -5,7 +5,6 @@
     "use strict";
 
     class Cube {
-
         /**
          * A Cube
          * @name Cube

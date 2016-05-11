@@ -1,4 +1,6 @@
-var R = {}; // the Recurrent library
+var R = {}, // the Recurrent library
+    RL = {};
+//     _Agent = _Agent || {};
 
 (function (global) {
     "use strict";
@@ -26,7 +28,7 @@ var R = {}; // the Recurrent library
             var u = 2 * Math.random() - 1,
                 v = 2 * Math.random() - 1,
                 r = u * u + v * v;
-            if (r == 0 || r > 1) {
+            if (r === 0 || r > 1) {
                 return gaussRandom();
             }
             var c = Math.sqrt(-2 * Math.log(r) / r);
@@ -59,13 +61,13 @@ var R = {}; // the Recurrent library
          * @returns {*}
          */
         zeros = function (n) {
-            if (typeof(n) === 'undefined' || isNaN(n)) {
+            if (typeof n === 'undefined' || isNaN(n)) {
                 return [];
             }
             if (typeof ArrayBuffer === 'undefined') {
                 // lacking browser support
                 var arr = new Array(n);
-                for (var i = 0; i < n; i++) {
+                for (let i = 0; i < n; i++) {
                     arr[i] = 0;
                 }
                 return arr;
@@ -161,6 +163,7 @@ var R = {}; // the Recurrent library
             }
         }
     };
+    R.Mat = Mat;
 
     /**
      *
@@ -171,161 +174,184 @@ var R = {}; // the Recurrent library
             var a = new Mat(b.n, b.d);
             a.setFrom(b.w);
             return a;
-        },
-        /**
-         *
-         * @param {Net} net
-         * @returns {Net}
-         */
-        copyNet = function (net) {
-            // nets are (k,v) pairs with k = string key, v = Mat()
-            var newNet = {};
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    newNet[p] = copyMat(net[p]);
+        };
+    R.copyMat = copyMat;
+
+    /**
+     *
+     * @param {Net} net
+     * @returns {Net}
+     */
+    var copyNet = function (net) {
+        // nets are (k,v) pairs with k = string key, v = Mat()
+        var newNet = {};
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                newNet[p] = copyMat(net[p]);
+            }
+        }
+        return newNet;
+    };
+    R.copyNet = copyNet;
+
+    /**
+     *
+     * @param m
+     * @param alpha
+     */
+    var updateMat = function (m, alpha) {
+        // updates in place
+        for (var i = 0, n = m.n * m.d; i < n; i++) {
+            if (m.dw[i] !== 0) {
+                m.w[i] += -alpha * m.dw[i];
+                m.dw[i] = 0;
+            }
+        }
+    };
+    R.updateMat = updateMat;
+
+    /**
+     *
+     * @param net
+     * @param alpha
+     */
+    var updateNet = function (net, alpha) {
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                updateMat(net[p], alpha);
+            }
+        }
+    };
+    R.updateNet = updateNet;
+
+    /**
+     *
+     * @param net
+     * @returns {}
+     */
+    var netToJSON = function (net) {
+        var j = {};
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                j[p] = net[p].toJSON();
+            }
+        }
+        return j;
+    };
+    R.netToJSON = netToJSON;
+
+    /**
+     *
+     * @param j
+     * @returns {}
+     */
+    var netFromJSON = function (j) {
+        var net = {};
+        for (var p in j) {
+            if (j.hasOwnProperty(p)) {
+                net[p] = new Mat(1, 1); // not proud of this
+                net[p].fromJSON(j[p]);
+            }
+        }
+        return net;
+    };
+    R.netFromJSON = netFromJSON;
+
+    /**
+     *
+     * @param net
+     */
+    var netZeroGrads = function (net) {
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                var mat = net[p];
+                gradFillConst(mat, 0);
+            }
+        }
+    };
+    R.netZeroGrads = netZeroGrads;
+
+    /**
+     *
+     * @param net
+     * @returns {Mat}
+     */
+    var netFlattenGrads = function (net) {
+        var n = 0;
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                var mat = net[p];
+                n += mat.dw.length;
+            }
+        }
+        var g = new Mat(n, 1),
+            ix = 0;
+        for (var p in net) {
+            if (net.hasOwnProperty(p)) {
+                var mat = net[p];
+                for (var i = 0, m = mat.dw.length; i < m; i++) {
+                    g.w[ix] = mat.dw[i];
+                    ix++;
                 }
             }
-            return newNet;
-        },
-        /**
-         *
-         * @param m
-         * @param alpha
-         */
-        updateMat = function (m, alpha) {
-            // updates in place
-            for (var i = 0, n = m.n * m.d; i < n; i++) {
-                if (m.dw[i] !== 0) {
-                    m.w[i] += -alpha * m.dw[i];
-                    m.dw[i] = 0;
-                }
-            }
-        },
-        /**
-         *
-         * @param net
-         * @param alpha
-         */
-        updateNet = function (net, alpha) {
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    updateMat(net[p], alpha);
-                }
-            }
-        },
-        /**
-         *
-         * @param net
-         * @returns {}
-         */
-        netToJSON = function (net) {
-            var j = {};
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    j[p] = net[p].toJSON();
-                }
-            }
-            return j;
-        },
-        /**
-         *
-         * @param j
-         * @returns {}
-         */
-        netFromJSON = function (j) {
-            var net = {};
-            for (var p in j) {
-                if (j.hasOwnProperty(p)) {
-                    net[p] = new Mat(1, 1); // not proud of this
-                    net[p].fromJSON(j[p]);
-                }
-            }
-            return net;
-        },
-        /**
-         *
-         * @param net
-         */
-        netZeroGrads = function (net) {
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    var mat = net[p];
-                    gradFillConst(mat, 0);
-                }
-            }
-        },
-        /**
-         *
-         * @param net
-         * @returns {Mat}
-         */
-        netFlattenGrads = function (net) {
-            var n = 0;
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    var mat = net[p];
-                    n += mat.dw.length;
-                }
-            }
-            var g = new Mat(n, 1),
-                ix = 0;
-            for (var p in net) {
-                if (net.hasOwnProperty(p)) {
-                    var mat = net[p];
-                    for (var i = 0, m = mat.dw.length; i < m; i++) {
-                        g.w[ix] = mat.dw[i];
-                        ix++;
-                    }
-                }
-            }
-            return g;
-        },
-        /**
-         * Return a Mat but filled with random numbers from gaussian
-         * @param n
-         * @param d
-         * @param mu
-         * @param std
-         * @returns {Mat}
-         */
-        randMat = function (n, d, mu, std) {
-            var m = new Mat(n, d);
-            fillRandn(m, mu, std);
-            //fillRand(m,-std,std); // kind of :P
-            return m;
-        },
-        /**
-         * Fill matrix with random gaussian numbers
-         * @param m
-         * @param mu
-         * @param std
-         */
-        fillRandn = function (m, mu, std) {
-            for (var i = 0, n = m.w.length; i < n; i++) {
-                m.w[i] = randn(mu, std);
-            }
-        },
-        /**
-         *
-         * @param m
-         * @param lo
-         * @param hi
-         */
-        fillRand = function (m, lo, hi) {
-            for (var i = 0, n = m.w.length; i < n; i++) {
-                m.w[i] = randf(lo, hi);
-            }
-        },
-        /**
-         *
-         * @param m
-         * @param c
-         */
-        gradFillConst = function (m, c) {
+        }
+        return g;
+    };
+    R.netFlattenGrads = netFlattenGrads;
+
+    /**
+     * Return a Mat but filled with random numbers from gaussian
+     * @param n
+     * @param d
+     * @param mu
+     * @param std
+     * @returns {Mat}
+     */
+    var randMat = function (n, d, mu, std) {
+        var m = new Mat(n, d);
+        fillRandn(m, mu, std);
+        //fillRand(m,-std,std); // kind of :P
+        return m;
+    };
+    R.randMat = randMat;
+
+    /**
+     * Fill matrix with random gaussian numbers
+     * @param m
+     * @param mu
+     * @param std
+     */
+    var fillRandn = function (m, mu, std) {
+        for (var i = 0, n = m.w.length; i < n; i++) {
+            m.w[i] = randn(mu, std);
+        }
+    };
+    R.fillRandn = fillRandn;
+
+    /**
+     *
+     * @param m
+     * @param lo
+     * @param hi
+     */
+    var fillRand = function (m, lo, hi) {
+        for (var i = 0, n = m.w.length; i < n; i++) {
+            m.w[i] = randf(lo, hi);
+        }
+    };
+    R.fillRand = fillRand;
+
+    /**
+     *
+     * @param m
+     * @param c
+     */
+    var gradFillConst = function (m, c) {
             for (var i = 0, n = m.dw.length; i < n; i++) {
                 m.dw[i] = c;
             }
         };
+    R.gradFillConst = gradFillConst;
 
     /**
      * Transformer definitions
@@ -577,6 +603,7 @@ var R = {}; // the Recurrent library
             return out;
         }
     };
+    R.Graph = Graph;
 
     /**
      *
@@ -606,6 +633,7 @@ var R = {}; // the Recurrent library
         // to set gradients directly on m
         return out;
     };
+    R.softMax = softMax;
 
     /**
      * @name Solver
@@ -669,6 +697,8 @@ var R = {}; // the Recurrent library
             return solverStats;
         }
     };
+    R.Solver = Solver;
+// END OF RECURRENTJS
 
     /**
      *
@@ -704,8 +734,9 @@ var R = {}; // the Recurrent library
             model.bd = new Mat(outputSize, 1);
 
             return model;
-        },
-        /**
+        };
+    RL.initLSTM = initLSTM;
+    /**
          * Forward prop for a single tick of LSTM
          * @param {Graph} G is graph to append ops to
          * @param model contains LSTM parameters
@@ -714,7 +745,7 @@ var R = {}; // the Recurrent library
          * @param {Object} prev is a struct containing hidden and cell from previous iteration
          * @returns {}
          */
-        forwardLSTM = function (G, model, hiddenSizes, x, prev) {
+    var forwardLSTM = function (G, model, hiddenSizes, x, prev) {
             var hiddenPrevs = [],
                 cellPrevs = [];
             if (prev === null || prev.h === undefined) {
@@ -775,127 +806,56 @@ var R = {}; // the Recurrent library
                 c: cell,
                 o: output
             };
-        },
-        /**
-         * helper function for computing sigmoid
-         * @param x
-         * @returns {number}
-         */
-        sig = function (x) {
-            return 1.0 / (1 + Math.exp(-x));
-        },
-        /**
-         * argmax of array w
-         * @param w
-         * @returns {number}
-         */
-        maxI = function (w) {
-            var maxv = w[0],
-                maxix = 0;
-            for (var i = 1, n = w.length; i < n; i++) {
-                var v = w[i];
-                if (v > maxv) {
-                    maxix = i;
-                    maxv = v;
-                }
-            }
-
-            return maxix;
-        },
-        /**
-         * sample argmax from w, assuming w are probabilities that sum to one
-         * @param w
-         * @returns {number}
-         */
-        sampleI = function (w) {
-            var r = randf(0, 1),
-                x = 0.0,
-                i = 0;
-            while (true) {
-                x += w[i];
-                if (x > r) {
-                    return i;
-                }
-                i++;
-            }
-
-            return w.length - 1; // pretty sure we should never get here?
         };
+    RL.forwardLSTM = forwardLSTM;
+    /**
+     * helper function for computing sigmoid
+     * @param x
+     * @returns {number}
+     */
+    var sig = function (x) {
+        return 1.0 / (1 + Math.exp(-x));
+    };
+    RL.sig = sig;
+    /**
+     * argmax of array w
+     * @param w
+     * @returns {number}
+     */
+    var maxI = function (w) {
+        var maxv = w[0],
+            maxix = 0;
+        for (var i = 1, n = w.length; i < n; i++) {
+            var v = w[i];
+            if (v > maxv) {
+                maxix = i;
+                maxv = v;
+            }
+        }
 
-// exports
-    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
-        module.exports = {
-            // various utils
-            assert: assert,
-            zeros: zeros,
-            maxI: maxI,
-            sampleI: sampleI,
-            randi: randi,
-            randn: randn,
-            randc: randc,
-            randf: randf,
-            softMax: softMax,
+        return maxix;
+    };
+    RL.maxI = maxI;
+    /**
+     * sample argmax from w, assuming w are probabilities that sum to one
+     * @param w
+     * @returns {number}
+     */
+    var sampleI = function (w) {
+        var r = randf(0, 1),
+            x = 0.0,
+            i = 0;
+        while (true) {
+            x += w[i];
+            if (x > r) {
+                return i;
+            }
+            i++;
+        }
 
-            // more utils
-            updateMat: updateMat,
-            updateNet: updateNet,
-            copyMat: copyMat,
-            copyNet: copyNet,
-            netToJSON: netToJSON,
-            netFromJSON: netFromJSON,
-            netZeroGrads: netZeroGrads,
-            netFlattenGrads: netFlattenGrads,
-
-            // classes
-            Mat: Mat,
-            randMat: randMat,
-            forwardLSTM: forwardLSTM,
-            initLSTM: initLSTM,
-
-            // optimization
-            Solver: Solver,
-            Graph: Graph
-        };
-    } else {
-        // various utils
-        global.assert = assert;
-        global.zeros = zeros;
-        global.maxI = maxI;
-        global.sampleI = sampleI;
-        global.randi = randi;
-        global.randn = randn;
-        global.randc = randc;
-        global.randf = randf;
-        global.softMax = softMax;
-
-        // more utils
-        global.updateMat = updateMat;
-        global.updateNet = updateNet;
-        global.copyMat = copyMat;
-        global.copyNet = copyNet;
-        global.netToJSON = netToJSON;
-        global.netFromJSON = netFromJSON;
-        global.netZeroGrads = netZeroGrads;
-        global.netFlattenGrads = netFlattenGrads;
-
-        // classes
-        global.Mat = Mat;
-        global.randMat = randMat;
-        global.forwardLSTM = forwardLSTM;
-        global.initLSTM = initLSTM;
-
-        // optimization
-        global.Solver = Solver;
-        global.Graph = Graph;
-    }
-})(R);
-
-// END OF RECURRENTJS
-
-var RL = {};
-(function (global) {
-    "use strict";
-
+        return w.length - 1; // pretty sure we should never get here?
+    };
+    RL.sampleI = sampleI;
     /**
      * syntactic sugar function for getting default parameter values
      * @param opt
@@ -904,31 +864,29 @@ var RL = {};
      * @returns {*}
      */
     var getOpt = function (opt, field_name, default_value) {
-            if (typeof opt === 'undefined') {
-                return default_value;
-            }
-            return (typeof opt[field_name] !== 'undefined') ? opt[field_name] : default_value;
-        },
-        zeros = R.zeros, // inherit these
-        assert = R.assert,
-        randi = R.randi,
-        randf = R.randf,
-        /*
+                if (typeof opt === 'undefined') {
+                    return default_value;
+                }
+                return (typeof opt[field_name] !== 'undefined') ? opt[field_name] : default_value;
+            };
+    RL.getOpt = getOpt;
+    /*
          *
          * @param arr
          * @param c
          */
-        setConst = function (arr, c) {
+    var setConst = function (arr, c) {
             for (var i = 0, n = arr.length; i < n; i++) {
                 arr[i] = c;
             }
-        },
-        /**
+        };
+    RL.setConst = setConst;
+    /**
          *
          * @param p
          * @returns {number}
          */
-        sampleWeighted = function (p) {
+    var sampleWeighted = function (p) {
             var r = Math.random();
             var c = 0.0;
             for (var i = 0, n = p.length; i < n; i++) {
@@ -939,12 +897,11 @@ var RL = {};
             }
             assert(false, 'wtf');
         };
-
+    RL.sampleWeighted = sampleWeighted;
 
 // ------
-// AGENTS
+// REINFORCEJS AGENTS
 // ------
-
     /**
      * DPAgent performs Value Iteration
      * - can also be used for Policy Iteration if you really wanted to
@@ -1473,6 +1430,8 @@ var RL = {};
         toJSON: function () {
             // save function
             var j = {};
+            j.exp = this.exp;
+            j.expi = this.expi;
             j.nh = this.nh;
             j.ns = this.ns;
             j.na = this.na;
@@ -1485,6 +1444,8 @@ var RL = {};
          */
         fromJSON: function (j) {
             // load function
+            this.exp = j.exp;
+            this.expi = j.expi;
             this.nh = j.nh;
             this.ns = j.ns;
             this.na = j.na;
@@ -1498,12 +1459,11 @@ var RL = {};
          * @returns {*}
          */
         forwardQ: function (net, s, needsBackprop) {
-            var G = new R.Graph(needsBackprop),
-                a1mat = G.add(G.mul(net.W1, s), net.b1),
-                h1mat = G.tanh(a1mat),
-                a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
+            var G = new R.Graph(needsBackprop);
+            var a1mat = G.add(G.mul(net.W1, s), net.b1);
+            var h1mat = G.tanh(a1mat);
+            var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
             this.lastG = G; // back this up. Kind of hacky isn't it
-
             return a2mat;
         },
         /**
@@ -1513,16 +1473,16 @@ var RL = {};
          */
         act: function (slist) {
             // convert to a Mat column vector
-            var a, s = new R.Mat(this.ns, 1);
+            var s = new R.Mat(this.ns, 1);
             s.setFrom(slist);
 
             // epsilon greedy policy
-            if (Math.random() < this.epsilon) {
-                a = randi(0, this.na);
+            if(Math.random() < this.epsilon) {
+                var a = randi(0, this.na);
             } else {
                 // greedy wrt Q function
-                var aMat = this.forwardQ(this.net, s, false);
-                a = R.maxI(aMat.w); // returns index of argmax action
+                var amat = this.forwardQ(this.net, s, false);
+                var a = RL.maxI(amat.w); // returns index of argmax action
             }
 
             // shift state memory
@@ -1538,26 +1498,28 @@ var RL = {};
          * @param r1
          */
         learn: function (r1) {
-            if (this.r0 !== null && this.alpha > 0) {
-                // learn from this tuple to get a sense of how "surprising" it is to the agent
-                // a measure of surprise
-                this.tdError = this.learnFromTuple(this.s0, this.a0, this.r0, this.s1, this.a1);
+            // perform an update on Q function
+            if(this.r0 !== null && this.alpha > 0) {
 
+                // learn from this tuple to get a sense of how "surprising" it is to the agent
+                var tderror = this.learnFromTuple(this.s0, this.a0, this.r0, this.s1, this.a1);
+                this.tdError = tderror; // a measure of surprise
+if (isNaN(tderror)) {
+    console.log();
+}
                 // decide if we should keep this experience in the replay
-                if (this.t % this.experienceAddEvery === 0) {
+                if(this.t % this.experienceAddEvery === 0) {
                     this.exp[this.expi] = [this.s0, this.a0, this.r0, this.s1, this.a1];
                     this.expi += 1;
-                    if (this.expi > this.experienceSize) {
-                        this.expi = 0;
-                    } // roll over when we run out
+                    if(this.expi > this.experienceSize) { this.expi = 0; } // roll over when we run out
                 }
                 this.t += 1;
 
                 // sample some additional experience from replay memory and learn from it
-                for (var k = 0; k < this.learningStepsPerIteration; k++) {
-                    var ri = randi(0, this.exp.length), // todo: priority sweeps?
-                        e = this.exp[ri];
-                    this.learnFromTuple(e[0], e[1], e[2], e[3], e[4]);
+                for(var k=0;k<this.learningStepsPerIteration;k++) {
+                    var ri = randi(0, this.exp.length); // todo: priority sweeps?
+                    var e = this.exp[ri];
+                    this.learnFromTuple(e[0], e[1], e[2], e[3], e[4])
                 }
             }
             this.r0 = r1; // store for next update
@@ -1572,29 +1534,31 @@ var RL = {};
          * @returns {number}
          */
         learnFromTuple: function (s0, a0, r0, s1, a1) {
-            // compute the target Q value
-            var tMat = this.forwardQ(this.net, s1, false),
             // want: Q(s,a) = r + gamma * max_a' Q(s',a')
-                qMax = r0 + this.gamma * tMat.w[R.maxI(tMat.w)],
-            // now predict so use backProp
-                predict = this.forwardQ(this.net, s0, true),
-                clamp = this.tdErrorClamp;
-            this.tdError = predict.w[a0] - qMax;
-            if (Math.abs(this.tdError) > clamp) {  // huber loss to robustify
-                if (this.tdError > clamp) {
-                    this.tdError = clamp;
-                }
-                if (this.tdError < -clamp) {
-                    this.tdError = -clamp;
-                }
+
+            // compute the target Q value
+            var tmat = this.forwardQ(this.net, s1, false);
+            var qmax = r0 + this.gamma * tmat.w[RL.maxI(tmat.w)];
+
+            // now predict
+            var pred = this.forwardQ(this.net, s0, true);
+
+            var tderror = pred.w[a0] - qmax;
+            if (isNaN(qmax) || isNaN(tderror)) {
+                console.log();
             }
-            predict.dw[a0] = this.tdError;
+            var clamp = this.tdErrorClamp;
+            if(Math.abs(tderror) > clamp) {  // huber loss to robustify
+                if(tderror > clamp) tderror = clamp;
+                if(tderror < -clamp) tderror = -clamp;
+            }
+            pred.dw[a0] = tderror;
             this.lastG.backward(); // compute gradients on net params
 
             // update net
             R.updateNet(this.net, this.alpha);
 
-            return this.tdError;
+            return tderror;
         }
     };
     RL.DQNAgent = DQNAgent;
@@ -2992,21 +2956,25 @@ var RL = {};
         }
     };
     RL.ESPTrainer = ESPTrainer;
+// END OF REINFORCEJS
 
     var _Agent;
-
     self.onmessage = (e) => {
         var data = e.data,
             actionIndex;
         if (data.cmd === 'init') {
             importScripts('../Utility.js');
-            var oEnv = JSON.parse(data.input.env, function (key, value) {
-                if (typeof value !== 'string') {
-                    return value;
-                }
-                return (value.substring(0, 8) === 'function') ? eval('(' + value + ')') : value;
-            });
-            var oOpts = JSON.parse(data.input.opts);
+            var returnV,
+                oEnv = JSON.parse(data.input.env, function (key, value) {
+                    if (typeof value !== 'string') {
+                        returnV = value;
+                    }
+                    if (value.substring(0, 8) === 'function') {
+                        returnV = eval('(' + value + ')');
+                    }
+                    return returnV;
+                }),
+                oOpts = JSON.parse(data.input.opts);
         }
         var brain = data.target.split('.');
         switch (brain[0]) {
@@ -3014,9 +2982,9 @@ var RL = {};
             case 'RL':
                 switch (data.cmd) {
                     case 'init':
-                        _Agent = new brain[0][brain[1]](oEnv, oOpts);
+                        _Agent = new global[brain[0]][brain[1]](oEnv, oOpts);
 
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'init',
                             msg: 'complete',
                             input: _Agent.toJSON()
@@ -3025,7 +2993,7 @@ var RL = {};
                     case 'act':
                         actionIndex = _Agent.act(data.input);
 
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'act',
                             msg: 'complete',
                             input: actionIndex
@@ -3038,7 +3006,7 @@ var RL = {};
                         }
                         _Agent.fromJSON(JSON.parse(data.input));
 
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'load',
                             msg: 'complete',
                             input: _Agent.toJSON()
@@ -3047,7 +3015,7 @@ var RL = {};
                     case 'learn':
                         _Agent.learn(data.input);
 
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'learn',
                             msg: 'complete',
                             input: _Agent.toJSON()
@@ -3061,7 +3029,7 @@ var RL = {};
                         });
                         break;
                     case 'stop':
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'stop',
                             msg: 'complete',
                             input: _Agent.toJSON()
@@ -3069,7 +3037,7 @@ var RL = {};
                         close(); // Terminates the worker.
                         break;
                     default:
-                        this.postMessage({
+                        self.postMessage({
                             cmd: 'error',
                             msg: 'Unknown command: ' + data.cmd
                         });
@@ -3081,10 +3049,26 @@ var RL = {};
 // exports
     if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
         module.exports = {
-            RL: RL
+            R: R,
+            RL: RL,
+            // various utils
+            assert: assert,
+            zeros: zeros,
+            randi: randi,
+            randn: randn,
+            randc: randc,
+            randf: randf
         };
     } else {
+        global.R = R;
         global.RL = RL;
+        // various utils
+        global.assert = assert;
+        global.zeros = zeros;
+        global.randi = randi;
+        global.randn = randn;
+        global.randc = randc;
+        global.randf = randf;
     }
 
-})(RL);
+})(this);

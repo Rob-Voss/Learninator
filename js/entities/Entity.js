@@ -45,13 +45,11 @@
                 this.type = this.entityTypes.indexOf(type);
                 this.typeName = type;
                 this.color = this.hexStyles[this.type];
-                this.legendColor = this.styles[this.type];
                 this.name = (this.name === undefined) ? type : this.name;
             } else if (typeOf === 'number') {
                 this.type = type || 1;
                 this.typeName = this.entityTypes[this.type];
                 this.color = this.hexStyles[this.type];
-                this.legendColor = this.styles[this.type];
                 this.name = (this.name === undefined) ? this.entityTypes[this.type] : this.name;
             }
 

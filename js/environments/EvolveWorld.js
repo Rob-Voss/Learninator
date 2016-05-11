@@ -367,7 +367,7 @@ var EvolveWorld = EvolveWorld || {},
         // Spawn more food, maybe
         if (this.counter % this.foodFrequency == 0 && this.food.length < this.foodLimit) {
             let f = {
-                pos: new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height))
+                position: new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height))
             };
             this.food.push(f);
         }

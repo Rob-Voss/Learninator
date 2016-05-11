@@ -5,6 +5,7 @@
     "use strict";
 
     class Hex {
+
         /**
          * A Hex
          * @name Hex
@@ -68,7 +69,7 @@
          * Distance from another Hex
          * @param {Hex} a
          * @param {Hex} b
-         * @returns {Hex}
+         * @returns {number}
          */
         distance(a, b) {
             return this.len(this.subtract(a, b));

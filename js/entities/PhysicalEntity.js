@@ -32,6 +32,7 @@
             this.position = this.body.position;
             this.radius = (this.type === 2) ? 10 : this.body.circleRadius;
             this.age = 0;
+            this.counter = 0;
             this.speed = 1;
             this.force = {
                 x: Common.random(-this.speed, this.speed) * 0.0025,
@@ -47,20 +48,22 @@
         }
 
         /**
-         *
-         */
-        move() {
-            Body.applyForce(this.body, this.body.position, this.force);
-            this.position = this.body.position;
-        }
-
-        /**
          * Do work son
+         * @param {array} bodies
          * @returns {PhysicalEntity}
          */
-        tick() {
+        tick(bodies) {
             this.age += 1;
-            this.move();
+            this.counter += 1;
+            if (this.counter >= 60 * 15) {
+                this.force = {
+                    x: Common.random(-this.speed, this.speed) * 0.0025,
+                    y: Common.random(-this.speed, this.speed) * 0.0025
+                };
+                this.counter = 0;
+            }
+            Body.applyForce(this.body, this.body.position, this.force);
+            this.position = this.body.position;
 
             return this;
         }
