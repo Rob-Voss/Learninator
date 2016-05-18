@@ -598,7 +598,7 @@ var GridWorld = GridWorld || {},
     GridWorld.prototype.reset = function () {
         let lastState = 0;
         // specify some rewards
-        this.Rarr = Utility.zeros(this.gS);
+        this.Rarr = Utility.Maths.zeros(this.gS);
         this.Aarr = new Array(this.gS);
 
         for (let y = 0; y < this.gH; y++) {

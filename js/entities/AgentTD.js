@@ -208,18 +208,18 @@ var Agent = Agent || {},
             let v = new Vec(0, this.radius / 2.0).rotate(this.oldAngle + Math.PI / 2);
 
             // Positions of wheel 1
-            let w1pos = this.position.add(v),
+            let w1pos = this.position.addVecTo(v),
             // Positions of wheel 2
                 w2pos = this.position.sub(v);
 
             let vv = this.position.sub(w2pos).rotate(-this.rot1),
                 vv2 = this.position.sub(w1pos).rotate(this.rot2);
 
-            let newPos = w2pos.add(vv),
-                newPos2 = w1pos.add(vv2);
+            let newPos = w2pos.addVecTo(vv),
+                newPos2 = w1pos.addVecTo(vv2);
             newPos.scale(0.5);
             newPos2.scale(0.5);
-            this.position = newPos.add(newPos2);
+            this.position = newPos.addVecTo(newPos2);
 
             this.angle -= this.rot1;
             if (this.angle < 0) {

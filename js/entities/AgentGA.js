@@ -21,10 +21,10 @@ var AgentGA = AgentGA || {},
             this.nInput = this.nGameInput + this.nOutput;
 
             // store current inputs and outputs
-            this.inputState = Utility.zeros(this.nInput);
+            this.inputState = Utility.Maths.zeros(this.nInput);
             this.convInputState = new convnetjs.Vol(1, 1, this.nInput); // compatible with convnetjs lib input.
-            this.outputState = Utility.zeros(this.nOutput);
-            this.prevOutputState = Utility.zeros(this.nOutput);
+            this.outputState = Utility.Maths.zeros(this.nOutput);
+            this.prevOutputState = Utility.Maths.zeros(this.nOutput);
 
             // setup neural network:
             this.layerDefs = [];

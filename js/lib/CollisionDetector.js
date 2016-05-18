@@ -3,7 +3,7 @@
 
     /**
      * Collision detection options
-     * @typedef {Object} cdOpts
+     * @typedef {Object} collisionOpts
      * @property {String} type - The collision type 'quad','grid','brute'
      * @property {number} maxChildren - The max number of children: 'quad' only
      * @property {number} maxDepth - The max depth of the nodes: 'quad' only
@@ -14,7 +14,7 @@
      * @name CollisionDetector
      * @constructor
      *
-     * @param {cdOpts} opts
+     * @param {collisionOpts} opts
      */
     var CollisionDetector = function (opts) {
         this.cdType = opts.type;
@@ -189,7 +189,7 @@
                 v.normalize();
                 v.scale(d);
                 var vecX,
-                    vecI = v0.add(v);
+                    vecI = v0.addVecTo(v);
                 if (Math.abs(v2.x - v1.x) > Math.abs(v2.y - v1.y)) {
                     vecX = (vecI.x - v1.x) / (v2.x - v1.x);
                 } else {

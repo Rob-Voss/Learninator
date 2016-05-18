@@ -1,88 +1,81 @@
-/**
- * Inspired by https://github.com/RobertBrewitz/axial-hexagonal-grid
- */
 (function (global) {
     "use strict";
 
-    class Hex {
+    /**
+     * A Hex
+     * @name Hex
+     * @constructor
+     *
+     * @param {number} q
+     * @param {number} r
+     * @param {number} s
+     * @returns {Hex}
+     */
+    var Hex = function (q, r, s) {
+        this.q = q || 0;
+        this.r = r || 0;
+        this.s = s || -q - r;
+        this.visited = false;
+        this.parent = null;
+        this.heuristic = 0;
+        this.reward = 0;
+        this.corners = [];
+        this.walls = [];
+        this.population = new Map();
 
-        /**
-         * A Hex
-         * @name Hex
-         * @constructor
-         *
-         * @param {number} q
-         * @param {number} r
-         * @param {number} s
-         * @returns {Hex}
-         */
-        constructor(q = 0, r = 0, s = 0) {
-            this.q = q;
-            this.r = r;
-            this.s = s || -q - r;
-            this.visited = false;
-            this.parent = null;
-            this.heuristic = 0;
-            this.reward = 0;
+        return this;
+    };
 
-            return this;
-        }
-
+    Hex.prototype = {
         /**
          * Add a Hex to another one
          * @param {Hex} a
          * @param {Hex} b
          * @returns {Hex}
          */
-        add(a, b) {
+        add: function (a, b) {
             return new Hex(a.q - b.q, a.r - b.r, a.s + b.s);
-        }
-
+        },
         /**
          * Get the diagonal coords for this Hex
          * @param {number} direction
          * @returns {*}
          */
-        diagonals(direction) {
-            return hexDiagonals[direction];
-        }
-
+        diagonals: function (direction) {
+            return Hex.hexDiagonals[direction];
+        },
         /**
          * Get the neighbor
          * @param {number} direction
          * @returns {*|Hex}
          */
-        diagonalNeighbor(hex, direction) {
-            return this.add(hex, this.diagonals[direction]);
-        }
-
+        diagonalNeighbor: function (hex, direction) {
+            return this.add(hex, Hex.hexDiagonals[direction]);
+        },
         /**
          * Get the direction
          * @param {number} direction
          * @returns {*}
          */
-        direction(direction) {
-            return hexDirections[direction];
-        }
-
+        direction: function (direction) {
+            return Hex.hexDirections[direction];
+        },
         /**
          * Distance from another Hex
          * @param {Hex} a
          * @param {Hex} b
-         * @returns {number}
+         * @returns {Hex}
          */
-        distance(a, b) {
+        distance: function (a, b) {
             return this.len(this.subtract(a, b));
-        }
-
+        },
         /**
          * Get the length of the Hex
          * @returns {number}
          */
-        len(hex) {
+        len: function (hex) {
             return Math.trunc((Math.abs(hex.q) + Math.abs(hex.r) + Math.abs(hex.s)) / 2);
-        }
-
+        },
         /**
          * Perform a linear interpolation on the Hex
          * @param {Hex} a
@@ -90,17 +83,16 @@
          * @param {number} t
          * @returns {Hex}
          */
-        lerp(a, b, t) {
+        lerp: function (a, b, t) {
             return new Hex(a.q + (b.q - a.q) * t, a.r + (b.r - a.r) * t);
-        }
-
+        },
         /**
          * Return the coords to draw a line from one Hex to another
          * @param {Hex} a
          * @param {Hex} b
          * @returns {Array}
          */
-        lineDraw(a, b) {
+        lineDraw: function (a, b) {
             var N = this.distance(a, b),
                 results = [],
                 step = 1.0 / Math.max(N, 1);
@@ -109,24 +101,22 @@
             }
 
             return results;
-        }
-
+        },
         /**
          * Get the neighbor
          * @param {Hex} hex
          * @param {number} direction
          * @returns {*|Hex}
          */
-        neighbor(hex, direction) {
-            return this.add(hex, this.direction(direction));
-        }
-
+        neighbor: function (hex, direction) {
+            return this.add(hex, Hex.hexDirections(direction));
+        },
         /**
          * Round the Hex
          * @param {Hex} hex
          * @returns {Hex}
          */
-        round(hex) {
+        round: function (hex) {
             let q = Math.trunc(Math.round(hex.q)),
                 r = Math.trunc(Math.round(hex.r)),
                 s = Math.trunc(Math.round(hex.s)),
@@ -142,50 +132,43 @@
             }
 
             return new Hex(q, r, s);
-        }
-
+        },
         /**
          * Scale the Hex according to the scalar
          * @param {Hex} hex
          * @param {number} k
          * @returns {Hex}
          */
-        scale(hex, k) {
+        scale: function (hex, k) {
             return new Hex(hex.q * k, hex.r * k, hex.s * k);
-        }
-
+        },
         /**
          * Subtract a Hex
          * @param {Hex} a
          * @param {Hex} b
          * @returns {Hex}
          */
-        subtract(a, b) {
+        subtract: function (a, b) {
             return new Hex(a.q - b.q, a.r - b.r, a.s - b.s);
-        }
-
+        },
         /**
          * Get an array of coords
          * @returns {*[]}
          */
-        toArray() {
+        toArray: function () {
             return [this.q, this.r, this.s];
-        }
-
+        },
         /**
          * Convert coords to string
          * @returns {string}
          */
-        toString() {
-            return this.toArray().join(",");
+        toString: function () {
+            return this.q + ":" + this.r + ":" + this.s;
         }
-    }
+    };
 
-    var hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)],
-        hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
-    Hex.hexDirections = hexDirections;
-    Hex.hexDiagonals = hexDiagonals;
-
+    Hex.hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)];
+    Hex.hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
     global.Hex = Hex;
 
 })(this);

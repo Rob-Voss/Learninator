@@ -42,9 +42,10 @@
             worker: false,
             interactive: false,
             useSprite: false
-        }
+        };
 
     class WaterWorld extends World {
+
         /**
          * World object contains many agents and walls and food and stuff
          * @name WaterWorld

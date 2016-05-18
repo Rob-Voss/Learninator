@@ -13,7 +13,7 @@
          * @returns {Wall}
          */
         constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), cheats = false) {
-            this.id = Utility.guid();
+            this.id = Utility.Strings.guid();
             this.type = 0;
             this.v1 = v1;
             this.v2 = v2;

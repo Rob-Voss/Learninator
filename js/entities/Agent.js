@@ -1,6 +1,9 @@
 (function (global) {
     "use strict";
 
+    var Utility = global.Utility || {},
+        Eye = global.Eye || {};
+
     class Agent extends Entity {
 
         /**
@@ -8,22 +11,15 @@
          * @typedef {Object} agentOpts
          * @property {boolean} worker - Is the Agent a Web Worker
          * @property {string} brainType - The type of Brain to use
+         * @property {number} numActions - The number of actions the Agent can take
+         * @property {number} numTypes - The number of item types the Agent's eyes can see
+         * @property {number} numEyes - The number of Agent's eyes
+         * @property {number} numProprioception - The number of Agent's proprioception values
+         * @property {number} range - The range of the Agent's eyes
+         * @property {number} proximity - The proximity of the Agent's eyes
          * @property {cheatOpts} cheats - The cheats to display
          * @property {brainOpts} spec - The brain options
          * @property {envObject} env - The environment
-         */
-
-        /**
-         * The env object is the representation of the environment
-         * @typedef {Object} envObject
-         * @property {number} numTypes - The number of types the Agent can sense
-         * @property {number} numEyes - The number of the Agent's eyes
-         * @property {number} range - The range of the eyes
-         * @property {number} proximity - The proximity range of the eyes
-         * @property {number} numActions - The number of actions the agent can perform
-         * @property {number} numStates - The number of states
-         * @property {number} getMaxNumActions - function that returns the numActions value
-         * @property {number} getNumStates - function that returns the numStates value
          */
 
         /**
@@ -58,21 +54,30 @@
             this.worker = worker;
             // Just a text value for the brain type, also useful for worker posts
             this.brainType = Utility.getOpt(opts, 'brainType', 'RL.DQNAgent');
-            // The number of actions the Agent can do
             this.numActions = Utility.getOpt(opts, 'numActions', 4);
-            // The number of item types the Agent's eyes can see
             this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
-            // The number of Agent's eyes
             this.numEyes = Utility.getOpt(opts, 'numEyes', 9);
-            // The number of Agent's proprioception values
             this.numProprioception = Utility.getOpt(opts, 'numProprioception', 0);
-            // The range of the Agent's eyes
             this.range = Utility.getOpt(opts, 'range', 85);
-            // The proximity of the Agent's eyes
             this.proximity = Utility.getOpt(opts, 'proximity', 85);
-            // The number of Agent's eyes times the number of known types plus the number of
-            // proprioception values it is tracking
+            // The number of Agent's eyes times the number of known types
+            // plus the number of proprioception values it is tracking
             this.numStates = this.numEyes * this.numTypes + this.numProprioception;
+
+            // Reward or punishment
+            this.carrot = 1;
+            this.stick = -1;
+
+            this.action = null;
+            this.avgReward = 0;
+            this.lastReward = 0;
+            this.digestionSignal = 0.0;
+            this.epsilon = 0.000;
+
+            this.nStepsHistory = [];
+            this.pts = [];
+            this.brain = {};
+            this.brainState = {};
 
             // The Agent's actions
             this.actions = [];
@@ -114,21 +119,6 @@
                     this.eyes.push(eye);
                 }
             }
-
-            // Reward or punishment
-            this.carrot = 1;
-            this.stick = -1;
-
-            this.action = null;
-            this.avgReward = 0;
-            this.lastReward = 0;
-            this.digestionSignal = 0.0;
-            this.epsilon = 0.000;
-
-            this.nStepsHistory = [];
-            this.pts = [];
-            this.brain = {};
-            this.brainState = {};
 
             this.reset();
 
@@ -234,7 +224,7 @@
                     this.brain.epsilon = 0.05;
                     this.brain.alpha = 0;
                 } else {
-                    this.post('load', JSON.stringify(data));
+                    this.post('load', Utility.Strings.stringify(data));
                 }
             });
 
@@ -320,8 +310,8 @@
                     this.brain.postMessage({target: this.brainType, cmd: cmd, input: input});
                 };
 
-                let jEnv = Utility.stringify(this.env),
-                    jOpts = Utility.stringify(this.brainOpts);
+                let jEnv = Utility.Strings.stringify(this.env),
+                    jOpts = Utility.Strings.stringify(this.brainOpts);
 
                 this.brain = new Worker('js/lib/external/rl.js');
                 this.brain.onmessage = (e) => {
@@ -341,17 +331,17 @@
                             break;
                         case 'learn':
                             if (data.msg === 'complete') {
-                                this.brainState = JSON.stringify(data.input);
+                                this.brainState = Utility.Strings.stringify(data.input);
                             }
                             break;
                         case 'load':
                             if (data.msg === 'complete') {
-                                this.brainState = JSON.stringify(data.input);
+                                this.brainState = Utility.Strings.stringify(data.input);
                             }
                             break;
                         case 'save':
                             if (data.msg === 'complete') {
-                                this.brainState = JSON.stringify(data.input);
+                                this.brainState = Utility.Strings.stringify(data.input);
                             }
                             break;
                         default:
@@ -372,7 +362,7 @@
          */
         save() {
             if (!this.worker) {
-                this.brainState = JSON.stringify(this.brain.toJSON());
+                this.brainState = Utility.Strings.stringify(this.brain.toJSON());
             } else {
                 this.post('save');
             }

@@ -241,8 +241,8 @@ if (window.MatterTools) {
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let x           = Utility.randi(5, this.width - 10),
-                    y           = Utility.randi(5, this.height - 10),
+                let x           = Utility.Maths.randi(5, this.width - 10),
+                    y           = Utility.Maths.randi(5, this.height - 10),
                     vx          = Math.random() * 5 - 2.5,
                     vy          = Math.random() * 5 - 2.5,
                     entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
@@ -294,18 +294,18 @@ if (window.MatterTools) {
                         //     mask: defaultCategory | greenCategory | redCategory
                         // },
                         position: {
-                            x: Utility.randi(4, this.width - 4),
-                            y: Utility.randi(4, this.height - 4)
+                            x: Utility.Maths.randi(4, this.width - 4),
+                            y: Utility.Maths.randi(4, this.height - 4)
                         },
                         render: {
                             strokeStyle: Common.shadeColor(blueColor, -20),
                             fillStyle: blueColor
                         },
-                        friction: 0,//Utility.randf(0.0, 0.9),
-                        frictionAir: Utility.randf(0.0, 0.9),
-                        frictionStatic: 0,//Utility.randf(0.0, 10.0),
-                        restitution: 0,//Utility.randf(0.1, 0.9),
-                        density: Utility.randf(0.001, 0.01)
+                        friction: 0,//Utility.Maths.randf(0.0, 0.9),
+                        frictionAir: Utility.Maths.randf(0.0, 0.9),
+                        frictionStatic: 0,//Utility.Maths.randf(0.0, 10.0),
+                        restitution: 0,//Utility.Maths.randf(0.1, 0.9),
+                        density: Utility.Maths.randf(0.001, 0.01)
                     },
                     body      = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
                     entity    = new PhysicalAgent(body, agentOpts);
@@ -336,16 +336,16 @@ if (window.MatterTools) {
                         //     mask: defaultCategory// | greenCategory | redCategory | blueCategory
                         // },
                         position: {
-                            x: Utility.randi(4, this.width - 4),
-                            y: Utility.randi(4, this.height - 4)
+                            x: Utility.Maths.randi(4, this.width - 4),
+                            y: Utility.Maths.randi(4, this.height - 4)
                         },
-                        friction: Utility.randf(0.0, 0.9),
-                        frictionAir: Utility.randf(0.0, 0.9),
-                        frictionStatic: Utility.randf(0.0, 10.0),
-                        restitution: Utility.randf(0.1, 0.9),
-                        density: Utility.randf(0.001, 0.01)
+                        friction: Utility.Maths.randf(0.0, 0.9),
+                        frictionAir: Utility.Maths.randf(0.0, 0.9),
+                        frictionStatic: Utility.Maths.randf(0.0, 10.0),
+                        restitution: Utility.Maths.randf(0.1, 0.9),
+                        density: Utility.Maths.randf(0.001, 0.01)
                     },
-                    type      = Utility.randi(1, 3);
+                    type      = Utility.Maths.randi(1, 3);
                 if (type === 1) {
                     // entityOpt.collisionFilter.category = redCategory;
                     entityOpt.render = {

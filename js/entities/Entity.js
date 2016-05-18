@@ -1,12 +1,16 @@
 (function (global) {
     "use strict";
 
+    var Utility = global.Utility,
+        Vec = global.Vec || {};
+
     /**
      * Options for the cheats to display
      * @typedef {Object} cheatOpts
-     * @property {boolean} position - Show Vec x, y
-     * @property {boolean} name - Show the name
      * @property {boolean} id - Show the ID
+     * @property {boolean} name - Show the name
+     * @property {boolean} direction - Show direction
+     * @property {boolean} position - Show Vec x, y
      * @property {boolean} gridLocation - Show the gridLocation x, y
      */
 
@@ -17,28 +21,27 @@
      * @property {number} width - The width of the Entity
      * @property {number} height - The height of the Entity
      * @property {boolean} interactive - Is it interactive
-     * @property {boolean} collision - Does it collide with stuff
-     * @property {boolean} movingEntities - Does it move
+     * @property {boolean} moving - Does it move
      * @property {boolean} useSprite - Should it use a sprite
      * @property {cheatOpts} cheats - The cheats to display
      */
-
     class Entity {
+
         /**
          * Initialize the Entity
          * @name Entity
          * @constructor
          *
-         * @param {number|string} type A type id (wall,nom,gnar,agent)
+         * @param {number|string} type - A type id (wall,nom,gnar,agent)
          * @param {Vec} position - The x, y location
          * @param {entityOpts} opts - The Entity options
          * @param {cheatOpts} opts.cheats - The cheats to display
          * @returns {Entity}
          */
         constructor(type, position = new Vec(5, 5), opts) {
-            this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
-            this.styles = ['black', 'red', 'green', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'];
-            this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00];
+            this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'];
+            this.styles = ['black', 'red', 'green', 'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'];
+            this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
 
             let typeOf = typeof type;
             if (typeOf === 'string') {
@@ -53,10 +56,9 @@
                 this.name = (this.name === undefined) ? this.entityTypes[this.type] : this.name;
             }
 
-            this.id = Utility.guid();
+            this.id = Utility.Strings.guid();
             this.options = opts || {
                     radius: 10,
-                    collision: true,
                     interactive: false,
                     useSprite: false,
                     moving: false,
@@ -79,7 +81,6 @@
             this.height = Utility.getOpt(this.options, 'height', undefined);
             this.size = this.radius * 2 || this.width;
             this.interactive = Utility.getOpt(this.options, 'interactive', false);
-            this.collision = Utility.getOpt(this.options, 'collision', true);
             this.moving = Utility.getOpt(this.options, 'moving', false);
             this.useSprite = Utility.getOpt(this.options, 'useSprite', false);
 
@@ -122,14 +123,13 @@
                     this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                     this.shape.endFill();
                 }
-                entity = this.shape;
             }
 
             if (this.interactive === true) {
                 this.isOver = false;
                 this.isDown = false;
-                entity.interactive = true;
-                entity
+                this.shape.interactive = true;
+                this.shape
                     .on('mousedown', (e, data) => {
                         this.onDragStart(e);
                     })
@@ -184,7 +184,7 @@
             // If cheats are on then show the entities position and velocity
             if (this.cheats.position && this.posText === undefined) {
                 let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                    textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
 
                 this.posText = new PIXI.Text(textP + textV, fontOpts);
                 this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
@@ -243,7 +243,7 @@
                     this.addCheats();
                 }
                 let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
-                    textV = ' Vel(' + Utility.flt2str(this.position.vx, 4) + ', ' + Utility.flt2str(this.position.vy, 4) + ')';
+                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
                 posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
                 posText.text = textP + textV;
                 posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
@@ -378,7 +378,7 @@
             }
 
             // Execute entity's desired action
-            this.action = (this.age % 1600) ? Utility.randi(0, 4) : this.action;
+            this.action = (this.age % 1600) ? Utility.Maths.randi(0, 4) : this.action;
             switch (this.action) {
                 case 0: // Left
                     this.force.x += -this.speed * 0.095;
@@ -420,7 +420,6 @@
 
         /**
          * Do work son
-         * @param {World} world
          * @returns {Entity}
          */
         tick() {

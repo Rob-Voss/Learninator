@@ -1,6 +1,14 @@
 (function (global) {
     "use strict";
 
+    var Utility = global.Utility || {},
+        CollisionDetector = global.CollisionDetector || {},
+        Entity = global.Entity || {},
+        EntityRLDQN = global.EntityRLDQN || {},
+        FlotGraph = global.FlotGraph || {},
+        Wall = global.Wall || {},
+        Vec = global.Vec || {};
+
     class World {
 
         /**
@@ -13,23 +21,28 @@
          */
 
         /**
-         * Options for the World that define the width/height
+         * Options for the World
          * @typedef {Object} worldOpts
          * @property {number} simSpeed - The speed of the simulation
-         * @property {cdOpts} collision - The collision definition
+         * @property {collisionOpts} collision - The collision definition
          * @property {cheatsOpts} cheats - The cheats definition
+         * @property {number} numEntities - The number of Entities to spawn
+         * @property {entityOpts} entityOpts - The Entity options to use for them
+         * @property {number} numEntityAgents - The number of EntityAgents to spawn
+         * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
+         * @property {Grid} grid - The grid to use
          */
 
         /**
          * Options for the World renderer
          * @typedef {Object} renderOpts
-         * @property [view] {HTMLCanvasElement} the canvas to use as a view, optional
-         * @property [transparent=false] {boolean} If the render view is transparent, default false
-         * @property [antialias=false] {boolean} sets antialias (only applicable in chrome at the moment)
-         * @property [preserveDrawingBuffer=false] {boolean} enables drawing buffer preservation, enable this if you
+         * @property {HTMLCanvasElement} view - the canvas to use as a view, optional
+         * @property {boolean} transparent - If the render view is transparent, default false
+         * @property {boolean} antialias - sets antialias (only applicable in chrome at the moment)
+         * @property {boolean} preserveDrawingBuffer - enables drawing buffer preservation, enable this if you
          *      need to call toDataUrl on the webgl context
-         * @property [resolution=1] {number} the resolution of the renderer, retina would be 2
-         * @property [noWebGL=false] {boolean} prevents selection of WebGL renderer, even if such is present
+         * @property {number} resolution - the resolution of the renderer, retina would be 2
+         * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
          * @property {number} width - The width
          * @property {number} height - The height
          */
@@ -49,7 +62,6 @@
             this.agents = agents || [];
             this.entityAgents = [];
             this.numAgents = this.agents.length;
-
             this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
             this.collision = Utility.getOpt(worldOpts, 'collision', {
                 type: 'quad',
@@ -62,15 +74,11 @@
                 grid: false,
                 walls: false
             });
-
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
             this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', null);
-
             this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
             this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', null);
-
             this.grid = Utility.getOpt(worldOpts, 'grid', false);
-
             this.rendererOpts = renderOpts || {
                 antialiasing: false,
                 autoResize: false,
@@ -81,7 +89,6 @@
                 width: 600,
                 height: 600
             };
-
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
             this.resizable = this.rendererOpts.resizable;
@@ -109,6 +116,9 @@
             this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats.walls));
             this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats.walls));
 
+            if (document.getElementById('flotreward')) {
+                this.rewards = new FlotGraph(this.agents);
+            }
             // Actually place the renderer onto the page for display
             document.body.querySelector('#game-container').appendChild(this.renderer.view);
 
@@ -150,15 +160,13 @@
             this.addEntityAgents();
             // Add the entities
             this.addEntities(this.numEntities);
+            // Add the population container to the stage
             this.stage.addChild(this.populationContainer);
 
             CollisionDetector.apply(this, [this.collision]);
 
             this.lastTime = new Date().getTime() / 1000;
             requestAnimationFrame(animate);
-            if (document.getElementById('flotreward')) {
-                this.rewards = new FlotGraph(this.agents);
-            }
 
             return this;
         }
@@ -189,8 +197,8 @@
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let x = Utility.randi(this.entityAgentOpts.radius, this.width - this.entityAgentOpts.radius),
-                    y = Utility.randi(this.entityAgentOpts.radius, this.height - this.entityAgentOpts.radius),
+                let x = Utility.Maths.randi(this.entityAgentOpts.radius, this.width - this.entityAgentOpts.radius),
+                    y = Utility.Maths.randi(this.entityAgentOpts.radius, this.height - this.entityAgentOpts.radius),
                     vx = Math.random() * 5 - 2.5,
                     vy = Math.random() * 5 - 2.5,
                     entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
@@ -217,11 +225,11 @@
             }
             // Populating the world
             for (let k = 0; k < number; k++) {
-                let type = Utility.randi(1, 3),
-                    x = Utility.randi(this.entityOpts.radius, this.width - this.entityOpts.radius),
-                    y = Utility.randi(this.entityOpts.radius, this.height - this.entityOpts.radius),
-                    vx = Utility.randf(-3, 3),
-                    vy = Utility.randf(-3, 3),
+                let type = Utility.Maths.randi(1, 3),
+                    x = Utility.Maths.randi(this.entityOpts.radius, this.width - this.entityOpts.radius),
+                    y = Utility.Maths.randi(this.entityOpts.radius, this.height - this.entityOpts.radius),
+                    vx = Utility.Maths.randf(-3, 3),
+                    vy = Utility.Maths.randf(-3, 3),
                     entity = new Entity(type, new Vec(x, y, vx, vy), this.entityOpts);
 
                 this.populationContainer.addChild(entity.shape || entity.sprite);

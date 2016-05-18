@@ -66,7 +66,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
 
             // returns a fresh node object
             return {
-                id: Utility.guid(),
+                id: Utility.Strings.guid(),
                 x: x, // top left point
                 y: y, // top right point
                 width: width, // width

@@ -48,8 +48,8 @@
                     self.brain.postMessage({target: 'TD', cmd: cmd, input: input});
                 };
 
-                let jEnv = Utility.stringify(self.env),
-                    jOpts = Utility.stringify(self.brainOpts);
+                let jEnv = Utility.Strings.stringify(self.env),
+                    jOpts = Utility.Strings.stringify(self.brainOpts);
 
                 self.brain = new Worker('js/lib/external/rl.js');
                 self.brain.onmessage = function (e) {

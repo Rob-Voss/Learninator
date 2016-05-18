@@ -184,10 +184,10 @@
          */
         randomAction: function () {
             if (this.randomActionDistribution.length === 0) {
-                return Utility.randi(0, this.numActions);
+                return Utility.Maths.randi(0, this.numActions);
             } else {
                 // okay, lets do some fancier sampling:
-                let p = Utility.randf(0, 1.0),
+                let p = Utility.Maths.randf(0, 1.0),
                     cumprob = 0.0;
                 for (let k = 0; k < this.numActions; k++) {
                     cumprob += this.randomActionDistribution[k];
@@ -270,7 +270,7 @@
                     // Use test-time value
                     this.epsilon = this.epsilonTestTime;
                 }
-                if (Utility.randf(0, 1) < this.epsilon) {
+                if (Utility.Maths.randf(0, 1) < this.epsilon) {
                     // Choose a random action with epsilon probability
                     action = this.randomAction();
                 } else {
@@ -321,7 +321,7 @@
                         this.experience.push(e);
                     } else {
                         // Replace. finite memory!
-                        let ri = Utility.randi(0, this.experienceSize);
+                        let ri = Utility.Maths.randi(0, this.experienceSize);
                         this.experience[ri] = e;
                     }
                 }
@@ -331,7 +331,7 @@
                 if (this.experience.length > this.startLearnThreshold) {
                     let actionValueCost = 0.0;
                     for (let k = 0; k < this.tdTrainer.batch_size; k++) {
-                        let randExp = Utility.randi(0, this.experience.length),
+                        let randExp = Utility.Maths.randi(0, this.experience.length),
                             exp = this.experience[randExp],
                             x = new convnetjs.Vol(1, 1, this.netInputs);
                         x.w = exp.state0;

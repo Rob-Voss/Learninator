@@ -108,13 +108,13 @@
                 },
                 matterOpts = {
                     friction: 0,
-                    frictionAir: Utility.randf(0.0, 0.9),
+                    frictionAir: Utility.Maths.randf(0.0, 0.9),
                     frictionStatic: 0,
                     restitution: 0,
-                    density: Utility.randf(0.001, 0.01)
+                    density: Utility.Maths.randf(0.001, 0.01)
                 },
-                x = Utility.randi(10, this.engine.render.bounds.max.x - 10),
-                y = Utility.randi(10, this.engine.render.bounds.max.y - 10),
+                x = Utility.Maths.randi(10, this.engine.render.bounds.max.x - 10),
+                y = Utility.Maths.randi(10, this.engine.render.bounds.max.y - 10),
                 color = Common.shadeColor(blueColor, -20),
                 agent = AgentFactory.create(x, y, color, agentOpts, matterOpts);
 

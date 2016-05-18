@@ -207,8 +207,8 @@
                     this.brain.postMessage({target: this.brainType, cmd: cmd, input: input});
                 };
 
-                let jEnv = Utility.stringify(this.env),
-                    jOpts = Utility.stringify(this.brainOpts);
+                let jEnv = Utility.Strings.stringify(this.env),
+                    jOpts = Utility.Strings.stringify(this.brainOpts);
 
                 this.brain = new Worker('js/lib/external/rl.js');
                 this.brain.onmessage = (e) => {

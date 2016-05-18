@@ -30,7 +30,9 @@ var EvolveWorld = EvolveWorld || {},
         this.foodLimit = 30; // How much food can there be total?
         this.replicationThreshold = 3; // What is the replication threshold? in amount of food
         this.boostCost = 0.001;  // How much does use of boost cost in health
-        this.agents = [new AgentEvolve(new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height)))];
+        this.agents = [
+            new AgentEvolve(new Vec(Utility.Maths.randf(0, this.width), Utility.Maths.randf(0, this.height)))
+        ];
 
         function mouseClick(x, y) {
             // Select an agent with mouse click
@@ -367,7 +369,7 @@ var EvolveWorld = EvolveWorld || {},
         // Spawn more food, maybe
         if (this.counter % this.foodFrequency == 0 && this.food.length < this.foodLimit) {
             let f = {
-                position: new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height))
+                position: new Vec(Utility.Maths.randf(0, this.width), Utility.Maths.randf(0, this.height))
             };
             this.food.push(f);
         }
@@ -385,11 +387,11 @@ var EvolveWorld = EvolveWorld || {},
         if (bi != -1) {
             // Grab the Agent about to evolve and then create a new Agent
             let a = this.agents[bi],
-                anew = new AgentEvolve(new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height)));
+                anew = new AgentEvolve(new Vec(Utility.Maths.randf(0, this.width), Utility.Maths.randf(0, this.height)));
             // Reset the replication count
             a.rep = 0;
             // New random spot to spawn
-            anew.position = new Vec(a.position.x + Utility.randf(-30, 30), a.position.y + Utility.randf(-30, 30));
+            anew.position = new Vec(a.position.x + Utility.Maths.randf(-30, 30), a.position.y + Utility.Maths.randf(-30, 30));
             // Mutate from the last brain
             anew.brain.mutateFrom(a.brain);
             anew.mutation += 1 + a.mutation;
@@ -399,7 +401,7 @@ var EvolveWorld = EvolveWorld || {},
 
         // Spawn more agents if there are too few agents left
         if (this.agents.length < 10) {
-            let anew = new AgentEvolve(new Vec(Utility.randf(0, this.width), Utility.randf(0, this.height)));
+            let anew = new AgentEvolve(new Vec(Utility.Maths.randf(0, this.width), Utility.Maths.randf(0, this.height)));
             this.agents.push(anew);
         }
 

@@ -4,16 +4,16 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
     "use strict";
 
     // used utilities, make explicit local references
-    var arrUnique = Utility.arrUnique;
-    var arrContains = Utility.arrContains;
-    var zeros = Utility.zeros;
-    var randf = Utility.randf;
-    var randi = Utility.randi;
-    var randn = Utility.randn;
-    var maxmin = Utility.maxmin;
-    var randperm = Utility.randperm;
-    var weightedSample = Utility.weightedSample;
-    var getopt = Utility.getopt;
+    var arrUnique = Utility.Arrays.arrUnique,
+        arrContains = Utility.Arrays.arrContains,
+        zeros = Utility.Maths.zeros,
+        randf = Utility.Maths.randf,
+        randi = Utility.Maths.randi,
+        randn = Utility.Maths.randn,
+        maxmin = Utility.Maths.maxMin,
+        randperm = Utility.Maths.randperm,
+        weightedSample = Utility.Maths.weightedSample,
+        getopt = Utility.getOpt;
 
     convnetjs.randf = randf;
     convnetjs.randi = randi;
@@ -55,7 +55,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
      * @name TDAgent
      * @constructor
      *
-     * @param {brainOpts} opt
+     * @param {brainOpts} opts
      * @returns {TDAgent}
      */
     function TDAgent(opts) {
@@ -121,7 +121,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
 
         // Create [state -> value of all possible actions] modeling net for the value function
         let layerDefs = [];
-        if (typeof opts.layerDefs !== 'undefined') {
+        if (opts.layerDefs !== undefined) {
             // Advanced usage feature.
             // Because size of the input to the network, and number of actions must check out.
             // This is not very pretty Object Oriented programming but I can't see
@@ -150,7 +150,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
                 out_sy: 1,
                 out_depth: this.netInputs
             });
-            if (typeof opts.hiddenLayerSizes !== 'undefined') {
+            if (opts.hiddenLayerSizes !== undefined) {
                 // Allow user to specify this via the option, for convenience
                 let hl = opts.hiddenLayerSizes;
                 for (let q = 0; q < hl.length; q++) {
@@ -177,7 +177,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             l2_decay: 0.01
         };
         // Allow user to overwrite this
-        if (typeof opts.tdTrainerOptions !== 'undefined') {
+        if (opts.tdTrainerOptions !== undefined) {
             tdTrainerOptions = opts.tdTrainerOptions;
         }
         this.tdTrainer = new convnetjs.SGDTrainer(this.valueNet, tdTrainerOptions);
@@ -186,7 +186,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         // Experience replay
         this.experience = [];
 
-        // letious housekeeping letiables
+        // various housekeeping variables
         this.age = 0; // incremented every backward()
         this.forwardPasses = 0; // incremented every forward()
         this.latestReward = 0;
@@ -208,10 +208,10 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
          */
         randomAction: function () {
             if (this.randomActionDistribution.length === 0) {
-                return Utility.randi(0, this.numActions);
+                return Utility.Maths.randi(0, this.numActions);
             } else {
                 // okay, lets do some fancier sampling:
-                let p = Utility.randf(0, 1.0),
+                let p = Utility.Maths.randf(0, 1.0),
                     cumprob = 0.0;
                 for (let k = 0; k < this.numActions; k++) {
                     cumprob += this.randomActionDistribution[k];
@@ -249,7 +249,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         /**
          * Return s = (x,a,x,a,x,a,xt) state vector.
          * It's a concatenation of last windowSize (x,a) pairs and current state x
-         * @param {type} xt
+         * @param {Array} xt
          * @returns {Array}
          */
         getNetInput: function (xt) {
@@ -294,7 +294,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
                     // Use test-time value
                     this.epsilon = this.epsilonTestTime;
                 }
-                if (Utility.randf(0, 1) < this.epsilon) {
+                if (Utility.Maths.randf(0, 1) < this.epsilon) {
                     // Choose a random action with epsilon probability
                     action = this.randomAction();
                 } else {
@@ -346,7 +346,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
                         this.experience.push(e);
                     } else {
                         // Replace. finite memory!
-                        let ri = Utility.randi(0, this.experienceSize);
+                        let ri = Utility.Maths.randi(0, this.experienceSize);
                         this.experience[ri] = e;
                     }
                 }
@@ -356,7 +356,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
                 if (this.experience.length > this.startLearnThreshold) {
                     let actionValueCost = 0.0;
                     for (let k = 0; k < this.tdTrainer.batch_size; k++) {
-                        let randExp = Utility.randi(0, this.experience.length),
+                        let randExp = Utility.Maths.randi(0, this.experience.length),
                             exp = this.experience[randExp],
                             x = new convnetjs.Vol(1, 1, this.netInputs);
                         x.w = exp.state0;
@@ -397,8 +397,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             this.depth = sx.length;
             // we have to do the following copy because we want to use
             // fast typed arrays, not an ordinary javascript array
-            this.w = Utility.zeros(this.depth);
-            this.dw = Utility.zeros(this.depth);
+            this.w = Utility.Maths.zeros(this.depth);
+            this.dw = Utility.Maths.zeros(this.depth);
             for (var i = 0; i < this.depth; i++) {
                 this.w[i] = sx[i];
             }
@@ -408,15 +408,15 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             this.sy = sy;
             this.depth = depth;
             var n = sx * sy * depth;
-            this.w = Utility.zeros(n);
-            this.dw = Utility.zeros(n);
+            this.w = Utility.Maths.zeros(n);
+            this.dw = Utility.Maths.zeros(n);
             if (typeof c === 'undefined') {
                 // weight normalization is done to equalize the output
                 // variance of every neuron, otherwise neurons with a lot
                 // of incoming connections have outputs of larger variance
                 var scale = Math.sqrt(1.0 / (sx * sy * depth));
                 for (var i = 0; i < n; i++) {
-                    this.w[i] = Utility.randn(0.0, scale);
+                    this.w[i] = Utility.Maths.randn(0.0, scale);
                 }
             } else {
                 for (var i = 0; i < n; i++) {
@@ -493,8 +493,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             this.depth = json.depth;
 
             var n = this.sx * this.sy * this.depth;
-            this.w = Utility.zeros(n);
-            this.dw = Utility.zeros(n);
+            this.w = Utility.Maths.zeros(n);
+            this.dw = Utility.Maths.zeros(n);
             // copy over the elements.
             for (var i = 0; i < n; i++) {
                 this.w[i] = json.w[i];
@@ -511,8 +511,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
     var augment = function (V, crop, dx, dy, fliplr) {
         // note assumes square outputs of size crop x crop
         if (typeof(fliplr) === 'undefined') var fliplr = false;
-        if (typeof(dx) === 'undefined') var dx = Utility.randi(0, V.sx - crop);
-        if (typeof(dy) === 'undefined') var dy = Utility.randi(0, V.sy - crop);
+        if (typeof(dx) === 'undefined') var dx = Utility.Maths.randi(0, V.sx - crop);
+        if (typeof(dy) === 'undefined') var dy = Utility.Maths.randi(0, V.sy - crop);
 
         // randomly sample a crop in the input volume
         var W;
@@ -685,7 +685,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
 
             // compute gradient wrt weights, biases and input data
             var V = this.in_act;
-            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out gradient wrt bottom data, we're about to fill it
             for (var d = 0; d < this.out_depth; d++) {
                 var f = this.filters[d];
                 var x = -this.pad;
@@ -821,7 +821,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         },
         backward: function () {
             var V = this.in_act;
-            V.dw = Utility.zeros(V.w.length); // zero out the gradient in input Vol
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out the gradient in input Vol
 
             // compute gradient wrt weights and data
             for (var i = 0; i < this.out_depth; i++) {
@@ -904,8 +904,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         this.out_sy = Math.floor((this.in_sy + this.pad * 2 - this.sy) / this.stride + 1);
         this.layer_type = 'pool';
         // store switches for x,y coordinates for where the max comes from, for each output neuron
-        this.switchx = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
-        this.switchy = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.switchx = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.switchy = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth);
     }
     PoolLayer.prototype = {
         forward: function (V, is_training) {
@@ -955,7 +955,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             // pooling layers have no parameters, so simply compute
             // gradient wrt data here
             var V = this.in_act;
-            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out gradient wrt data
             var A = this.out_act; // computed in forward pass
 
             var n = 0;
@@ -1000,8 +1000,8 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             this.stride = json.stride;
             this.in_depth = json.in_depth;
             this.pad = typeof json.pad !== 'undefined' ? json.pad : 0; // backwards compatibility
-            this.switchx = Utility.zeros(this.out_sx * this.out_sy * this.out_depth); // need to re-init these appropriately
-            this.switchy = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
+            this.switchx = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth); // need to re-init these appropriately
+            this.switchy = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth);
         }
     }
     convnetjs.PoolLayer = PoolLayer;
@@ -1076,7 +1076,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             }
 
             // compute exponentials (carefully to not blow up)
-            var es = Utility.zeros(this.out_depth);
+            var es = Utility.Maths.zeros(this.out_depth);
             var esum = 0.0;
             for (var i = 0; i < this.out_depth; i++) {
                 var e = Math.exp(as[i] - amax);
@@ -1098,7 +1098,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.Maths.zeros(x.w.length); // zero out the gradient of input Vol
 
             for (var i = 0; i < this.out_depth; i++) {
                 var indicator = i === y ? 1.0 : 0.0;
@@ -1155,7 +1155,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.Maths.zeros(x.w.length); // zero out the gradient of input Vol
             var loss = 0.0;
             if (y instanceof Array || y instanceof Float64Array) {
                 for (var i = 0; i < this.out_depth; i++) {
@@ -1216,7 +1216,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
 
             // compute and accumulate gradient wrt weights and bias of this layer
             var x = this.in_act;
-            x.dw = Utility.zeros(x.w.length); // zero out the gradient of input Vol
+            x.dw = Utility.Maths.zeros(x.w.length); // zero out the gradient of input Vol
 
             var yscore = x.w[y]; // score of ground truth
             var margin = 1.0;
@@ -1287,7 +1287,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = Utility.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 if (V2.w[i] <= 0) V.dw[i] = 0; // threshold
                 else V.dw[i] = V2.dw[i];
@@ -1342,7 +1342,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = Utility.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 var v2wi = V2.w[i];
                 V.dw[i] = v2wi * (1.0 - v2wi) * V2.dw[i];
@@ -1384,7 +1384,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         this.out_depth = Math.floor(opt.in_depth / this.group_size);
         this.layer_type = 'maxout';
 
-        this.switches = Utility.zeros(this.out_sx * this.out_sy * this.out_depth); // useful for backprop
+        this.switches = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth); // useful for backprop
     }
     MaxoutLayer.prototype = {
         forward: function (V, is_training) {
@@ -1440,7 +1440,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = this.out_depth;
-            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out gradient wrt data
 
             // pass the gradient through the appropriate switch
             if (this.out_sx === 1 && this.out_sy === 1) {
@@ -1480,7 +1480,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             this.out_sy = json.out_sy;
             this.layer_type = json.layer_type;
             this.group_size = json.group_size;
-            this.switches = Utility.zeros(this.group_size);
+            this.switches = Utility.Maths.zeros(this.group_size);
         }
     }
     convnetjs.MaxoutLayer = MaxoutLayer;
@@ -1518,7 +1518,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             var V = this.in_act; // we need to set dw of this
             var V2 = this.out_act;
             var N = V.w.length;
-            V.dw = Utility.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 var v2wi = V2.w[i];
                 V.dw[i] = (1.0 - v2wi * v2wi) * V2.dw[i];
@@ -1559,7 +1559,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         this.out_depth = opt.in_depth;
         this.layer_type = 'dropout';
         this.drop_prob = typeof opt.drop_prob !== 'undefined' ? opt.drop_prob : 0.5;
-        this.dropped = Utility.zeros(this.out_sx * this.out_sy * this.out_depth);
+        this.dropped = Utility.Maths.zeros(this.out_sx * this.out_sy * this.out_depth);
     }
     DropoutLayer.prototype = {
         forward: function (V, is_training) {
@@ -1593,7 +1593,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
             var V = this.in_act; // we need to set dw of this
             var chain_grad = this.out_act;
             var N = V.w.length;
-            V.dw = Utility.zeros(N); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(N); // zero out gradient wrt data
             for (var i = 0; i < N; i++) {
                 if (!(this.dropped[i])) {
                     V.dw[i] = chain_grad.dw[i]; // copy over the gradient
@@ -1679,7 +1679,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         backward: function () {
             // evaluate gradient wrt data
             var V = this.in_act; // we need to set dw of this
-            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out gradient wrt data
             var A = this.out_act; // computed in forward pass
 
             var n2 = Math.floor(this.n / 2);
@@ -1775,7 +1775,7 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
         },
         backward: function () {
             var V = this.in_act;
-            V.dw = Utility.zeros(V.w.length); // zero out gradient wrt data
+            V.dw = Utility.Maths.zeros(V.w.length); // zero out gradient wrt data
             var V2 = this.out_act;
             var N = this.out_depth;
             var Ni = V.depth;
@@ -2118,9 +2118,9 @@ var convnetjs = convnetjs || {REVISION: 'ALPHA'},
                     // adagrad needs gsum
                     // adadelta needs gsum and xsum
                     for (var i = 0; i < pglist.length; i++) {
-                        this.gsum.push(Utility.zeros(pglist[i].params.length));
+                        this.gsum.push(Utility.Maths.zeros(pglist[i].params.length));
                         if (this.method === 'adadelta') {
-                            this.xsum.push(Utility.zeros(pglist[i].params.length));
+                            this.xsum.push(Utility.Maths.zeros(pglist[i].params.length));
                         } else {
                             this.xsum.push([]); // conserve memory
                         }

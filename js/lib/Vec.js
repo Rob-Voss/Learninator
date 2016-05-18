@@ -1,10 +1,31 @@
 (function (global) {
     "use strict";
 
+    class Point {
+
+        /**
+         * Simple Point
+         * @name Point
+         * @constructor
+         *
+         * @param {number} x
+         * @param {number} y
+         * @returns {Point}
+         */
+        constructor(x = 0, y = 0) {
+            this.x = x;
+            this.y = y;
+
+            return this;
+        }
+    }
+    global.Point = Point;
+
     const toRadian = Math.PI / 180,
         toDegree = 180 / Math.PI;
 
     class Vec {
+
         /**
          * A 2D vector utility
          * @name Vec
@@ -36,7 +57,7 @@
          * @param {Vec} v The vector to add to this one
          * @return {Vec} Returns itself.
          */
-        add(v) {
+        addVecTo(v) {
             return new Vec(this.x + v.x, this.y + v.y, this.vx + v.vx, this.vy + v.vy, this.ax + v.ax, this.ay + v.ay);
         }
 
@@ -46,7 +67,7 @@
          * @param {Vec} b
          * @return {Vec} Returns itself.
          */
-        addVectors(a, b) {
+        addVecsTo(a, b) {
             this.x = a.x + b.x;
             this.y = a.y + b.y;
 
@@ -82,26 +103,6 @@
         }
 
         /**
-         * This will add the velocity x,y to the position x,y
-         * @param {number} angle in radians
-         * @param {number} speed
-         * @returns {Vec}
-         */
-        advanceAtAngle(angle, speed) {
-            let oldPos = this.clone();
-            this.vx = speed * Math.cos(angle);
-            this.vy = speed * Math.sin(angle);
-            this.x += this.vx;
-            this.y += this.vy;
-            this.angle = Math.atan2(this.y, this.x);
-            this.ax = speed * Math.cos(this.angle);
-            this.ay = speed * Math.sin(this.angle);
-            this.direction = oldPos.angleBetween(this);
-
-            return this;
-        }
-
-        /**
          * Get the angle of this Vec
          *       90
          *       ^
@@ -126,7 +127,7 @@
         angleBetween(v, inDegree = false) {
             let v1 = this.clone(),
                 v2 = v.clone(),
-                angle = Math.atan2(v2.sub(v1).y, v2.sub(v1).x);
+                angle = Math.atan2(v2.subByVec(v1).y, v2.subByVec(v1).x);
 
             return (inDegree) ? angle * toDegree : angle;
         }
@@ -144,13 +145,13 @@
 
         /**
          * Clamps the vectors components to be between min and max
+         * This function assumes min < max, if this assumption
+         * isn't true it will not operate correctly
          * @param {Vec} min The minimum value a component can be
          * @param {Vec} max The maximum value a component can be
          * @return {Vec} Returns itself.
          */
         clamp(min, max) {
-            // This function assumes min < max, if this assumption
-            // isn't true it will not operate correctly
             if (this.x < min.x) {
                 this.x = min.x;
             } else if (this.x > max.x) {
@@ -222,7 +223,7 @@
          * @param {number} s The value to divide by
          * @return {Vec} Returns itself.
          */
-        divideScalar(s) {
+        divideBy(s) {
             if (s !== 0) {
                 this.x /= s;
                 this.y /= s;
@@ -281,19 +282,6 @@
         }
 
         /**
-         * Performs a linear interpolation between this vector and the passed vector
-         * @param {Vec} v The vector to interpolate with
-         * @param {number} alpha The amount to interpolate [0-1] or extrapolate (1-]
-         * @return {Vec} Returns itself.
-         */
-        lerp(v, alpha) {
-            this.x += (v.x - this.x) * alpha;
-            this.y += (v.y - this.y) * alpha;
-
-            return this;
-        }
-
-        /**
          * Returns the magnitude of the passed vector.
          * Sort of like the vector's speed.
          * A vector with a larger x or y will have a larger magnitude.
@@ -342,7 +330,7 @@
          * @param {number} s The value to multiply by
          * @return {Vec} Returns itself.
          */
-        multiplyScalar(s) {
+        multiplyBy(s) {
             this.x *= s;
             this.y *= s;
 
@@ -354,7 +342,7 @@
          * @return {Vec} Returns itself.
          */
         negate() {
-            return this.multiplyScalar(-1);
+            return this.multiplyBy(-1);
         }
 
         /**
@@ -362,49 +350,16 @@
          * @return {Vec} Returns the normalized vector
          */
         normalize() {
-            return this.divideScalar(this.length());
+            return this.divideBy(this.length());
         }
 
         /**
-         * Rotates the vector by 90 degrees
-         * @return {Vec} Returns itself.
+         *
+         * @param v
          */
-        perp() {
-            let x = this.x;
-            this.x = this.y;
-            this.y = -x;
-
-            return this;
-        }
-
-        /**
-         * Calculate the perpendicular vector (normal)
-         * http://en.wikipedia.org/wiki/Perpendicular_vector
-         * @returns {Vec}
-         */
-        perpendicular() {
-            this.y = -this.y;
-
-            return this;
-        }
-
         plusEq(v) {
             this.x += v.x;
             this.y += v.y;
-        }
-
-        /**
-         * Get a point at a % point between this Vec and another
-         * @param {Vec} v
-         * @param {number} p
-         * @return {Vec} .
-         */
-        pointBetween(v, p) {
-            let blend = p / 100,
-                x = this.x + blend * (v.x - this.x),
-                y = this.y + blend * (v.y - this.y);
-
-            return new Vec(x, y);
         }
 
         /**
@@ -441,7 +396,7 @@
         reflect(axis) {
             let x = this.x,
                 y = this.y;
-            this.project(axis).multiplyScalar(2);
+            this.project(axis).multiplyBy(2);
             this.x -= x;
             this.y -= y;
 
@@ -456,7 +411,7 @@
         reflectN(axis) {
             let x = this.x,
                 y = this.y;
-            this.projectN(axis).multiplyScalar(2);
+            this.projectN(axis).multiplyBy(2);
             this.x -= x;
             this.y -= y;
 
@@ -513,7 +468,7 @@
         }
 
         /**
-         * Set the Vec's properties
+         * Set the Vec properties
          * @param {number} x
          * @param {number} y
          * @param {number} vx
@@ -533,18 +488,6 @@
         }
 
         /**
-         * Set the angle.
-         * @param {number} angle The angle in radians
-         */
-        setAngle(angle) {
-            let len = this.length();
-            this.x = Math.cos(angle) * len;
-            this.y = Math.sin(angle) * len;
-
-            return this;
-        }
-
-        /**
          * Sets the length of the vector
          * @param {number} l The length to set this vector to
          * @return {Vec}
@@ -553,7 +496,7 @@
             let oldLength = this.length();
 
             if (oldLength !== 0 && l !== oldLength) {
-                this.multiplyScalar(l / oldLength);
+                this.multiplyBy(l / oldLength);
             }
 
             return this;
@@ -564,7 +507,7 @@
          * @param {Vec} v The vector to subtract from this one
          * @return {Vec}
          */
-        sub(v) {
+        subByVec(v) {
             if (typeof v === 'undefined') {
                 console.log("Can't sub a vector that is not a vector.");
             }
@@ -577,7 +520,7 @@
          * @param {Vec} b
          * @return {Vec} Returns itself.
          */
-        subVectors(a, b) {
+        subByVecs(a, b) {
             this.x = a.x - b.x;
             this.y = a.y - b.y;
 
@@ -609,9 +552,187 @@
          * @returns {Vec}
          */
         unitVector() {
-            return this.divideScalar(this.length());
+            return this.divideBy(this.length());
         }
     }
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {Vec}
+     */
+    Vec.add = function (v1, v2) {
+        return new Vec(v1.x + v2.x, v1.y + v2.y);
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {number}
+     */
+    Vec.angleBetween = function (v1, v2) {
+        var dotValue = v1.dot(v2);
+
+        return Math.acos(dotValue / (v1.mag() * v2.mag()));
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {number}
+     */
+    Vec.distance = function (v1, v2) {
+        var dx = v1.x - v2.x,
+            dy = v1.y - v2.y;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {number}
+     */
+    Vec.distanceSq = function (v1, v2) {
+        var dx = v1.x - v2.x,
+            dy = v1.y - v2.y;
+
+        return dx * dx + dy * dy;
+    };
+
+    /**
+     *
+     * @param {Vec} v
+     * @param {number} value
+     * @returns {Vec}
+     */
+    Vec.div = function (v, value) {
+        return new Vec(v.x / value, v.y / value);
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {boolean}
+     */
+    Vec.equal = function (v1, v2) {
+        return (v1.x === v2.x && v1.y === v2.y);
+    };
+
+    /**
+     *
+     * @param {number} angle
+     * @param {number} magnitude
+     * @returns {Vec}
+     */
+    Vec.fromAngle = function (angle, magnitude) {
+        if (magnitude === undefined) {
+            magnitude = 1;
+        }
+        var newVector = new Vec();
+        newVector.x = Math.cos(angle) * magnitude;
+        newVector.y = Math.sin(angle) * magnitude;
+
+        return newVector;
+    };
+
+    /**
+     *
+     * @param {b2.Vec} b2Vec
+     * @param {boolean} multiply30
+     * @returns {Vec}
+     */
+    Vec.fromb2Vec = function (b2Vec, multiply30) {
+        if (multiply30 === undefined) {
+            multiply30 = false;
+        }
+        if (multiply30) {
+            return new Vec(b2Vec.x * 30, b2Vec.y * 30);
+        } else {
+            return new Vec(b2Vec.x, b2Vec.y);
+        }
+    };
+
+    /**
+     *
+     * @param {Vec} point
+     * @param {Vec} linePtA
+     * @param {Vec} linePtB
+     */
+    Vec.getNormalPoint = function (point, linePtA, linePtB) {
+        var pa = Vec.sub(point, linePtA),
+            ba = Vec.sub(linePtB, linePtA);
+        ba.normalize().mult(pa.dot(ba));
+
+        return Vec.add(linePtA, ba);
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @param {number} fraction
+     * @returns {Vec}
+     */
+    Vec.lerp = function (v1, v2, fraction) {
+        var tempV = Vec.sub(v2, v1);
+        tempV.mult(fraction);
+        tempV.addVecTo(v1);
+
+        return tempV;
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {number} value
+     * @returns {Vec}
+     */
+    Vec.mult = function (v1, value) {
+        return new Vec(v1.x * value, v1.y * value);
+    };
+
+    /**
+     *
+     * @param {number} xmin
+     * @param {number} xmax
+     * @param {number} ymin
+     * @param {number} ymax
+     * @returns {Vec}
+     */
+    Vec.random = function (xmin, xmax, ymin, ymax) {
+        var result = new Vec();
+        result.x = Utility.Maths.map(Math.random(), 0, 1, xmin, xmax);
+        result.y = Utility.Maths.map(Math.random(), 0, 1, ymin, ymax);
+
+        return result;
+    };
+
+    /**
+     *
+     * @param {Vec} v
+     * @param {number} angle
+     */
+    Vec.setAngle = function (v, angle) {
+        var mag = v.mag();
+        v.x = Math.cos(angle) * mag;
+        v.y = Math.sin(angle) * mag;
+    };
+
+    /**
+     *
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @returns {Vec}
+     */
+    Vec.sub = function (v1, v2) {
+        return new Vec(v1.x - v2.x, v1.y - v2.y);
+    };
 
     /**
      * Get a Vec between this Vec and another
@@ -625,6 +746,7 @@
 
         return new Vec(x, y);
     };
+
     global.Vec = Vec;
 
 }(this));

@@ -35,49 +35,14 @@ var HexShape = HexShape || {};
          * @constructor
          */
         constructor(hex, layout = false, size = 20, fill = false) {
-            this.hex = hex;
+            Object.assign(this, hex);
             this.layout = layout;
             this.size = size;
             this.fill = fill;
             this.color = colorForHex(this.q, this.r, this.s);
-            this.population = new Map();
-            this.corners = [];
-            this.walls = [];
-
-            if (this.layout) {
-                this.position = this.layout.hexToPixel(hex);
-                this.corners = this.layout.polygonCorners(this.position);
-                for (let c = 0; c < this.corners.length; c++) {
-                    let x1 = this.corners[c].x,
-                        y1 = this.corners[c].y,
-                        x2, y2;
-                    if (c !== this.corners.length - 1) {
-                        x2 = this.corners[c + 1].x;
-                        y2 = this.corners[c + 1].y;
-                    } else {
-                        x2 = this.corners[0].x;
-                        y2 = this.corners[0].y;
-                    }
-                    let v1 = new Vec(x1, y1),
-                        v2 = new Vec(x2, y2);
-                    this.walls.push(new Wall(v1, v2));
-                }
-            } else {
-                this.pointy = true;
-                for (let i = 0; i < 6; i++) {
-                    var angleAdd = (this.pointy) ? 30 : 0,
-                        angleDeg = 60 * i + angleAdd,
-                        angleRad = Math.PI / 180 * angleDeg;
-                    this.corners.push(new Point(this.position.x + this.size * Math.cos(angleRad),
-                        this.position.y + this.size * Math.sin(angleRad)));
-                }
-            }
-
-            this.color = colorForHex(this.q, this.r, this.s);
             this.shape = new PIXI.Graphics();
-            this.shape.interactive = true;
             this.draw();
-            this.bounds = this.shape.getBounds();
+            this.shape.interactive = true;
             this.shape
                 .on('mousedown', (event) => {
                     this.data = event.data;
@@ -92,7 +57,7 @@ var HexShape = HexShape || {};
                 .on('mouseout', (event) => {
                     this.color = colorForHex(this.q, this.r, this.s);
                 });
-
+            this.bounds = this.shape.getBounds();
 
             return this;
         }
@@ -118,8 +83,8 @@ var HexShape = HexShape || {};
             this.cheatOverlay = new PIXI.Container();
 
             let txtOpts = {font: "10px Arial", fill: "#000000", align: "center"},
-                posText = new PIXI.Text(this.hex.toString() + "\n" + this.position.toString(), txtOpts);
-            posText.position.set(this.position.x - this.size / 2, this.position.y - 7);
+                posText = new PIXI.Text(this.center.toString(), txtOpts);
+            posText.position.set(this.center.x - this.size / 2, this.center.y - 7);
             this.cheatOverlay.addChild(posText);
 
             this.shape.addChild(this.cheatOverlay);

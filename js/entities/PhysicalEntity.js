@@ -22,7 +22,7 @@
          * @returns {PhysicalEntity}
          */
         constructor(type, body) {
-            this.id = Utility.guid();
+            this.id = Utility.Strings.guid();
             this.type = (typeof type === 'string') ? entityTypes.indexOf(type) : type || 1;
             this.name = entityTypes[this.type];
             this.color = hexStyles[this.type];

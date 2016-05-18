@@ -4,6 +4,11 @@
 (function (global) {
     "use strict";
 
+    var Utility = global.Utility || {},
+        Grid = global.Grid || {},
+        Wall = global.Wall || {},
+        Vec = global.Vec || {};
+
     /**
      * Options for the Maze
      * @typedef {Object} mazeOpts

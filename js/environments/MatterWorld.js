@@ -159,10 +159,10 @@ var Matter = Matter || {},
                             fillStyle: blueColor
                         },
                         friction: 0,
-                        frictionAir: Utility.randf(0.0, 0.9),
+                        frictionAir: Utility.Maths.randf(0.0, 0.9),
                         frictionStatic: 0,
                         restitution: 0,
-                        density: Utility.randf(0.001, 0.01)
+                        density: Utility.Maths.randf(0.001, 0.01)
                     },
                     body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
                     entity = new PhysicalAgent(body, agentOpts);
@@ -188,16 +188,16 @@ var Matter = Matter || {},
                 let body, entity,
                     entityOpt = {
                         position: {
-                            x: Utility.randi(10, this.width - 10),
-                            y: Utility.randi(10, this.height - 10)
+                            x: Utility.Maths.randi(10, this.width - 10),
+                            y: Utility.Maths.randi(10, this.height - 10)
                         },
                         friction: 0.1,
-                        frictionAir: Utility.randf(0.0, 0.9),
+                        frictionAir: Utility.Maths.randf(0.0, 0.9),
                         frictionStatic: 0.5,
                         restitution: 1,
-                        density: Utility.randf(0.005, 0.01)
+                        density: Utility.Maths.randf(0.005, 0.01)
                     },
-                    type = Utility.randi(1, 3);
+                    type = Utility.Maths.randi(1, 3);
                 if (type === 1) {
                     entityOpt.render = {
                         strokeStyle: Common.shadeColor(greenColor, -20),

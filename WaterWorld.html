@@ -36,6 +36,16 @@
 </div>
 <script>
     var world = world || {};
+//    Promise.all([
+//        load.js('lib/highlighter.js'),
+//        load.js('lib/main.js'),
+//        load.css('lib/highlighter.css'),
+//        load.img('images/logo.png')
+//    ]).then(function() {
+//       console.log('Everything has loaded!');
+//    }).catch(function() {
+//       console.log('Oh no, epic failure!');
+//    });
 
     function start() {
         world = new WaterWorld();
@@ -50,14 +60,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+
 <script src="js/lib/external/rl.js"></script>
-
 <script src="js/lib/graphing/FlotGraph.js"></script>
-
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
+<script src="js/lib/Vector.js"></script>
 <script src="js/lib/Array.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/grid/Cell.js"></script>
@@ -66,12 +75,10 @@
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
-
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Eye.js"></script>
 <script src="js/entities/Agent.js"></script>
 <script src="js/entities/Wall.js"></script>
-
 <script src="js/environments/World.js"></script>
 <script src="js/environments/WaterWorld.js"></script>
 

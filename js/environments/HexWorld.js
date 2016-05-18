@@ -52,7 +52,7 @@
                 size: 6,
                 tileSize: 30,
                 tileSpacing: 20,
-                pointyTiles: true,
+                pointyTiles: false,
                 fill: false
             };
             let grid = new HexGrid(gridOptions);

@@ -29,8 +29,8 @@ var Brain = Brain || {},
                 this.w[i] = new Array(this.density);
                 this.ix[i] = new Array(this.density);
                 for (let j = 0; j < this.density; j++) {
-                    this.w[i][j] = Utility.randf(-1.2, 1.2);
-                    this.ix[i][j] = Utility.randi(0, this.size);
+                    this.w[i][j] = Utility.Maths.randf(-1.2, 1.2);
+                    this.ix[i][j] = Utility.Maths.randi(0, this.size);
                 }
             }
         }
@@ -73,14 +73,14 @@ var Brain = Brain || {},
             for (var i = 0; i < this.size; i++) {
                 for (var j = 0; j < this.density; j++) {
                     var m = brain.w[i][j];
-                    if (Utility.randf(0, 1) < this.mutrate) {
-                        m += Utility.randn(0, this.mutrate2);
+                    if (Utility.Maths.randf(0, 1) < this.mutrate) {
+                        m += Utility.Maths.randn(0, this.mutrate2);
                     }
                     this.w[i][j] = m;
 
                     m = brain.ix[i][j];
-                    if (Utility.randf(0, 1) < this.mutrate) {
-                        m = Utility.randi(0, this.size);
+                    if (Utility.Maths.randf(0, 1) < this.mutrate) {
+                        m = Utility.Maths.randi(0, this.size);
                     }
                     this.ix[i][j] = m;
                 }
@@ -96,7 +96,7 @@ var Brain = Brain || {},
          */
         constructor(pos) {
             this.position = pos;
-            this.dir = Utility.randf(0, 2 * Math.PI);
+            this.dir = Utility.Maths.randf(0, 2 * Math.PI);
             this.id = 'merps';
             this.s1 = 0;  // Food sense eye 1
             this.s2 = 0;  // Food sense eye 2

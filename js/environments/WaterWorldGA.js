@@ -95,7 +95,7 @@ var WaterWorldGA = WaterWorldGA || {},
         };
 
         this.entityOpts = {
-            radius: Utility.randi(5, 10),
+            radius: Utility.Maths.randi(5, 10),
             collision: true,
             interactive: false,
             useSprite: false,
@@ -109,7 +109,7 @@ var WaterWorldGA = WaterWorldGA || {},
         };
 
         this.agents = [
-            new AgentGA(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
+            new AgentGA(new Vec(Utility.Maths.randi(3, this.width - 2), Utility.Maths.randi(3, this.height - 2)),
                 {
                     brainType: 'GA',
                     env: {
@@ -140,7 +140,7 @@ var WaterWorldGA = WaterWorldGA || {},
                         name: true
                     }
                 }),
-            new AgentGA(new Vec(Utility.randi(3, this.width - 2), Utility.randi(3, this.height - 2)),
+            new AgentGA(new Vec(Utility.Maths.randi(3, this.width - 2), Utility.Maths.randi(3, this.height - 2)),
                 {
                     brainType: 'GA',
                     env: {

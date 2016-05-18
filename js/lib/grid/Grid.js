@@ -20,7 +20,7 @@
          * @param {number} opts.buffer - The buffer
          * @returns {Grid}
          */
-        constructor(opts) {
+        constructor(opts, type) {
             this.xCount = Utility.getOpt(opts, 'xCount', 6);
             this.yCount = Utility.getOpt(opts, 'yCount', 6);
             this.width = Utility.getOpt(opts, 'width', 600);
@@ -35,8 +35,8 @@
             this.path = [];
             this.walls = [];
             this.map = new Map();
-            this.cellsContainer = new PIXI.Container();
 
+            this.cellsContainer = new PIXI.Container();
             for (let x = 0; x < this.xCount; x++) {
                 for (let y = 0; y < this.yCount; y++) {
                     let cell = new Cell(x, y, this.cellWidth, this.cellHeight),
@@ -47,6 +47,7 @@
                     this.cellsContainer.addChild(cs.shape);
                 }
             }
+
             this.mapCells();
 
             return this;
