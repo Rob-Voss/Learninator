@@ -33,39 +33,29 @@
                 numProprioception: 2,
                 collision: true,
                 interactive: false,
-                useSprite: false,
-                cheats: {
-                    id: false,
-                    direction: false,
-                    name: false,
-                    gridLocation: false,
-                    position: false
-                }
+                useSprite: false
             };
             let agents = [
                 new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
                 new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
             ];
-            let gridOptions = {
-                width: renderOpts.width,
-                height: renderOpts.height,
-                size: 6,
-                tileSize: 30,
-                tileSpacing: 20,
-                pointyTiles: false,
-                fill: false
-            };
-            let grid = new HexGrid(gridOptions);
+
             let worldOpts = {
-                grid: grid,
                 simSpeed: 1,
                 collision: {
-                    type: 'brute'
+                    type: 'brute',
+                    cheats: {
+                        brute: false,
+                        quad: false,
+                        grid: false
+                    }
                 },
                 cheats: {
-                    brute: false,
-                    quad: false,
-                    grid: false,
+                    id: false,
+                    name: false,
+                    direction: false,
+                    gridLocation: true,
+                    position: false,
                     walls: false
                 },
                 numEntities: 20,
@@ -74,25 +64,39 @@
                     collision: true,
                     interactive: true,
                     useSprite: false,
-                    moving: true,
-                    cheats: {
-                        id: false,
-                        name: false,
-                        direction: false,
-                        gridLocation: false,
-                        position: false
-                    }
+                    moving: true
                 }
             };
 
-            super(agents, grid.walls, worldOpts, renderOpts);
+            let gridOptions = {
+                width: renderOpts.width,
+                height: renderOpts.height,
+                size: 5,
+                cheats: worldOpts.cheats,
+                tileSize: 30,
+                tileSpacing: 20,
+                pointyTiles: false,
+                fill: false
+            };
+
+            let maze = new Maze({
+                xCount: renderOpts.width / gridOptions.tileSize,
+                yCount: renderOpts.height / gridOptions.tileSize,
+                width: renderOpts.width,
+                height: renderOpts.height,
+                closed: false,
+                cheats: false,
+                grid: new HexGrid(gridOptions)
+            });
+
+            worldOpts.grid = maze.grid;
+            super(agents, maze.walls, worldOpts, renderOpts);
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 
             return this;
         }
     }
-
     global.HexWorld = HexWorld;
 
 }(this));

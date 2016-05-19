@@ -15,10 +15,12 @@
         this.q = q || 0;
         this.r = r || 0;
         this.s = s || -q - r;
+        this.center = null;
         this.visited = false;
         this.parent = null;
         this.heuristic = 0;
         this.reward = 0;
+        this.neighbors = [];
         this.corners = [];
         this.walls = [];
         this.population = new Map();
@@ -26,6 +28,8 @@
         return this;
     };
 
+    Hex.hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)];
+    Hex.hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
     Hex.prototype = {
         /**
          * Add a Hex to another one
@@ -109,7 +113,8 @@
          * @returns {*|Hex}
          */
         neighbor: function (hex, direction) {
-            return this.add(hex, Hex.hexDirections(direction));
+            let neighb = Hex.hexDirections[direction];
+            return this.add(hex, neighb);
         },
         /**
          * Round the Hex
@@ -143,6 +148,21 @@
             return new Hex(hex.q * k, hex.r * k, hex.s * k);
         },
         /**
+         * Score
+         * @returns {number}
+         */
+        score: function () {
+            var total = 0,
+                p = this.parent;
+
+            while (p) {
+                ++total;
+                p = p.parent;
+            }
+
+            return total;
+        },
+        /**
          * Subtract a Hex
          * @param {Hex} a
          * @param {Hex} b
@@ -164,11 +184,18 @@
          */
         toString: function () {
             return this.q + ":" + this.r + ":" + this.s;
+        },
+        /**
+         * Mark it as visited
+         * @return {Hex}
+         */
+        visit: function () {
+            this.visited = true;
+
+            return this;
         }
     };
 
-    Hex.hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)];
-    Hex.hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
     global.Hex = Hex;
 
 })(this);

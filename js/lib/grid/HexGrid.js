@@ -15,54 +15,91 @@
         this.width = Utility.getOpt(opts, 'width', 600);
         this.height = Utility.getOpt(opts, 'height', 600);
         this.size = Utility.getOpt(opts, 'size', 5);
+        this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.tileSize = Utility.getOpt(opts, 'tileSize', 20);
         this.tileSpacing = Utility.getOpt(opts, 'tileSpacing', 0);
         this.pointyTiles = Utility.getOpt(opts, 'pointyTiles', false);
         this.fill = Utility.getOpt(opts, 'fill', false);
+        this.map = new Map();
         this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.tileSize, this.tileSize), new Point(this.width / 2, this.height / 2));
         this.cells = cells || this.shapeHexagon(this.size);
         this.xCount = this.width / this.tileSize;
         this.yCount = this.height / this.tileSize;
+        this.mapCells();
 
         this.removedEdges = [];
         this.path = [];
         this.walls = [];
-        this.map = new Map();
 
         this.cellsContainer = new PIXI.Container();
         this.cells.forEach((cell) => {
-            var hs = new HexShape(cell, this.layout, this.tileSize, this.fill);
+            var hs = new HexShape(cell, this.layout, this.tileSize, this.fill, this.cheats);
+            for (let c = 0; c < cell.corners.length; c++) {
+                let neighb = cell.neighbor(cell, c);
+                cell.neighbors[c] = this.getCellAt(neighb.q, neighb.r);
+            }
+            for (let c = 0; c < hs.corners.length; c++) {
+                let x1 = hs.corners[c].x,
+                    y1 = hs.corners[c].y,
+                    x2, y2;
+                if (c !== hs.corners.length - 1) {
+                    x2 = hs.corners[c + 1].x;
+                    y2 = hs.corners[c + 1].y;
+                } else {
+                    x2 = hs.corners[0].x;
+                    y2 = hs.corners[0].y;
+                }
+                this.walls.push(new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls));
+            }
             this.cellsContainer.addChild(hs.shape);
         });
 
-        this.mapCells();
 
         return this;
     };
 
     HexGrid.prototype = {
         /**
-         * Distance between two axial coords
-         * @param {number} q1
-         * @param {number} r1
-         * @param {number} q2
-         * @param {number} r2
-         * @returns {number}
+         * Returns true if there is an edge between c1 and c2
+         * @param {Hex} h1
+         * @param {Hex} h2
+         * @returns {boolean}
          */
-        axialDistance: function (q1, r1, q2, r2) {
-            return (Math.abs(q1 - q2) + Math.abs(r1 - r2) + Math.abs(q1 + r1 - q2 - r2)) / 2;
+        areConnected(h1, h2) {
+            if (!h1 || !h2) {
+                return false;
+            }
+
+            var removedEdge = _.detect(this.removedEdges, function (edge) {
+                return _.include(edge, h1) && _.include(edge, h2);
+            });
+
+            return removedEdge === undefined;
         },
         /**
          * Convert from axial coords to Cube
          * @param {Hex} hex
          * @returns {Cube}
          */
-        axialToCube: function (axial) {
+        axialToCube: function (hex) {
             return {
                 x: axial.q,
                 y: axial.r,
                 z: -axial.q - axial.r
             };
+        },
+        /**
+         * Returns all neighbors of this Cell that are separated by an edge
+         * @param {Hex} h
+         * @returns {Array}
+         */
+        connectedNeighbors: function (h) {
+            var con;
+            return _.select(this.neighbors(h), (h0) => {
+                con = this.areConnected(h, h0);
+
+                return con;
+            });
         },
         /**
          * Convert from Cube coords to axial
@@ -77,20 +114,48 @@
             };
         },
         /**
+         * Returns all neighbors of this Cell that are NOT separated by an edge
+         * This means there is a maze path between both cells.
+         * @param {Hex} hex
+         * @returns {Array}
+         */
+        disconnectedNeighbors: function (hex) {
+            var disc;
+            return _.reject(this.neighbors(hex), (c0) => {
+                disc = this.areConnected(hex, c0);
+
+                return disc;
+            });
+        },
+        /**
+         * Get the cell at the axial coords
+         * @param {number} q
+         * @param {number} r
+         * @returns {Hex|boolean}
+         */
+        getCellAt: function (q, r) {
+            let column = this.map.get(q),
+                row = column ? column.get(r) : false,
+                cell = row ? row.get(-q - r) : false;
+
+            return cell;
+        },
+        /**
+         * Distance between two axial coords
+         * @param {Hex} h1
+         * @param {Hex} h2
+         * @returns {number}
+         */
+        getCellDistance: function (h1, h2) {
+            return (Math.abs(h1.q - h2.q) + Math.abs(h1.r - h2.r) + Math.abs(h1.q + h1.r - h2.q - h2.r)) / 2;
+        },
+        /**
          * Get the center x,y coords for a Hex
          * @param {Hex} hex
          * @returns {Point}
          */
         getCenterXY: function (hex) {
-            var x, y;
-            if (this.pointyTiles) {
-                x = (this.tileSize + this.tileSpacing) * Math.sqrt(3) * (hex.q + hex.r / 2);
-                y = -((this.tileSize + this.tileSpacing) * 3 / 2 * hex.r);
-            } else {
-                x = (this.tileSize + this.tileSpacing) * 3 / 2 * hex.q;
-                y = -((this.tileSize + this.tileSpacing) * Math.sqrt(3) * (hex.r + hex.q / 2));
-            }
-            return new Vec(x, y);
+            return this.layout.hexToPixel(hex);
         },
         /**
          * Return the location of the entity within a grid
@@ -149,20 +214,19 @@
         },
         /**
          * Return a Hex's neighbors
-         * @param {number} q
-         * @param {number} r
+         * @param {Hex} hex
          * @returns {Array}
          */
-        neighbors: function (q, r) {
-            var i, len, neighbor, neighbors, result;
+        neighbors: function (hex) {
+            var i, len, neighbors, result;
             result = [];
             neighbors = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
             for (i = 0, len = neighbors.length; i < len; i++) {
-                neighbor = neighbors[i];
-                result.push({
-                    q: q + neighbor[0],
-                    r: neighbor[1]
-                });
+                let neighbor = neighbors[i],
+                    q = hex.q + neighbor[0],
+                    r = neighbor[1],
+                    s = -q - r;
+                result.push(this.getCellAt(q, r));
             }
 
             return result;
@@ -208,6 +272,16 @@
                 r: r,
                 s: -q - r
             };
+        },
+        /**
+         * Remove the edge from between two Cells
+         * @param {Hex} h1
+         * @param {Hex} h2
+         */
+        removeEdgeBetween: function (h1, h2) {
+            this.removedEdges.push([h1, h2]);
+
+            return this;
         },
         /**
          * Get something
@@ -260,14 +334,16 @@
          * @returns {Array}
          */
         shapeHexagon: function (size) {
-            var hexes = [];
+            var hexes = [],
+                neighbs = [];
             for (let q = -size; q <= size; q++) {
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    hex.corners = this.layout.polygonCorners(hex);
-                    hex.center = this.layout.hexToPixel(hex);
+                    let hex = new Hex(q, r, -q - r),
+                        corners = this.layout.polygonCorners(hex);
+                    hex.corners = corners[1];
+                    hex.polyCorners = corners[0];
                     hexes.push(hex);
                 }
             }
@@ -286,9 +362,10 @@
             var hexes = [];
             for (let q = q1; q <= q2; q++) {
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new constructor(q, r, -q - r);
-                    hex.corners = this.layout.polygonCorners(hex);
-                    hex.center = this.layout.hexToPixel(hex);
+                    let hex = new constructor(q, r, -q - r),
+                        corners = this.layout.polygonCorners(hex);
+                    hex.polyCorners = corners[0];
+                    hex.corners = corners[1];
                     hexes.push(hex);
                 }
             }
@@ -310,9 +387,10 @@
             for (let j = j1; j < j2; j++) {
                 let jOffset = -Math.floor(j / 2);
                 for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    let hex = new constructor(i, j, -i - j);
-                    hex.position = this.layout.hexToPixel(hex);
-                    hex.corners = this.layout.polygonCorners(hex);
+                    let hex = new constructor(i, j, -i - j),
+                        corners = this.layout.polygonCorners(hex);
+                    hex.polyCorners = corners[0];
+                    hex.corners = corners[1];
                     hexes.push(hex);
                 }
             }
@@ -335,15 +413,41 @@
                     q += moveDirection[0];
                     r += moveDirection[1];
                     if (moveDirectionIndex !== 0) {
-                        let hex = new Hex(q, r, -q - r);
-                        hex.corners = this.layout.polygonCorners(hex);
-                        hex.center = this.layout.hexToPixel(hex);
+                        let hex = new Hex(q, r, -q - r),
+                            corners = this.layout.polygonCorners(hex);
+                        hex.polyCorners = corners[0];
+                        hex.corners = corners[1];
                         result.push(hex);
                     }
                 }
             }
 
             return result;
+        },
+        /**
+         *
+         * @param minQ
+         * @param maxQ
+         * @param minR
+         * @param maxR
+         * @param toCube
+         * @returns {Array}
+         */
+        shapeTrapezoidal: function (minQ, maxQ, minR, maxR, toCube) {
+            var q, r, _g3, _g2,
+                hexes = [],
+                _g1 = minQ,
+                _g = maxQ + 1;
+            while (_g1 < _g) {
+                q = _g1++;
+                _g3 = minR;
+                _g2 = maxR + 1;
+                while (_g3 < _g2) {
+                    r = _g3++;
+                    hexes.push(toCube(new Hex(q, r, -q - r)));
+                }
+            }
+            return hexes;
         },
         /**
          * Create a triangle of Hexes
@@ -354,9 +458,10 @@
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = 0; r <= size - q; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    hex.corners = this.layout.polygonCorners(hex);
-                    hex.center = this.layout.hexToPixel(hex);
+                    let hex = new Hex(q, r, -q - r),
+                        corners = this.layout.polygonCorners(hex);
+                    hex.polyCorners = corners[0];
+                    hex.corners = corners[1];
                     hexes.push(hex);
                 }
             }
@@ -371,13 +476,26 @@
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = size - q; r <= size; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    hex.corners = this.layout.polygonCorners(hex);
-                    hex.center = this.layout.hexToPixel(hex);
+                    let hex = new Hex(q, r, -q - r),
+                        corners = this.layout.polygonCorners(hex);
+                    hex.polyCorners = corners[0];
+                    hex.corners = corners[1];
                     hexes.push(hex);
                 }
             }
             return hexes;
+        },
+        /**
+         * Returns all neighbors of this Cell that aren't separated by an edge
+         * @param {Hex} hex
+         * @returns {Array}
+         */
+        unvisitedNeighbors: function (hex) {
+            var unv;
+            return _.select(this.connectedNeighbors(hex), function (c0) {
+                unv = !c0.visited;
+                return unv;
+            });
         }
     };
 
@@ -459,7 +577,6 @@
      * @constructor
      */
     var Orientation = function (f0, f1, f2, f3, b0, b1, b2, b3, angle) {
-        this.startAngle = angle;
         this.f0 = f0;
         this.f1 = f1;
         this.f2 = f2;
@@ -468,6 +585,7 @@
         this.b1 = b1;
         this.b2 = b2;
         this.b3 = b3;
+        this.startAngle = angle;
 
         return this;
     };
@@ -540,13 +658,15 @@
          */
         polygonCorners: function (hex) {
             var corners = [],
-                center = this.hexToPixel(hex);
+                polyCorners = [];
+            hex.center = this.hexToPixel(hex);
             for (let i = 0; i < 6; i++) {
                 var offset = this.hexCornerOffset(i);
-                corners.push(new Point(center.x + offset.x, center.y + offset.y));
+                polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);
+                corners.push(new Point(hex.center.x + offset.x, hex.center.y + offset.y));
             }
 
-            return corners;
+            return [polyCorners, corners];
         }
     };
 

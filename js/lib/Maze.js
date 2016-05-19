@@ -38,7 +38,7 @@
         this.cheats = Utility.getOpt(opts, 'cheats', false);
         this.closed = Utility.getOpt(opts, 'closed', false);
         this.buffer = Utility.getOpt(opts, 'buffer', 0);
-        this.grid = Utility.getOpt(opts, 'grid', new Grid(opts));
+        this.grid = Utility.getOpt(opts, 'grid', {});
         this.cellWidth = (this.width - this.buffer) / this.xCount;
         this.cellHeight = (this.height - this.buffer) / this.yCount;
 
@@ -47,7 +47,7 @@
         this.path = [];
 
         this.draw();
-        this.solve();
+        // this.solve();
 
         return this;
     };
@@ -126,8 +126,8 @@
         drawMaze: function () {
             var grid = this.grid,
                 drawnEdges = [],
-                x1, y1, x2, y2,
-                v, topV, leftV, rightV, bottomV;
+                neighbs = [],
+                v;
 
             let edgeAlreadyDrawn = function (v1, v2) {
                 return _.detect(drawnEdges, function (edge) {
@@ -137,48 +137,20 @@
 
             for (let i = 0; i < grid.cells.length; i++) {
                 v = grid.cells[i];
-                topV = grid.getCellAt(v.x, v.y - 1);
-                leftV = grid.getCellAt(v.x - 1, v.y);
-                rightV = grid.getCellAt(v.x + 1, v.y);
-                bottomV = grid.getCellAt(v.x, v.y + 1);
-
-                if (!edgeAlreadyDrawn(v, topV) && grid.areConnected(v, topV)) {
-                    x1 = v.x * this.cellWidth;
-                    y1 = v.y * this.cellHeight;
-                    x2 = x1 + this.cellWidth;
-                    y2 = y1;
-
-                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                    drawnEdges.push([v, topV]);
+                for (let c = 0; c < v.corners.length; c++) {
+                    let neighb = v.neighbor(v, c);
+                    neighbs[c] = grid.getCellAt(neighb.q, neighb.r, neighb.s);
                 }
+                neighbs.forEach((hex, id) => {
+                    if (!edgeAlreadyDrawn(v, hex) && grid.areConnected(v, hex)) {
+                        this.addWall(
+                            new Vec(hex.corners[id].x, hex.corners[id].y),
+                            new Vec(hex.corners[id+1].x, hex.corners[id+1].y)
+                        );
+                        drawnEdges.push([v, hex]);
+                    }
+                });
 
-                if (!edgeAlreadyDrawn(v, leftV) && grid.areConnected(v, leftV)) {
-                    x2 = x1;
-                    y2 = y1 + this.cellHeight;
-
-                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                    drawnEdges.push([v, leftV]);
-                }
-
-                if (!edgeAlreadyDrawn(v, rightV) && grid.areConnected(v, rightV)) {
-                    x1 = (v.x * this.cellWidth) + this.cellWidth;
-                    y1 = v.y * this.cellHeight;
-                    x2 = x1;
-                    y2 = y1 + this.cellHeight;
-
-                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                    drawnEdges.push([v, rightV]);
-                }
-
-                if (!edgeAlreadyDrawn(v, bottomV) && grid.areConnected(v, bottomV)) {
-                    x1 = v.x * this.cellWidth;
-                    y1 = (v.y * this.cellHeight) + this.cellHeight;
-                    x2 = x1 + this.cellWidth;
-                    y2 = y1;
-
-                    this.addWall(new Vec(x1, y1), new Vec(x2, y2));
-                    drawnEdges.push([v, bottomV]);
-                }
             }
 
             return this;
