@@ -13,11 +13,13 @@
 
         /**
          * The flags for what to display for 'cheats'
-         * Show the QuadTree overlay, show the grid overlay, show the wall's numbers
          * @typedef {Object} cheatsOpts
-         * @property {boolean} quad - Show the Quadtree overlay
-         * @property {boolean} grid - Show the Grid overlay
-         * @property {boolean} walls - Show the Wall numbers
+         * @property {boolean} id
+         * @property {boolean} name
+         * @property {boolean} direction
+         * @property {boolean} gridLocation
+         * @property {boolean} position
+         * @property {boolean} walls
          */
 
         /**
@@ -69,9 +71,11 @@
                 maxDepth: 30
             });
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
-                brute: false,
-                quad: false,
-                grid: false,
+                id: false,
+                name: false,
+                direction: false,
+                gridLocation: false,
+                position: false,
                 walls: false
             });
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
@@ -106,8 +110,7 @@
             this.population = new Map();
 
             if (this.grid) {
-                this.cellsContainer = this.grid.getGrid();
-                this.stage.addChild(this.cellsContainer);
+                this.stage.addChild(this.grid.cellsContainer);
             }
 
             this.walls = walls;

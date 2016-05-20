@@ -124,10 +124,7 @@
          * @returns {Maze}
          */
         drawMaze: function () {
-            var grid = this.grid,
-                drawnEdges = [],
-                neighbs = [],
-                v;
+            var drawnEdges = [];
 
             let edgeAlreadyDrawn = function (v1, v2) {
                 return _.detect(drawnEdges, function (edge) {
@@ -135,23 +132,15 @@
                     }) !== undefined;
             };
 
-            for (let i = 0; i < grid.cells.length; i++) {
-                v = grid.cells[i];
-                for (let c = 0; c < v.corners.length; c++) {
-                    let neighb = v.neighbor(v, c);
-                    neighbs[c] = grid.getCellAt(neighb.q, neighb.r, neighb.s);
-                }
-                neighbs.forEach((hex, id) => {
-                    if (!edgeAlreadyDrawn(v, hex) && grid.areConnected(v, hex)) {
-                        this.addWall(
-                            new Vec(hex.corners[id].x, hex.corners[id].y),
-                            new Vec(hex.corners[id+1].x, hex.corners[id+1].y)
-                        );
-                        drawnEdges.push([v, hex]);
+            this.grid.cells.forEach((cell) => {
+                cell.neighbors.forEach((hex, dir) => {
+                    if (!hex || (!edgeAlreadyDrawn(cell, hex) && this.grid.areConnected(cell, hex))) {
+                        this.walls.push(cell.walls[dir]);
+                        drawnEdges.push([cell, hex]);
                     }
                 });
 
-            }
+            });
 
             return this;
         },
@@ -160,8 +149,17 @@
          * @returns {Maze}
          */
         generate: function () {
+            // let randomCell = this.grid.cells[Math.floor(Math.random() * this.grid.cells.length)];
+            // this.recurse(randomCell);
             var initialCell = this.grid.getCellAt(0, 0);
             this.recurse(initialCell);
+
+            this.grid.cells.forEach((cell) => {
+                if (!cell.visited) {
+                    let neighbors = this.grid.unvisitedNeighbors(cell);
+                    this.recurse(cell);
+                }
+            });
 
             return this;
         },

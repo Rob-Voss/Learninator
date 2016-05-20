@@ -260,11 +260,19 @@
          * @returns {Array}
          */
         unvisitedNeighbors(c) {
-            var unv;
-            return _.select(this.connectedNeighbors(c), function (c0) {
-                unv = !c0.visited;
-                return unv;
+            var unv = [];
+            c.neighbors.forEach((cell) => {
+                if (!cell.visited) {
+                    unv.push(cell);
+                }
             });
+            
+            return unv;
+            // var unv;
+            // return _.select(this.connectedNeighbors(c), function (c0) {
+            //     unv = !c0.visited;
+            //     return unv;
+            // });
         }
     }
 

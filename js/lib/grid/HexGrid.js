@@ -34,26 +34,54 @@
         this.cellsContainer = new PIXI.Container();
         this.cells.forEach((cell) => {
             var hs = new HexShape(cell, this.layout, this.tileSize, this.fill, this.cheats);
-            for (let c = 0; c < cell.corners.length; c++) {
-                let neighb = cell.neighbor(cell, c);
-                cell.neighbors[c] = this.getCellAt(neighb.q, neighb.r);
-            }
-            for (let c = 0; c < hs.corners.length; c++) {
-                let x1 = hs.corners[c].x,
-                    y1 = hs.corners[c].y,
-                    x2, y2;
-                if (c !== hs.corners.length - 1) {
-                    x2 = hs.corners[c + 1].x;
-                    y2 = hs.corners[c + 1].y;
-                } else {
-                    x2 = hs.corners[0].x;
-                    y2 = hs.corners[0].y;
+            for (let dir = 0; dir < Hex.hexDirections.length; dir++) {
+                let neighb = cell.neighbor(cell, dir), x1, x2, y1, y2;
+                cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
+
+                switch (dir) {
+                    case 0:
+                        x1 = cell.corners[3].x;
+                        y1 = cell.corners[3].y;
+                        x2 = cell.corners[2].x;
+                        y2 = cell.corners[2].y;
+                        break;
+                    case 1:
+                        x1 = cell.corners[2].x;
+                        y1 = cell.corners[2].y;
+                        x2 = cell.corners[1].x;
+                        y2 = cell.corners[1].y;
+                        break;
+                    case 2:
+                        x1 = cell.corners[1].x;
+                        y1 = cell.corners[1].y;
+                        x2 = cell.corners[0].x;
+                        y2 = cell.corners[0].y;
+                        break;
+                    case 3:
+                        x1 = cell.corners[5].x;
+                        y1 = cell.corners[5].y;
+                        x2 = cell.corners[0].x;
+                        y2 = cell.corners[0].y;
+                        break;
+                    case 4:
+                        x1 = cell.corners[4].x;
+                        y1 = cell.corners[4].y;
+                        x2 = cell.corners[5].x;
+                        y2 = cell.corners[5].y;
+                        break;
+                    case 5:
+                        x1 = cell.corners[3].x;
+                        y1 = cell.corners[3].y;
+                        x2 = cell.corners[4].x;
+                        y2 = cell.corners[4].y;
+                        break;
                 }
-                this.walls.push(new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls));
+
+                cell.walls[dir] = new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls);
+                this.walls.push(cell.walls[dir]);
             }
             this.cellsContainer.addChild(hs.shape);
         });
-
 
         return this;
     };
@@ -83,20 +111,20 @@
          */
         axialToCube: function (hex) {
             return {
-                x: axial.q,
-                y: axial.r,
-                z: -axial.q - axial.r
+                x: hex.q,
+                y: hex.r,
+                z: -hex.q - hex.r
             };
         },
         /**
          * Returns all neighbors of this Cell that are separated by an edge
-         * @param {Hex} h
+         * @param {Hex} hex
          * @returns {Array}
          */
-        connectedNeighbors: function (h) {
+        connectedNeighbors: function (hex) {
             var con;
-            return _.select(this.neighbors(h), (h0) => {
-                con = this.areConnected(h, h0);
+            return _.select(this.neighbors(hex), (h0) => {
+                con = this.areConnected(hex, h0);
 
                 return con;
             });
@@ -158,12 +186,13 @@
             return this.layout.hexToPixel(hex);
         },
         /**
-         * Return the location of the entity within a grid
-         * @param {Entity} entity
+         * Return the PIXI cell container from the grid
          * @returns {Object}
          */
         getGrid: function () {
-            return this.cellsContainer;
+            // for (let [id, entity] of this.map.entries()) {
+            return this.map;
+            // }
         },
         /**
          * Return the location of the entity within a grid
@@ -190,13 +219,13 @@
          * Add the cells to a hash map
          */
         mapCells: function () {
-            let column, row, hex, self = this;
-            this.cells.forEach(function (cell) {
+            let column, row, hex;
+            this.cells.forEach((cell) => {
                 // check q
-                column = self.map.get(cell.q);
+                column = this.map.get(cell.q);
                 if (!column) {
-                    self.map.set(cell.q, new Map());
-                    column = self.map.get(cell.q);
+                    this.map.set(cell.q, new Map());
+                    column = this.map.get(cell.q);
                 }
                 // check r
                 row = column.get(cell.r);
@@ -288,14 +317,14 @@
          * @param {Object} coords
          * @returns {Vec}
          */
-        roundCube: function (coordinates) {
+        roundCube: function (coords) {
             var dx, dy, dz, rx, ry, rz;
-            rx = Math.round(coordinates.x);
-            ry = Math.round(coordinates.y);
-            rz = Math.round(coordinates.z);
-            dx = Math.abs(rx - coordinates.x);
-            dy = Math.abs(ry - coordinates.y);
-            dz = Math.abs(rz - coordinates.z);
+            rx = Math.round(coords.x);
+            ry = Math.round(coords.y);
+            rz = Math.round(coords.z);
+            dx = Math.abs(rx - coords.x);
+            dy = Math.abs(ry - coords.y);
+            dz = Math.abs(rz - coords.z);
             if (dx > dy && dx > dz) {
                 rx = -ry - rz;
             } else if (dy > dz) {
@@ -334,16 +363,13 @@
          * @returns {Array}
          */
         shapeHexagon: function (size) {
-            var hexes = [],
-                neighbs = [];
+            var hexes = [];
             for (let q = -size; q <= size; q++) {
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new Hex(q, r, -q - r),
-                        corners = this.layout.polygonCorners(hex);
-                    hex.corners = corners[1];
-                    hex.polyCorners = corners[0];
+                    let hex = new Hex(q, r, -q - r);
+                    this.layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
@@ -362,10 +388,8 @@
             var hexes = [];
             for (let q = q1; q <= q2; q++) {
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new constructor(q, r, -q - r),
-                        corners = this.layout.polygonCorners(hex);
-                    hex.polyCorners = corners[0];
-                    hex.corners = corners[1];
+                    let hex = new constructor(q, r, -q - r);
+                    this.layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
@@ -387,10 +411,8 @@
             for (let j = j1; j < j2; j++) {
                 let jOffset = -Math.floor(j / 2);
                 for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    let hex = new constructor(i, j, -i - j),
-                        corners = this.layout.polygonCorners(hex);
-                    hex.polyCorners = corners[0];
-                    hex.corners = corners[1];
+                    let hex = new constructor(i, j, -i - j);
+                    this.layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
@@ -413,10 +435,8 @@
                     q += moveDirection[0];
                     r += moveDirection[1];
                     if (moveDirectionIndex !== 0) {
-                        let hex = new Hex(q, r, -q - r),
-                            corners = this.layout.polygonCorners(hex);
-                        hex.polyCorners = corners[0];
-                        hex.corners = corners[1];
+                        let hex = new Hex(q, r, -q - r);
+                        this.layout.polygonCorners(hex);
                         result.push(hex);
                     }
                 }
@@ -458,10 +478,8 @@
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = 0; r <= size - q; r++) {
-                    let hex = new Hex(q, r, -q - r),
-                        corners = this.layout.polygonCorners(hex);
-                    hex.polyCorners = corners[0];
-                    hex.corners = corners[1];
+                    let hex = new Hex(q, r, -q - r);
+                    this.layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
@@ -476,10 +494,8 @@
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = size - q; r <= size; r++) {
-                    let hex = new Hex(q, r, -q - r),
-                        corners = this.layout.polygonCorners(hex);
-                    hex.polyCorners = corners[0];
-                    hex.corners = corners[1];
+                    let hex = new Hex(q, r, -q - r);
+                    this.layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
@@ -491,11 +507,21 @@
          * @returns {Array}
          */
         unvisitedNeighbors: function (hex) {
-            var unv;
-            return _.select(this.connectedNeighbors(hex), function (c0) {
-                unv = !c0.visited;
-                return unv;
+            var unv = [];
+            hex.neighbors.forEach((cell) => {
+                if (cell) {
+                    if (!cell.visited) {
+                        unv.push(cell);
+                    }
+                }
             });
+
+            return unv;
+            // var unv;
+            // return _.select(this.connectedNeighbors(hex), function (c0) {
+            //     unv = !c0.visited;
+            //     return unv;
+            // });
         }
     };
 
@@ -654,26 +680,22 @@
         /**
          *
          * @param {Hex} hex
-         * @returns {Array}
+         * @returns {Layout}
          */
         polygonCorners: function (hex) {
-            var corners = [],
-                polyCorners = [];
             hex.center = this.hexToPixel(hex);
             for (let i = 0; i < 6; i++) {
                 var offset = this.hexCornerOffset(i);
-                polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);
-                corners.push(new Point(hex.center.x + offset.x, hex.center.y + offset.y));
+                hex.polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);
+                hex.corners.push(new Point(hex.center.x + offset.x, hex.center.y + offset.y));
             }
 
-            return [polyCorners, corners];
+            return this;
         }
     };
 
-    var layoutPointy = new Orientation(Math.sqrt(3.0), Math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, Math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5),
-        layoutFlat = new Orientation(3.0 / 2.0, 0.0, Math.sqrt(3.0) / 2.0, Math.sqrt(3.0), 2.0 / 3.0, 0.0, -1.0 / 3.0, Math.sqrt(3.0) / 3.0, 0.0);
-    Layout.layoutPointy = layoutPointy;
-    Layout.layoutFlat = layoutFlat;
+    Layout.layoutPointy = new Orientation(Math.sqrt(3.0), Math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, Math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5);
+    Layout.layoutFlat = new Orientation(3.0 / 2.0, 0.0, Math.sqrt(3.0) / 2.0, Math.sqrt(3.0), 2.0 / 3.0, 0.0, -1.0 / 3.0, Math.sqrt(3.0) / 3.0, 0.0);
     global.HexGrid = HexGrid;
     global.Layout = Layout;
     global.OffsetCoord = OffsetCoord;

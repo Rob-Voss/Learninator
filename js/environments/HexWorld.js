@@ -16,16 +16,16 @@
                 autoResize: false,
                 resizable: false,
                 transparent: false,
-                resolution: window.devicePixelRatio,
-                width: 600,
-                height: 600
+                resolution: 1,//window.devicePixelRatio,
+                width: 800,
+                height: 800
             };
 
             let agentOpts = {
                 brainType: 'RL.DQNAgent',
                 worker: false,
-                range: 120,
-                proximity: 120,
+                range: 90,
+                proximity: 90,
                 radius: 10,
                 numEyes: 30,
                 numTypes: 5,
@@ -44,17 +44,13 @@
                 simSpeed: 1,
                 collision: {
                     type: 'brute',
-                    cheats: {
-                        brute: false,
-                        quad: false,
-                        grid: false
-                    }
+                    cheats: false
                 },
                 cheats: {
                     id: false,
                     name: false,
                     direction: false,
-                    gridLocation: true,
+                    gridLocation: false,
                     position: false,
                     walls: false
                 },

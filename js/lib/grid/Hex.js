@@ -22,6 +22,7 @@
         this.reward = 0;
         this.neighbors = [];
         this.corners = [];
+        this.polyCorners = [];
         this.walls = [];
         this.population = new Map();
 
