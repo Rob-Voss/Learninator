@@ -149,14 +149,11 @@
          * @returns {Maze}
          */
         generate: function () {
-            // let randomCell = this.grid.cells[Math.floor(Math.random() * this.grid.cells.length)];
-            // this.recurse(randomCell);
             var initialCell = this.grid.getCellAt(0, 0);
             this.recurse(initialCell);
 
             this.grid.cells.forEach((cell) => {
                 if (!cell.visited) {
-                    let neighbors = this.grid.unvisitedNeighbors(cell);
                     this.recurse(cell);
                 }
             });

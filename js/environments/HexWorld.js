@@ -35,7 +35,7 @@
                 interactive: false,
                 useSprite: false
             };
-            let agents = [
+            let agents    = [
                 new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
                 new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
             ];
@@ -65,24 +65,26 @@
             };
 
             let gridOptions = {
-                width: renderOpts.width,
-                height: renderOpts.height,
-                size: 5,
-                cheats: worldOpts.cheats,
-                tileSize: 30,
-                tileSpacing: 20,
-                pointyTiles: false,
-                fill: false
-            };
+                    width: renderOpts.width,
+                    height: renderOpts.height,
+                    cheats: worldOpts.cheats,
+                    buffer: 0,
+                    cellSize: 30,
+                    cellSpacing: 20,
+                    size: 5,
+                    pointy: true,
+                    fill: false
+                },
+                grid        = new HexGrid(gridOptions);
 
             let maze = new Maze({
-                xCount: renderOpts.width / gridOptions.tileSize,
-                yCount: renderOpts.height / gridOptions.tileSize,
+                xCount: grid.xCount,
+                yCount: grid.yCount,
                 width: renderOpts.width,
                 height: renderOpts.height,
                 closed: false,
                 cheats: false,
-                grid: new HexGrid(gridOptions)
+                grid: grid
             });
 
             worldOpts.grid = maze.grid;

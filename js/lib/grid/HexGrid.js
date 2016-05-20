@@ -1,96 +1,34 @@
 (function (global) {
     "use strict";
 
-    /**
-     * A library for creating Hexagonal grids
-     * @name HexGrid
-     * @constructor
-     *
-     * @param {Object} opts
-     * @param {Array} cells
-     * @param {Layout} layout
-     * @returns {HexGrid}
-     */
-    var HexGrid = function (opts, cells, layout) {
-        this.width = Utility.getOpt(opts, 'width', 600);
-        this.height = Utility.getOpt(opts, 'height', 600);
-        this.size = Utility.getOpt(opts, 'size', 5);
-        this.cheats = Utility.getOpt(opts, 'cheats', false);
-        this.tileSize = Utility.getOpt(opts, 'tileSize', 20);
-        this.tileSpacing = Utility.getOpt(opts, 'tileSpacing', 0);
-        this.pointyTiles = Utility.getOpt(opts, 'pointyTiles', false);
-        this.fill = Utility.getOpt(opts, 'fill', false);
-        this.map = new Map();
-        this.layout = layout || new Layout(Layout.layoutPointy, new Point(this.tileSize, this.tileSize), new Point(this.width / 2, this.height / 2));
-        this.cells = cells || this.shapeHexagon(this.size);
-        this.xCount = this.width / this.tileSize;
-        this.yCount = this.height / this.tileSize;
-        this.mapCells();
+    class HexGrid extends Grid {
 
-        this.removedEdges = [];
-        this.path = [];
-        this.walls = [];
+        /**
+         * A library for creating Hexagonal grids
+         * @name HexGrid
+         * @constructor
+         *
+         * @param {Object} opts
+         * @param {Array} cells
+         * @returns {HexGrid}
+         */
+        constructor(opts, cells) {
+            super(opts);
 
-        this.cellsContainer = new PIXI.Container();
-        this.cells.forEach((cell) => {
-            var hs = new HexShape(cell, this.layout, this.tileSize, this.fill, this.cheats);
-            for (let dir = 0; dir < Hex.hexDirections.length; dir++) {
-                let neighb = cell.neighbor(cell, dir), x1, x2, y1, y2;
-                cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
+            this.orientation = this.pointy ? Layout.layoutPointy : Layout.layoutFlat;
+            this.layout = new Layout(this.orientation, new Point(this.cellSize, this.cellSize), new Point(this.width / 2, this.height / 2));
+            this.cells = cells || HexGrid.shapeHexagon(this.size, this.layout);
 
-                switch (dir) {
-                    case 0:
-                        x1 = cell.corners[3].x;
-                        y1 = cell.corners[3].y;
-                        x2 = cell.corners[2].x;
-                        y2 = cell.corners[2].y;
-                        break;
-                    case 1:
-                        x1 = cell.corners[2].x;
-                        y1 = cell.corners[2].y;
-                        x2 = cell.corners[1].x;
-                        y2 = cell.corners[1].y;
-                        break;
-                    case 2:
-                        x1 = cell.corners[1].x;
-                        y1 = cell.corners[1].y;
-                        x2 = cell.corners[0].x;
-                        y2 = cell.corners[0].y;
-                        break;
-                    case 3:
-                        x1 = cell.corners[5].x;
-                        y1 = cell.corners[5].y;
-                        x2 = cell.corners[0].x;
-                        y2 = cell.corners[0].y;
-                        break;
-                    case 4:
-                        x1 = cell.corners[4].x;
-                        y1 = cell.corners[4].y;
-                        x2 = cell.corners[5].x;
-                        y2 = cell.corners[5].y;
-                        break;
-                    case 5:
-                        x1 = cell.corners[3].x;
-                        y1 = cell.corners[3].y;
-                        x2 = cell.corners[4].x;
-                        y2 = cell.corners[4].y;
-                        break;
-                }
+            this.mapCells();
+            this.init();
 
-                cell.walls[dir] = new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls);
-                this.walls.push(cell.walls[dir]);
-            }
-            this.cellsContainer.addChild(hs.shape);
-        });
+            return this;
+        }
 
-        return this;
-    };
-
-    HexGrid.prototype = {
         /**
          * Returns true if there is an edge between c1 and c2
-         * @param {Hex} h1
-         * @param {Hex} h2
+         * @param {Cell} h1
+         * @param {Cell} h2
          * @returns {boolean}
          */
         areConnected(h1, h2) {
@@ -103,122 +41,157 @@
             });
 
             return removedEdge === undefined;
-        },
+        }
+
         /**
          * Convert from axial coords to Cube
          * @param {Hex} hex
          * @returns {Cube}
          */
-        axialToCube: function (hex) {
+        axialToCube(hex) {
             return {
                 x: hex.q,
                 y: hex.r,
                 z: -hex.q - hex.r
             };
-        },
-        /**
-         * Returns all neighbors of this Cell that are separated by an edge
-         * @param {Hex} hex
-         * @returns {Array}
-         */
-        connectedNeighbors: function (hex) {
-            var con;
-            return _.select(this.neighbors(hex), (h0) => {
-                con = this.areConnected(hex, h0);
+        }
 
-                return con;
-            });
-        },
         /**
          * Convert from Cube coords to axial
          * @param {Cube} cube
          * @returns {Hex}
          */
-        cubeToAxial: function (cube) {
+        cubeToAxial(cube) {
             return {
                 q: cube.x,
                 r: cube.y,
                 s: -cube.x - cube.y
             };
-        },
-        /**
-         * Returns all neighbors of this Cell that are NOT separated by an edge
-         * This means there is a maze path between both cells.
-         * @param {Hex} hex
-         * @returns {Array}
-         */
-        disconnectedNeighbors: function (hex) {
-            var disc;
-            return _.reject(this.neighbors(hex), (c0) => {
-                disc = this.areConnected(hex, c0);
+        }
 
-                return disc;
-            });
-        },
         /**
          * Get the cell at the axial coords
          * @param {number} q
          * @param {number} r
          * @returns {Hex|boolean}
          */
-        getCellAt: function (q, r) {
+        getCellAt(q, r) {
             let column = this.map.get(q),
                 row = column ? column.get(r) : false,
                 cell = row ? row.get(-q - r) : false;
 
             return cell;
-        },
+        }
+
         /**
          * Distance between two axial coords
-         * @param {Hex} h1
-         * @param {Hex} h2
+         * @param {Cell} h1
+         * @param {Cell} h2
          * @returns {number}
          */
-        getCellDistance: function (h1, h2) {
+        getCellDistance(h1, h2) {
             return (Math.abs(h1.q - h2.q) + Math.abs(h1.r - h2.r) + Math.abs(h1.q + h1.r - h2.q - h2.r)) / 2;
-        },
+        }
+
         /**
          * Get the center x,y coords for a Hex
-         * @param {Hex} hex
+         * @param {Cell} hex
          * @returns {Point}
          */
-        getCenterXY: function (hex) {
+        getCenterXY(hex) {
             return this.layout.hexToPixel(hex);
-        },
+        }
+
         /**
          * Return the PIXI cell container from the grid
          * @returns {Object}
          */
-        getGrid: function () {
+        getGrid() {
             // for (let [id, entity] of this.map.entries()) {
-            return this.map;
+            return this;
             // }
-        },
+        }
+
         /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
-         * @returns {Object}
+         * @returns {Cell|boolean}
          */
-        getGridLocation: function (entity) {
+        getGridLocation(entity) {
             let hex = this.pixelToHex(entity.position),
                 cube = this.roundCube(this.axialToCube(hex)),
                 hexR = this.cubeToAxial(cube),
                 cell = this.getCellAt(hexR.q, hexR.r);
 
             return cell;
-        },
+        }
+
         /**
          *
          * @param {Hex} hex
          * @returns {*|Vec|Point}
          */
-        hexToPixel: function (hex) {
+        hexToPixel(hex) {
             return this.layout.hexToPixel(hex);
-        },
+        }
+
+        init() {
+            this.cells.forEach((cell) => {
+                var hs = new HexShape(cell, this.layout, this.cellSize, this.fill, this.cheats);
+                for (let dir = 0; dir < Hex.hexDirections.length; dir++) {
+                    let neighb = cell.neighbor(cell, dir), x1, x2, y1, y2;
+
+                    switch (dir) {
+                        case 0:
+                            x1 = cell.corners[3].x;
+                            y1 = cell.corners[3].y;
+                            x2 = cell.corners[2].x;
+                            y2 = cell.corners[2].y;
+                            break;
+                        case 1:
+                            x1 = cell.corners[2].x;
+                            y1 = cell.corners[2].y;
+                            x2 = cell.corners[1].x;
+                            y2 = cell.corners[1].y;
+                            break;
+                        case 2:
+                            x1 = cell.corners[1].x;
+                            y1 = cell.corners[1].y;
+                            x2 = cell.corners[0].x;
+                            y2 = cell.corners[0].y;
+                            break;
+                        case 3:
+                            x1 = cell.corners[5].x;
+                            y1 = cell.corners[5].y;
+                            x2 = cell.corners[0].x;
+                            y2 = cell.corners[0].y;
+                            break;
+                        case 4:
+                            x1 = cell.corners[4].x;
+                            y1 = cell.corners[4].y;
+                            x2 = cell.corners[5].x;
+                            y2 = cell.corners[5].y;
+                            break;
+                        case 5:
+                            x1 = cell.corners[3].x;
+                            y1 = cell.corners[3].y;
+                            x2 = cell.corners[4].x;
+                            y2 = cell.corners[4].y;
+                            break;
+                    }
+
+                    cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
+                    cell.walls[dir] = new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls);
+                    this.walls.push(cell.walls[dir]);
+                }
+                this.cellsContainer.addChild(hs.shape);
+            });
+        }
+
         /**
          * Add the cells to a hash map
          */
-        mapCells: function () {
+        mapCells() {
             let column, row, hex;
             this.cells.forEach((cell) => {
                 // check q
@@ -240,13 +213,14 @@
                     hex = row.get(cell.s);
                 }
             });
-        },
+        }
+
         /**
          * Return a Hex's neighbors
-         * @param {Hex} hex
+         * @param {Cell} hex
          * @returns {Array}
          */
-        neighbors: function (hex) {
+        neighbors(hex) {
             var i, len, neighbors, result;
             result = [];
             neighbors = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
@@ -259,21 +233,23 @@
             }
 
             return result;
-        },
+        }
+
         /**
          *
          * @param x
          * @param y
          * @returns {*|{q, r, s}|Hex}
          */
-        pixelToAxial: function (x, y) {
+        pixelToAxial(x, y) {
             var cube, decimalQR, roundedCube;
             decimalQR = this.pixelToDecimalQR(x, y);
             cube = this.axialToCube(decimalQR);
             roundedCube = this.roundCube(cube);
 
             return this.cubeToAxial(roundedCube);
-        },
+        }
+
         /**
          *
          * @param x
@@ -281,17 +257,17 @@
          * @param scale
          * @returns {{q: *, r: *, s: number}}
          */
-        pixelToDecimalQR: function (x, y, scale) {
+        pixelToDecimalQR(x, y, scale) {
             var q, r;
             if (typeof scale !== "number") {
                 scale = 1;
             }
-            if (this.pointyTiles) {
-                q = (1 / 3 * Math.sqrt(3) * x - 1 / 3 * -y) / (this.tileSize + this.tileSpacing);
-                r = 2 / 3 * -y / (this.tileSize + this.tileSpacing);
+            if (this.pointy) {
+                q = (1 / 3 * Math.sqrt(3) * x - 1 / 3 * -y) / (this.cellSize + this.cellSpacing);
+                r = 2 / 3 * -y / (this.cellSize + this.cellSpacing);
             } else {
-                q = 2 / 3 * x / (this.tileSize + this.tileSpacing);
-                r = (1 / 3 * Math.sqrt(3) * -y - 1 / 3 * x) / (this.tileSize + this.tileSpacing);
+                q = 2 / 3 * x / (this.cellSize + this.cellSpacing);
+                r = (1 / 3 * Math.sqrt(3) * -y - 1 / 3 * x) / (this.cellSize + this.cellSpacing);
             }
             q /= scale;
             r /= scale;
@@ -301,23 +277,14 @@
                 r: r,
                 s: -q - r
             };
-        },
-        /**
-         * Remove the edge from between two Cells
-         * @param {Hex} h1
-         * @param {Hex} h2
-         */
-        removeEdgeBetween: function (h1, h2) {
-            this.removedEdges.push([h1, h2]);
+        }
 
-            return this;
-        },
         /**
          * Get something
          * @param {Object} coords
          * @returns {Vec}
          */
-        roundCube: function (coords) {
+        roundCube(coords) {
             var dx, dy, dz, rx, ry, rz;
             rx = Math.round(coords.x);
             ry = Math.round(coords.y);
@@ -338,43 +305,52 @@
                 y: ry,
                 z: rz
             };
-        },
-        permuteQRS: function (q, r, s) {
+        }
+
+        permuteQRS(q, r, s) {
             return new Hex(q, r, s);
-        },
-        permuteSRQ: function (q, r, s) {
+        }
+
+        permuteSRQ(q, r, s) {
             return new Hex(s, r, q);
-        },
-        permuteSQR: function (q, r, s) {
+        }
+
+        permuteSQR(q, r, s) {
             return new Hex(s, q, r);
-        },
-        permuteRQS: function (q, r, s) {
+        }
+
+        permuteRQS(q, r, s) {
             return new Hex(r, q, s);
-        },
-        permuteRSQ: function (q, r, s) {
+        }
+
+        permuteRSQ(q, r, s) {
             return new Hex(r, s, q);
-        },
-        permuteQSR: function (q, r, s) {
+        }
+
+        permuteQSR(q, r, s) {
             return new Hex(q, s, r);
-        },
+        }
+
         /**
          * Create a Hexagon of Hexes
          * @param {number} size
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeHexagon: function (size) {
+        static shapeHexagon(size, layout) {
             var hexes = [];
             for (let q = -size; q <= size; q++) {
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
                     let hex = new Hex(q, r, -q - r);
-                    this.layout.polygonCorners(hex);
+                    layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Create a parallelogram of Hexes
          * @param {number} q1
@@ -382,27 +358,30 @@
          * @param {number} q2
          * @param {number} r2
          * @param {Function} constructor
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeParallelogram: function (q1, r1, q2, r2, constructor) {
+        static shapeParallelogram(q1, r1, q2, r2, constructor, layout) {
             var hexes = [];
             for (let q = q1; q <= q2; q++) {
                 for (let r = r1; r <= r2; r++) {
                     let hex = new constructor(q, r, -q - r);
-                    this.layout.polygonCorners(hex);
+                    layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Create a rectangle of Hexes
          * @param {number} w
          * @param {number} h
          * @param {Function} constructor
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeRectangle: function (w, h, constructor) {
+        static shapeRectangle(w, h, constructor, layout) {
             var hexes = [],
                 i1 = -Math.floor(w / 2),
                 i2 = i1 + w,
@@ -412,20 +391,22 @@
                 let jOffset = -Math.floor(j / 2);
                 for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
                     let hex = new constructor(i, j, -i - j);
-                    this.layout.polygonCorners(hex);
+                    layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Create a ring of Hexes
          * @param {number} q
          * @param {number} r
          * @param {number} radius
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeRing: function (q, r, radius) {
+        static shapeRing(q, r, radius, layout) {
             var i, j, len, moveDirection, moveDirectionIndex, moveDirections, ref, result;
             result = [];
             moveDirections = [[1, 0], [0, -1], [-1, 0], [-1, 1], [0, 1], [1, 0], [1, -1]];
@@ -436,14 +417,15 @@
                     r += moveDirection[1];
                     if (moveDirectionIndex !== 0) {
                         let hex = new Hex(q, r, -q - r);
-                        this.layout.polygonCorners(hex);
+                        layout.polygonCorners(hex);
                         result.push(hex);
                     }
                 }
             }
 
             return result;
-        },
+        }
+
         /**
          *
          * @param minQ
@@ -451,9 +433,10 @@
          * @param minR
          * @param maxR
          * @param toCube
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeTrapezoidal: function (minQ, maxQ, minR, maxR, toCube) {
+        static shapeTrapezoidal(minQ, maxQ, minR, maxR, toCube, layout) {
             var q, r, _g3, _g2,
                 hexes = [],
                 _g1 = minQ,
@@ -468,62 +451,60 @@
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Create a triangle of Hexes
          * @param {number} size
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeTriangle1: function (size) {
+        static shapeTriangle1(size, layout) {
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = 0; r <= size - q; r++) {
                     let hex = new Hex(q, r, -q - r);
-                    this.layout.polygonCorners(hex);
+                    layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Create a triangle of Hexes
          * @param {number} size
+         * @param {Layout} layout
          * @returns {Array}
          */
-        shapeTriangle2: function (size) {
+        static shapeTriangle2(size, layout) {
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = size - q; r <= size; r++) {
                     let hex = new Hex(q, r, -q - r);
-                    this.layout.polygonCorners(hex);
+                    layout.polygonCorners(hex);
                     hexes.push(hex);
                 }
             }
             return hexes;
-        },
+        }
+
         /**
          * Returns all neighbors of this Cell that aren't separated by an edge
-         * @param {Hex} hex
+         * @param {Cell} hex
          * @returns {Array}
          */
-        unvisitedNeighbors: function (hex) {
+        unvisitedNeighbors(hex) {
             var unv = [];
             hex.neighbors.forEach((cell) => {
-                if (cell) {
-                    if (!cell.visited) {
-                        unv.push(cell);
-                    }
+                if (cell && !cell.visited) {
+                    unv.push(cell);
                 }
             });
 
             return unv;
-            // var unv;
-            // return _.select(this.connectedNeighbors(hex), function (c0) {
-            //     unv = !c0.visited;
-            //     return unv;
-            // });
         }
-    };
+    }
 
     /**
      *
