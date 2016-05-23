@@ -4,6 +4,9 @@
 (function (global) {
     "use strict";
 
+    var Utility = global.Utility || {},
+        Cell = Cell || {};
+
     class Grid {
 
         /**
@@ -21,9 +24,11 @@
          * @param {number} opts.cellSpacing -
          * @param {boolean} opts.pointy -
          * @param {boolean} opts.fill -
+         * @param {array} cells -
+         * @param {*} layout -
          * @returns {Grid}
          */
-        constructor(opts) {
+        constructor(opts, cells, layout) {
             this.width = Utility.getOpt(opts, 'width', 600);
             this.height = Utility.getOpt(opts, 'height', 600);
             this.cheats = Utility.getOpt(opts, 'cheats', false);
@@ -37,16 +42,17 @@
             this.yCount = this.height / this.cellSize;
             this.cellWidth = (this.width - this.buffer) / this.xCount;
             this.cellHeight = (this.height - this.buffer) / this.yCount;
+            this.cells = cells || [];
+            this.layout = layout || {};
 
             this.cellsContainer = new PIXI.Container();
             this.map = new Map();
-            this.cells = [];
             this.path = [];
             this.removedEdges = [];
             this.walls = [];
 
             this.mapCells();
-            this.init();
+
 
             return this;
         }
@@ -142,8 +148,8 @@
         }
 
         /**
-         * Return a PIXI container with the grid
-         * @returns {PIXI.Container|*}
+         * Return the grid
+         * @returns {Grid}
          */
         getGrid() {
             return this;
@@ -162,24 +168,6 @@
                     second = this.pixelToCell(entity.bounds.x + entity.bounds.width, entity.bounds.y + entity.bounds.height);
                 return (first) ? first : second;
             }
-        }
-
-        /**
-         *
-         */
-        init() {
-            for (let x = 0; x < this.xCount; x++) {
-                for (let y = 0; y < this.yCount; y++) {
-                    let cell = new Cell(x, y, this.cellWidth, this.cellHeight),
-                        cs = new CellShape(cell, this.cheats);
-                    cell.shape = cs;
-                    this.cells.push(cell);
-
-                    this.cellsContainer.addChild(cs.shape);
-                }
-            }
-
-            return this;
         }
 
         /**
@@ -268,6 +256,26 @@
             this.removedEdges.push([c1, c2]);
 
             return this;
+        }
+
+        /**
+         * Create a rectangle of Cells
+         * @param {number} w
+         * @param {number} h
+         * @param {Function} constructor
+         * @param {Layout} layout
+         * @returns {Array}
+         */
+        static shapeRectangle(w, h, constructor, layout) {
+            let cells = [];
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    let cell = new constructor(x, y, this.cellWidth, this.cellHeight);
+                    cells.push(cell);
+                }
+            }
+
+            return cells;
         }
 
         /**

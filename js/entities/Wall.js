@@ -12,8 +12,9 @@
          * @param {boolean} cheats
          * @returns {Wall}
          */
-        constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), cheats = false) {
+        constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), cheats = false, name = null) {
             this.id = Utility.Strings.guid();
+            this.name = name || '';
             this.type = 0;
             this.v1 = v1;
             this.v2 = v2;
@@ -31,17 +32,33 @@
         }
 
         /**
-         * 
+         *
          * @returns {Wall}
          */
         draw() {
-            if (this.cheats) {
-                let wallText = new PIXI.Text(this.id.substring(0, 10), {
+            if (this.cheats.id) {
+                let wallText = new PIXI.Text(this.id.substring(0, 5), {
                     font: "12px Arial",
                     fill: "#000000",
                     align: "center"
                 });
-                wallText.position.set(this.v1.x, this.v1.y);
+                wallText.position.set(this.v1.x - 3, this.v1.y - 3);
+
+                if (this.cheatOverlay !== undefined) {
+                    this.shape.removeChild(this.cheatOverlay);
+                }
+                this.cheatOverlay = new PIXI.Container();
+                this.cheatOverlay.addChild(wallText);
+                this.shape.addChild(this.cheatOverlay);
+            }
+
+            if (this.cheats.name) {
+                let wallText = new PIXI.Text(this.name, {
+                    font: "12px Arial",
+                    fill: "#000000",
+                    align: "center"
+                });
+                wallText.position.set(this.v2.x - 3, this.v2.y - 3);
 
                 if (this.cheatOverlay !== undefined) {
                     this.shape.removeChild(this.cheatOverlay);

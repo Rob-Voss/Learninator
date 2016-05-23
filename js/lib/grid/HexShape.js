@@ -6,26 +6,29 @@ var HexShape = HexShape || {};
 (function (global) {
     "use strict";
 
-    class HexShape {
+    /**
+     *
+     */
+    class HexShape extends Hex {
 
         /**
          *
-         * @param {Hex} hex
-         * @param {Layout} layout
+         * @param {object} hex
          * @param {number} size
          * @param {boolean} fill
          * @param {boolean} cheats
          * @returns {HexShape}
          * @constructor
          */
-        constructor(hex, layout = false, size = 20, fill = false, cheats = false) {
-            Object.assign(this, hex);
-            this.layout = layout;
+        constructor(hex, size = 20, fill = false, cheats = false) {
+            super(hex.q, hex.r, hex.s);
+
             this.size = size;
             this.fill = fill;
             this.cheats = cheats;
             this.color = this.colorForHex(this.q, this.r, this.s);
             this.alpha = 0.2;
+            this.polyCorners = [];
 
             this.shape = new PIXI.Graphics();
             this.shape.color = this.color;
@@ -118,6 +121,7 @@ var HexShape = HexShape || {};
             if (this.fill) {
                 this.shape.endFill();
             }
+            this.bounds = this.shape.getBounds();
 
             return this;
         }

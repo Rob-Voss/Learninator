@@ -1,6 +1,10 @@
 (function (global) {
     "use strict";
 
+    var Grid = global.Grid || {},
+        Wall = global.Wall || {},
+        Vec = global.Vec || {};
+
     class HexGrid extends Grid {
 
         /**
@@ -8,19 +12,59 @@
          * @name HexGrid
          * @constructor
          *
-         * @param {Object} opts
-         * @param {Array} cells
+         * @param {object} opts
+         * @param {array} cells
+         * @param {Layout} layout
          * @returns {HexGrid}
          */
-        constructor(opts, cells) {
-            super(opts);
-
-            this.orientation = this.pointy ? Layout.layoutPointy : Layout.layoutFlat;
-            this.layout = new Layout(this.orientation, new Point(this.cellSize, this.cellSize), new Point(this.width / 2, this.height / 2));
-            this.cells = cells || HexGrid.shapeHexagon(this.size, this.layout);
+        constructor(opts, cells, layout) {
+            let o = layout || (opts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+                lay = new Layout(o, new Point(opts.cellSize, opts.cellSize), new Point(opts.width / 2, opts.height / 2)),
+                cs = cells || HexGrid.shapeHexagon(opts.size, lay);
+            super(opts, cs, lay);
 
             this.mapCells();
-            this.init();
+
+            this.cells.forEach((cell) => {
+                var dirs = Hex.hexDirections;
+                for (let dir = 0; dir < dirs.length; dir++) {
+                    let neighb = cell.neighbor(cell, dir),
+                        v1, v2,
+                        ad = (!this.pointy) ? 1 : 0;
+
+                    switch (dir) {
+                        case 0:
+                            v1 = cell.corners[2 + ad];
+                            v2 = cell.corners[3 + ad];
+                            break;
+                        case 1:
+                            v1 = cell.corners[1 + ad];
+                            v2 = cell.corners[2 + ad];
+                            break;
+                        case 2:
+                            v1 = cell.corners[0 + ad];
+                            v2 = cell.corners[1 + ad];
+                            break;
+                        case 3:
+                            v1 = cell.corners[0 + ad];
+                            v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                            break;
+                        case 4:
+                            v1 = cell.corners[4 + ad];
+                            v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                            break;
+                        case 5:
+                            v1 = cell.corners[3 + ad];
+                            v2 = cell.corners[4 + ad];
+                            break;
+                    }
+
+                    cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
+                    cell.walls[dir] = new Wall(v1, v2, this.cheats.walls, dir);
+                    this.walls.push(cell.walls[dir]);
+                }
+                this.cellsContainer.addChild(cell.shape);
+            });
 
             return this;
         }
@@ -103,16 +147,6 @@
         }
 
         /**
-         * Return the PIXI cell container from the grid
-         * @returns {Object}
-         */
-        getGrid() {
-            // for (let [id, entity] of this.map.entries()) {
-            return this;
-            // }
-        }
-
-        /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
          * @returns {Cell|boolean}
@@ -133,59 +167,6 @@
          */
         hexToPixel(hex) {
             return this.layout.hexToPixel(hex);
-        }
-
-        init() {
-            this.cells.forEach((cell) => {
-                var hs = new HexShape(cell, this.layout, this.cellSize, this.fill, this.cheats);
-                for (let dir = 0; dir < Hex.hexDirections.length; dir++) {
-                    let neighb = cell.neighbor(cell, dir), x1, x2, y1, y2;
-
-                    switch (dir) {
-                        case 0:
-                            x1 = cell.corners[3].x;
-                            y1 = cell.corners[3].y;
-                            x2 = cell.corners[2].x;
-                            y2 = cell.corners[2].y;
-                            break;
-                        case 1:
-                            x1 = cell.corners[2].x;
-                            y1 = cell.corners[2].y;
-                            x2 = cell.corners[1].x;
-                            y2 = cell.corners[1].y;
-                            break;
-                        case 2:
-                            x1 = cell.corners[1].x;
-                            y1 = cell.corners[1].y;
-                            x2 = cell.corners[0].x;
-                            y2 = cell.corners[0].y;
-                            break;
-                        case 3:
-                            x1 = cell.corners[5].x;
-                            y1 = cell.corners[5].y;
-                            x2 = cell.corners[0].x;
-                            y2 = cell.corners[0].y;
-                            break;
-                        case 4:
-                            x1 = cell.corners[4].x;
-                            y1 = cell.corners[4].y;
-                            x2 = cell.corners[5].x;
-                            y2 = cell.corners[5].y;
-                            break;
-                        case 5:
-                            x1 = cell.corners[3].x;
-                            y1 = cell.corners[3].y;
-                            x2 = cell.corners[4].x;
-                            y2 = cell.corners[4].y;
-                            break;
-                    }
-
-                    cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
-                    cell.walls[dir] = new Wall(new Vec(x1, y1), new Vec(x2, y2), this.cheats.walls);
-                    this.walls.push(cell.walls[dir]);
-                }
-                this.cellsContainer.addChild(hs.shape);
-            });
         }
 
         /**
@@ -343,8 +324,9 @@
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    layout.polygonCorners(hex);
+                    let cell = {q: q, r: r, s: -q - r},
+                        hex = new HexShape(cell, this.cellSize, this.fill, this.cheats);
+                    layout.polygonCorners(hex)
                     hexes.push(hex);
                 }
             }
@@ -668,7 +650,7 @@
             for (let i = 0; i < 6; i++) {
                 var offset = this.hexCornerOffset(i);
                 hex.polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);
-                hex.corners.push(new Point(hex.center.x + offset.x, hex.center.y + offset.y));
+                hex.corners.push(new Vec(hex.center.x + offset.x, hex.center.y + offset.y));
             }
 
             return this;
