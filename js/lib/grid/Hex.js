@@ -17,13 +17,14 @@
             this.q           = q || 0;
             this.r           = r || 0;
             this.s           = s || -q - r;
-            this.center      = null;
+            this.center      = new Point(0, 0);
             this.visited     = false;
             this.parent      = null;
             this.heuristic   = 0;
             this.reward      = 0;
             this.neighbors   = [];
             this.corners     = [];
+            this.polyCorners = [];
             this.walls       = [];
             this.population  = new Map();
 
@@ -184,7 +185,7 @@
 
         /**
          * Get an array of coords
-         * @returns {array}
+         * @returns {*[]}
          */
         toArray() {
             return [this.q, this.r, this.s];
@@ -195,7 +196,7 @@
          * @returns {string}
          */
         toString() {
-            return this.q + ":" + this.r + ":" + this.s;
+            return this.toArray().join(",");
         }
 
         /**

@@ -133,13 +133,12 @@
             };
 
             this.grid.cells.forEach((cell) => {
-                cell.neighbors.forEach((hex, dir) => {
-                    if (!hex || (!edgeAlreadyDrawn(cell, hex) && this.grid.areConnected(cell, hex))) {
+                cell.neighbors.forEach((neigh, dir) => {
+                    if (!neigh || (!edgeAlreadyDrawn(cell, neigh) && this.grid.areConnected(cell, neigh))) {
                         this.walls.push(cell.walls[dir]);
-                        drawnEdges.push([cell, hex]);
+                        drawnEdges.push([cell, neigh]);
                     }
                 });
-
             });
 
             return this;
@@ -169,7 +168,8 @@
             cell.visit();
             let neighbors = this.grid.unvisitedNeighbors(cell);
             if (neighbors.length > 0) {
-                let randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                let numb = Math.floor(Math.random() * neighbors.length),
+                    randomNeighbor = neighbors[numb];
                 this.cellStack.push(cell);
                 this.grid.removeEdgeBetween(cell, randomNeighbor);
                 this.recurse(randomNeighbor);

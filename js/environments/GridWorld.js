@@ -16,15 +16,31 @@ var GridWorld = GridWorld || {},
      * @constructor
      */
     function GridWorld() {
-        let self = this;
-        this.maze = new Maze({
-            xCount: 10,
-            yCount: 10,
+        let cheats = {
+            id: false,
+            name: false,
+            angle: false,
+            bounds: false,
+            direction: false,
+            gridLocation: false,
+            position: false,
+            walls: false
+        },
+            gridOpts = {
             width: 600,
-            height: 600
-        });
+            height: 600,
+            buffer: 0,
+            size: 10,
+            cellSize: 60,
+            cellSpacing: 0,
+            fill: false,
+            closed: false,
+            cheats: cheats
+        };
+        this.grid = new Grid(gridOpts);
+        gridOpts.grid = this.grid;
+        this.maze = new Maze(gridOpts);
 
-        this.grid = this.maze.grid;
         this.walls = this.maze.walls;
         this.gH = this.grid.yCount;
         this.gW = this.grid.xCount;
@@ -50,38 +66,38 @@ var GridWorld = GridWorld || {},
                 {
                     brainType: 'RL.TDAgent',
                     env: {
-                        allowedActions: function (s) {
-                            return self.allowedActions(s);
+                        allowedActions: (s) => {
+                            return this.allowedActions(s);
                         },
-                        getMaxNumActions: function () {
-                            return self.getMaxNumActions();
+                        getMaxNumActions: () => {
+                            return this.getMaxNumActions();
                         },
-                        getNumStates: function () {
-                            return self.getNumStates();
+                        getNumStates: () => {
+                            return this.getNumStates();
                         },
-                        nextStateDistribution: function (s, a) {
-                            return self.nextStateDistribution(s, a);
+                        nextStateDistribution: (s, a) => {
+                            return this.nextStateDistribution(s, a);
                         },
-                        randomState: function () {
-                            return self.randomState();
+                        randomState: () => {
+                            return this.randomState();
                         },
-                        reset: function () {
-                            return self.reset();
+                        reset: () => {
+                            return this.reset();
                         },
-                        sampleNextState: function (s, a) {
-                            return self.sampleNextState(s, a);
+                        sampleNextState: (s, a) => {
+                            return this.sampleNextState(s, a);
                         },
-                        startState: function () {
-                            return self.startState();
+                        startState: () => {
+                            return this.startState();
                         },
-                        sToX: function (s) {
-                            return self.sToX(s);
+                        sToX: (s) => {
+                            return this.sToX(s);
                         },
-                        sToY: function (s) {
-                            return self.sToY(s);
+                        sToY: (s) => {
+                            return this.sToY(s);
                         },
-                        xyToS: function (x, y) {
-                            return self.xyToS(x, y);
+                        xyToS: (x, y) => {
+                            return this.xyToS(x, y);
                         }
                     },
                     numActions: 4,

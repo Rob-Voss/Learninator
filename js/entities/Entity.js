@@ -58,18 +58,12 @@
 
             this.id = Utility.Strings.guid();
             this.options = opts || {
-                    radius: 10,
-                    interactive: false,
-                    useSprite: false,
-                    moving: false,
-                    cheats: {
-                        id: false,
-                        name: false,
-                        direction: false,
-                        position: false,
-                        gridLocation: false
-                    }
-                };
+                radius: 10,
+                interactive: false,
+                useSprite: false,
+                moving: false,
+                cheats: false
+            };
             // Remember the old position and angle
             this.position = position;
             this.oldPosition = this.position.clone();
@@ -94,35 +88,26 @@
             this.collisions = [];
             this.gridLocation = {};
             this.cleanUp = false;
+            if (this.type === 2) {
+                this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
+            }
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
             this.addCheats();
 
-            let entity;
             if (this.useSprite) {
                 this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
                 this.sprite = new PIXI.Sprite(this.texture);
                 this.sprite.width = this.width;
                 this.sprite.height = this.height;
                 this.sprite.anchor.set(0.5, 0.5);
-                this.sprite.position.set(this.position.x, this.position.y);
+                this.draw();
                 this.sprite.addChild(this.cheatsContainer);
-                entity = this.sprite;
             } else {
                 this.shape = new PIXI.Graphics();
+                this.draw();
                 this.shape.addChild(this.cheatsContainer);
-
-                this.shape.clear();
-                this.shape.beginFill(this.color);
-                this.shape.drawCircle(this.position.x, this.position.y, this.radius);
-                this.shape.endFill();
-                this.bounds = this.shape.getBounds();
-                if (this.cheats.bounds) {
-                    this.shape.lineStyle(1, 0xFF0000, 1);
-                    this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                    this.shape.endFill();
-                }
             }
 
             if (this.interactive === true) {
@@ -172,44 +157,57 @@
         addCheats() {
             let fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
 
-            // If cheats are on then show the entities grid location and x,y coords
-            if (this.cheats.gridLocation && this.gridText === undefined) {
-                let textG = ' Grid(' + this.gridLocation.x + ',' + this.gridLocation.y + ')';
+            if (this.cheats.angle && this.anglePointer === undefined) {
+                let dirV = new Vec(
+                    this.position.x + this.radius * Math.sin(this.position.direction),
+                    this.position.y + this.radius * Math.cos(this.position.direction)
+                );
+                this.anglePointer = new PIXI.Graphics();
+                this.anglePointer.lineStyle(2, 0x000000, 2);
+                this.anglePointer.moveTo(this.position.x, this.position.y);
+                this.anglePointer.lineTo(dirV.x, dirV.y);
+                this.cheatsContainer.addChild(this.anglePointer);
+            }
 
-                this.gridText = new PIXI.Text(textG, fontOpts);
-                this.gridText.position.set(this.position.x + this.radius, this.position.y - (this.radius * 2));
+            if (this.cheats.gridLocation && this.gridText === undefined) {
+                this.gridText = new PIXI.Text('(' + this.gridLocation.toString() + ')', fontOpts);
+                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
                 this.cheatsContainer.addChild(this.gridText);
             }
 
-            // If cheats are on then show the entities position and velocity
             if (this.cheats.position && this.posText === undefined) {
-                let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                let textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) + ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
                     textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
 
                 this.posText = new PIXI.Text(textP + textV, fontOpts);
-                this.posText.position.set(this.position.x + this.radius, this.position.y - this.radius);
+                this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
                 this.cheatsContainer.addChild(this.posText);
             }
 
-            // If cheats are on then show the entities name
             if (this.cheats.name && this.nameText === undefined) {
                 this.nameText = new PIXI.Text(this.name, fontOpts);
-                this.nameText.position.set(this.position.x + this.radius, this.position.y + this.radius);
+                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
                 this.cheatsContainer.addChild(this.nameText);
             }
 
-            // If cheats are on then show the entities id
             if (this.cheats.id && this.idText === undefined) {
                 this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
-                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
                 this.cheatsContainer.addChild(this.idText);
             }
 
-            // If cheats are on then show the entities id
             if (this.cheats.direction && this.directionText === undefined) {
                 this.directionText = new PIXI.Text(this.direction, fontOpts);
-                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
                 this.cheatsContainer.addChild(this.directionText);
+            }
+
+            if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
+                this.boundsRect = new PIXI.Graphics();
+                this.boundsRect.lineStyle(1, 0xFF0000, 1);
+                this.boundsRect.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                this.boundsRect.endFill();
+                this.cheatsContainer.addChild(this.boundsRect);
             }
 
             return this;
@@ -220,15 +218,28 @@
          * @returns {Entity}
          */
         updateCheats() {
-            let posText, gridText, nameText, idText, directionText;
-            // If cheats are on then show the entities grid location and x,y coords
-            if (this.cheats.gridLocation) {
-                if (this.gridText === undefined) {
-                    this.addCheats();
+            this.addCheats();
+            if (this.cheats.angle) {
+                let dirV = new Vec(
+                    this.position.x + this.radius * Math.sin(this.position.direction),
+                    this.position.y + this.radius * Math.cos(this.position.direction)
+                );
+                this.anglePointer.clear();
+                this.anglePointer.lineStyle(2, 0x000000, 2);
+                this.anglePointer.moveTo(this.position.x, this.position.y);
+                this.anglePointer.lineTo(dirV.x, dirV.y);
+            } else {
+                if (this.anglePointer !== undefined) {
+                    let index = this.cheatsContainer.getChildIndex(this.anglePointer);
+                    this.cheatsContainer.removeChildAt(index);
+                    this.anglePointer = undefined;
                 }
-                gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-                gridText.text = '(' + this.gridLocation.toString() + ')';
-                gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius));
+            }
+
+            if (this.cheats.gridLocation) {
+                this.gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
+                this.gridText.text = '(' + this.gridLocation.toString() + ')';
+                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
             } else {
                 if (this.gridText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.gridText);
@@ -237,16 +248,12 @@
                 }
             }
 
-            // If cheats are on then show the entities position and velocity
             if (this.cheats.position) {
-                if (this.posText === undefined) {
-                    this.addCheats();
-                }
-                let textP = ' Pos(' + this.position.x + ', ' + this.position.y + ')',
+                let textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) + ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
                     textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
-                posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
-                posText.text = textP + textV;
-                posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
+                this.posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
+                this.posText.text = textP + textV;
+                this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
             } else {
                 if (this.posText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.posText);
@@ -255,13 +262,9 @@
                 }
             }
 
-            // If cheats are on then show the entities name
             if (this.cheats.name) {
-                if (this.nameText === undefined) {
-                    this.addCheats();
-                }
-                nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-                nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                this.nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
+                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
             } else {
                 if (this.nameText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.nameText);
@@ -270,13 +273,9 @@
                 }
             }
 
-            // If cheats are on then show the entities id
             if (this.cheats.id) {
-                if (this.idText === undefined) {
-                    this.addCheats();
-                }
-                idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-                idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+                this.idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
+                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
             } else {
                 if (this.idText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.idText);
@@ -285,19 +284,28 @@
                 }
             }
 
-            // If cheats are on then show the entities direction
             if (this.cheats.direction) {
-                if (this.directionText === undefined) {
-                    this.addCheats();
-                }
-                directionText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.directionText));
-                directionText.text = this.direction;
-                directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
+                this.directionText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.directionText));
+                this.directionText.text = this.direction;
+                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
             } else {
                 if (this.directionText !== undefined) {
                     let index = this.cheatsContainer.getChildIndex(this.directionText);
                     this.cheatsContainer.removeChildAt(index);
                     this.directionText = undefined;
+                }
+            }
+
+            if (this.cheats.bounds) {
+                this.boundsRect.clear();
+                this.boundsRect.lineStyle(1, 0xFF0000, 1);
+                this.boundsRect.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                this.boundsRect.endFill();
+            } else {
+                if (this.boundsRect !== undefined) {
+                    let index = this.cheatsContainer.getChildIndex(this.boundsRect);
+                    this.cheatsContainer.removeChildAt(index);
+                    this.boundsRect = undefined;
                 }
             }
 
@@ -313,32 +321,46 @@
                 this.sprite.position.set(this.position.x, this.position.y);
             } else {
                 this.shape.clear();
+                this.shape.lineStyle(0.5, 0x000000, 0.8);
                 this.shape.beginFill(this.color);
-                this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+                if (this.type === 2) {
+                    this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
+                    this.shape.drawPolygon(this.vertices);
+                } else {
+                    this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+                }
                 this.shape.endFill();
                 this.bounds = this.shape.getBounds();
-                if (this.cheats.bounds) {
-                    this.shape.lineStyle(1, 0xFF0000, 1);
-                    this.shape.drawRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                    this.shape.endFill();
-                }
-
-                if (this.cheats.direction) {
-                    let dirV = new Vec(
-                        this.position.x + this.radius * Math.sin(this.position.direction),
-                        this.position.y + this.radius * Math.cos(this.position.direction)
-                    );
-                    this.shape.lineStyle(2, 0x000000, 2);
-                    this.shape.moveTo(this.position.x, this.position.y);
-                    this.shape.lineTo(dirV.x, dirV.y);
-                }
             }
 
-            if (this.cheats) {
-                this.updateCheats();
-            }
+            this.updateCheats();
 
             return this;
+        }
+
+        /**
+         *
+         * @param x
+         * @param y
+         * @param points - number of points (or number of sides for polygons)
+         * @param radius1 - "outer" radius of the star
+         * @param radius2 - "inner" radius of the star (if equal to radius1, a polygon is drawn)
+         * @param alpha0 - initial angle (clockwise), by default, stars and polygons are 'pointing' up
+         */
+        static drawShape(x, y, points, radius1, radius2, alpha0) {
+            var i, angle, radius, vertices = [];
+            if (radius2 !== radius1) {
+                points = 2 * points;
+            }
+            for (i = 0; i <= points; i++) {
+                angle = i * 2 * Math.PI / points - Math.PI / 2 + alpha0;
+                radius = i % 2 === 0 ? radius1 : radius2;
+                let px = x + radius * Math.cos(angle),
+                    py = y + radius * Math.sin(angle);
+                vertices.push(px, py);
+            }
+
+            return vertices;
         }
 
         /**

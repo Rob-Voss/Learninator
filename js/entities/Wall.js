@@ -26,46 +26,29 @@
             this.rotation = this.angle * Math.PI / 180;
 
             this.shape = new PIXI.Graphics();
-            this.draw();
-
-            return this;
-        }
-
-        /**
-         *
-         * @returns {Wall}
-         */
-        draw() {
-            if (this.cheats.id) {
-                let wallText = new PIXI.Text(this.id.substring(0, 5), {
-                    font: "12px Arial",
-                    fill: "#000000",
-                    align: "center"
-                });
-                wallText.position.set(this.v1.x - 3, this.v1.y - 3);
-
-                if (this.cheatOverlay !== undefined) {
-                    this.shape.removeChild(this.cheatOverlay);
-                }
-                this.cheatOverlay = new PIXI.Container();
-                this.cheatOverlay.addChild(wallText);
-                this.shape.addChild(this.cheatOverlay);
+            this.cheatsContainer = new PIXI.Container();
+            this.shape.addChild(this.cheatsContainer);
+            this.fontOpts = {
+                font: "12px Arial",
+                fill: "#000000",
+                align: "center"
+            };
+            if (this.cheats && this.cheats.id) {
+                this.idText = new PIXI.Text(this.id.substring(0, 5), this.fontOpts);
+                this.idText.position.set(this.v1.x - 3, this.v1.y - 3);
+                this.cheatsContainer.addChild(this.idText);
             }
 
-            if (this.cheats.name) {
-                let wallText = new PIXI.Text(this.name, {
-                    font: "12px Arial",
-                    fill: "#000000",
-                    align: "center"
-                });
-                wallText.position.set(this.v2.x - 3, this.v2.y - 3);
+            if (this.cheats && this.cheats.name) {
+                this.nameText = new PIXI.Text(this.name, this.fontOpts);
+                this.nameText.position.set(this.v2.x - 3, this.v2.y - 3);
+                this.cheatsContainer.addChild(this.nameText);
+            }
 
-                if (this.cheatOverlay !== undefined) {
-                    this.shape.removeChild(this.cheatOverlay);
-                }
-                this.cheatOverlay = new PIXI.Container();
-                this.cheatOverlay.addChild(wallText);
-                this.shape.addChild(this.cheatOverlay);
+            if (this.cheats && this.cheats.direction) {
+                this.nameText = new PIXI.Text(this.name, this.fontOpts);
+                this.nameText.position.set(this.v2.x - 3, this.v2.y - 3);
+                this.cheatsContainer.addChild(this.nameText);
             }
 
             this.shape.clear();
@@ -75,6 +58,15 @@
             this.shape.lineTo(this.v2.x, this.v2.y);
             this.shape.endFill();
             this.bounds = this.shape.getBounds();
+
+            return this;
+        }
+
+        /**
+         *
+         * @returns {Wall}
+         */
+        draw() {
 
             return this;
         }

@@ -6,6 +6,7 @@
     "use strict";
 
     class Cell {
+
         /**
          * Create a cell
          * @name Cell
@@ -13,28 +14,82 @@
          *
          * @param {number} x
          * @param {number} y
-         * @param {number} width
-         * @param {number} height
+         * @param {number} size
          * @returns {Cell}
          */
-        constructor(x = 0, y = 0, width = 10, height = 10) {
+        constructor(x = 0, y = 0, size = 20) {
             this.x = x;
             this.y = y;
             this.z = -x - y;
-            this.width = width;
-            this.height = height;
-            this.corners = [
-                new Point(this.x * this.width, this.y * this.height),
-                new Point(this.x * this.width + this.width, this.y * this.height),
-                new Point(this.x * this.width + this.width, this.y * this.height + this.height),
-                new Point(this.x * this.width, this.y * this.height + this.height)
-            ];
+            this.size = size;
             this.visited = false;
             this.parent = null;
             this.heuristic = 0;
             this.reward = 0;
+            this.neighbors = [];
+            this.population = new Map();
 
             return this;
+        }
+
+        /**
+         * Add a Cell to another one
+         * @param {Cell} a
+         * @param {Cell} b
+         * @returns {Hex}
+         */
+        add(a, b) {
+            return new Cell(a.x - b.x, a.y - b.y);
+        }
+
+        /**
+         * Get the direction
+         * @param {Cell} cell
+         * @param {number} dir
+         * @returns {*}
+         */
+        direction(cell, dir) {
+            switch (dir) {
+                case 0: // Up
+                    cell = new Cell(cell.x, cell.y - 1);
+                    break;
+                case 1: // Right
+                    cell = new Cell(cell.x + 1, cell.y);
+                    break;
+                case 2: // Down
+                    cell = new Cell(cell.x, cell.y + 1);
+                    break;
+                case 3: // Left
+                    cell = new Cell(cell.x - 1, cell.y);
+                    break;
+
+            }
+            return cell;
+        }
+
+        /**
+         * Get the neighbor
+         * @param {Cell} cell
+         * @param {number} dir
+         * @returns {Hex}
+         */
+        neighbor(cell, dir) {
+            switch (dir) {
+                case 0: // Up
+                    cell = new Cell(cell.x, cell.y - 1);
+                    break;
+                case 1: // Right
+                    cell = new Cell(cell.x + 1, cell.y);
+                    break;
+                case 2: // Down
+                    cell = new Cell(cell.x, cell.y + 1);
+                    break;
+                case 3: // Left
+                    cell = new Cell(cell.x - 1, cell.y);
+                    break;
+
+            }
+            return cell;
         }
 
         /**

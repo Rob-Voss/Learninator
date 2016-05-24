@@ -5,7 +5,9 @@
     "use strict";
 
     var Utility = global.Utility || {},
-        Cell = Cell || {};
+        Cell = global.Cell || {},
+        CellShape = global.CellShape || {},
+        Point = global.Point || {};
 
     class Grid {
 
@@ -25,34 +27,35 @@
          * @param {boolean} opts.pointy -
          * @param {boolean} opts.fill -
          * @param {array} cells -
-         * @param {*} layout -
          * @returns {Grid}
          */
-        constructor(opts, cells, layout) {
+        constructor(opts, cells) {
             this.width = Utility.getOpt(opts, 'width', 600);
             this.height = Utility.getOpt(opts, 'height', 600);
-            this.cheats = Utility.getOpt(opts, 'cheats', false);
-            this.buffer = Utility.getOpt(opts, 'buffer', 2);
+            this.buffer = Utility.getOpt(opts, 'buffer', 0);
             this.size = Utility.getOpt(opts, 'size', 5);
             this.cellSize = Utility.getOpt(opts, 'cellSize', 20);
             this.cellSpacing = Utility.getOpt(opts, 'cellSpacing', 0);
             this.pointy = Utility.getOpt(opts, 'pointy', false);
             this.fill = Utility.getOpt(opts, 'fill', false);
+            this.cheats = Utility.getOpt(opts, 'cheats', false);
             this.xCount = this.width / this.cellSize;
             this.yCount = this.height / this.cellSize;
             this.cellWidth = (this.width - this.buffer) / this.xCount;
             this.cellHeight = (this.height - this.buffer) / this.yCount;
-            this.cells = cells || [];
-            this.layout = layout || {};
-
-            this.cellsContainer = new PIXI.Container();
-            this.map = new Map();
+            this.cells = cells || Grid.shapeRectangle(this.xCount, this.yCount, this.cellSize, this.fill, this.cheats);
             this.path = [];
             this.removedEdges = [];
             this.walls = [];
 
+            this.map = new Map();
             this.mapCells();
 
+            this.cellsContainer = new PIXI.Container();
+            this.cells.forEach((cell) => {
+                cell.neighbors = this.neighbors(cell);
+                this.cellsContainer.addChild(cell.shape);
+            });
 
             return this;
         }
@@ -141,8 +144,8 @@
          * @returns {Object}
          */
         getCenterXY(cell) {
-            let x = cell.corners[2].x - (this.cellWidth / 2),
-                y = cell.corners[2].y - (this.cellHeight / 2);
+            let x = cell.corners[0].x + (this.cellWidth / 2),
+                y = cell.corners[0].y + (this.cellHeight / 2);
 
             return new Point(x, y);
         }
@@ -161,13 +164,11 @@
          * @returns {Cell|boolean}
          */
         getGridLocation(entity) {
-            if (entity.type !== undefined && entity.type !== 0) {
-                return this.pixelToCell(entity.position.x, entity.position.y);
-            } else if (entity.type === 0) {
-                let first = this.pixelToCell(entity.bounds.x, entity.bounds.y),
-                    second = this.pixelToCell(entity.bounds.x + entity.bounds.width, entity.bounds.y + entity.bounds.height);
-                return (first) ? first : second;
-            }
+            let x = entity.bounds.x + (entity.bounds.width/2),
+                y = entity.bounds.y + (entity.bounds.height/2),
+                cell = this.pixelToCell(x, y);
+
+            return cell;
         }
 
         /**
@@ -201,29 +202,21 @@
 
         /**
          * Returns all neighbors of this cell, regardless if they are connected or not.
-         * @param {Cell} c
+         * @param {Cell} cell
          * @returns {Array}
          */
-        neighbors(c) {
+        neighbors(cell) {
             let neighbors = [];
-            if (c !== null) {
-                let topCell = this.getCellAt(c.x, c.y - 1),
-                    rightCell = this.getCellAt(c.x + 1, c.y),
-                    bottomCell = this.getCellAt(c.x, c.y + 1),
-                    leftCell = this.getCellAt(c.x - 1, c.y);
+            if (cell !== null) {
+                let u = cell.direction(cell, 0),
+                    r = cell.direction(cell, 1),
+                    d = cell.direction(cell, 2),
+                    l = cell.direction(cell, 3);
 
-                if (topCell) {
-                    neighbors.push(topCell);
-                }
-                if (rightCell) {
-                    neighbors.push(rightCell);
-                }
-                if (bottomCell) {
-                    neighbors.push(bottomCell);
-                }
-                if (leftCell) {
-                    neighbors.push(leftCell);
-                }
+                neighbors[0] = this.getCellAt(u.x, u.y);
+                neighbors[1] = this.getCellAt(r.x, r.y);
+                neighbors[2] = this.getCellAt(d.x, d.y);
+                neighbors[3] = this.getCellAt(l.x, l.y);
             }
             return neighbors;
         }
@@ -234,7 +227,7 @@
          */
         pixelToCell(x, y) {
             var foundCell = false;
-            this.cells.some((cell) => {
+            this.cells.forEach((cell) => {
                 let inIt = x >= cell.corners[0].x &&
                     x <= cell.corners[2].x &&
                     y >= cell.corners[0].y &&
@@ -262,16 +255,18 @@
          * Create a rectangle of Cells
          * @param {number} w
          * @param {number} h
-         * @param {Function} constructor
-         * @param {Layout} layout
+         * @param {number} size
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeRectangle(w, h, constructor, layout) {
+        static shapeRectangle(w, h, size, fill, cheats) {
             let cells = [];
             for (let x = 0; x < w; x++) {
                 for (let y = 0; y < h; y++) {
-                    let cell = new constructor(x, y, this.cellWidth, this.cellHeight);
-                    cells.push(cell);
+                    let cell = new Cell(x, y, size),
+                        cellShape = new CellShape(cell, fill, cheats);
+                    cells.push(cellShape);
                 }
             }
 
@@ -294,7 +289,6 @@
             return unv;
         }
     }
-
     global.Grid = Grid;
 
 }(this));

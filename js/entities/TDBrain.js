@@ -161,7 +161,7 @@
         // Experience replay
         this.experience = [];
 
-        // letious housekeeping letiables
+        // various housekeeping variables
         this.age = 0; // incremented every backward()
         this.forwardPasses = 0; // incremented every forward()
         this.latestReward = 0;

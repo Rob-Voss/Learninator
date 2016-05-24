@@ -76,8 +76,10 @@
                     break;
                 case 'grid':
                     if (target.gridLocation) {
-                        for (let [id, ent] of target.gridLocation.population.entries()) {
-                            checkIt(ent);
+                        if (target.gridLocation.population !== undefined) {
+                            for (let [id, ent] of target.gridLocation.population.entries()) {
+                                checkIt(ent);
+                            }
                         }
                     }
                     break;
@@ -293,15 +295,15 @@
      */
     var GridCD = function () {
         this.path = this.grid.path;
-        this.cellWidth = this.grid.cellWidth;
-        this.cellHeight = this.grid.cellHeight;
+        this.cellWidth = this.grid.cellSize;
+        this.cellHeight = this.grid.cellSize;
 
         /**
          * Draw the regions of the grid
          */
         this.drawRegions = function () {
             // Draw the grid
-            if (this.cheats.grid) {
+            if (this.cheats.bounds) {
                 // Clear the collision detection holder
                 if (this.collisionOverlay !== undefined) {
                     this.stage.removeChild(this.collisionOverlay);
@@ -310,8 +312,8 @@
 
                 // If we are using grid based collision set up an overlay
                 this.grid.cells.forEach((cell) => {
-                    cell.shape.draw();
-                    this.collisionOverlay.addChild(cell.shape.shape);
+                    cell.draw();
+                    this.collisionOverlay.addChild(cell.shape);
                 });
 
                 this.stage.addChild(this.collisionOverlay);
@@ -339,6 +341,9 @@
                     entity.gridLocation = cell;
                     if (!entity.gridLocation.population.has(entity.id)) {
                         entity.gridLocation.population.set(entity.id, entity);
+                    }
+                    if (entity.gridLocation.population === undefined) {
+                        console.log();
                     }
                 }
             }

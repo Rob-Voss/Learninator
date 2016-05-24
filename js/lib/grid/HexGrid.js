@@ -2,6 +2,9 @@
     "use strict";
 
     var Grid = global.Grid || {},
+        Hex = global.Hex || {},
+        HexShape = global.HexShape || {},
+        Point = global.Point || {},
         Wall = global.Wall || {},
         Vec = global.Vec || {};
 
@@ -20,14 +23,15 @@
         constructor(opts, cells, layout) {
             let o = layout || (opts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
                 lay = new Layout(o, new Point(opts.cellSize, opts.cellSize), new Point(opts.width / 2, opts.height / 2)),
-                cs = cells || HexGrid.shapeHexagon(opts.size, lay);
-            super(opts, cs, lay);
+                cs = cells || HexGrid.shapeHexagon(opts.size, lay, opts.cellSize, opts.fill, opts.cheats);
+            super(opts, cs);
 
+            this.layout = lay;
+            this.directions = Hex.hexDirections;
             this.mapCells();
-
+            this.cellsContainer = new PIXI.Container();
             this.cells.forEach((cell) => {
-                var dirs = Hex.hexDirections;
-                for (let dir = 0; dir < dirs.length; dir++) {
+                for (let dir = 0; dir < this.directions.length; dir++) {
                     let neighb = cell.neighbor(cell, dir),
                         v1, v2,
                         ad = (!this.pointy) ? 1 : 0;
@@ -90,7 +94,7 @@
         /**
          * Convert from axial coords to Cube
          * @param {Hex} hex
-         * @returns {Cube}
+         * @returns {object}
          */
         axialToCube(hex) {
             return {
@@ -103,7 +107,7 @@
         /**
          * Convert from Cube coords to axial
          * @param {Cube} cube
-         * @returns {Hex}
+         * @returns {object}
          */
         cubeToAxial(cube) {
             return {
@@ -152,7 +156,11 @@
          * @returns {Cell|boolean}
          */
         getGridLocation(entity) {
-            let hex = this.pixelToHex(entity.position),
+            let center = new Point(
+                    entity.bounds.x + entity.bounds.width / 2,
+                    entity.bounds.y + entity.bounds.height / 2
+                ),
+                hex = this.layout.pixelToHex(center),
                 cube = this.roundCube(this.axialToCube(hex)),
                 hexR = this.cubeToAxial(cube),
                 cell = this.getCellAt(hexR.q, hexR.r);
@@ -204,7 +212,7 @@
         neighbors(hex) {
             var i, len, neighbors, result;
             result = [];
-            neighbors = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+            neighbors = Hex.hexDirections;
             for (i = 0, len = neighbors.length; i < len; i++) {
                 let neighbor = neighbors[i],
                     q = hex.q + neighbor[0],
@@ -262,8 +270,8 @@
 
         /**
          * Get something
-         * @param {Object} coords
-         * @returns {Vec}
+         * @param {object} coords
+         * @returns {object}
          */
         roundCube(coords) {
             var dx, dy, dz, rx, ry, rz;
@@ -316,17 +324,19 @@
          * Create a Hexagon of Hexes
          * @param {number} size
          * @param {Layout} layout
+         * @param {number} cellSize
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeHexagon(size, layout) {
+        static shapeHexagon(size, layout, cellSize, fill, cheats) {
             var hexes = [];
             for (let q = -size; q <= size; q++) {
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
-                    let cell = {q: q, r: r, s: -q - r},
-                        hex = new HexShape(cell, this.cellSize, this.fill, this.cheats);
-                    layout.polygonCorners(hex)
+                    let cell = new Hex(q, r, -q - r),
+                        hex = new HexShape(cell, layout, cellSize, fill, cheats);
                     hexes.push(hex);
                 }
             }
@@ -612,7 +622,7 @@
         },
         /**
          *
-         * @param {Vec} p
+         * @param {Point} p
          * @returns {Hex}
          */
         pixelToHex: function (p) {
@@ -646,7 +656,6 @@
          * @returns {Layout}
          */
         polygonCorners: function (hex) {
-            hex.center = this.hexToPixel(hex);
             for (let i = 0; i < 6; i++) {
                 var offset = this.hexCornerOffset(i);
                 hex.polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);

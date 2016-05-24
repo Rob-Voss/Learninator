@@ -39,20 +39,23 @@
                     new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
                     new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
+                cheats = {
+                    id: false,
+                    name: false,
+                    angle: false,
+                    bounds: false,
+                    direction: false,
+                    gridLocation: false,
+                    position: false,
+                    walls: false
+                },
                 worldOpts   = {
                     simSpeed: 1,
                     collision: {
-                        type: 'brute',
-                        cheats: false
+                        type: 'grid',
+                        cheats: cheats
                     },
-                    cheats: {
-                        id: false,
-                        name: true,
-                        direction: true,
-                        gridLocation: true,
-                        position: false,
-                        walls: true
-                    },
+                    cheats: cheats,
                     numEntities: 20,
                     entityOpts: {
                         radius: 10,
@@ -65,12 +68,12 @@
                 gridOptions = {
                     width: renderOpts.width,
                     height: renderOpts.height,
-                    cheats: worldOpts.cheats,
+                    cheats: cheats,
                     buffer: 0,
                     cellSize: 30,
                     cellSpacing: 20,
-                    size: 5,
-                    pointy: true,
+                    size: 7,
+                    pointy: false,
                     fill: false
                 },
                 grid        = new HexGrid(gridOptions),

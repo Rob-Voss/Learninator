@@ -64,35 +64,40 @@
             this.agents = agents || [];
             this.entityAgents = [];
             this.numAgents = this.agents.length;
+            this.rendererOpts = renderOpts || {
+                    antialiasing: false,
+                    autoResize: false,
+                    resolution: window.devicePixelRatio,
+                    resizable: false,
+                    transparent: false,
+                    noWebGL: true,
+                    width: 600,
+                    height: 600
+                };
             this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
-            this.collision = Utility.getOpt(worldOpts, 'collision', {
-                type: 'quad',
-                maxChildren: 10,
-                maxDepth: 30
-            });
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
                 id: false,
                 name: false,
+                angle: false,
+                bounds: false,
                 direction: false,
                 gridLocation: false,
                 position: false,
                 walls: false
             });
+            this.collision = Utility.getOpt(worldOpts, 'collision', {
+                type: 'quad',
+                maxChildren: 10,
+                maxDepth: 30
+            });
+            this.collision.cheats = this.cheats;
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', null);
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', []);
+            this.entityOpts.cheats = this.cheats;
             this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', null);
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', []);
+            this.entityAgentOpts.cheats = this.cheats;
             this.grid = Utility.getOpt(worldOpts, 'grid', false);
-            this.rendererOpts = renderOpts || {
-                antialiasing: false,
-                autoResize: false,
-                resolution: window.devicePixelRatio,
-                resizable: false,
-                transparent: false,
-                noWebGL: true,
-                width: 600,
-                height: 600
-            };
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
             this.resizable = this.rendererOpts.resizable;
@@ -114,10 +119,12 @@
             }
 
             this.walls = walls;
-            this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats.walls));
-            this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats.walls));
-            this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats.walls));
-            this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats.walls));
+            if (!this.walls) {
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats));
+                this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats));
+                this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats));
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats));
+            }
 
             if (document.getElementById('flotreward')) {
                 this.rewards = new FlotGraph(this.agents);

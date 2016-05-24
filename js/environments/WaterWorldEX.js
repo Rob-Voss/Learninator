@@ -4,56 +4,7 @@ var WaterWorldEX = WaterWorldEX || {},
 
 (function (global) {
     "use strict";
-    
-    const renderOpts = {
-            antialiasing: false,
-            autoResize: false,
-            resizable: false,
-            transparent: false,
-            resolution: window.devicePixelRatio,
-            width: 600,
-            height: 600
-        },
-        agentOpts = {
-            brainType: 'RL.DQNAgent',
-            numActions: 4,
-            numEyes: 30,
-            numTypes: 5,
-            numPriopreception: 2,
-            range: 120,
-            proximity: 120,
-            radius: 10,
-            interactive: false,
-            useSprite: false,
-            worker: false
-        },
-        worldOpts = {
-            collision: {
-                type: 'brute'
-            },
-            numEntities: 10,
-            entityOpts: {
-                radius: 10,
-                interactive: false,
-                useSprite: false,
-                moving: true
-            },
-            numEntityAgents: 2,
-            entityAgentOpts: {
-                brainType: 'RL.DQNAgent',
-                numActions: 5,
-                numEyes: 6,
-                numTypes: 5,
-                numProprioception: 2,
-                range: 85,
-                proximity: 85,
-                radius: 10,
-                interactive: false,
-                useSprite: false,
-                worker: false
-            }
-        };
-    
+
     class WaterWorldEX extends World {
 
         /**
@@ -65,19 +16,88 @@ var WaterWorldEX = WaterWorldEX || {},
          * @returns {WaterWorldEX}
          */
         constructor() {
-            let agents = [
+            let renderOpts = {
+                    antialiasing: false,
+                    autoResize: false,
+                    resizable: false,
+                    transparent: false,
+                    resolution: 1,//window.devicePixelRatio,
+                    width: 600,
+                    height: 600
+                },
+                cheats = {
+                    id: false,
+                    name: false,
+                    angle: false,
+                    bounds: false,
+                    direction: false,
+                    gridLocation: false,
+                    position: false,
+                    walls: false
+                },
+                agentOpts = {
+                    brainType: 'RL.DQNAgent',
+                    numActions: 4,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numPriopreception: 2,
+                    range: 120,
+                    proximity: 120,
+                    radius: 10,
+                    interactive: false,
+                    useSprite: false,
+                    worker: false,
+                    cheats: cheats
+                },
+                agents = [
                     new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
                     new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
                 ],
-                maze = new Maze({
-                    xCount: 1,
-                    yCount: 1,
+                gridOptions = {
                     width: renderOpts.width,
                     height: renderOpts.height,
-                    closed: true
-                });
-            worldOpts.agents = agents;
-            worldOpts.grid = maze.grid;
+                    cheats: cheats,
+                    buffer: 0,
+                    cellSize: 60,
+                    cellSpacing: 20,
+                    size: 3,
+                    pointy: false,
+                    fill: false
+                },
+                grid = new Grid(gridOptions);
+            gridOptions.grid = grid;
+            let maze = new Maze(gridOptions),
+                worldOpts = {
+                    collision: {
+                        type: 'brute',
+                        cheats: cheats
+                    },
+                    numEntities: 10,
+                    entityOpts: {
+                        radius: 10,
+                        interactive: false,
+                        useSprite: false,
+                        moving: true,
+                        cheats: cheats
+                    },
+                    numEntityAgents: 2,
+                    entityAgentOpts: {
+                        brainType: 'RL.DQNAgent',
+                        numActions: 5,
+                        numEyes: 6,
+                        numTypes: 5,
+                        numProprioception: 2,
+                        range: 85,
+                        proximity: 85,
+                        radius: 10,
+                        interactive: false,
+                        useSprite: false,
+                        worker: false,
+                        cheats: cheats
+                    },
+                    grid: maze.grid,
+                    cheats: cheats
+                };
 
             super(agents, maze.walls, worldOpts, renderOpts);
 

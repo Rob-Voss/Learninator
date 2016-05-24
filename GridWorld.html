@@ -53,13 +53,13 @@
             $("#slider").slider('value', world.agents[0].epsilon);
             $("#eps").html(world.agents[0].epsilon.toFixed(2));
             state = world.startState(); // move state to beginning too
-            drawGrid();
+            world.drawGrid();
         }
 
         function resetAll() {
             world.reset();
             world.agents[0].reset();
-            drawGrid();
+            world.drawGrid();
         }
 
         /**

@@ -112,16 +112,6 @@ var Matter = Matter || {},
             this.render.mouse = this.mouseConstraint.mouse;
             Render.run(this.render);
 
-            // World.add(this.engine.world, this.mouseConstraint);
-            if (useTools) {
-                this.useInspector = useInspector;
-                this.isMobile = isMobile;
-                // create a Matter.Gui
-                this.gui = Gui.create(this.engine);
-                this.initControls();
-                Gui.update(this.gui);
-            }
-
             this.addWalls();
             this.addAgents();
             this.addEntities(30);
@@ -130,6 +120,15 @@ var Matter = Matter || {},
             this.setWorldEvents();
 
             this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
+            // World.add(this.engine.world, this.mouseConstraint);
+            if (useTools) {
+                this.useInspector = useInspector;
+                this.isMobile = isMobile;
+                // create a Matter.Gui
+                this.gui = Gui.create(this);
+                this.initControls();
+                Gui.update(this.gui);
+            }
         }
 
         /**

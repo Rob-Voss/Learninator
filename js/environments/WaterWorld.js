@@ -56,16 +56,33 @@
          */
         constructor() {
             let agents = [
-                new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
-                new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)],
-                maze = new Maze({
-                    xCount: 3,
-                    yCount: 3,
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
+                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
+                ],
+                cheats = {
+                    id: false,
+                    name: false,
+                    angle: false,
+                    bounds: false,
+                    direction: false,
+                    gridLocation: false,
+                    position: false,
+                    walls: false
+                },
+                gridOptions = {
                     width: renderOpts.width,
                     height: renderOpts.height,
-                    closed: false,
-                    cheats: false
-                });
+                    cheats: cheats,
+                    buffer: 0,
+                    cellSize: 60,
+                    cellSpacing: 20,
+                    size: 3,
+                    pointy: false,
+                    fill: false
+                },
+                grid = new Grid(gridOptions);
+            gridOptions.grid = grid;
+            let maze = new Maze(gridOptions);
 
             worldOpts.grid = maze.grid;
             super(agents, maze.walls, worldOpts, renderOpts);

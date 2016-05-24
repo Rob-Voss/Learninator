@@ -154,8 +154,8 @@
         }
       };
       var metrics = datGui.addFolder("Metrics");
-      metrics.add(runner, "fps").listen();
       if (engine.metrics.extended) {
+        metrics.add(runner, "fps").listen();
         metrics.add(runner, "delta").listen();
         metrics.add(runner, "correction").listen();
         metrics.add(engine.metrics, "bodies").listen();
