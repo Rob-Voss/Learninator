@@ -107,7 +107,7 @@ var HexShape = HexShape || {};
 
             if (this.cheats.gridLocation) {
                 this.gridText = new PIXI.Text(this.toString(), this.txtOpts);
-                this.gridText.position.set(this.center.x, this.center.y);
+                this.gridText.position.set(this.center.x - this.size / 2, this.center.y - 7);
                 this.cheatOverlay.addChild(this.gridText);
             }
 

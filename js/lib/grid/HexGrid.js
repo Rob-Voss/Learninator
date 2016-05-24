@@ -64,7 +64,7 @@
                     }
 
                     cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
-                    cell.walls[dir] = new Wall(v1, v2, this.cheats.walls, dir);
+                    cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
                     this.walls.push(cell.walls[dir]);
                 }
                 this.cellsContainer.addChild(cell.shape);
@@ -105,6 +105,42 @@
         }
 
         /**
+         * Returns true if there is an edge between c1 and c2
+         * @param {Cell} c1
+         * @param {Cell} c2
+         * @returns {boolean}
+         */
+        areConnected(c1, c2) {
+            if (!c1 || !c2) {
+                return false;
+            }
+
+            if (Math.abs(c1.x - c2.x) > 1 || Math.abs(c1.y - c2.y) > 1) {
+                return false;
+            }
+
+            var removedEdge = _.detect(this.removedEdges, function (edge) {
+                return _.include(edge, c1) && _.include(edge, c2);
+            });
+
+            return removedEdge === undefined;
+        }
+
+        /**
+         * Returns all neighbors of this Cell that are separated by an edge
+         * @param {Cell} c
+         * @returns {Array}
+         */
+        connectedNeighbors(c) {
+            var con;
+            return _.select(this.neighbors(c), (c0) => {
+                con = this.areConnected(c, c0);
+
+                return con;
+            });
+        }
+
+        /**
          * Convert from Cube coords to axial
          * @param {Cube} cube
          * @returns {object}
@@ -115,6 +151,21 @@
                 r: cube.y,
                 s: -cube.x - cube.y
             };
+        }
+
+        /**
+         * Returns all neighbors of this Cell that are NOT separated by an edge
+         * This means there is a maze path between both cells.
+         * @param {Cell} cell
+         * @returns {Array}
+         */
+        disconnectedNeighbors(cell) {
+            var disc;
+            return _.reject(this.neighbors(cell), (c0) => {
+                disc = this.areConnected(cell, c0);
+
+                return disc;
+            });
         }
 
         /**
@@ -169,15 +220,6 @@
         }
 
         /**
-         *
-         * @param {Hex} hex
-         * @returns {*|Vec|Point}
-         */
-        hexToPixel(hex) {
-            return this.layout.hexToPixel(hex);
-        }
-
-        /**
          * Add the cells to a hash map
          */
         mapCells() {
@@ -215,10 +257,11 @@
             neighbors = Hex.hexDirections;
             for (i = 0, len = neighbors.length; i < len; i++) {
                 let neighbor = neighbors[i],
-                    q = hex.q + neighbor[0],
-                    r = neighbor[1],
-                    s = -q - r;
-                result.push(this.getCellAt(q, r));
+                    q = hex.q + neighbor.q,
+                    r = neighbor.r,
+                    cell = this.getCellAt(q, r),
+                    neigh = hex.direction(i);
+                result.push((cell) ? cell : neigh);
             }
 
             return result;

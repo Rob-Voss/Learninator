@@ -25,10 +25,10 @@
                 this.y * this.size + (this.size / 2)
             );
             this.corners = [
-                new Point(this.x * this.size, this.y * this.size),
-                new Point(this.x * this.size + this.size, this.y * this.size),
-                new Point(this.x * this.size + this.size, this.y * this.size + this.size),
-                new Point(this.x * this.size, this.y * this.size + this.size)
+                new Vec(this.x * this.size, this.y * this.size),
+                new Vec(this.x * this.size + this.size, this.y * this.size),
+                new Vec(this.x * this.size + this.size, this.y * this.size + this.size),
+                new Vec(this.x * this.size, this.y * this.size + this.size)
             ];
             this.walls = [];
             for (let c = 0; c < this.corners.length; c++) {

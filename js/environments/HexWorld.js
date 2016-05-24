@@ -45,7 +45,7 @@
                     angle: false,
                     bounds: false,
                     direction: false,
-                    gridLocation: false,
+                    gridLocation: true,
                     position: false,
                     walls: false
                 },
@@ -76,14 +76,14 @@
                     pointy: false,
                     fill: false
                 },
-                grid        = new HexGrid(gridOptions),
-                maze        = new Maze({
-                    grid: grid,
-                    closed: false
-                });
-
+                grid = new HexGrid(gridOptions);
+            gridOptions.grid = grid;
+            let maze = new Maze(gridOptions);
             worldOpts.grid = maze.grid;
+            
             super(agents, maze.walls, worldOpts, renderOpts);
+            maze.drawSolution();
+            this.stage.addChild(maze.cheatsContainer);
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 

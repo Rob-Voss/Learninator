@@ -71,8 +71,8 @@
                     fill: false,
                     closed: false,
                     cheats: cheats
-                };
-            let grid = new Grid(gridOpts);
+                },
+                grid = new Grid(gridOpts);
             gridOpts.grid = grid;
             let maze = new Maze(gridOpts),
                 worldOpts = {
@@ -94,6 +94,8 @@
                 };
 
             super(agents, maze.walls, worldOpts, renderOpts);
+            maze.drawSolution();
+            this.stage.addChild(maze.cheatsContainer);
             // this.agents[0].load('zoo/mazeagent.json');
 
             return this;

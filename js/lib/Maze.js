@@ -47,75 +47,19 @@
         this.path = [];
 
         this.draw();
-        // this.solve();
+        this.solve();
 
         return this;
     };
 
     Maze.prototype = {
         /**
-         * Add a Wall to the Maze
-         * @param {Vec} v1
-         * @param {Vec} v2
-         * @returns {Maze}
-         */
-        addWall: function (v1, v2) {
-            this.walls.push(new Wall(v1, v2, this.cheats));
-
-            return this;
-        },
-        /**
          * Draw it
          * @returns {Maze}
          */
         draw: function () {
             this.generate();
-            if (this.closed) {
-                this.drawBorders();
-            }
             this.drawMaze();
-
-            return this;
-        },
-        /**
-         * Draw the borders
-         * @returns {Maze}
-         */
-        drawBorders: function () {
-            this.addWall(new Vec((this.closed ? this.buffer : this.cellWidth), this.buffer), new Vec(this.width - this.buffer, this.buffer));
-            this.addWall(new Vec(this.width - this.buffer, this.buffer), new Vec(this.width - this.buffer, this.height - this.buffer));
-            this.addWall(new Vec(this.width - (this.closed ? this.buffer : this.cellWidth), this.height - this.buffer), new Vec(this.buffer, this.height - this.buffer));
-            this.addWall(new Vec(this.buffer, this.height - this.buffer), new Vec(this.buffer, this.buffer));
-
-            return this;
-        },
-        /**
-         * Draw the solution
-         * @param {Canvas} canvas
-         * @returns {Maze}
-         */
-        drawSolution: function (canvas) {
-            let V, vW, vH, vX, vY, x, y,
-                _ctx = canvas.getContext("2d"),
-                _this = this,
-                path = this.path;
-            _ctx.fillStyle = "rgba(0,165,0,.1)";
-            _ctx.strokeStyle = "rgb(0,0,0)";
-            for (let i = 0; i < this.path.length; i++) {
-                V = path[i];
-                vW = this.cellWidth;
-                vH = this.cellHeight;
-                vX = V.x;
-                vY = V.y;
-                // Get the cell X coords and multiply by the cell width
-                x = _this.grid.cells[vX][vY].x * vW;
-                // Get the cell Y coords and multiply by the cell height
-                y = _this.grid.cells[vX][vY].y * vH;
-
-                (function () {
-                    _ctx.fillRect(x, y, vW, vH);
-                })();
-            }
 
             return this;
         },
@@ -140,6 +84,28 @@
                     }
                 });
             });
+
+            return this;
+        },
+        /**
+         * Draw the solution
+         * @returns {Maze}
+         */
+        drawSolution: function () {
+            let V;
+            // Add a container to hold our display cheats
+            this.cheatsContainer = new PIXI.Container();
+            this.solution = new PIXI.Graphics();
+            this.solution.lineStyle(1, 0x00FF00, 1);
+            for (let i = 0; i < this.path.length; i++) {
+                V = this.path[i];
+                if (i === 0) {
+                    this.solution.moveTo(V.center.x, V.center.y);
+                } else {
+                    this.solution.lineTo(V.center.x, V.center.y);
+                }
+            }
+            this.cheatsContainer.addChild(this.solution);
 
             return this;
         },
@@ -188,10 +154,8 @@
          */
         solve: function () {
             let closedSet = [],
-            // Top left cell
-                startCell = this.grid.getCellAt(0, 0),
-            // Bottom right cell
-                targetCell = this.grid.getCellAt(this.xCount - 1, this.yCount - 1),
+                startCell = this.grid.cells[0],
+                targetCell = this.grid.cells[this.grid.cells.length - 1],
                 openSet = [startCell],
                 searchCell = startCell,
                 neighbors, neighbor;

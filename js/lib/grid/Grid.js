@@ -50,12 +50,41 @@
 
             this.map = new Map();
             this.mapCells();
-
             this.cellsContainer = new PIXI.Container();
             this.cells.forEach((cell) => {
-                cell.neighbors = this.neighbors(cell);
+                for (let dir = 0; dir < 4; dir++) {
+                    let neighb = cell.neighbor(cell, dir),
+                        v1, v2;
+
+                    switch (dir) {
+                        case 0:
+                            v1 = cell.corners[0];
+                            v2 = cell.corners[1];
+                            break;
+                        case 1:
+                            v1 = cell.corners[1];
+                            v2 = cell.corners[2];
+                            break;
+                        case 2:
+                            v1 = cell.corners[2];
+                            v2 = cell.corners[3];
+                            break;
+                        case 3:
+                            v1 = cell.corners[0];
+                            v2 = cell.corners[3];
+                            break;
+                    }
+
+                    cell.neighbors[dir] = this.getCellAt(neighb.x, neighb.y);
+                    cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
+                    this.walls.push(cell.walls[dir]);
+                }
                 this.cellsContainer.addChild(cell.shape);
             });
+            // this.cells.forEach((cell) => {
+            //     cell.neighbors = this.neighbors(cell);
+            //     this.cellsContainer.addChild(cell.shape);
+            // });
 
             return this;
         }
@@ -151,14 +180,6 @@
         }
 
         /**
-         * Return the grid
-         * @returns {Grid}
-         */
-        getGrid() {
-            return this;
-        }
-
-        /**
          * Return the location of the entity within a grid
          * @param {Entity} entity
          * @returns {Cell|boolean}
@@ -213,10 +234,10 @@
                     d = cell.direction(cell, 2),
                     l = cell.direction(cell, 3);
 
-                neighbors[0] = this.getCellAt(u.x, u.y);
-                neighbors[1] = this.getCellAt(r.x, r.y);
-                neighbors[2] = this.getCellAt(d.x, d.y);
-                neighbors[3] = this.getCellAt(l.x, l.y);
+                neighbors[0] = (this.getCellAt(u.x, u.y)) ? this.getCellAt(u.x, u.y) : u;
+                neighbors[1] = (this.getCellAt(r.x, r.y)) ? this.getCellAt(r.x, r.y) : r;
+                neighbors[2] = (this.getCellAt(d.x, d.y)) ? this.getCellAt(d.x, d.y) : d;
+                neighbors[3] = (this.getCellAt(l.x, l.y)) ? this.getCellAt(l.x, l.y) : l;
             }
             return neighbors;
         }
