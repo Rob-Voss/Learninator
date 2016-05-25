@@ -192,7 +192,7 @@
                 for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                     agent.addChild(this.agents[a].eyes[ei].shape);
                 }
-                this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+                this.agents[a].color = Entity.hexStyles[this.agents[a].type];
 
                 this.populationContainer.addChild(agent);
                 this.population.set(this.agents[a].id, this.agents[a]);

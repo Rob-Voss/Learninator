@@ -39,21 +39,17 @@
          * @returns {Entity}
          */
         constructor(type, position = new Vec(5, 5), opts) {
-            this.entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'];
-            this.styles = ['black', 'red', 'green', 'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'];
-            this.hexStyles = [0x000000, 0xFF0000, 0x00FF00, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
-
             let typeOf = typeof type;
             if (typeOf === 'string') {
-                this.type = this.entityTypes.indexOf(type);
+                this.type = Entity.entityTypes.indexOf(type);
                 this.typeName = type;
-                this.color = this.hexStyles[this.type];
+                this.color = Entity.hexStyles[this.type];
                 this.name = (this.name === undefined) ? type : this.name;
             } else if (typeOf === 'number') {
                 this.type = type || 1;
-                this.typeName = this.entityTypes[this.type];
-                this.color = this.hexStyles[this.type];
-                this.name = (this.name === undefined) ? this.entityTypes[this.type] : this.name;
+                this.typeName = Entity.entityTypes[this.type];
+                this.color = Entity.hexStyles[this.type];
+                this.name = (this.name === undefined) ? Entity.entityTypes[this.type] : this.name;
             }
 
             this.id = Utility.Strings.guid();
@@ -552,7 +548,9 @@
             return this;
         }
     }
-
+    Entity.entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'];
+    Entity.styles = ['black', 'green', 'red',  'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'];
+    Entity.hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
     global.Entity = Entity;
 
 }(this));
