@@ -17,29 +17,31 @@ var GridWorld = GridWorld || {},
      */
     function GridWorld() {
         let cheats = {
-            id: false,
-            name: false,
-            angle: false,
-            bounds: false,
-            direction: false,
-            gridLocation: false,
-            position: false,
-            walls: false
-        },
+                id: false,
+                name: false,
+                angle: false,
+                brute: false,
+                bounds: false,
+                direction: false,
+                grid: false,
+                gridLocation: true,
+                position: false,
+                quad: false,
+                walls: false
+            },
             gridOpts = {
-            width: 600,
-            height: 600,
-            buffer: 0,
-            size: 10,
-            cellSize: 60,
-            cellSpacing: 0,
-            fill: false,
-            closed: false,
-            cheats: cheats
-        };
+                width: 600,
+                height: 600,
+                buffer: 0,
+                size: 10,
+                cellSize: 60,
+                cellSpacing: 0,
+                fill: false,
+                closed: false,
+                cheats: cheats
+            };
         this.grid = new Grid(gridOpts);
-        gridOpts.grid = this.grid;
-        this.maze = new Maze(gridOpts);
+        this.maze = new Maze(this.grid);
 
         this.walls = this.maze.walls;
         this.gH = this.grid.yCount;
@@ -111,13 +113,7 @@ var GridWorld = GridWorld || {},
                     collision: false,
                     interactive: false,
                     useSprite: false,
-                    worker: false,
-                    cheats: {
-                        id: false,
-                        name: false,
-                        gridLocation: false,
-                        position: false
-                    }
+                    worker: false
                 })
         ];
 

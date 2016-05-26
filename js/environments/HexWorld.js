@@ -43,27 +43,14 @@
                     id: false,
                     name: false,
                     angle: false,
+                    brute: false,
                     bounds: false,
                     direction: false,
+                    grid: false,
                     gridLocation: true,
                     position: false,
+                    quad: false,
                     walls: false
-                },
-                worldOpts   = {
-                    simSpeed: 1,
-                    collision: {
-                        type: 'grid',
-                        cheats: cheats
-                    },
-                    cheats: cheats,
-                    numEntities: 20,
-                    entityOpts: {
-                        radius: 10,
-                        collision: true,
-                        interactive: true,
-                        useSprite: false,
-                        moving: true
-                    }
                 },
                 gridOptions = {
                     width: renderOpts.width,
@@ -76,18 +63,34 @@
                     pointy: false,
                     fill: false
                 },
-                grid = new HexGrid(gridOptions);
-            gridOptions.grid = grid;
-            let maze = new Maze(gridOptions);
-            worldOpts.grid = maze.grid;
-            
+                maze = new Maze(new HexGrid(gridOptions)),
+                worldOpts   = {
+                    simSpeed: 1,
+                    cheats: cheats,
+                    collision: {
+                        type: 'brute'
+                    },
+                    grid: maze.grid,
+                    maze: maze,
+                    numEntities: 20,
+                    entityOpts: {
+                        radius: 10,
+                        collision: true,
+                        interactive: true,
+                        useSprite: false,
+                        moving: true
+                    }
+                };
+
             super(agents, maze.walls, worldOpts, renderOpts);
-            maze.drawSolution();
-            this.stage.addChild(maze.cheatsContainer);
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 
             return this;
+        }
+
+        drawSolution() {
+            this.maze.drawSolution(this.stage);
         }
     }
     global.HexWorld = HexWorld;

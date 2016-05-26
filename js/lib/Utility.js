@@ -175,8 +175,8 @@ var Utility = Utility || {};
 
         /**
          *
-         * @param {array} arr
-         * @returns {array}
+         * @param {Array} arr
+         * @returns {Array}
          */
         Arrays.arrUnique = function (arr) {
             var h = {}, output = [];
@@ -191,7 +191,7 @@ var Utility = Utility || {};
 
         /**
          *
-         * @param {array} arr
+         * @param {Array} arr
          * @param {object} elt
          * @returns {boolean}
          */
@@ -206,7 +206,7 @@ var Utility = Utility || {};
 
         /**
          * Find an object in the array via id attribute
-         * @param {array} ar
+         * @param {Array} ar
          * @param {string} id
          * @returns {object}
          */

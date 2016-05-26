@@ -90,14 +90,14 @@
                 maxChildren: 10,
                 maxDepth: 30
             });
-            this.collision.cheats = this.cheats;
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', []);
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {});
             this.entityOpts.cheats = this.cheats;
             this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', []);
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {});
             this.entityAgentOpts.cheats = this.cheats;
             this.grid = Utility.getOpt(worldOpts, 'grid', false);
+            this.maze = Utility.getOpt(worldOpts, 'maze', false);
             this.width = this.rendererOpts.width;
             this.height = this.rendererOpts.height;
             this.resizable = this.rendererOpts.resizable;
@@ -192,7 +192,7 @@
                 for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
                     agent.addChild(this.agents[a].eyes[ei].shape);
                 }
-                this.agents[a].color = Entity.hexStyles[this.agents[a].type];
+                this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
 
                 this.populationContainer.addChild(agent);
                 this.population.set(this.agents[a].id, this.agents[a]);

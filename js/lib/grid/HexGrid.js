@@ -16,7 +16,7 @@
          * @constructor
          *
          * @param {object} opts
-         * @param {array} cells
+         * @param {Array} cells
          * @param {Layout} layout
          * @returns {HexGrid}
          */
@@ -74,24 +74,6 @@
         }
 
         /**
-         * Returns true if there is an edge between c1 and c2
-         * @param {Cell} h1
-         * @param {Cell} h2
-         * @returns {boolean}
-         */
-        areConnected(h1, h2) {
-            if (!h1 || !h2) {
-                return false;
-            }
-
-            var removedEdge = _.detect(this.removedEdges, function (edge) {
-                return _.include(edge, h1) && _.include(edge, h2);
-            });
-
-            return removedEdge === undefined;
-        }
-
-        /**
          * Convert from axial coords to Cube
          * @param {Hex} hex
          * @returns {object}
@@ -102,42 +84,6 @@
                 y: hex.r,
                 z: -hex.q - hex.r
             };
-        }
-
-        /**
-         * Returns true if there is an edge between c1 and c2
-         * @param {Cell} c1
-         * @param {Cell} c2
-         * @returns {boolean}
-         */
-        areConnected(c1, c2) {
-            if (!c1 || !c2) {
-                return false;
-            }
-
-            if (Math.abs(c1.x - c2.x) > 1 || Math.abs(c1.y - c2.y) > 1) {
-                return false;
-            }
-
-            var removedEdge = _.detect(this.removedEdges, function (edge) {
-                return _.include(edge, c1) && _.include(edge, c2);
-            });
-
-            return removedEdge === undefined;
-        }
-
-        /**
-         * Returns all neighbors of this Cell that are separated by an edge
-         * @param {Cell} c
-         * @returns {Array}
-         */
-        connectedNeighbors(c) {
-            var con;
-            return _.select(this.neighbors(c), (c0) => {
-                con = this.areConnected(c, c0);
-
-                return con;
-            });
         }
 
         /**
@@ -154,20 +100,53 @@
         }
 
         /**
+         * Returns true if there is an edge between c1 and c2
+         * @param {Hex|HexShape} h1
+         * @param {Hex|HexShape} h2
+         * @returns {boolean}
+         */
+        areConnected(h1, h2) {
+            if (!h1 || !h2) {
+                return true;
+            }
+
+            var removedEdge = _.detect(this.removedEdges, function (edge) {
+                return _.include(edge, h1) && _.include(edge, h2);
+            });
+
+            return removedEdge === undefined;
+        }
+
+        /**
          * Returns all neighbors of this Cell that are NOT separated by an edge
          * This means there is a maze path between both cells.
-         * @param {Cell} cell
+         * @param {Hex|HexShape} cell
          * @returns {Array}
          */
         disconnectedNeighbors(cell) {
             var disc;
-            return _.reject(this.neighbors(cell), (c0) => {
+            return _.reject(cell.neighbors, (c0) => {
                 disc = this.areConnected(cell, c0);
 
                 return disc;
             });
         }
 
+        /**
+         * Returns all neighbors of this Cell that aren't separated by an edge
+         * @param {Cell} hex
+         * @returns {Array}
+         */
+        unvisitedNeighbors(hex) {
+            var unv = [];
+            hex.neighbors.forEach((cell) => {
+                if (cell && !cell.visited) {
+                    unv.push(cell);
+                }
+            });
+
+            return unv;
+        }
         /**
          * Get the cell at the axial coords
          * @param {number} q
@@ -194,7 +173,7 @@
 
         /**
          * Get the center x,y coords for a Hex
-         * @param {Cell} hex
+         * @param {Hex} hex
          * @returns {Point}
          */
         getCenterXY(hex) {
@@ -248,20 +227,21 @@
 
         /**
          * Return a Hex's neighbors
-         * @param {Cell} hex
+         * @param {Hex} hex
+         * @param {boolean} all
          * @returns {Array}
          */
-        neighbors(hex) {
+        neighbors(hex, all = false) {
             var i, len, neighbors, result;
             result = [];
             neighbors = Hex.hexDirections;
             for (i = 0, len = neighbors.length; i < len; i++) {
-                let neighbor = neighbors[i],
-                    q = hex.q + neighbor.q,
-                    r = neighbor.r,
+                let n = neighbors[i],
+                    q = hex.q + n.q,
+                    r = n.r,
                     cell = this.getCellAt(q, r),
-                    neigh = hex.direction(i);
-                result.push((cell) ? cell : neigh);
+                    neighbor = hex.direction(i);
+                result.push((!all) ? cell : neighbor);
             }
 
             return result;
@@ -522,22 +502,6 @@
                 }
             }
             return hexes;
-        }
-
-        /**
-         * Returns all neighbors of this Cell that aren't separated by an edge
-         * @param {Cell} hex
-         * @returns {Array}
-         */
-        unvisitedNeighbors(hex) {
-            var unv = [];
-            hex.neighbors.forEach((cell) => {
-                if (cell && !cell.visited) {
-                    unv.push(cell);
-                }
-            });
-
-            return unv;
         }
     }
 

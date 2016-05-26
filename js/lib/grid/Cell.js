@@ -27,6 +27,7 @@
             this.heuristic = 0;
             this.reward = 0;
             this.neighbors = [];
+            this.directions = Cell.cellDirections;
             this.population = new Map();
 
             return this;
@@ -34,62 +35,22 @@
 
         /**
          * Add a Cell to another one
-         * @param {Cell} a
-         * @param {Cell} b
-         * @returns {Hex}
+         * @param {Cell|object} a
+         * @param {Cell|object} b
+         * @returns {Cell}
          */
         add(a, b) {
-            return new Cell(a.x - b.x, a.y - b.y);
-        }
-
-        /**
-         * Get the direction
-         * @param {Cell} cell
-         * @param {number} dir
-         * @returns {*}
-         */
-        direction(cell, dir) {
-            switch (dir) {
-                case 0: // Up
-                    cell = new Cell(cell.x, cell.y - 1);
-                    break;
-                case 1: // Right
-                    cell = new Cell(cell.x + 1, cell.y);
-                    break;
-                case 2: // Down
-                    cell = new Cell(cell.x, cell.y + 1);
-                    break;
-                case 3: // Left
-                    cell = new Cell(cell.x - 1, cell.y);
-                    break;
-
-            }
-            return cell;
+            return new Cell(a.x + b.x, a.y + b.y);
         }
 
         /**
          * Get the neighbor
-         * @param {Cell} cell
+         * @param {Cell|object} cell
          * @param {number} dir
-         * @returns {Hex}
+         * @returns {Cell}
          */
         neighbor(cell, dir) {
-            switch (dir) {
-                case 0: // Up
-                    cell = new Cell(cell.x, cell.y - 1);
-                    break;
-                case 1: // Right
-                    cell = new Cell(cell.x + 1, cell.y);
-                    break;
-                case 2: // Down
-                    cell = new Cell(cell.x, cell.y + 1);
-                    break;
-                case 3: // Left
-                    cell = new Cell(cell.x - 1, cell.y);
-                    break;
-
-            }
-            return cell;
+            return this.add(cell, Cell.cellDirections[dir]);
         }
 
         /**
@@ -152,7 +113,7 @@
         }
 
     }
-
+    Cell.cellDirections = [new Cell(0, -1), new Cell(1, 0), new Cell(0, 1), new Cell(-1, 0)];
     global.Cell = Cell;
 
 }(this));

@@ -58,15 +58,14 @@ var WaterWorldEX = WaterWorldEX || {},
                     height: renderOpts.height,
                     cheats: cheats,
                     buffer: 0,
-                    cellSize: 60,
-                    cellSpacing: 20,
+                    cellSize: 200,
+                    cellSpacing: 0,
                     size: 3,
                     pointy: false,
                     fill: false
                 },
-                grid = new Grid(gridOptions);
-            gridOptions.grid = grid;
-            let maze = new Maze(gridOptions),
+                grid = new Grid(gridOptions),
+                maze = new Maze(grid),
                 worldOpts = {
                     collision: {
                         type: 'brute',

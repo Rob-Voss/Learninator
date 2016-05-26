@@ -49,7 +49,7 @@
 
         /**
          * Do work son
-         * @param {array} bodies
+         * @param {Array} bodies
          * @returns {PhysicalEntity}
          */
         tick(bodies) {

@@ -22,52 +22,53 @@
      * @property {Grid} opts.grid - The Grid
      */
 
-    /**
-     * A maze generator
-     * @name Maze
-     * @constructor
-     *
-     * @param {mazeOpts} opts - The options for the Maze
-     * @returns {Maze}
-     */
-    var Maze = function (opts) {
-        this.xCount = Utility.getOpt(opts, 'xCount', 6);
-        this.yCount = Utility.getOpt(opts, 'yCount', 6);
-        this.width = Utility.getOpt(opts, 'width', 600);
-        this.height = Utility.getOpt(opts, 'height', 600);
-        this.cheats = Utility.getOpt(opts, 'cheats', false);
-        this.closed = Utility.getOpt(opts, 'closed', false);
-        this.buffer = Utility.getOpt(opts, 'buffer', 0);
-        this.grid = Utility.getOpt(opts, 'grid', {});
-        this.cellWidth = (this.width - this.buffer) / this.xCount;
-        this.cellHeight = (this.height - this.buffer) / this.yCount;
+    class Maze {
 
-        this.walls = [];
-        this.cellStack = [];
-        this.path = [];
+        /**
+         * A maze generator
+         * @name Maze
+         * @constructor
+         *
+         * @param {Grid} grid - The options for the Maze
+         * @returns {Maze}
+         */
+        constructor(grid) {
+            this.grid = grid;
+            this.xCount = Utility.getOpt(grid, 'xCount', 6);
+            this.yCount = Utility.getOpt(grid, 'yCount', 6);
+            this.width = Utility.getOpt(grid, 'width', 600);
+            this.height = Utility.getOpt(grid, 'height', 600);
+            this.cheats = Utility.getOpt(grid, 'cheats', false);
+            this.closed = Utility.getOpt(grid, 'closed', false);
+            this.buffer = Utility.getOpt(grid, 'buffer', 0);
+            this.cellWidth = (this.width - this.buffer) / this.xCount;
+            this.cellHeight = (this.height - this.buffer) / this.yCount;
 
-        this.draw();
-        this.solve();
+            this.walls = [];
+            this.cellStack = [];
+            this.path = [];
 
-        return this;
-    };
+            this.draw();
 
-    Maze.prototype = {
+            return this;
+        }
+
         /**
          * Draw it
          * @returns {Maze}
          */
-        draw: function () {
+        draw() {
             this.generate();
             this.drawMaze();
 
             return this;
-        },
+        }
+
         /**
          * Draw the Maze
          * @returns {Maze}
          */
-        drawMaze: function () {
+        drawMaze() {
             var drawnEdges = [];
 
             let edgeAlreadyDrawn = function (v1, v2) {
@@ -79,20 +80,26 @@
             this.grid.cells.forEach((cell) => {
                 cell.neighbors.forEach((neigh, dir) => {
                     if (!neigh || (!edgeAlreadyDrawn(cell, neigh) && this.grid.areConnected(cell, neigh))) {
-                        this.walls.push(cell.walls[dir]);
-                        drawnEdges.push([cell, neigh]);
+                        if (!Utility.Arrays.arrContains(this.walls, cell.walls[dir])) {
+                            this.walls.push(cell.walls[dir]);
+                            drawnEdges.push([cell, neigh]);
+                        }
                     }
                 });
             });
 
             return this;
-        },
+        }
+
         /**
          * Draw the solution
+         * @param {PIXI.Container} stage
          * @returns {Maze}
          */
-        drawSolution: function () {
+        drawSolution(stage) {
             let V;
+            this.solve();
+
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
             this.solution = new PIXI.Graphics();
@@ -106,14 +113,16 @@
                 }
             }
             this.cheatsContainer.addChild(this.solution);
+            stage.addChild(this.cheatsContainer);
 
             return this;
-        },
+        }
+
         /**
          * Build the maze
          * @returns {Maze}
          */
-        generate: function () {
+        generate() {
             var initialCell = this.grid.getCellAt(0, 0);
             this.recurse(initialCell);
 
@@ -124,13 +133,14 @@
             });
 
             return this;
-        },
+        }
+
         /**
          * Recurse through a Cell's neighbors
          * @param {Cell} cell
          * @returns {Maze}
          */
-        recurse: function (cell) {
+        recurse(cell) {
             cell.visit();
             let neighbors = this.grid.unvisitedNeighbors(cell);
             if (neighbors.length > 0) {
@@ -147,13 +157,14 @@
             }
 
             return this;
-        },
+        }
+
         /**
          * Solve the Maze
          * @returns {Maze}
          */
-        solve: function () {
-            let closedSet = [],
+        solve() {
+            var closedSet = [],
                 startCell = this.grid.cells[0],
                 targetCell = this.grid.cells[this.grid.cells.length - 1],
                 openSet = [startCell],
@@ -193,15 +204,8 @@
             }
 
             return this;
-        },
-        /**
-         * Return the walls
-         * @returns {Array}
-         */
-        walls: function () {
-            return this.walls;
         }
-    };
+    }
     global.Maze = Maze;
 
 }(this));

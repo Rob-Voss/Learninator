@@ -26,6 +26,7 @@
             this.corners     = [];
             this.polyCorners = [];
             this.walls       = [];
+            this.directions = Hex.hexDirections;
             this.population  = new Map();
 
             return this;
@@ -44,7 +45,7 @@
         /**
          * Get the diagonal coords for this Hex
          * @param {number} dir
-         * @returns {array}
+         * @returns {Array}
          */
         diagonals(dir) {
             return Hex.hexDiagonals[dir];
@@ -122,6 +123,23 @@
          */
         neighbor(hex, dir) {
             return this.add(hex, Hex.hexDirections[dir]);
+        }
+
+        /**
+         * Calculate the path to the origin
+         * @returns {Array}
+         */
+        pathToOrigin() {
+            var path = [this],
+                p = this.parent;
+
+            while (p) {
+                path.push(p);
+                p = p.parent;
+            }
+            path.reverse();
+
+            return path;
         }
 
         /**

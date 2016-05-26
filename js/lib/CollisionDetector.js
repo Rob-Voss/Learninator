@@ -303,7 +303,7 @@
          */
         this.drawRegions = function () {
             // Draw the grid
-            if (this.cheats.bounds) {
+            if (this.cheats.grid) {
                 // Clear the collision detection holder
                 if (this.collisionOverlay !== undefined) {
                     this.stage.removeChild(this.collisionOverlay);

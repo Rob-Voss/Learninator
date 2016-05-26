@@ -26,7 +26,7 @@
          * @param {number} opts.cellSpacing -
          * @param {boolean} opts.pointy -
          * @param {boolean} opts.fill -
-         * @param {array} cells -
+         * @param {Array} cells -
          * @returns {Grid}
          */
         constructor(opts, cells) {
@@ -81,10 +81,6 @@
                 }
                 this.cellsContainer.addChild(cell.shape);
             });
-            // this.cells.forEach((cell) => {
-            //     cell.neighbors = this.neighbors(cell);
-            //     this.cellsContainer.addChild(cell.shape);
-            // });
 
             return this;
         }
@@ -113,13 +109,13 @@
 
         /**
          * Returns all neighbors of this Cell that are separated by an edge
-         * @param {Cell} c
+         * @param {Cell} cell
          * @returns {Array}
          */
-        connectedNeighbors(c) {
+        connectedNeighbors(cell) {
             var con;
-            return _.select(this.neighbors(c), (c0) => {
-                con = this.areConnected(c, c0);
+            return _.select(this.neighbors(cell/*, true*/), (c0) => {
+                con = this.areConnected(cell, c0);
 
                 return con;
             });
@@ -132,12 +128,17 @@
          * @returns {Array}
          */
         disconnectedNeighbors(cell) {
-            var disc;
-            return _.reject(this.neighbors(cell), (c0) => {
+            var disc, neighbors = this.neighbors(cell), results = [];
+            results = _.reject(neighbors, (c0) => {
+                if (c0 === false) {
+                    return true;
+                }
                 disc = this.areConnected(cell, c0);
 
                 return disc;
             });
+
+            return results;
         }
 
         /**
@@ -165,18 +166,6 @@
                 yDist = Math.abs(c1.y - c2.y);
 
             return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-        }
-
-        /**
-         * Return the centered location of the entity within a grid
-         * @param {Cell} cell
-         * @returns {Object}
-         */
-        getCenterXY(cell) {
-            let x = cell.corners[0].x + (this.cellWidth / 2),
-                y = cell.corners[0].y + (this.cellHeight / 2);
-
-            return new Point(x, y);
         }
 
         /**
@@ -224,22 +213,22 @@
         /**
          * Returns all neighbors of this cell, regardless if they are connected or not.
          * @param {Cell} cell
+         * @param {boolean} all
          * @returns {Array}
          */
-        neighbors(cell) {
-            let neighbors = [];
+        neighbors(cell, all = false) {
+            let neighbors = [], cells = [];
             if (cell !== null) {
-                let u = cell.direction(cell, 0),
-                    r = cell.direction(cell, 1),
-                    d = cell.direction(cell, 2),
-                    l = cell.direction(cell, 3);
-
-                neighbors[0] = (this.getCellAt(u.x, u.y)) ? this.getCellAt(u.x, u.y) : u;
-                neighbors[1] = (this.getCellAt(r.x, r.y)) ? this.getCellAt(r.x, r.y) : r;
-                neighbors[2] = (this.getCellAt(d.x, d.y)) ? this.getCellAt(d.x, d.y) : d;
-                neighbors[3] = (this.getCellAt(l.x, l.y)) ? this.getCellAt(l.x, l.y) : l;
+                cells[0] = cell.neighbor(cell, 0);
+                cells[1] = cell.neighbor(cell, 1);
+                cells[2] = cell.neighbor(cell, 2);
+                cells[3] = cell.neighbor(cell, 3);
+                neighbors[0] = this.getCellAt(cells[0].x, cells[0].y);
+                neighbors[1] = this.getCellAt(cells[1].x, cells[1].y);
+                neighbors[2] = this.getCellAt(cells[2].x, cells[2].y);
+                neighbors[3] = this.getCellAt(cells[3].x, cells[3].y);
             }
-            return neighbors;
+            return all ? cells : neighbors;
         }
 
         /**
@@ -301,7 +290,7 @@
          */
         unvisitedNeighbors(c) {
             var unv = [];
-            c.neighbors.forEach((cell) => {
+            c.neighbors.forEach((cell, dir) => {
                 if (cell && !cell.visited) {
                     unv.push(cell);
                 }

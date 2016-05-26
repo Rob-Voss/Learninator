@@ -21,21 +21,20 @@
             <div class="rowUis">
                 <div class="uiSet" style="width:160px;">
                     <div class="toggleTxt">Show Path</div>
-                    <span id="sliderPath" class="checkbox"><input id="ckPath" type="checkbox"><label></label></span>
+                    <span id="sliderPath" class="checkbox">
+                        <input id="ckPath" type="checkbox"><label></label>
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
     <script type="text/javascript">
-
         var mouseUnit;
-
         function initScene() {
-
             var pixiRenderer = PIXI.autoDetectRenderer(1024, 660, { antialias: false, transparent: true, resolution: 1 });
             document.getElementById("divScreen").appendChild(pixiRenderer.view);
-            var pixiStage = new PIXI.Stage(0xFFFFFF);
+            var pixiStage = new PIXI.Container(0xFFFFFF);
             var domain = new steer.Domain();
             domain.createB2World(new box2d.b2Vec2(0, 0));
 
@@ -46,10 +45,9 @@
             steer.item.Creator.setDomainReference(domain);
             steer.item.Creator.pixelCreateFormat = true;
 
-            var loader = new PIXI.AssetLoader(["cart.json"]);
+            var loader = new PIXI.loaders.Loader().add("img/cart.json");
             var koopaT = [], marioT = [], luigiT = [], PeachT = [], ToadT = [], TroopaT = [];
-            loader.onComplete = function () {
-
+            loader.once('complete', function () {
                 for (var i = 1; i < 23; i++) {
                     var d = (i < 10) ? "0" : "";
                     koopaT.push(PIXI.Texture.fromFrame("c" + d + i + ".png"));
@@ -59,12 +57,12 @@
                     ToadT.push(PIXI.Texture.fromFrame("r" + d + i + ".png"));
                     TroopaT.push(PIXI.Texture.fromFrame("t" + d + i + ".png"));
                 }
-                var koopaM = new PIXI.MovieClip(koopaT);
-                var marioM = new PIXI.MovieClip(marioT);
-                var luigiM = new PIXI.MovieClip(luigiT);
-                var peachM = new PIXI.MovieClip(PeachT);
-                var toadM = new PIXI.MovieClip(ToadT);
-                var troopaM = new PIXI.MovieClip(TroopaT);
+                var koopaM = new PIXI.extras.MovieClip(koopaT);
+                var marioM = new PIXI.extras.MovieClip(marioT);
+                var luigiM = new PIXI.extras.MovieClip(luigiT);
+                var peachM = new PIXI.extras.MovieClip(PeachT);
+                var toadM = new PIXI.extras.MovieClip(ToadT);
+                var troopaM = new PIXI.extras.MovieClip(TroopaT);
 
                 var movs = [koopaM, marioM, luigiM, peachM, toadM, troopaM];
                 movs.sort(function () { return .5 - Math.random(); });
@@ -125,7 +123,7 @@
                     "updateStep": function (delta) {
                         pixiRenderer.render(pixiStage);
                     }
-                }
+                };
                 //增加自訂義 renderer 至domain
                 domain.addRenderer(baseDR);
 
@@ -147,7 +145,7 @@
                     domain.integrate(delta);
                 });
                 myTimer.start();
-            };//after asset loaded
+            });//after asset loaded
             loader.load();
 
 
