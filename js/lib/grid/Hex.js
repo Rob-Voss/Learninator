@@ -25,8 +25,8 @@
             this.neighbors   = [];
             this.corners     = [];
             this.polyCorners = [];
-            this.walls       = [];
             this.directions = Hex.hexDirections;
+            this.diagonals = Hex.hexDiagonals;
             this.population  = new Map();
 
             return this;
@@ -39,7 +39,7 @@
          * @returns {Hex}
          */
         add(a, b) {
-            return new Hex(a.q - b.q, a.r - b.r, a.s + b.s);
+            return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
         }
 
         /**

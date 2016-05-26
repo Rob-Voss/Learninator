@@ -266,6 +266,20 @@
         }
 
         /**
+         * Get a point at a % point between this Vec and another
+         * @param {Vec} v
+         * @param {number} p
+         * @return {Vec} .
+         */
+        getPointBetween(v, p) {
+            let blend = p / 100,
+                x = this.x + blend * (v.x - this.x),
+                y = this.y + blend * (v.y - this.y);
+
+            return new Vec(x, y);
+        }
+
+        /**
          * Calculates the square length of the vector
          * @return {number} Returns the square length of the vector
          */
@@ -670,6 +684,19 @@
         ba.normalize().mult(pa.dot(ba));
 
         return Vec.add(linePtA, ba);
+    };
+
+    /**
+     * Get a point at a % point between this Vec and another
+     * @param {Vec} v1
+     * @param {Vec} v2
+     * @return {Vec} .
+     */
+    Vec.getVectorBetween = function (v1, v2) {
+        let x = v2.x - v1.x,
+            y = v2.y - v1.y;
+
+        return new Vec(x, y);
     };
 
     /**

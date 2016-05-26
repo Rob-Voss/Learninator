@@ -29,7 +29,7 @@
          * @param {Array} cells -
          * @returns {Grid}
          */
-        constructor(opts, cells) {
+        constructor(opts, cells, layout = false) {
             this.width = Utility.getOpt(opts, 'width', 600);
             this.height = Utility.getOpt(opts, 'height', 600);
             this.buffer = Utility.getOpt(opts, 'buffer', 0);
@@ -43,12 +43,17 @@
             this.yCount = this.height / this.cellSize;
             this.cellWidth = (this.width - this.buffer) / this.xCount;
             this.cellHeight = (this.height - this.buffer) / this.yCount;
+            this.layout = layout || {};
             this.cells = cells || Grid.shapeRectangle(this.xCount, this.yCount, this.cellSize, this.fill, this.cheats);
             this.path = [];
             this.removedEdges = [];
             this.walls = [];
-
             this.map = new Map();
+
+            return this;
+        }
+
+        init() {
             this.mapCells();
             this.cellsContainer = new PIXI.Container();
             this.cells.forEach((cell) => {
@@ -70,8 +75,8 @@
                             v2 = cell.corners[3];
                             break;
                         case 3:
-                            v1 = cell.corners[0];
-                            v2 = cell.corners[3];
+                            v1 = cell.corners[3];
+                            v2 = cell.corners[0];
                             break;
                     }
 
@@ -174,8 +179,8 @@
          * @returns {Cell|boolean}
          */
         getGridLocation(entity) {
-            let x = entity.bounds.x + (entity.bounds.width/2),
-                y = entity.bounds.y + (entity.bounds.height/2),
+            let x = entity.bounds.x + (entity.bounds.width / 2),
+                y = entity.bounds.y + (entity.bounds.height / 2),
                 cell = this.pixelToCell(x, y);
 
             return cell;

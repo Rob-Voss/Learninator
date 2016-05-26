@@ -21,45 +21,49 @@
          * @returns {HexGrid}
          */
         constructor(opts, cells, layout) {
-            let o = layout || (opts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-                lay = new Layout(o, new Point(opts.cellSize, opts.cellSize), new Point(opts.width / 2, opts.height / 2)),
-                cs = cells || HexGrid.shapeHexagon(opts.size, lay, opts.cellSize, opts.fill, opts.cheats);
-            super(opts, cs);
+            let orientation = (opts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+                size = new Point(opts.width / opts.cellSize, opts.height / opts.cellSize),
+                origin = new Point(opts.width / 2, opts.height / 2),
+                lay = layout || new Layout(orientation, size, origin),
+                cs = cells || HexGrid.shapeHexagon(opts.size, opts.cellSize, lay, opts.fill, opts.cheats);
+            super(opts, cs, lay);
 
-            this.layout = lay;
-            this.directions = Hex.hexDirections;
+            return this;
+        }
+
+        init() {
             this.mapCells();
             this.cellsContainer = new PIXI.Container();
             this.cells.forEach((cell) => {
-                for (let dir = 0; dir < this.directions.length; dir++) {
+                cell.neighbors = [];
+                cell.walls = [];
+                for (let dir = 0; dir < cell.directions.length; dir++) {
                     let neighb = cell.neighbor(cell, dir),
-                        v1, v2,
-                        ad = (!this.pointy) ? 1 : 0;
-
+                        v1, v2;
                     switch (dir) {
                         case 0:
-                            v1 = cell.corners[2 + ad];
-                            v2 = cell.corners[3 + ad];
+                            v1 = cell.corners[5];
+                            v2 = cell.corners[0];
                             break;
                         case 1:
-                            v1 = cell.corners[1 + ad];
-                            v2 = cell.corners[2 + ad];
+                            v1 = cell.corners[5];
+                            v2 = cell.corners[4];
                             break;
                         case 2:
-                            v1 = cell.corners[0 + ad];
-                            v2 = cell.corners[1 + ad];
+                            v1 = cell.corners[4];
+                            v2 = cell.corners[3];
                             break;
                         case 3:
-                            v1 = cell.corners[0 + ad];
-                            v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                            v1 = cell.corners[3];
+                            v2 = cell.corners[2];
                             break;
                         case 4:
-                            v1 = cell.corners[4 + ad];
-                            v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                            v1 = cell.corners[2];
+                            v2 = cell.corners[1];
                             break;
                         case 5:
-                            v1 = cell.corners[3 + ad];
-                            v2 = cell.corners[4 + ad];
+                            v1 = cell.corners[1];
+                            v2 = cell.corners[0];
                             break;
                     }
 
@@ -68,6 +72,7 @@
                     this.walls.push(cell.walls[dir]);
                 }
                 this.cellsContainer.addChild(cell.shape);
+                cell.draw();
             });
 
             return this;
@@ -134,7 +139,7 @@
 
         /**
          * Returns all neighbors of this Cell that aren't separated by an edge
-         * @param {Cell} hex
+         * @param {Hex|HexShape} hex
          * @returns {Array}
          */
         unvisitedNeighbors(hex) {
@@ -163,21 +168,12 @@
 
         /**
          * Distance between two axial coords
-         * @param {Cell} h1
-         * @param {Cell} h2
+         * @param {Hex|HexShape} h1
+         * @param {Hex|HexShape} h2
          * @returns {number}
          */
         getCellDistance(h1, h2) {
             return (Math.abs(h1.q - h2.q) + Math.abs(h1.r - h2.r) + Math.abs(h1.q + h1.r - h2.q - h2.r)) / 2;
-        }
-
-        /**
-         * Get the center x,y coords for a Hex
-         * @param {Hex} hex
-         * @returns {Point}
-         */
-        getCenterXY(hex) {
-            return this.layout.hexToPixel(hex);
         }
 
         /**
@@ -346,20 +342,20 @@
         /**
          * Create a Hexagon of Hexes
          * @param {number} size
-         * @param {Layout} layout
          * @param {number} cellSize
+         * @param {Layout} layout
          * @param {boolean} fill
          * @param {object} cheats
          * @returns {Array}
          */
-        static shapeHexagon(size, layout, cellSize, fill, cheats) {
+        static shapeHexagon(size, cellSize, layout, fill, cheats) {
             var hexes = [];
             for (let q = -size; q <= size; q++) {
                 var r1 = Math.max(-size, -q - size),
                     r2 = Math.min(size, -q + size);
                 for (let r = r1; r <= r2; r++) {
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, layout, cellSize, fill, cheats);
+                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
                     hexes.push(hex);
                 }
             }
@@ -372,16 +368,18 @@
          * @param {number} r1
          * @param {number} q2
          * @param {number} r2
-         * @param {Function} constructor
+         * @param {number} cellSize
          * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeParallelogram(q1, r1, q2, r2, constructor, layout) {
+        static shapeParallelogram(q1, r1, q2, r2, cellSize, layout, fill, cheats) {
             var hexes = [];
             for (let q = q1; q <= q2; q++) {
                 for (let r = r1; r <= r2; r++) {
-                    let hex = new constructor(q, r, -q - r);
-                    layout.polygonCorners(hex);
+                    let cell = new Hex(q, r, -q - r),
+                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
                     hexes.push(hex);
                 }
             }
@@ -390,26 +388,40 @@
 
         /**
          * Create a rectangle of Hexes
-         * @param {number} w
-         * @param {number} h
-         * @param {Function} constructor
+         * @param {number} w - width
+         * @param {number} h - height
+         * @param {number} cellSize
          * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeRectangle(w, h, constructor, layout) {
+        static shapeRectangle(w, h, cellSize, layout, fill, cheats, pointy = false) {
             var hexes = [],
-                i1 = -Math.floor(w / 2),
-                i2 = i1 + w,
-                j1 = -Math.floor(h / 2),
-                j2 = j1 + h;
-            for (let j = j1; j < j2; j++) {
-                let jOffset = -Math.floor(j / 2);
-                for (let i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    let hex = new constructor(i, j, -i - j);
-                    layout.polygonCorners(hex);
-                    hexes.push(hex);
+                r1 = -Math.floor(w / 2),
+                r2 = r1 + w,
+                q1 = -Math.floor(h / 2),
+                q2 = q1 + h;
+            if (!pointy) {
+                for (let q = q1; q < q2; q++) {
+                    let qOffset = -Math.floor(q / 2);
+                    for (let r = r1 + qOffset; r < r2 + qOffset; r++) {
+                        let cell = new Hex(q, r, -q - r),
+                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hexes.push(hex);
+                    }
+                }
+            } else {
+                for (let r = r1; r < r2; r++) {
+                    let rOffset = -Math.floor(r / 2);
+                    for (let q = q1 + rOffset; q < q2 + rOffset; q++) {
+                        let cell = new Hex(q, r, -q - r),
+                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hexes.push(hex);
+                    }
                 }
             }
+
             return hexes;
         }
 
@@ -418,12 +430,14 @@
          * @param {number} q
          * @param {number} r
          * @param {number} radius
+         * @param {number} cellSize
          * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeRing(q, r, radius, layout) {
-            var i, j, len, moveDirection, moveDirectionIndex, moveDirections, ref, result;
-            result = [];
+        static shapeRing(q, r, radius, cellSize, layout, fill, cheats) {
+            var i, j, len, moveDirection, moveDirectionIndex, moveDirections, ref, hexes = [];
             moveDirections = [[1, 0], [0, -1], [-1, 0], [-1, 1], [0, 1], [1, 0], [1, -1]];
             for (moveDirectionIndex = i = 0, len = moveDirections.length; i < len; moveDirectionIndex = ++i) {
                 moveDirection = moveDirections[moveDirectionIndex];
@@ -431,14 +445,14 @@
                     q += moveDirection[0];
                     r += moveDirection[1];
                     if (moveDirectionIndex !== 0) {
-                        let hex = new Hex(q, r, -q - r);
-                        layout.polygonCorners(hex);
-                        result.push(hex);
+                        let cell = new Hex(q, r, -q - r),
+                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hexes.push(hex);
                     }
                 }
             }
 
-            return result;
+            return hexes;
         }
 
         /**
@@ -448,10 +462,13 @@
          * @param minR
          * @param maxR
          * @param toCube
+         * @param {number} cellSize
          * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeTrapezoidal(minQ, maxQ, minR, maxR, toCube, layout) {
+        static shapeTrapezoidal(minQ, maxQ, minR, maxR, toCube, cellSize, layout, fill, cheats) {
             var q, r, _g3, _g2,
                 hexes = [],
                 _g1 = minQ,
@@ -462,24 +479,8 @@
                 _g2 = maxR + 1;
                 while (_g3 < _g2) {
                     r = _g3++;
-                    hexes.push(toCube(new Hex(q, r, -q - r)));
-                }
-            }
-            return hexes;
-        }
-
-        /**
-         * Create a triangle of Hexes
-         * @param {number} size
-         * @param {Layout} layout
-         * @returns {Array}
-         */
-        static shapeTriangle1(size, layout) {
-            var hexes = [];
-            for (let q = 0; q <= size; q++) {
-                for (let r = 0; r <= size - q; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    layout.polygonCorners(hex);
+                    let cell = new Hex(q, r, -q - r),
+                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
                     hexes.push(hex);
                 }
             }
@@ -489,15 +490,39 @@
         /**
          * Create a triangle of Hexes
          * @param {number} size
+         * @param {number} cellSize
          * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
          * @returns {Array}
          */
-        static shapeTriangle2(size, layout) {
+        static shapeTriangle1(size, cellSize, layout, fill, cheats) {
+            var hexes = [];
+            for (let q = 0; q <= size; q++) {
+                for (let r = 0; r <= size - q; r++) {
+                    let cell = new Hex(q, r, -q - r),
+                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                    hexes.push(hex);
+                }
+            }
+            return hexes;
+        }
+
+        /**
+         * Create a triangle of Hexes
+         * @param {number} size
+         * @param {number} cellSize
+         * @param {Layout} layout
+         * @param {boolean} fill
+         * @param {object} cheats
+         * @returns {Array}
+         */
+        static shapeTriangle2(size, cellSize, layout, fill, cheats) {
             var hexes = [];
             for (let q = 0; q <= size; q++) {
                 for (let r = size - q; r <= size; r++) {
-                    let hex = new Hex(q, r, -q - r);
-                    layout.polygonCorners(hex);
+                    let cell = new Hex(q, r, -q - r),
+                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
                     hexes.push(hex);
                 }
             }
@@ -660,16 +685,16 @@
         /**
          *
          * @param {Hex} hex
-         * @returns {Layout}
+         * @returns {Array}
          */
         polygonCorners: function (hex) {
+            let corners = [];
             for (let i = 0; i < 6; i++) {
                 var offset = this.hexCornerOffset(i);
-                hex.polyCorners.push(hex.center.x + offset.x, hex.center.y + offset.y);
-                hex.corners.push(new Vec(hex.center.x + offset.x, hex.center.y + offset.y));
+                corners.push(new Vec(hex.center.x + offset.x, hex.center.y + offset.y));
             }
 
-            return this;
+            return corners;
         }
     };
 

@@ -21,35 +21,31 @@
             this.cheats = cheats;
             this.width = (this.v2.x - this.v1.x <= 0) ? 1 : this.v2.x - this.v1.x;
             this.height = (this.v2.y - this.v1.y <= 0) ? 1 : this.v2.y - this.v1.y;
-            this.len = this.v2.distanceTo(this.v1);
-            this.angle = this.v2.angleBetween(this.v1);
+            this.len = this.v1.distanceTo(this.v2);
+            this.angle = this.v1.angleBetween(this.v2);
             this.rotation = this.angle * Math.PI / 180;
 
             this.shape = new PIXI.Graphics();
             this.cheatsContainer = new PIXI.Container();
-            this.shape.addChild(this.cheatsContainer);
-            this.fontOpts = {
-                font: "12px Arial",
-                fill: "#000000",
-                align: "center"
-            };
-            if (this.cheats && this.cheats.id) {
-                this.idText = new PIXI.Text(this.id.substring(0, 5), this.fontOpts);
-                this.idText.position.set(this.v1.x - 3, this.v1.y - 3);
-                this.cheatsContainer.addChild(this.idText);
-            }
+            this.fontOpts = {font: "12px Arial", fill: "#000000", align: "center"};
 
             if (this.cheats && this.cheats.name) {
                 this.nameText = new PIXI.Text(this.name, this.fontOpts);
-                this.nameText.position.set(this.v2.x - 3, this.v2.y - 3);
-                this.cheatsContainer.addChild(this.nameText);
+                this.nameText.anchor = new PIXI.Point(0, 0);
+                this.nameText.rotation = this.angle;
+                let midWall = this.v1.getPointBetween(this.v2, 50);
+                this.nameText.position = new PIXI.Point(midWall.x, midWall.y);
+                this.shape.addChild(this.nameText);
             }
 
-            if (this.cheats && this.cheats.direction) {
-                this.nameText = new PIXI.Text(this.name, this.fontOpts);
-                this.nameText.position.set(this.v2.x - 3, this.v2.y - 3);
+            if (this.cheats && this.cheats.angle) {
+                this.nameText = new PIXI.Text(this.rotation, this.fontOpts);
+                let midWall = this.v1.getPointBetween(this.v2, 50);
+                this.nameText.position.set(midWall.x - 3, midWall.y - 3);
+                this.nameText.angle = this.angle;
                 this.cheatsContainer.addChild(this.nameText);
             }
+            this.shape.addChild(this.cheatsContainer);
 
             this.shape.clear();
             this.shape.lineStyle(1, 0x000000);

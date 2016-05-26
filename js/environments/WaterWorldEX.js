@@ -65,7 +65,7 @@ var WaterWorldEX = WaterWorldEX || {},
                     fill: false
                 },
                 grid = new Grid(gridOptions),
-                maze = new Maze(grid),
+                maze = new Maze(grid.init()),
                 worldOpts = {
                     collision: {
                         type: 'brute',

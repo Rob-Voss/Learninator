@@ -80,10 +80,8 @@
             this.grid.cells.forEach((cell) => {
                 cell.neighbors.forEach((neigh, dir) => {
                     if (!neigh || (!edgeAlreadyDrawn(cell, neigh) && this.grid.areConnected(cell, neigh))) {
-                        if (!Utility.Arrays.arrContains(this.walls, cell.walls[dir])) {
-                            this.walls.push(cell.walls[dir]);
-                            drawnEdges.push([cell, neigh]);
-                        }
+                        this.walls.push(cell.walls[dir]);
+                        drawnEdges.push([cell, neigh]);
                     }
                 });
             });
@@ -123,7 +121,7 @@
          * @returns {Maze}
          */
         generate() {
-            var initialCell = this.grid.getCellAt(0, 0);
+            var initialCell = this.grid.getCellAt(this.grid.cells[0].q, this.grid.cells[0].r);
             this.recurse(initialCell);
 
             this.grid.cells.forEach((cell) => {

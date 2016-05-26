@@ -14,28 +14,28 @@ var HexShape = HexShape || {};
         /**
          *
          * @param {Hex|object} hex
-         * @param {Layout} layout
          * @param {number} size
+         * @param {Layout} layout
          * @param {boolean} fill
          * @param {boolean} cheats
          * @returns {HexShape}
          * @constructor
          */
-        constructor(hex, layout, size = 20, fill = false, cheats = false) {
+        constructor(hex, size = 20, layout, fill = false, cheats = false) {
             super(hex.q, hex.r, hex.s);
 
+            this.walls = [];
             this.size = size;
             this.fill = fill;
             this.cheats = cheats;
-            this.center = layout.hexToPixel(hex);
-            for (let i = 0; i < 6; i++) {
-                var offset = layout.hexCornerOffset(i);
-                this.polyCorners.push(this.center.x + offset.x, this.center.y + offset.y);
-                this.corners.push(new Vec(this.center.x + offset.x, this.center.y + offset.y));
-            }
+            this.center = layout.hexToPixel(this);
+            this.corners = layout.polygonCorners(this);
+            this.corners.forEach((corner) => {
+                this.polyCorners.push(corner.x, corner.y);
+            });
+
             this.color = this.colorForHex(this.q, this.r, this.s);
             this.alpha = 0.2;
-
             this.shape = new PIXI.Graphics();
             this.shape.color = this.color;
             this.shape.interactive = true;
@@ -99,16 +99,39 @@ var HexShape = HexShape || {};
             }
             this.cheatOverlay = new PIXI.Container();
 
-            if (this.cheats.position) {
+            if (this.cheats && this.cheats.position) {
                 this.posText = new PIXI.Text(this.center.toString() + '\n' + this.toString(), this.txtOpts);
                 this.posText.position.set(this.center.x - this.size / 2, this.center.y - 7);
                 this.cheatOverlay.addChild(this.posText);
             }
 
-            if (this.cheats.gridLocation) {
+            if (this.cheats && this.cheats.gridLocation) {
                 this.gridText = new PIXI.Text(this.toString(), this.txtOpts);
-                this.gridText.position.set(this.center.x - this.size / 2, this.center.y - 7);
+                this.gridText.position.set(this.center.x - this.size / 2, this.center.y);
                 this.cheatOverlay.addChild(this.gridText);
+            }
+
+            if (this.cheats && this.cheats.id) {
+                this.corners.forEach((corner, id) => {
+                    let inside = this.center.getPointBetween(corner, 85);
+                    this.idText = new PIXI.Text(id, {font: "10px Arial", fill: "#CC0000", align: "center"});
+                    this.idText.anchor = new PIXI.Point(0.5, 0.5);
+                    this.idText.position = new PIXI.Point(inside.x, inside.y);
+                    this.cheatOverlay.addChild(this.idText);
+                });
+            }
+
+            if (this.cheats && this.cheats.direction) {
+                this.walls.forEach((wall, dir) => {
+                    let midWall = wall.v1.getPointBetween(wall.v2, 50),
+                        inside = midWall.getPointBetween(this.center, 20);
+                    wall.directionText = new PIXI.Text(dir, {font: "10px Arial", fill: "#0000CC", align: "center"});
+                    wall.directionText.style.fill = 0x0000FF;
+                    wall.directionText.anchor = new PIXI.Point(0.5, 0.5);
+                    wall.directionText.rotation = wall.angle;
+                    wall.directionText.position = new PIXI.Point(inside.x, inside.y);
+                    this.cheatOverlay.addChild(wall.directionText);
+                });
             }
 
             this.shape.clear();

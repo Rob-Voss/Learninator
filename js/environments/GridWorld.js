@@ -41,7 +41,7 @@ var GridWorld = GridWorld || {},
                 cheats: cheats
             };
         this.grid = new Grid(gridOpts);
-        this.maze = new Maze(this.grid);
+        this.maze = new Maze(this.grid.init());
 
         this.walls = this.maze.walls;
         this.gH = this.grid.yCount;
