@@ -39,37 +39,65 @@
                 cell.walls = [];
                 for (let dir = 0; dir < cell.directions.length; dir++) {
                     let neighb = cell.neighbor(cell, dir),
-                        v1, v2;
+                        v1, v2,
+                        ad = (!this.pointy) ? 1 : 0;
+
+                    // switch (dir) {
+                    //     case 0:
+                    //         v1 = cell.corners[2 + ad];
+                    //         v2 = cell.corners[3 + ad];
+                    //         break;
+                    //     case 1:
+                    //         v1 = cell.corners[1 + ad];
+                    //         v2 = cell.corners[2 + ad];
+                    //         break;
+                    //     case 2:
+                    //         v1 = cell.corners[0 + ad];
+                    //         v2 = cell.corners[1 + ad];
+                    //         break;
+                    //     case 3:
+                    //         v1 = cell.corners[0 + ad];
+                    //         v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                    //         break;
+                    //     case 4:
+                    //         v1 = cell.corners[4 + ad];
+                    //         v2 = cell.corners[(!this.pointy) ? 0 : 5];
+                    //         break;
+                    //     case 5:
+                    //         v1 = cell.corners[3 + ad];
+                    //         v2 = cell.corners[4 + ad];
+                    //         break;
+                    // }
                     switch (dir) {
                         case 0:
-                            v1 = cell.corners[5];
-                            v2 = cell.corners[0];
+                            v1 = cell.corners[(!this.pointy) ? 0 : 5];
+                            v2 = cell.corners[0 + ad];
                             break;
                         case 1:
-                            v1 = cell.corners[5];
-                            v2 = cell.corners[4];
+                            v1 = cell.corners[(!this.pointy) ? 0 : 5];
+                            v2 = cell.corners[4 + ad];
                             break;
                         case 2:
-                            v1 = cell.corners[4];
-                            v2 = cell.corners[3];
+                            v1 = cell.corners[4 + ad];
+                            v2 = cell.corners[3 + ad];
                             break;
                         case 3:
-                            v1 = cell.corners[3];
-                            v2 = cell.corners[2];
+                            v1 = cell.corners[3 + ad];
+                            v2 = cell.corners[2 + ad];
                             break;
                         case 4:
-                            v1 = cell.corners[2];
-                            v2 = cell.corners[1];
+                            v1 = cell.corners[2 + ad];
+                            v2 = cell.corners[1 + ad];
                             break;
                         case 5:
-                            v1 = cell.corners[1];
-                            v2 = cell.corners[0];
+                            v1 = cell.corners[1 + ad];
+                            v2 = cell.corners[0 + ad];
                             break;
                     }
 
                     cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
                     cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
-                    this.walls.push(cell.walls[dir]);
+                    // this.walls.push(cell.walls[dir]);
                 }
                 this.cellsContainer.addChild(cell.shape);
                 cell.draw();

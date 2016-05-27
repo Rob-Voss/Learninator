@@ -59,7 +59,7 @@
                     cellSize: 10,
                     cellSpacing: 0,
                     size: 2,
-                    pointy: false,
+                    pointy: true,
                     fill: false,
                     cheats: {
                         id: true,
