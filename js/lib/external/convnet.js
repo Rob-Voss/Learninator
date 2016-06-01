@@ -1,7 +1,8 @@
-var convnetjs = convnetjs || {REVISION: 'ALPHA'},
-    Utility = Utility || {};
 (function (global) {
     "use strict";
+
+    var convnetjs = convnetjs || {REVISION: 'ALPHA'},
+        Utility = global.Utility || {};
 
     // used utilities, make explicit local references
     var arrUnique = Utility.Arrays.arrUnique,

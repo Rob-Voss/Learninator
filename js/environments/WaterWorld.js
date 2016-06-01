@@ -55,11 +55,7 @@
          * @returns {WaterWorld}
          */
         constructor() {
-            let agents = [
-                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
-                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
-                ],
-                cheats = {
+            let cheats = {
                     id: false,
                     name: false,
                     angle: false,
@@ -74,19 +70,23 @@
                     height: renderOpts.height,
                     cheats: cheats,
                     buffer: 0,
-                    cellSize: 60,
-                    cellSpacing: 20,
-                    size: 3,
+                    cellSize: 200,
+                    cellSpacing: 0,
+                    size: 1,
                     pointy: false,
                     fill: false
                 },
                 grid = new Grid(gridOptions),
-                maze = new Maze(grid.init());
+                maze = new Maze(grid.init()),
+                agents = [
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts),
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts)
+                ];
 
             worldOpts.grid = maze.grid;
             super(agents, maze.walls, worldOpts, renderOpts);
             this.agents[0].load('zoo/wateragent.json');
-            // this.agents[1].load('zoo/wateragent.json');
+            this.agents[1].load('zoo/wateragent.json');
 
             return this;
         }

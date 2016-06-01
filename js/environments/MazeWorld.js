@@ -44,9 +44,8 @@
                     cheats: cheats
                 },
                 grid = new Grid(gridOpts),
-                maze = new Maze(grid.init());
-
-            let worldOpts = {
+                maze = new Maze(grid.init()),
+                worldOpts = {
                     simSpeed: 1,
                     collision: {
                         type: 'brute'
@@ -116,7 +115,7 @@
                     useSprite: false
                 },
                 agents = [
-                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
+                    new Agent(new Vec(grid.startCell.x, grid.startCell.y), agentOpts)
                     // new Agent(new Vec(50, 50), {
                     //         brainType: 'RL.TDAgent',
                     //         env: env,

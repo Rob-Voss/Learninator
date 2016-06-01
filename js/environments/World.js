@@ -61,9 +61,6 @@
          * @returns {World}
          */
         constructor(agents, walls, worldOpts, renderOpts) {
-            this.agents = agents || [];
-            this.entityAgents = [];
-            this.numAgents = this.agents.length;
             this.rendererOpts = renderOpts || {
                     antialiasing: false,
                     autoResize: false,
@@ -74,6 +71,13 @@
                     width: 600,
                     height: 600
                 };
+            this.options = worldOpts;
+            this.width = this.rendererOpts.width;
+            this.height = this.rendererOpts.height;
+            this.resizable = this.rendererOpts.resizable;
+            this.stage = new PIXI.Container();
+            this.grid = Utility.getOpt(worldOpts, 'grid', false);
+            this.maze = Utility.getOpt(worldOpts, 'maze', false);
             this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
                 id: false,
@@ -82,25 +86,20 @@
                 bounds: false,
                 direction: false,
                 gridLocation: false,
-                position: false,
-                walls: false
+                position: false
             });
             this.collision = Utility.getOpt(worldOpts, 'collision', {
                 type: 'quad',
                 maxChildren: 10,
-                maxDepth: 30
+                maxDepth: 30,
+                cheats: {
+                    bounds: this.cheats.bounds
+                }
             });
-            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {});
-            this.entityOpts.cheats = this.cheats;
-            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {});
-            this.entityAgentOpts.cheats = this.cheats;
-            this.grid = Utility.getOpt(worldOpts, 'grid', false);
-            this.maze = Utility.getOpt(worldOpts, 'maze', false);
-            this.width = this.rendererOpts.width;
-            this.height = this.rendererOpts.height;
-            this.resizable = this.rendererOpts.resizable;
+            if (this.grid) {
+                this.stage.addChild(this.grid.cellsContainer);
+            }
+
             this.clock = 0;
             this.pause = false;
 
@@ -110,20 +109,25 @@
             this.renderer.view.style.top = "0px";
             this.renderer.view.style.left = "0px";
 
-            this.stage = new PIXI.Container();
             this.populationContainer = new PIXI.Container();
             this.population = new Map();
 
-            if (this.grid) {
-                this.stage.addChild(this.grid.cellsContainer);
-            }
+            this.agents = agents || [];
+            this.entityAgents = [];
+            this.numAgents = this.agents.length;
+            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
+            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
+            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {});
+            this.entityOpts.cheats = this.cheats;
+            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {});
+            this.entityAgentOpts.cheats = this.cheats;
 
             this.walls = walls;
             if (!this.walls) {
-                this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats));
-                this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats));
-                this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats));
-                this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats));
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats, 'Top'));
+                this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Right'));
+                this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Bottom'));
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats, 'Left'));
             }
 
             if (document.getElementById('flotreward')) {
@@ -164,12 +168,12 @@
 
             // Walls
             this.addWalls();
-            // Population of Agents for the environment
-            this.addAgents();
-            // Population of Agents that are considered 'smart' entities for the environment
-            this.addEntityAgents();
             // Add the entities
             this.addEntities(this.numEntities);
+            // Population of Agents that are considered 'smart' entities for the environment
+            this.addEntityAgents();
+            // Population of Agents for the environment
+            this.addAgents();
             // Add the population container to the stage
             this.stage.addChild(this.populationContainer);
 
@@ -189,11 +193,14 @@
             // Add the agents
             for (let a = 0; a < this.numAgents; a++) {
                 let agent = this.agents[a].shape || this.agents[a].sprite;
-                for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                    agent.addChild(this.agents[a].eyes[ei].shape);
+                if (this.agents[a].eyes !== undefined) {
+                    for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
+                        agent.addChild(this.agents[a].eyes[ei].shape);
+                    }
                 }
-                this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
-
+                if (this.agents[a].hexStyles !== undefined) {
+                    this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
+                }
                 this.populationContainer.addChild(agent);
                 this.population.set(this.agents[a].id, this.agents[a]);
             }
@@ -206,12 +213,23 @@
          * @returns {World}
          */
         addEntityAgents() {
+            let startXY,
+                r = this.entityAgentOpts.radius;
             for (let k = 0; k < this.numEntityAgents; k++) {
-                let x = Utility.Maths.randi(this.entityAgentOpts.radius, this.width - this.entityAgentOpts.radius),
-                    y = Utility.Maths.randi(this.entityAgentOpts.radius, this.height - this.entityAgentOpts.radius),
-                    vx = Math.random() * 5 - 2.5,
-                    vy = Math.random() * 5 - 2.5,
-                    entityAgent = new EntityRLDQN(new Vec(x, y, vx, vy), this.entityAgentOpts),
+                if (this.grid && this.grid.startCell !== undefined) {
+                    let numb = Math.floor(Math.random() * this.grid.cells.length),
+                        startCell = this.grid.cells[numb],
+                        randAdd = Utility.Maths.randi(-7, 7);
+                    startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
+                } else {
+                    startXY = new Vec(
+                        Utility.Maths.randi(r, this.width - r),
+                        Utility.Maths.randi(r, this.height - r)
+                    );
+                }
+                startXY.vx = Math.random() * 5 - 2.5;
+                startXY.vy = Math.random() * 5 - 2.5;
+                let entityAgent = new EntityRLDQN(startXY, this.entityAgentOpts),
                     entity = entityAgent.shape || entityAgent.sprite;
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
                     entity.addChild(entityAgent.eyes[ei].shape);
@@ -229,18 +247,27 @@
          * @parameter {number} number
          * @returns {World}
          */
-        addEntities(number) {
-            if (number === undefined) {
-                number = 1;
-            }
+        addEntities(number = 1) {
+            let startXY,
+                r = this.entityOpts.radius;
+
             // Populating the world
             for (let k = 0; k < number; k++) {
+                if (this.grid && this.grid.startCell !== undefined) {
+                    let numb = Math.floor(Math.random() * this.grid.cells.length),
+                        startCell = this.grid.cells[numb],
+                        randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 -r), this.grid.cellSize / 2 -r);
+                    startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
+                } else {
+                    startXY = new Vec(
+                        Utility.Maths.randi(r, this.width - r),
+                        Utility.Maths.randi(r, this.height - r)
+                    );
+                }
+                startXY.vx = Utility.Maths.randf(-3, 3);
+                startXY.vy = Utility.Maths.randf(-3, 3);
                 let type = Utility.Maths.randi(1, 3),
-                    x = Utility.Maths.randi(this.entityOpts.radius, this.width - this.entityOpts.radius),
-                    y = Utility.Maths.randi(this.entityOpts.radius, this.height - this.entityOpts.radius),
-                    vx = Utility.Maths.randf(-3, 3),
-                    vy = Utility.Maths.randf(-3, 3),
-                    entity = new Entity(type, new Vec(x, y, vx, vy), this.entityOpts);
+                    entity = new Entity(type, startXY, this.entityOpts);
 
                 this.populationContainer.addChild(entity.shape || entity.sprite);
                 this.population.set(entity.id, entity);
@@ -255,12 +282,10 @@
          */
         addWalls() {
             // Add the walls to the world
-            let wallsContainer = new PIXI.Container();
             this.walls.forEach((wall, id) => {
-                wallsContainer.addChild(wall.shape);
+                this.populationContainer.addChild(wall.shape);
                 this.population.set(wall.id, wall);
             });
-            this.populationContainer.addChild(wallsContainer);
 
             return this;
         }
@@ -334,12 +359,14 @@
                     } else if (entity.type === 2 || entity.type === 1) {
                         popCount++;
                     }
+                } else {
+                    entity.draw();
                 }
             }
 
             // If we have less then the number of Items allowed throw a random one in
             if (popCount < this.numEntities) {
-                this.addEntities(this.numEntities - popCount);
+                // this.addEntities(this.numEntities - popCount);
             }
 
             if (this.rewards) {

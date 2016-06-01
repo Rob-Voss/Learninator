@@ -384,6 +384,16 @@ var R = {}, // the Recurrent library
                 this.backprop[i](); // tick!
             }
         },
+        // backward: function () {
+        //     var bp = this.backprop;
+        //     for (var i = bp.length - 1; i >= 0; ) {
+        //         var args = bp[i--];
+        //         var func = bp[i--];
+        //         func.apply(this, args);
+        //
+        //         //bp[i](); // tick!
+        //     }
+        // },
         /**
          * Pluck a row of m with index ix and return it as col vector
          * @param m
@@ -2108,7 +2118,7 @@ if (isNaN(tderror)) {
     RL.DeterministPG = DeterministPG;
 
     /**
-     * chromosome implementation using an array of floats
+     * Chromosome implementation using an array of floats
      * @param floatArray
      * @name Chromosome
      * @constructor
@@ -2319,6 +2329,20 @@ if (isNaN(tderror)) {
     }
 
     /**
+     * Randomize neural network with random weights and biases
+     * @param net
+     */
+    var randomizeNetwork = function (net) {
+        var netSize = getNetworkSize(net),
+            chromosome = new Chromosome(zeros(netSize));
+        chromosome.randomize(1.0);
+        pushGeneToNetwork(net, chromosome.gene);
+
+        return chromosome;
+    };
+    RL.randomizeNetwork = randomizeNetwork;
+
+    /**
      * Returns a FloatArray copy of real numbered array x.
      * @param x
      * @returns {*}
@@ -2345,19 +2369,6 @@ if (isNaN(tderror)) {
     }
 
     /**
-     * Randomize neural network with random weights and biases
-     * @param net
-     */
-    var randomizeNetwork = function (net) {
-        var netSize = getNetworkSize(net),
-            chromosome = new Chromosome(zeros(netSize));
-        chromosome.randomize(1.0);
-        pushGeneToNetwork(net, chromosome.gene);
-
-        return chromosome;
-    };
-
-    /**
      * Implementation of basic conventional neuroevolution algorithm (CNE)
      * options:
      * - populationSize: positive integer
@@ -2374,24 +2385,25 @@ if (isNaN(tderror)) {
      * @name GATrainer
      * @constructor
      */
-    var GATrainer = function (opts, initGene) {
-        this.net = new convnetjs.Net();
+    var GATrainer = function (net, opts, initGene) {
+        this.net = net;
         var layerDefs = getOpt(opts, 'layerDefs', [
             {type: 'input', out_sx: 1, out_sy: 1, out_depth: 1},
             {type: 'fc', num_neurons: 12, activation: 'relu'},
             {type: 'fc', num_neurons: 8, activation: 'sigmoid'},
             {type: 'regression', num_neurons: 1}
         ]);
-        this.net.makeLayers(layerDefs);
 
         this.populationSize = getOpt(opts, 'populationSize', 100);
-        this.populationSize = Math.floor(this.populationSize / 2) * 2; // make sure even number
+        // make sure even number
+        this.populationSize = Math.floor(this.populationSize / 2) * 2;
         this.mutationRate = getOpt(opts, 'mutationRate', 0.01);
         this.elitePercentage = getOpt(opts, 'elitePercentage', 0.2);
         this.mutationSize = getOpt(opts, 'mutationSize', 0.05);
         this.targetFitness = getOpt(opts, 'targetFitness', 10000000000000000);
         this.burstGenerations = getOpt(opts, 'burstGenerations', 10);
         this.bestTrial = getOpt(opts, 'bestTrial', 1);
+        this.numMatch = getOpt(opts, 'numMatch', 1);
         this.chromosomeSize = getNetworkSize(this.net);
 
         var initChromosome = null;
@@ -2405,9 +2417,9 @@ if (isNaN(tderror)) {
             // if initial gene supplied, burst mutate param.
             if (initChromosome) {
                 chromosome.copyFrom(initChromosome);
-                pushGeneToNetwork(this.net, initChromosome.gene);
-                // don't mutate the first guy.
+                // pushGeneToNetwork(this.net, initChromosome.gene);
                 if (i > 0) {
+                    // don't mutate the first guy.
                     chromosome.burstMutate(this.mutationSize);
                 }
             } else {
@@ -2415,6 +2427,7 @@ if (isNaN(tderror)) {
             }
             this.chromosomes.push(chromosome);
         }
+        pushGeneToNetwork(this.net, this.chromosomes[0].gene); // push first chromosome to neural network. (replaced *1 above)
 
         this.bestFitness = -10000000000000000;
         this.bestFitnessCount = 0;
@@ -2425,6 +2438,7 @@ if (isNaN(tderror)) {
      * @type {{train: Function}}
      */
     GATrainer.prototype = {
+
         /**
          * Has to pass in fitness function.
          * returns best fitness
@@ -2503,15 +2517,82 @@ if (isNaN(tderror)) {
                         c[i].copyFrom(c[0]);
                         c[i].burstMutate(this.mutationSize);
                     }
-                    //c[0].burstMutate(this.mutationSize); // don't mutate best solution.
                 }
-
             } else {
                 this.bestFitnessCount = 0; // reset count for burst
                 this.bestFitness = bestFitness; // record the best fitness score
             }
 
             return bestFitness;
+        },
+        /**
+         * Uses arms race to determine best chromosome by playing them against
+         * each other this algorithm loops through each chromosome, and for each
+         * chromosome, it will play num_match games against other chromosomes.
+         * at the same time.  if it wins, the fitness is incremented by 1
+         * else it is subtracted by 1.  if the game is tied, the fitness doesn't
+         * change. at the end of the algorithm, each fitness is divided by the
+         * number of games the chromosome has played the algorithm will then
+         * sort the chromosomes by this average fitness
+         *
+         * @param matchFunc
+         */
+        matchTrain: function (matchFunc) {
+            var i, j, N,
+                opponent,
+                fitness,
+                c = this.chromosomes,
+                result = 0;
+            N = this.populationSize;
+
+            // zero out all fitness and
+            for (i = 0; i < N; i++) {
+                c[i].fitness = 0;
+                c[i].nTrial = 0;
+            }
+
+            // get these guys to fight against each other!
+            for (i = 0; i < N; i++) {
+                for (j = 0; j < this.numMatch; j++) {
+                    opponent = randi(0, N);
+                    if (opponent === i) continue;
+                    result = matchFunc(c[i], c[opponent]);
+                    c[i].nTrial += 1;
+                    c[opponent].nTrial += 1;
+                    c[i].fitness += (result+1);
+                    // if result is -1, it means opponent has won.
+                    c[opponent].fitness += ((-result)+1);
+                }
+            }
+
+            // average out all fitness scores by the number of matches each chromosome has done.
+            for (i = 0; i < N; i++) {
+                if (c[i].nTrial > 0) {
+                    c[i].fitness /= c[i].nTrial;
+                }
+            }
+
+            // sort the chromosomes by fitness
+            c = c.sort(function (a, b) {
+                if (a.fitness > b.fitness) { return -1; }
+                if (a.fitness < b.fitness) { return 1; }
+                return 0;
+            });
+
+            var Nelite = Math.floor(Math.floor(this.elitePercentage*N)/2)*2; // even number
+            for (i = Nelite; i < N; i+=2) {
+                var p1 = randi(0, Nelite);
+                var p2 = randi(0, Nelite);
+                c[p1].crossover(c[p2], c[i], c[i+1]);
+            }
+
+            for (i = 2; i < N; i++) {
+                // keep two best guys the same.  don't mutate the best one, so start from 2, not 0.
+                c[i].mutate(this.mutationRate, this.mutationSize);
+            }
+
+            // push best one to network.
+            pushGeneToNetwork(this.net, c[0].gene);
         }
     };
     RL.GATrainer = GATrainer;
@@ -2703,6 +2784,7 @@ if (isNaN(tderror)) {
      * @type {{initialize: Function, train: Function}}
      */
     ESPTrainer.prototype = {
+
         /**
          *
          * @param initGenes
@@ -2922,15 +3004,17 @@ if (isNaN(tderror)) {
                 }
             }
 
-            // put global and local bestgenes in the last element of each gene
+            // put global and local best genes in the last element of each gene
             for (i = 0; i < nSp; i++) {
                 c[i][N - 1].copyFromGene(this.bestGenes[i]);
                 c[i][N - 2].copyFromGene(bestGenes[i]);
             }
 
-            if (bestFitness < this.bestFitness) { // didn't beat the record this time
+            // didn't beat the record this time
+            if (bestFitness < this.bestFitness) {
                 this.bestFitnessCount++;
-                if (this.bestFitnessCount > this.burstGenerations) { // stagnation, do burst mutate!
+                // stagnation, do burst mutate!
+                if (this.bestFitnessCount > this.burstGenerations) {
                     // add code here when progress stagnates later.
                     console.log('stagnating. burst mutate based on best solution.');
                     var bestGenesCopy = makeCopyOfGenes(this.bestGenes),
@@ -2939,9 +3023,7 @@ if (isNaN(tderror)) {
 
                     this.bestGenes = bestGenesCopy;
                     this.bestFitness = this.bestFitnessCopy;
-
                 }
-
             } else {
                 this.bestFitnessCount = 0; // reset count for burst
                 this.bestFitness = bestFitness; // record the best fitness score

@@ -199,8 +199,8 @@ var Matter = Matter || {},
                     type = Utility.Maths.randi(1, 3);
                 if (type === 1) {
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(greenColor, -20),
-                        fillStyle: Common.shadeColor(greenColor, -20)
+                        strokeStyle: Common.shadeColor(redColor, -20),
+                        fillStyle: Common.shadeColor(redColor, -20)
                     };
                     body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
                 } else {
@@ -208,8 +208,8 @@ var Matter = Matter || {},
                         radius: 30
                     };
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(redColor, -20),
-                        fillStyle: Common.shadeColor(redColor, -20)
+                        strokeStyle: Common.shadeColor(greenColor, -20),
+                        fillStyle: Common.shadeColor(greenColor, -20)
                     };
                     body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
                 }

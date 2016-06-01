@@ -43,6 +43,7 @@
             this.buffer = Utility.getOpt(grid, 'buffer', 0);
             this.cellWidth = (this.width - this.buffer) / this.xCount;
             this.cellHeight = (this.height - this.buffer) / this.yCount;
+            this.initialCell = grid.startCell;
 
             this.walls = [];
             this.cellStack = [];
@@ -92,7 +93,7 @@
         /**
          * Draw the solution
          * @param {PIXI.Container} stage
-         * @returns {Maze}
+         * @returns {PIXI.Container}
          */
         drawSolution(stage) {
             let V;
@@ -111,9 +112,11 @@
                 }
             }
             this.cheatsContainer.addChild(this.solution);
-            stage.addChild(this.cheatsContainer);
+            if (stage) {
+                stage.addChild(this.cheatsContainer);
+            }
 
-            return this;
+            return this.cheatsContainer;
         }
 
         /**
@@ -121,8 +124,7 @@
          * @returns {Maze}
          */
         generate() {
-            var initialCell = this.grid.getCellAt(this.grid.cells[0].q, this.grid.cells[0].r);
-            this.recurse(initialCell);
+            this.recurse(this.initialCell);
 
             this.grid.cells.forEach((cell) => {
                 if (!cell.visited) {

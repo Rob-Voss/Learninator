@@ -173,7 +173,7 @@
 
             if (this.cheats.position && this.posText === undefined) {
                 let textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) + ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
-                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
+                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) + ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
 
                 this.posText = new PIXI.Text(textP + textV, fontOpts);
                 this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
@@ -246,7 +246,7 @@
 
             if (this.cheats.position) {
                 let textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) + ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
-                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 4) + ', ' + Utility.Strings.flt2str(this.position.vy, 4) + ')';
+                    textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) + ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
                 this.posText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.posText));
                 this.posText.text = textP + textV;
                 this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));

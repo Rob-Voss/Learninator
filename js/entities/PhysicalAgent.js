@@ -133,11 +133,11 @@
                         break;
                     case 1:
                         // It is noms
-                        context.strokeStyle = '#00FF00';
+                        context.strokeStyle = '#FF0000';
                         break;
                     case 2:
                         // It is gnar gnar
-                        context.strokeStyle = '#FF0000';
+                        context.strokeStyle = '#00FF00';
                         break;
                     case 3:
                     case 4:

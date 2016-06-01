@@ -82,10 +82,10 @@
 
                     cell.neighbors[dir] = this.getCellAt(neighb.x, neighb.y);
                     cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
-                    this.walls.push(cell.walls[dir]);
                 }
                 this.cellsContainer.addChild(cell.shape);
             });
+            this.startCell = this.getCellAt(this.cells[0].x, this.cells[0].y);
 
             return this;
         }

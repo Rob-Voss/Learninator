@@ -12,16 +12,24 @@
          */
         constructor() {
             let renderOpts = {
-                antialiasing: false,
-                autoResize: false,
-                resizable: false,
-                transparent: false,
-                resolution: 1,//window.devicePixelRatio,
-                width: 800,
-                height: 800
-            };
-
-            let agentOpts   = {
+                    antialiasing: false,
+                    autoResize: false,
+                    resizable: false,
+                    transparent: false,
+                    resolution: 1,//window.devicePixelRatio,
+                    width: 800,
+                    height: 800
+                },
+                cheats = {
+                    id: false,
+                    name: false,
+                    angle: false,
+                    bounds: false,
+                    direction: false,
+                    gridLocation: false,
+                    position: false
+                },
+                agentOpts = {
                     brainType: 'RL.DQNAgent',
                     worker: false,
                     range: 90,
@@ -33,76 +41,53 @@
                     numProprioception: 2,
                     collision: true,
                     interactive: false,
-                    useSprite: false
-                },
-                agents      = [
-                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
-                    new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
-                ],
-                cheats = {
-                    id: false,
-                    name: false,
-                    angle: false,
-                    brute: false,
-                    bounds: false,
-                    direction: false,
-                    grid: false,
-                    gridLocation: false,
-                    position: false,
-                    quad: false,
-                    walls: false
+                    useSprite: false,
+                    cheats: cheats
                 },
                 gridOpts = {
                     width: renderOpts.width,
                     height: renderOpts.height,
                     buffer: 0,
-                    cellSize: 10,
+                    cellSize: 20,
                     cellSpacing: 0,
-                    size: 2,
-                    pointy: true,
+                    size: 8,
+                    pointy: false,
                     fill: false,
-                    cheats: {
-                        id: true,
-                        name: false,
-                        angle: false,
-                        brute: false,
-                        bounds: false,
-                        direction: true,
-                        grid: false,
-                        gridLocation: false,
-                        position: false,
-                        quad: false,
-                        walls: false
-                    }
+                    cheats: cheats
                 },
                 orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
                 size = new Point(gridOpts.width / gridOpts.cellSize, gridOpts.height / gridOpts.cellSize),
                 origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
                 layout = new Layout(orientation, size, origin),
-                shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeRectangle(gridOpts.size, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats, gridOpts.pointy),
-                // shape = HexGrid.shapeRing(0, 0, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeParallelogram(0, 0, gridOpts.size, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTrapezoidal(0, gridOpts.size, 0, gridOpts.size, false, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTriangle1(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTriangle2(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                grid = new HexGrid(gridOpts, shape, layout);
-            let maze = new Maze(grid.init()),
-                worldOpts   = {
+                shape = HexGrid.shapeRectangle(gridOpts.size, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats, gridOpts.pointy),
+                // shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                // shape = HexGrid.shapeRing(0, 0, 2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                // shape = HexGrid.shapeParallelogram(-1, -2, 1, 1, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                // shape = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                // shape = HexGrid.shapeTriangle1(2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                // shape = HexGrid.shapeTriangle2(2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
+                grid = new HexGrid(gridOpts, shape, layout),
+                maze = new Maze(grid.init()),
+                agents = [
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts),
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts)
+                ],
+                worldOpts = {
                     simSpeed: 1,
                     cheats: cheats,
-                    collision: {
-                        type: 'brute'
-                    },
                     grid: maze.grid,
                     maze: maze,
+                    collision: {
+                        type: 'grid'
+                    },
                     numEntities: 20,
                     entityOpts: {
                         radius: 10,
                         collision: true,
                         interactive: true,
                         useSprite: false,
-                        moving: true
+                        moving: true,
+                        cheats: cheats
                     }
                 };
 
@@ -110,6 +95,7 @@
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 
+            datGUI(this);
             return this;
         }
 
