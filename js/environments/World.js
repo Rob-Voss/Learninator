@@ -366,7 +366,7 @@
 
             // If we have less then the number of Items allowed throw a random one in
             if (popCount < this.numEntities) {
-                // this.addEntities(this.numEntities - popCount);
+                this.addEntities(this.numEntities - popCount);
             }
 
             if (this.rewards) {
