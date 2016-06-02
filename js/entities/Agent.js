@@ -75,6 +75,9 @@
             this.epsilon = 0.000;
 
             this.nStepsHistory = [];
+            this.nStepsCounter = 0;
+            this.nflot = 1000;
+            this.score = 0;
             this.pts = [];
             this.brain = {};
             this.brainState = {};
@@ -167,6 +170,7 @@
          */
         draw() {
             super.draw();
+
             // Loop through the eyes and check the walls and nearby entities
             for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
                 this.eyes[ae].draw(this);
@@ -375,7 +379,6 @@
          * @returns {Agent}
          */
         tick() {
-            this.draw();
             // Let the agents behave in the world based on their input
             this.act();
 
@@ -387,7 +390,7 @@
                 // actions on the environment
                 this.learn();
             }
-
+            this.draw();
 
             return this;
         }

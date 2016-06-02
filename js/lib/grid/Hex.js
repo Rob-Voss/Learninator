@@ -14,20 +14,21 @@
          * @returns {Hex}
          */
         constructor(q, r, s) {
-            this.q           = q || 0;
-            this.r           = r || 0;
-            this.s           = s || -q - r;
-            this.center      = new Point(0, 0);
-            this.visited     = false;
-            this.parent      = null;
-            this.heuristic   = 0;
-            this.reward      = 0;
-            this.neighbors   = [];
-            this.corners     = [];
+            this.q = q || 0;
+            this.r = r || 0;
+            this.s = s || -q - r;
+            this.center = new Point(0, 0);
+            this.visited = false;
+            this.parent = null;
+            this.heuristic = 0;
+            this.reward = null;
+            this.value = null;
+            this.corners = [];
             this.polyCorners = [];
+            this.neighbors = [];
             this.directions = Hex.hexDirections;
             this.diagonals = Hex.hexDiagonals;
-            this.population  = new Map();
+            this.population = new Map();
 
             return this;
         }
@@ -105,9 +106,9 @@
          * @returns {Array}
          */
         lineDraw(a, b) {
-            var N       = this.distance(a, b),
+            var N = this.distance(a, b),
                 results = [],
-                step    = 1.0 / Math.max(N, 1);
+                step = 1.0 / Math.max(N, 1);
             for (let i = 0; i <= N; i++) {
                 results.push(this.round(this.lerp(a, b, step * i)));
             }
@@ -148,9 +149,9 @@
          * @returns {Hex}
          */
         round(hex) {
-            let q     = Math.trunc(Math.round(hex.q)),
-                r     = Math.trunc(Math.round(hex.r)),
-                s     = Math.trunc(Math.round(hex.s)),
+            let q = Math.trunc(Math.round(hex.q)),
+                r = Math.trunc(Math.round(hex.r)),
+                s = Math.trunc(Math.round(hex.s)),
                 qDiff = Math.abs(q - hex.q),
                 rDiff = Math.abs(r - hex.r),
                 sDiff = Math.abs(s - hex.s);
@@ -181,7 +182,7 @@
          */
         score() {
             var total = 0,
-                p     = this.parent;
+                p = this.parent;
 
             while (p) {
                 ++total;
@@ -228,7 +229,7 @@
         }
     }
     Hex.hexDirections = [new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)];
-    Hex.hexDiagonals  = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
+    Hex.hexDiagonals = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
 
     global.Hex = Hex;
 

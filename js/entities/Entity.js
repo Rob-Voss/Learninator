@@ -90,27 +90,26 @@
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            this.addCheats();
-
+            let graphicObj = null;
             if (this.useSprite) {
                 this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
                 this.sprite = new PIXI.Sprite(this.texture);
                 this.sprite.width = this.width;
                 this.sprite.height = this.height;
                 this.sprite.anchor.set(0.5, 0.5);
-                this.draw();
-                this.sprite.addChild(this.cheatsContainer);
+                graphicObj = this.sprite;
             } else {
                 this.shape = new PIXI.Graphics();
-                this.draw();
-                this.shape.addChild(this.cheatsContainer);
+                graphicObj = this.shape;
             }
+
+            this.draw();
 
             if (this.interactive === true) {
                 this.isOver = false;
                 this.isDown = false;
-                this.shape.interactive = true;
-                this.shape
+                graphicObj.interactive = true;
+                graphicObj
                     .on('mousedown', (e, data) => {
                         this.onDragStart(e);
                     })
@@ -142,6 +141,7 @@
                         this.onDragMove();
                     });
             }
+            graphicObj.addChild(this.cheatsContainer);
 
             return this;
         }
@@ -151,7 +151,7 @@
          * @returns {Entity}
          */
         addCheats() {
-            let fontOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
+            this.txtOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
 
             if (this.cheats.angle && this.anglePointer === undefined) {
                 let dirV = new Vec(
@@ -166,7 +166,7 @@
             }
 
             if (this.cheats.gridLocation && this.gridText === undefined) {
-                this.gridText = new PIXI.Text('(' + this.gridLocation.toString() + ')', fontOpts);
+                this.gridText = new PIXI.Text('(' + this.gridLocation.toString() + ')', this.txtOpts);
                 this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
                 this.cheatsContainer.addChild(this.gridText);
             }
@@ -175,25 +175,25 @@
                 let textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) + ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
                     textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) + ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
 
-                this.posText = new PIXI.Text(textP + textV, fontOpts);
+                this.posText = new PIXI.Text(textP + textV, this.txtOpts);
                 this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
                 this.cheatsContainer.addChild(this.posText);
             }
 
             if (this.cheats.name && this.nameText === undefined) {
-                this.nameText = new PIXI.Text(this.name, fontOpts);
+                this.nameText = new PIXI.Text(this.name, this.txtOpts);
                 this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
                 this.cheatsContainer.addChild(this.nameText);
             }
 
             if (this.cheats.id && this.idText === undefined) {
-                this.idText = new PIXI.Text(this.id.substring(0, 10), fontOpts);
+                this.idText = new PIXI.Text(this.id.substring(0, 10), this.txtOpts);
                 this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
                 this.cheatsContainer.addChild(this.idText);
             }
 
             if (this.cheats.direction && this.directionText === undefined) {
-                this.directionText = new PIXI.Text(this.direction, fontOpts);
+                this.directionText = new PIXI.Text(this.direction, this.txtOpts);
                 this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
                 this.cheatsContainer.addChild(this.directionText);
             }
@@ -226,20 +226,18 @@
                 this.anglePointer.lineTo(dirV.x, dirV.y);
             } else {
                 if (this.anglePointer !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.anglePointer);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.anglePointer));
                     this.anglePointer = undefined;
                 }
             }
 
             if (this.cheats.gridLocation) {
                 this.gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-                this.gridText.text = '(' + this.gridLocation.toString() + ')';
+                this.gridText.text = this.gridLocation.toString();
                 this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
             } else {
                 if (this.gridText !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.gridText);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.gridText));
                     this.gridText = undefined;
                 }
             }
@@ -252,8 +250,7 @@
                 this.posText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 1));
             } else {
                 if (this.posText !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.posText);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.posText));
                     this.posText = undefined;
                 }
             }
@@ -263,8 +260,7 @@
                 this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
             } else {
                 if (this.nameText !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.nameText);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.nameText));
                     this.nameText = undefined;
                 }
             }
@@ -274,8 +270,7 @@
                 this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
             } else {
                 if (this.idText !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.idText);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.idText));
                     this.idText = undefined;
                 }
             }
@@ -286,8 +281,7 @@
                 this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
             } else {
                 if (this.directionText !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.directionText);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.directionText));
                     this.directionText = undefined;
                 }
             }
@@ -299,8 +293,7 @@
                 this.boundsRect.endFill();
             } else {
                 if (this.boundsRect !== undefined) {
-                    let index = this.cheatsContainer.getChildIndex(this.boundsRect);
-                    this.cheatsContainer.removeChildAt(index);
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.boundsRect));
                     this.boundsRect = undefined;
                 }
             }
@@ -442,10 +435,10 @@
          */
         tick() {
             this.age += 1;
-            this.draw();
             if (this.moving) {
                 this.move();
             }
+            this.draw();
 
             return this;
         }

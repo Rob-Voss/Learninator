@@ -130,34 +130,19 @@
                 this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats, 'Left'));
             }
 
-            if (document.getElementById('flotreward')) {
-                this.rewards = new FlotGraph(this.agents);
-            }
             // Actually place the renderer onto the page for display
             document.body.querySelector('#game-container').appendChild(this.renderer.view);
 
-            var animate = (timestamp) => {
-                var timeSinceLast,
-                    now = new Date().getTime() / 1000;
-                if (!this.pause) {
-                    timeSinceLast = now - this.lastTime;
-                    this.lastTime = now;
-                    this.tick(timeSinceLast);
-                }
-                this.renderer.render(this.stage);
-                requestAnimationFrame(animate);
-            };
-
-            var resize = () => {
-                // Determine which screen dimension is most constrained
-                let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
-                // Scale the view appropriately to fill that dimension
-                this.stage.scale.x = this.stage.scale.y = ratio;
-                // Update the renderer dimensions
-                this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
-            };
-
             if (this.resizable) {
+                var resize = () => {
+                    // Determine which screen dimension is most constrained
+                    let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+                    // Scale the view appropriately to fill that dimension
+                    this.stage.scale.x = this.stage.scale.y = ratio;
+                    // Update the renderer dimensions
+                    this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
+                };
+
                 // Listen for and adapt to changes to the screen size, e.g.,
                 // user changing the window or rotating their device
                 window.addEventListener("resize", resize);
@@ -179,10 +164,30 @@
 
             CollisionDetector.apply(this, [this.collision]);
 
+            return this;
+        }
+
+        /**
+         * Initialize the world
+         */
+        init() {
+            if (document.getElementById('flotreward')) {
+                this.rewards = new FlotGraph(this.agents);
+            }
+            var animate = (timestamp) => {
+                var timeSinceLast,
+                    now = new Date().getTime() / 1000;
+                if (!this.pause) {
+                    timeSinceLast = now - this.lastTime;
+                    this.lastTime = now;
+                    this.tick(timeSinceLast);
+                }
+                this.renderer.render(this.stage);
+                requestAnimationFrame(animate);
+            };
+
             this.lastTime = new Date().getTime() / 1000;
             requestAnimationFrame(animate);
-
-            return this;
         }
 
         /**
@@ -191,7 +196,7 @@
          */
         addAgents() {
             // Add the agents
-            for (let a = 0; a < this.numAgents; a++) {
+            for (let a = 0; a < this.agents.length; a++) {
                 let agent = this.agents[a].shape || this.agents[a].sprite;
                 if (this.agents[a].eyes !== undefined) {
                     for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
@@ -307,9 +312,10 @@
 
         /**
          * Tick the environment
+         * @param {number} timeSinceLast
          * @returns {World}
          */
-        tick() {
+        tick(timeSinceLast) {
             this.updatePopulation();
 
             let popCount = 0;

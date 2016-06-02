@@ -2,6 +2,7 @@
     "use strict";
 
     class AgentRLTD extends Agent {
+        
         /**
          * Initialize the AgentRLTD
          * @name AgentRLTD
@@ -14,6 +15,7 @@
          */
         constructor(position, opts) {
             super(position, opts);
+
             this.nStepsHistory = [];
             this.nStepsCounter = 0;
             this.nflot = 1000;

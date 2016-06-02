@@ -19,14 +19,24 @@
          */
         var world = world || {};
 
+        var goslow = function() {
+            world.stepsPerTick = 1;
+        };
+        var gonormal = function(){
+            world.stepsPerTick = 10;
+        };
+        var gofast = function() {
+            world.stepsPerTick = 25;
+        };
+
         /**
          *
          */
         function solve() {
-            world.redraw = true;
             world.maze.solve();
             world.maze.drawSolution();
-            world.pause = true;
+            world.stage.addChild(world.maze.cheatsContainer);
+            world.renderer.render(world.stage);
         }
 
         /**
@@ -44,14 +54,30 @@
 <div id="container">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <h2>
                     Maze World
                     <small>Funsies</small>
                 </h2>
                 <div id="game-container"></div>
+                <button class="btn btn-primary" onclick="solve()" style="width:150px;height:50px;margin-bottom:5px;">
+                    Show Solution
+                </button>
+                <button class="btn btn-primary" onclick="world.init()" style="width:170px;height:50px;margin-bottom:5px;">
+                    Start TD Learning
+                </button>
+                <button class="btn btn-success" onclick="gofast()" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Fast
+                </button>
+                <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Normal
+                </button>
+                <button class="btn btn-success" onclick="goslow()" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Slow
+                </button>
+
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div id="flotreward" style="width:600px; height: 400px;"></div>
             </div>
         </div>

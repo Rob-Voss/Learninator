@@ -14,18 +14,20 @@
          *
          * @param {number} x
          * @param {number} y
-         * @param {number} size
          * @returns {Cell}
          */
-        constructor(x = 0, y = 0, size = 20) {
+        constructor(x = 0, y = 0, z = 0) {
             this.x = x;
             this.y = y;
-            this.z = -x - y;
-            this.size = size;
+            this.z = z || -x - y;
+            this.center = new Point(0, 0);
             this.visited = false;
             this.parent = null;
             this.heuristic = 0;
-            this.reward = 0;
+            this.reward = null;
+            this.value = null;
+            this.corners = [];
+            this.polyCorners = [];
             this.neighbors = [];
             this.directions = Cell.cellDirections;
             this.population = new Map();
