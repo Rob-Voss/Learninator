@@ -129,7 +129,7 @@
             this.pause = false;
 
             this.addAgents();
-            Agent.prototype.tick = (() => {
+            Agent.prototype.tick = () => {
                 if (this.sid === -1) {
                     this.sid = setInterval(() => {
                         for (let k = 0; k < this.stepsPerTick; k++) {
@@ -151,7 +151,7 @@
                                 agent.brain.resetEpisode();
 
                                 agent.gridLocation = this.grid.getCellAt(0, 0);
-                                agent.position.set(this.grid.cellWidth / 2, this.grid.cellHeight / 2);
+                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
                                 this.state = this.startState();
 
                                 // record the reward achieved
@@ -162,16 +162,21 @@
                                 agent.nStepsCounter = 0;
                             } else {
                                 agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
-                                let x = agent.gridLocation.corners[2].x - (this.grid.cellWidth / 2),
-                                    y = agent.gridLocation.corners[2].y - (this.grid.cellHeight / 2);
-                                agent.position.set(x, y);
+                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
                             }
                             // Check them for collisions
                             this.check(agent);
+
                             // Loop through the eyes and check the walls and nearby entities
                             for (let ae = 0, ne = agent.numEyes; ae < ne; ae++) {
                                 this.check(agent.eyes[ae]);
                             }
+
+                            if (agent.collisions.length > 0) {
+                                console.log('Ouch I hit sumfin');
+                            }
+
+                            this.tick();
                             agent.draw();
                             this.drawGrid();
                         }
@@ -180,11 +185,51 @@
                     clearInterval(this.sid);
                     this.sid = -1;
                 }
-            })();
+            };
 
             this.reset();
             this.initFlot();
             this.drawGrid();
+
+            return this;
+        }
+
+        /**
+         * Tick the environment
+         * @param {number} timeSinceLast
+         * @returns {World}
+         */
+        tick(timeSinceLast) {
+            this.updatePopulation();
+
+            let popCount = 0;
+            for (let [id, entity] of this.population.entries()) {
+                if (entity.type !== 0 && entity.type !== 4) {
+                    // Check them for collisions
+                    this.check(entity);
+
+                    // Tick them
+                    entity.tick();
+
+                    if (entity.useSprite) {
+                        entity.sprite.position.set(entity.position.x, entity.position.y);
+                    }
+
+                    if (entity.cleanUp === true || (entity.type === 2 || entity.type === 1)) {
+                        popCount++;
+                        if (entity.age > 5000) {
+                            this.deleteEntity(entity.id);
+                            popCount--;
+                        }
+                    }
+                }
+                entity.draw();
+            }
+
+            // If we have less then the number of Items allowed throw a random one in
+            if (popCount < this.numEntities) {
+                this.addEntities(this.numEntities - popCount);
+            }
 
             return this;
         }
@@ -236,47 +281,48 @@
                     // Write the value text
                     cell.value = vv;
 
-                    // update policy arrows
-                    // for (var a = 0; a < 4; a++) {
-                    //     var prob = this.agents[0].brain.P[a * this.grid.cells.length + s],
-                    //         nx = 0,
-                    //         ny = 0,
-                    //         actions = this.Aarr[s],
-                    //         avail = actions[a];
-                    //     if (avail === null || prob < 0.01) {
-                    //         pa.attr('visibility', 'hidden');
-                    //     } else {
-                    //         pa.attr('visibility', 'visible');
-                    //     }
-                    //
-                    //     // The length of the arrow based on experience
-                    //     var ss = this.grid.cellSize / 2 * (prob * 0.9);
-                    //
-                    //     switch (a) {
-                    //         case 0: // Left
-                    //             nx = -ss;
-                    //             ny = 0;
-                    //             break;
-                    //         case 1: // Down
-                    //             nx = 0;
-                    //             ny = ss;
-                    //             break;
-                    //         case 2: // Up
-                    //             nx = 0;
-                    //             ny = -ss;
-                    //             break;
-                    //         case 3: // Right
-                    //             nx = ss;
-                    //             ny = 0;
-                    //             break;
-                    //     }
-                    //
-                    //     pa.attr('x1', xcoord + (this.grid.cellSize / 2))
-                    //         .attr('y1', ycoord + (this.grid.cellSize / 2))
-                    //         .attr('x2', xcoord + (this.grid.cellSize / 2) + nx)
-                    //         .attr('y2', ycoord + (this.grid.cellSize / 2) + ny);
-                    // }
                     cell.draw();
+
+                    // update policy arrows
+                    for (var a = 0; a < 4; a++) {
+                        var prob = this.agents[0].brain.P[a * this.grid.cells.length + s],
+                            nx = 0,
+                            ny = 0,
+                            actions = this.Aarr[s],
+                            avail = actions[a];
+                        if (avail === null || prob < 0.01) {
+                            // Hide the arrow
+                        } else {
+                            // Show the arrow
+                        }
+
+                        // The length of the arrow based on experience
+                        var ss = this.grid.cellSize / 2 * (prob * 0.9);
+
+                        switch (a) {
+                            case 0: // Left
+                                nx = -ss;
+                                ny = 0;
+                                break;
+                            case 1: // Down
+                                nx = 0;
+                                ny = ss;
+                                break;
+                            case 2: // Up
+                                nx = 0;
+                                ny = -ss;
+                                break;
+                            case 3: // Right
+                                nx = ss;
+                                ny = 0;
+                                break;
+                        }
+                        //     // Draw the arrow using below as guide
+                        //     pa.attr('x1', xcoord + (this.grid.cellSize / 2))
+                        //         .attr('y1', ycoord + (this.grid.cellSize / 2))
+                        //         .attr('x2', xcoord + (this.grid.cellSize / 2) + nx)
+                        //         .attr('y2', ycoord + (this.grid.cellSize / 2) + ny);
+                    }
                 }
             }
             this.renderer.render(this.stage);
@@ -469,8 +515,8 @@
         this.Rarr = Utility.Maths.zeros(this.grid.cells.length);
         this.Aarr = new Array(this.grid.cells.length);
 
-        for (let y = 0; y < this.grid.yCount; y++) {
-            for (let x = 0; x < this.grid.xCount; x++) {
+        for (let x = 0; x < this.grid.xCount; x++) {
+            for (let y = 0; y < this.grid.yCount; y++) {
                 let state = this.xyToS(x, y),
                     cell = this.grid.getCellAt(x, y),
                     actions = this.grid.disconnectedNeighbors(cell),

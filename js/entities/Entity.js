@@ -54,12 +54,12 @@
 
             this.id = Utility.Strings.guid();
             this.options = opts || {
-                radius: 10,
-                interactive: false,
-                useSprite: false,
-                moving: false,
-                cheats: false
-            };
+                    radius: 10,
+                    interactive: false,
+                    useSprite: false,
+                    moving: false,
+                    cheats: false
+                };
             // Remember the old position and angle
             this.position = position;
             this.oldPosition = this.position.clone();
@@ -365,7 +365,7 @@
                             // Wall
                             // Get the vector that points out from the surface the circle is bouncing on.
                             let bounceLineNormal = Vec.vectorBetween(this.position, collisionObj.vecI).unitVector(),
-                            // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
+                                // Set the new circle velocity by reflecting the old velocity in `bounceLineNormal`.
                                 dot = this.position.vx * bounceLineNormal.x + this.position.vy * bounceLineNormal.y;
 
                             this.force.x -= 2 * dot * bounceLineNormal.x;

@@ -13,13 +13,15 @@
          * @constructor
          *
          * @param {Cell} cell
+         * @param {number} size
          * @param {boolean} fill
          * @param {object} cheats
          * @returns {CellShape}
          */
-        constructor(cell, fill = false, cheats = false) {
-            super(cell.x, cell.y, cell.size);
-            
+        constructor(cell, size, fill = false, cheats = false) {
+            super(cell.x, cell.y, cell.z);
+
+            this.size = size;
             this.fill = fill;
             this.cheats = cheats;
             this.useSprite = false;

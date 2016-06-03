@@ -14,6 +14,7 @@
          *
          * @param {number} x
          * @param {number} y
+         * @param {number} z
          * @returns {Cell}
          */
         constructor(x = 0, y = 0, z = 0) {

@@ -170,7 +170,6 @@
          */
         draw() {
             super.draw();
-
             // Loop through the eyes and check the walls and nearby entities
             for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
                 this.eyes[ae].draw(this);

@@ -279,8 +279,8 @@
             let cells = [];
             for (let x = 0; x < w; x++) {
                 for (let y = 0; y < h; y++) {
-                    let cell = new Cell(x, y, size),
-                        cellShape = new CellShape(cell, fill, cheats);
+                    let cell = new Cell(x, y),
+                        cellShape = new CellShape(cell, size, fill, cheats);
                     cells.push(cellShape);
                 }
             }

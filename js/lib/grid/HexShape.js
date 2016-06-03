@@ -177,38 +177,6 @@ var HexShape = HexShape || {};
                     this.shape.endFill();
                 }
                 this.bounds = this.shape.getBounds();
-                
-                if (this.reward !== null && this.value !== null) {
-                    let rew = this.reward.toFixed(1),
-                        val = this.value.toFixed(2);
-                    if (this.rewardText === undefined) {
-                        this.rewardText = new PIXI.Text(rew !== "0.0" ? 'R' + rew : '', {
-                            font: "8px Arial",
-                            fill: rew < 0.0 ? "#000000" : "#00FF00",
-                            align: "center"
-                        });
-                        this.rewardText.anchor = new PIXI.Point(0.5, 0.5);
-                        this.rewardText.position.set(this.center.x, this.center.y - 8);
-                        this.shape.addChild(this.rewardText);
-                    } else {
-                        this.rewardText = this.shape.getChildAt(this.shape.getChildIndex(this.rewardText));
-                        this.rewardText.text = rew !== "0.0" ? 'R' + rew : '';
-                    }
-
-                    if (this.valueText === undefined) {
-                        this.valueText = new PIXI.Text(val !== 0.00 ? val : '', {
-                            font: "8px Arial",
-                            fill: val === "0.00" ? "#000000" : "#00FF00",
-                            align: "center"
-                        });
-                        this.valueText.anchor = new PIXI.Point(0.5, 0.5);
-                        this.valueText.position.set(this.center.x, this.center.y);
-                        this.shape.addChild(this.valueText);
-                    } else {
-                        this.valueText = this.shape.getChildAt(this.shape.getChildIndex(this.valueText));
-                        this.valueText.text = val !== "0.00" ? val : '';
-                    }
-                }
             }
 
             this.updateCheats();
