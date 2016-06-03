@@ -43,7 +43,7 @@
                 this.idText = new PIXI.Text(this.id.substring(0, 6), this.fontOpts);
                 this.idText.anchor = new PIXI.Point(0.5, 0.5);
                 this.idText.rotation = this.angle;
-                this.idText.position.set(midWall.x + 4, midWall.y + 4);
+                this.idText.position.set(midWall.x, midWall.y);
                 this.cheatsContainer.addChild(this.idText);
             }
 
@@ -51,7 +51,7 @@
                 this.directionText = new PIXI.Text(this.direction, this.fontOpts);
                 this.directionText.anchor = new PIXI.Point(0.5, 0.5);
                 this.directionText.rotation = this.angle;
-                this.directionText.position.set(midWall.x + 4, midWall.y + 4);
+                this.directionText.position.set(midWall.x + 5, midWall.y + 5);
                 this.cheatsContainer.addChild(this.directionText);
             }
 
@@ -59,7 +59,7 @@
                 this.angleInd = new PIXI.Text(Utility.Strings.flt2str(this.angle, 2), this.fontOpts);
                 this.angleInd.anchor = new PIXI.Point(0.5, 0.5);
                 this.angleInd.rotation = this.angle;
-                this.angleInd.position.set(midWall.x + 4, midWall.y + 4);
+                this.angleInd.position.set(midWall.x - 5, midWall.y - 5);
                 this.cheatsContainer.addChild(this.angleInd);
             }
 

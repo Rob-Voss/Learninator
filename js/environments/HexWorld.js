@@ -24,7 +24,7 @@
                     id: false,
                     name: false,
                     angle: false,
-                    bounds: false,
+                    bounds: true,
                     direction: false,
                     gridLocation: false,
                     position: false
@@ -95,7 +95,10 @@
             // this.agents[0].load('zoo/wateragent.json');
             // this.agents[1].load('zoo/wateragent.json');
 
+            this.init();
+
             datGUI(this);
+
             return this;
         }
 

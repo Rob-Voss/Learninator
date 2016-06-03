@@ -226,7 +226,7 @@ var Utility = Utility || {};
         Arrays.arrContains = function (arr, elt) {
             for (var i = 0, n = arr.length; i < n; i++) {
                 if (arr[i] === elt) {
-                    return true;
+                    return i;
                 }
             }
             return false;

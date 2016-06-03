@@ -263,6 +263,7 @@
                         startCell = this.grid.cells[numb],
                         randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 -r), this.grid.cellSize / 2 -r);
                     startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
+                    this.entityOpts.gridLocation = startCell;
                 } else {
                     startXY = new Vec(
                         Utility.Maths.randi(r, this.width - r),

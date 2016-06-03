@@ -82,7 +82,7 @@
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.collisions = [];
-            this.gridLocation = {};
+            this.gridLocation = Utility.getOpt(this.options, 'gridLocation', {});
             this.cleanUp = false;
             if (this.type === 2) {
                 this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
@@ -151,7 +151,7 @@
          * @returns {Entity}
          */
         addCheats() {
-            this.txtOpts = {font: "10px Arial", fill: "#FF0000", align: "center"};
+            this.txtOpts = {font: "10px Arial", fill: "#000000", align: "center"};
 
             if (this.cheats.angle && this.anglePointer === undefined) {
                 let dirV = new Vec(
@@ -165,10 +165,22 @@
                 this.cheatsContainer.addChild(this.anglePointer);
             }
 
-            if (this.cheats.gridLocation && this.gridText === undefined) {
-                this.gridText = new PIXI.Text('(' + this.gridLocation.toString() + ')', this.txtOpts);
-                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
-                this.cheatsContainer.addChild(this.gridText);
+            if (this.cheats.id && this.idText === undefined) {
+                this.idText = new PIXI.Text(this.id.substring(0, 10), this.txtOpts);
+                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
+                this.cheatsContainer.addChild(this.idText);
+            }
+
+            if (this.cheats.direction && this.directionText === undefined) {
+                this.directionText = new PIXI.Text(this.direction, this.txtOpts);
+                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
+                this.cheatsContainer.addChild(this.directionText);
+            }
+
+            if (this.cheats.name && this.nameText === undefined) {
+                this.nameText = new PIXI.Text(this.name, this.txtOpts);
+                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+                this.cheatsContainer.addChild(this.nameText);
             }
 
             if (this.cheats.position && this.posText === undefined) {
@@ -180,22 +192,10 @@
                 this.cheatsContainer.addChild(this.posText);
             }
 
-            if (this.cheats.name && this.nameText === undefined) {
-                this.nameText = new PIXI.Text(this.name, this.txtOpts);
-                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
-                this.cheatsContainer.addChild(this.nameText);
-            }
-
-            if (this.cheats.id && this.idText === undefined) {
-                this.idText = new PIXI.Text(this.id.substring(0, 10), this.txtOpts);
-                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
-                this.cheatsContainer.addChild(this.idText);
-            }
-
-            if (this.cheats.direction && this.directionText === undefined) {
-                this.directionText = new PIXI.Text(this.direction, this.txtOpts);
-                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
-                this.cheatsContainer.addChild(this.directionText);
+            if (this.cheats.gridLocation && this.gridText === undefined) {
+                this.gridText = new PIXI.Text('(' + this.gridLocation.toString() + ')', this.txtOpts);
+                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
+                this.cheatsContainer.addChild(this.gridText);
             }
 
             if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
@@ -231,14 +231,34 @@
                 }
             }
 
-            if (this.cheats.gridLocation) {
-                this.gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-                this.gridText.text = this.gridLocation.toString();
-                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
+            if (this.cheats.id) {
+                this.idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
+                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
             } else {
-                if (this.gridText !== undefined) {
-                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.gridText));
-                    this.gridText = undefined;
+                if (this.idText !== undefined) {
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.idText));
+                    this.idText = undefined;
+                }
+            }
+
+            if (this.cheats.name) {
+                this.nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
+                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            } else {
+                if (this.nameText !== undefined) {
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.nameText));
+                    this.nameText = undefined;
+                }
+            }
+
+            if (this.cheats.direction) {
+                this.directionText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.directionText));
+                this.directionText.text = this.direction;
+                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
+            } else {
+                if (this.directionText !== undefined) {
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.directionText));
+                    this.directionText = undefined;
                 }
             }
 
@@ -255,34 +275,14 @@
                 }
             }
 
-            if (this.cheats.name) {
-                this.nameText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-                this.nameText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 2));
+            if (this.cheats.gridLocation) {
+                this.gridText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.gridText));
+                this.gridText.text = this.gridLocation.toString();
+                this.gridText.position.set(this.position.x + this.radius, this.position.y + (this.radius * -0.5));
             } else {
-                if (this.nameText !== undefined) {
-                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.nameText));
-                    this.nameText = undefined;
-                }
-            }
-
-            if (this.cheats.id) {
-                this.idText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.idText));
-                this.idText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 3));
-            } else {
-                if (this.idText !== undefined) {
-                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.idText));
-                    this.idText = undefined;
-                }
-            }
-
-            if (this.cheats.direction) {
-                this.directionText = this.cheatsContainer.getChildAt(this.cheatsContainer.getChildIndex(this.directionText));
-                this.directionText.text = this.direction;
-                this.directionText.position.set(this.position.x + this.radius, this.position.y + (this.radius * 4));
-            } else {
-                if (this.directionText !== undefined) {
-                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.directionText));
-                    this.directionText = undefined;
+                if (this.gridText !== undefined) {
+                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.gridText));
+                    this.gridText = undefined;
                 }
             }
 

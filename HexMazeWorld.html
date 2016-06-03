@@ -15,7 +15,7 @@
     <script>
         /**
          * Global world object
-         * @type {World}
+         * @type {HexMazeWorld}
          */
         var world = world || {};
 
@@ -43,7 +43,7 @@
          * Create existence!
          */
         function start() {
-            world = new MazeWorld();
+            world = new HexMazeWorld();
 //            datGUI(world);
         }
 
@@ -56,7 +56,7 @@
         <div class="row">
             <div class="col-md-6">
                 <h2>
-                    Maze World
+                    Hex Maze World
                     <small>Funsies</small>
                 </h2>
                 <div id="game-container"></div>
@@ -88,7 +88,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 
 <!-- markdown -->
@@ -103,22 +103,23 @@
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
 <script src="js/lib/Array.js"></script>
+<script src="js/entities/Wall.js"></script>
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
-<script src="js/lib/grid/Cell.js"></script>
-<script src="js/lib/grid/CellShape.js"></script>
 <script src="js/lib/grid/Grid.js"></script>
 <script src="js/lib/Maze.js"></script>
+<script src="js/lib/grid/Hex.js"></script>
+<script src="js/lib/grid/HexShape.js"></script>
+<script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
 
-<script src="js/entities/Wall.js"></script>
 <script src="js/entities/Eye.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 
 <script src="js/environments/World.js"></script>
-<script src="js/environments/MazeWorld.js"></script>
+<script src="js/environments/HexMazeWorld.js"></script>
 
 </body>
 </html>
