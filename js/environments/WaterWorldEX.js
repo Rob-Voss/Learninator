@@ -95,6 +95,7 @@ var WaterWorldEX = WaterWorldEX || {},
                         cheats: cheats
                     },
                     grid: maze.grid,
+                    maze: maze,
                     cheats: cheats
                 };
 
@@ -105,6 +106,8 @@ var WaterWorldEX = WaterWorldEX || {},
 
             this.entityAgents[1].enemy = this.agents[1];
             this.entityAgents[1].target = this.agents[0];
+
+            this.init();
 
             return this;
         }

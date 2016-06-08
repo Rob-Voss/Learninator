@@ -226,10 +226,12 @@ var HexShape = HexShape || {};
                     corner.idText.text = id;
                 });
             } else {
-                if (this.idText !== undefined) {
-                    this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(this.idText));
-                    this.idText = undefined;
-                }
+                this.corners.forEach((corner) => {
+                    if (corner.idText !== undefined) {
+                        this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(corner.idText));
+                        corner.idText = undefined;
+                    }
+                });
             }
 
             if (this.cheats.direction) {
@@ -238,7 +240,7 @@ var HexShape = HexShape || {};
                     wall.directionText.text = dir;
                 });
             } else {
-                this.walls.forEach((wall, dir) => {
+                this.walls.forEach((wall) => {
                     if (wall.directionText !== undefined) {
                         this.cheatsContainer.removeChildAt(this.cheatsContainer.getChildIndex(wall.directionText));
                         wall.directionText = undefined;

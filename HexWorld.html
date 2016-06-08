@@ -15,6 +15,16 @@
     <script>
         var world = world || {};
 
+        var goslow = function() {
+            world.stepsPerTick = 1;
+        };
+        var gonormal = function(){
+            world.stepsPerTick = 10;
+        };
+        var gofast = function() {
+            world.stepsPerTick = 25;
+        };
+
         function start() {
             world = new HexWorld();
         }
@@ -34,6 +44,26 @@
             </div>
             <div class="col-md-4">
                 <button onclick="world.drawSolution();">Solve It</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+
+                <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Show Solution
+                </button>
+                <!--<button class="btn btn-primary" onclick="world.agents[0].tick();" style="width:170px;height:50px;margin-bottom:5px;">-->
+                <!--Start Learning-->
+                <!--</button>-->
+                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Fast
+                </button>
+                <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Normal
+                </button>
+                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Slow
+                </button>
             </div>
         </div>
     </div>

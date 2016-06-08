@@ -7,74 +7,116 @@
 
     <title>Water World EXtreme</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
+          rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
-
-    <script>
-        var world = world || {},
-            jaxrendered = false;
-
-        function renderJax() {
-            if(jaxrendered) {
-                return;
-            }
-            // render markdown
-            $(".md").each(function () {
-                $(this).html(marked($(this).html()));
-            });
-            (function () {
-                var script = document.createElement("script");
-                script.type = "text/javascript";
-                script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-                document.getElementsByTagName("head")[0].appendChild(script);
-                jaxrendered = true;
-            })();
-        }
-
-        function start() {
-            world = new WaterWorldEX();
-            renderJax();
-        }
-    </script>
     <link rel="import" href="/templates/twitch-nav.html">
 </head>
 <body onload="start();">
 <div id="container">
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-6">
-            <div id="exp" class="md">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div id="exp" class="md">
 
 ### Setup
 
 This is another Deep Q Learning demo with a more realistic and larger setup:
 
-- The **state space** is even larger and continuous: The agent has 30 eye sensors pointing in all directions and in each direction is observes 5 variables: the range, the type of sensed object (green, red), and the velocity of the sensed object. The agent's proprioception includes two additional sensors for its own speed in both x and y directions. This is a total of 152-dimensional state space.
-- There are 4 **actions** available to the agent: To apply thrusters to the left, right, up and down. This gives the agent control over its velocity.
-- The **dynamics** integrate the velocity of the agent to change its position. The green and red targets bounce around.
-- The **reward** awarded to the agent is +1 for making contact with any red target (these are apples) and -1 for making contact with any green target (this is poison).
+- The **state space** is even larger and continuous: The agent has 30 eye sensors pointing in all
+directions and in each direction is observes 5 variables: the range, the type of sensed object
+(green, red), and the velocity of the sensed object. The agent's proprioception includes two
+additional sensors for its own speed in both x and y directions. This is a total of 152-dimensional
+state space.
+- There are 4 **actions** available to the agent: To apply thrusters to the left, right, up and
+down. This gives the agent control over its velocity.
+- The **dynamics** integrate the velocity of the agent to change its position. The green and red
+targets bounce around.
+- The **reward** awarded to the agent is +1 for making contact with any red target (these are
+apples) and -1 for making contact with any green target (this is poison).
 
-The optimal strategy of the agent is to cruise around, run away from green targets and eat red targets. What's interesting about this demo is that the state space is so high-dimensional, and also that the sensed variables are agent-relative. They're not just toy x,y coordinates of some fixed number of targets as in previous demo.
+The optimal strategy of the agent is to cruise around, run away from green targets and eat red
+targets. What's interesting about this demo is that the state space is so high-dimensional, and also
+that the sensed variables are agent-relative. They're not just toy x,y coordinates of some fixed
+number of targets as in previous demo.
 
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!--<div id="flotreward"></div>-->
             </div>
         </div>
-        <div class="col-md-6">
-            <!--<div id="flotreward"></div>-->
+        <div class="row">
+            <div class="col-md-12">
+                <h2>
+                    Water World EXtreme
+                    <small>Funsies</small>
+                </h2>
+                <div id="game-container"></div>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <h2>
-                Water World EXtreme
-                <small>Funsies</small>
-            </h2>
-            <div id="game-container"></div>
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Show Solution
+                </button>
+                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Go
+                    Fast
+                </button>
+                <button class="btn btn-success" onclick="gonormal();"
+                        style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Normal
+                </button>
+                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Go
+                    Slow
+                </button>
+            </div>
         </div>
     </div>
 </div>
-</div>
+
+<script>
+    var world       = world || {},
+        jaxrendered = false;
+
+    function renderJax() {
+        if (jaxrendered) {
+            return;
+        }
+        // render markdown
+        $(".md").each(function () {
+            $(this).html(marked($(this).html()));
+        });
+        (function () {
+            var script  = document.createElement("script");
+            script.type = "text/javascript";
+            script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+            document.getElementsByTagName("head")[0].appendChild(script);
+            jaxrendered = true;
+        })();
+    }
+
+    var goslow   = function () {
+        world.stepsPerTick = 1;
+    };
+    var gonormal = function () {
+        world.stepsPerTick = 10;
+    };
+    var gofast   = function () {
+        world.stepsPerTick = 25;
+    };
+
+    function start() {
+        world = new WaterWorldEX();
+        renderJax();
+    }
+</script>
 
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
@@ -91,7 +133,7 @@ The optimal strategy of the agent is to cruise around, run away from green targe
 <link href="css/highlight_default.css" rel="stylesheet">
 <script>hljs.initHighlightingOnLoad();</script>
 
-<!--<script src="js/lib/graphing/FlotGraph.js"></script>-->
+<script src="js/lib/graphing/FlotGraph.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Point.js"></script>

@@ -22,11 +22,11 @@
                     position: false
                 },
                 renderOpts = {
-                    antialiasing: true,
+                    antialiasing: false,
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,//window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
                     width: 600,
                     height: 600
@@ -57,6 +57,7 @@
                 maze = new Maze(grid.init()),
                 worldOpts = {
                     simSpeed: 1,
+                    theme: 'space',
                     collision: {
                         type: 'brute'
                     },
@@ -125,6 +126,57 @@
                         useSprite: false,
                         worker: false
                     }
+                ),
+                new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
+                    {
+                        brainType: 'RL.TDAgent',
+                        env: {
+                            allowedActions: (s) => {
+                                return this.allowedActions(s);
+                            },
+                            getMaxNumActions: () => {
+                                return this.getMaxNumActions();
+                            },
+                            getNumStates: () => {
+                                return this.getNumStates();
+                            },
+                            nextStateDistribution: (s, a) => {
+                                return this.nextStateDistribution(s, a);
+                            },
+                            randomState: () => {
+                                return this.randomState();
+                            },
+                            reset: () => {
+                                return this.reset();
+                            },
+                            sampleNextState: (s, a) => {
+                                return this.sampleNextState(s, a);
+                            },
+                            startState: () => {
+                                return this.startState();
+                            },
+                            sToX: (s) => {
+                                return this.sToX(s);
+                            },
+                            sToY: (s) => {
+                                return this.sToY(s);
+                            },
+                            xyToS: (q, r) => {
+                                return this.xyToS(q, r);
+                            }
+                        },
+                        numActions: this.grid.startCell.directions.length,
+                        numEyes: 0,
+                        numTypes: 0,
+                        numProprioception: 0,
+                        range: 0,
+                        proximity: 0,
+                        radius: 10,
+                        collision: false,
+                        interactive: false,
+                        useSprite: false,
+                        worker: false
+                    }
                 )
             ];
 
@@ -134,61 +186,314 @@
             this.sid = -1;
             this.action = null;
             this.state = 0;
-            this.stepsPerTick = 1;
-            this.nStepsHistory = [];
-            this.pause = false;
 
-            this.addAgents();
+            Agent.prototype.onMouseDown = (event) => {
+                this.data = event.data;
+                this.isDown = true;
+                this.alpha = 1;
+                this.guiObj = {
+                    id: 'main',
+                    draggable: true,
+                    component: 'Window',
+                    skin: 'MetalWindow',
+                    position: {x: 20, y: 20},
+                    width: 400,
+                    height: 400,
+                    z: 1,
+                    header: {
+                        id: 'title',
+                        component: 'Header',
+                        skin: 'MetalHeader',
+                        text: 'Agent Options',
+                        position: {x: 5, y: 0},
+                        width: 390,
+                        height: 30
+                    },
+                    layout: [1, 1],
+                    children: [{
+                        id: 'inputSamples',
+                        component: 'Layout',
+                        skin: 'MetalLayout',
+                        position: {x: 0, y: 0},
+                        width: 390,
+                        height: 360,
+                        layout: [2, 5],
+                        children: [{
+                            id: 'chk1',
+                            text: 'Checkbox #1',
+                            component: 'Checkbox',
+                            skin: 'MetalCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio1',
+                            text: 'Radio #1',
+                            component: 'Radio',
+                            skin: 'MetalRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'chk2',
+                            text: 'Checkbox #2',
+                            component: 'Checkbox',
+                            skin: 'MetalCheckbox',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'radio2',
+                            text: 'Radio #2',
+                            component: 'Radio',
+                            skin: 'MetalRadio',
+                            group: 'odd',
+                            position: {x: 0, y: 0},
+                            width: 25,
+                            height: 25
+                        }, {
+                            id: 'text1',
+                            component: 'Input',
+                            skin: 'MetalInput',
+                            text: 'input here',
+                            position: {x: 0, y: 0},
+                            width: 150,
+                            height: 29
+                        }, {
+                            id: 'btnDone',
+                            component: 'Button',
+                            skin: 'MetalButton',
+                            text: 'Done',
+                            position: {x: 0, y: 0},
+                            width: 75,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }, {
+                            id: 'mySlider',
+                            component: 'Slider',
+                            position: {x: 0, y: 0},
+                            slide: {
+                                component: 'Slide',
+                                width: 10,
+                                height: 10
+                            },
+                            width: 150,
+                            height: 5
+
+                        }, {
+                            id: 'myLabel',
+                            text: 'none',
+                            component: 'Label',
+                            position: {x: 0, y: 0},
+                            width: 120,
+                            height: 29
+                        }, {
+                            id: 'btnCancel',
+                            component: 'Button',
+                            skin: 'MetalButton',
+                            text: 'Cancel',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }, {
+                            id: 'btnSave',
+                            component: 'Button',
+                            skin: 'MetalButton',
+                            text: 'Save',
+                            position: {x: 0, y: 0},
+                            width: 100,
+                            height: 29,
+                            font: {
+                                color: 'white'
+                            }
+                        }]
+                    }]
+                };
+                /*this.guiObj = {
+                 id: 'mainGlass',
+                 draggable: true,
+                 component: 'Window',
+                 skin: 'GlassWindow',
+                 position: {x: 20, y: 20},
+                 width: 400,
+                 height: 400,
+                 z: 1,
+                 header: {
+                 id: 'titleGlass',
+                 component: 'Header',
+                 skin: 'GlassHeader',
+                 text: 'Options',
+                 position: {x: 5, y: 0},
+                 width: 390,
+                 height: 30
+                 },
+                 layout: [1, 1],
+                 children: [{
+                 id: 'inputSamples',
+                 component: 'Layout',
+                 skin: 'GlassLayout',
+                 position: {x: 0, y: 0},
+                 width: 380,
+                 height: 360,
+                 layout: [2, 5],
+                 children: [{
+                 id: 'chk1',
+                 text: 'Checkbox #1',
+                 component: 'Checkbox',
+                 skin: 'GlassCheckbox',
+                 position: {x: 0, y: 0},
+                 width: 25,
+                 height: 25
+                 }, {
+                 id: 'radio1',
+                 text: 'Radio #1',
+                 component: 'Radio',
+                 skin: 'GlassRadio',
+                 group: 'odd',
+                 position: {x: 0, y: 0},
+                 width: 25,
+                 height: 25
+                 }, {
+                 id: 'chk2',
+                 text: 'Checkbox #2',
+                 component: 'Checkbox',
+                 skin: 'GlassCheckbox',
+                 position: {x: 0, y: 0},
+                 width: 25,
+                 height: 25
+                 }, {
+                 id: 'radio2',
+                 text: 'Radio #2',
+                 component: 'Radio',
+                 skin: 'GlassRadio',
+                 group: 'odd',
+                 position: {x: 0, y: 0},
+                 width: 25,
+                 height: 25
+                 }, {
+                 id: 'text1',
+                 component: 'Input',
+                 skin: 'GlassInput',
+                 text: 'input here',
+                 position: {x: 0, y: 0},
+                 width: 150,
+                 height: 29
+                 }, {
+                 id: 'btnDone',
+                 component: 'Button',
+                 skin: 'GlassButton',
+                 text: 'Done',
+                 position: {x: 0, y: 0},
+                 width: 75,
+                 height: 29
+                 }, {
+                 id: 'mySlider',
+                 component: 'Slider',
+                 position: {x: 0, y: 0},
+                 slide: {
+                 component: 'Slide',
+                 width: 10,
+                 height: 10
+                 },
+                 width: 150,
+                 height: 5
+
+                 }, {
+                 id: 'myLabel',
+                 component: 'Label',
+                 text: 'none',
+                 position: {x: 0, y: 0},
+                 width: 120,
+                 height: 29
+                 }, {
+                 id: 'btnCancel',
+                 component: 'Button',
+                 skin: 'GlassButton',
+                 text: 'Cancel',
+                 position: {x: 0, y: 0},
+                 width: 100,
+                 height: 29
+                 }, {
+                 id: 'btnSave',
+                 component: 'Button',
+                 skin: 'GlassButton',
+                 text: 'Save',
+                 position: {x: 0, y: 0},
+                 width: 100,
+                 height: 29
+                 }]
+                 }]
+                 };*/
+                this.loadTheme(this.guiObj, 'space');
+
+                return this;
+            };
+
             Agent.prototype.tick = () => {
                 if (this.sid === -1) {
                     this.sid = setInterval(() => {
-                        for (let k = 0; k < this.stepsPerTick; k++) {
-                            // ask agent for an action
-                            let agent = this.agents[0],
-                                state = this.state;
-                            let a = agent.brain.act(state);
-                                // run it through environment dynamics
-                            let obs = this.sampleNextState(state, a);
+                        var timeSinceLast,
+                            now = new Date().getTime() / 1000;
+                        if (!this.pause) {
+                            timeSinceLast = now - this.lastTime;
+                            this.lastTime = now;
+                            for (let k = 0; k < this.stepsPerTick; k++) {
+                                this.tick(timeSinceLast);
 
-                            // allow opportunity for the agent to learn
-                            agent.brain.learn(obs.r);
-                            // evolve environment to next state
-                            this.state = obs.ns;
+                                for (let l = 0; l < this.agents.length; l++) {
+                                    // ask agent for an action
+                                    let agent = this.agents[l],
+                                        state = this.state;
+                                    let a = agent.brain.act(state);
+                                    // run it through environment dynamics
+                                    let obs = this.sampleNextState(state, a);
 
-                            agent.nStepsCounter += 1;
-                            if (typeof obs.resetEpisode !== 'undefined') {
-                                agent.score += 1;
-                                agent.brain.resetEpisode();
+                                    // allow opportunity for the agent to learn
+                                    agent.brain.learn(obs.r);
+                                    // evolve environment to next state
+                                    this.state = obs.ns;
 
-                                agent.gridLocation = this.grid.getCellAt(0, 0);
-                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
-                                this.state = this.startState();
+                                    agent.nStepsCounter += 1;
+                                    if (typeof obs.resetEpisode !== 'undefined') {
+                                        agent.score += 1;
+                                        agent.brain.resetEpisode();
 
-                                // record the reward achieved
-                                if (agent.nStepsHistory.length >= agent.nflot) {
-                                    agent.nStepsHistory = agent.nStepsHistory.slice(1);
+                                        agent.gridLocation = this.grid.getCellAt(0, 0);
+                                        agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
+                                        this.state = this.startState();
+
+                                        // record the reward achieved
+                                        if (agent.nStepsHistory.length >= agent.nflot) {
+                                            agent.nStepsHistory = agent.nStepsHistory.slice(1);
+                                        }
+                                        agent.nStepsHistory.push(agent.nStepsCounter);
+                                        agent.nStepsCounter = 0;
+                                    } else {
+                                        agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+                                        agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
+                                    }
+                                    // Check them for collisions
+                                    this.check(agent);
+
+                                    // Loop through the eyes and check the walls and nearby entities
+                                    for (let ae = 0, ne = agent.eyes.length; ae < ne; ae++) {
+                                        this.check(agent.eyes[ae]);
+                                    }
+
+                                    if (agent.collisions.length > 0) {
+                                        console.log('Ouch I hit sumfin');
+                                    }
+
+                                    agent.draw();
                                 }
-                                agent.nStepsHistory.push(agent.nStepsCounter);
-                                agent.nStepsCounter = 0;
-                            } else {
-                                agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
-                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
+                                this.drawGrid();
                             }
-                            // Check them for collisions
-                            this.check(agent);
-
-                            // Loop through the eyes and check the walls and nearby entities
-                            for (let ae = 0, ne = agent.numEyes; ae < ne; ae++) {
-                                this.check(agent.eyes[ae]);
-                            }
-
-                            if (agent.collisions.length > 0) {
-                                console.log('Ouch I hit sumfin');
-                            }
-
-                            this.tick();
-                            agent.draw();
-                            this.drawGrid();
                         }
                     }, 20);
                 } else {
@@ -197,6 +502,7 @@
                 }
             };
 
+            this.addAgents();
             this.reset();
             this.initFlot();
             this.drawGrid();
@@ -255,81 +561,84 @@
                     vv = null;
 
                 // get value of state s under agent policy
-                if (typeof this.agents[0].brain.V !== 'undefined') {
-                    vv = this.agents[0].brain.V[s];
-                } else if (typeof this.agents[0].brain.Q !== 'undefined') {
-                    var poss = this.allowedActions(s);
-                    vv = -1;
-                    for (var i = 0, n = poss.length; i < n; i++) {
-                        var qsa = this.agents[0].brain.Q[poss[i] * this.grid.cells.length + s];
-                        if (i === 0 || qsa > vv) {
-                            vv = qsa;
+                for (let a = 0; a < this.agents.length; a++) {
+                    let agent = this.agents[a];
+                    if (typeof agent.brain.V !== 'undefined') {
+                        vv = agent.brain.V[s];
+                    } else if (typeof agent.brain.Q !== 'undefined') {
+                        var poss = this.allowedActions(s);
+                        vv = -1;
+                        for (var i = 0, n = poss.length; i < n; i++) {
+                            var qsa = agent.brain.Q[poss[i] * this.grid.cells.length + s];
+                            if (i === 0 || qsa > vv) {
+                                vv = qsa;
+                            }
                         }
                     }
-                }
 
-                var ms = 10000;
-                if (vv > 0) {
-                    g = 255;
-                    rd = 255 - (vv * ms);
-                    b = 255 - (vv * ms);
-                }
-                if (vv < 0) {
-                    g = 255 + (vv * ms);
-                    rd = 255;
-                    b = 255 + (vv * ms);
-                }
-
-                let cell = this.grid.cells[s];
-                cell.color = Utility.rgbToHex(rd, g, b);
-
-                // Write the reward value text
-                cell.reward = this.Rarr[s];
-
-                // Write the value text
-                cell.value = vv;
-
-                cell.draw();
-
-                // update policy arrows
-                for (var a = 0; a < 6; a++) {
-                    var prob = this.agents[0].brain.P[a * this.grid.cells.length + s],
-                        nx = 0,
-                        ny = 0,
-                        actions = this.Aarr[s],
-                        avail = actions[a];
-                    if (avail === null || prob < 0.01) {
-                        // Hide the arrow
-                    } else {
-                        // Show the arrow
+                    var ms = 10000;
+                    if (vv > 0) {
+                        g = 255;
+                        rd = 255 - (vv * ms);
+                        b = 255 - (vv * ms);
+                    }
+                    if (vv < 0) {
+                        g = 255 + (vv * ms);
+                        rd = 255;
+                        b = 255 + (vv * ms);
                     }
 
-                    // The length of the arrow based on experience
-                    var ss = this.grid.cellSize / 2 * (prob * 0.9);
+                    let cell = this.grid.cells[s];
+                    cell.color = Utility.rgbToHex(rd, g, b);
 
-                    switch (a) {
-                        case 0: // Left
-                            nx = -ss;
-                            ny = 0;
-                            break;
-                        case 1: // Down
-                            nx = 0;
-                            ny = ss;
-                            break;
-                        case 2: // Up
-                            nx = 0;
-                            ny = -ss;
-                            break;
-                        case 3: // Right
-                            nx = ss;
-                            ny = 0;
-                            break;
+                    // Write the reward value text
+                    cell.reward = this.Rarr[s];
+
+                    // Write the value text
+                    cell.value = vv;
+
+                    cell.draw();
+
+                    // update policy arrows
+                    for (var z = 0; z < 6; z++) {
+                        var prob = agent.brain.P[z * this.grid.cells.length + s],
+                            nx = 0,
+                            ny = 0,
+                            actions = this.Aarr[s],
+                            avail = actions[z];
+                        if (avail === null || prob < 0.01) {
+                            // Hide the arrow
+                        } else {
+                            // Show the arrow
+                        }
+
+                        // The length of the arrow based on experience
+                        var ss = this.grid.cellSize / 2 * (prob * 0.9);
+
+                        switch (z) {
+                            case 0: // Left
+                                nx = -ss;
+                                ny = 0;
+                                break;
+                            case 1: // Down
+                                nx = 0;
+                                ny = ss;
+                                break;
+                            case 2: // Up
+                                nx = 0;
+                                ny = -ss;
+                                break;
+                            case 3: // Right
+                                nx = ss;
+                                ny = 0;
+                                break;
+                        }
+                        //     // Draw the arrow using below as guide
+                        //     pa.attr('x1', xcoord + (this.grid.cellSize / 2))
+                        //         .attr('y1', ycoord + (this.grid.cellSize / 2))
+                        //         .attr('x2', xcoord + (this.grid.cellSize / 2) + nx)
+                        //         .attr('y2', ycoord + (this.grid.cellSize / 2) + ny);
                     }
-                    //     // Draw the arrow using below as guide
-                    //     pa.attr('x1', xcoord + (this.grid.cellSize / 2))
-                    //         .attr('y1', ycoord + (this.grid.cellSize / 2))
-                    //         .attr('x2', xcoord + (this.grid.cellSize / 2) + nx)
-                    //         .attr('y2', ycoord + (this.grid.cellSize / 2) + ny);
                 }
             }
             this.renderer.render(this.stage);
@@ -371,7 +680,7 @@
                         fill: true
                     },
                     color: a,
-                    label: this.agents[a].name
+                    label: this.agents[a].id.substring(0, 10)
                 };
             }
 
@@ -408,6 +717,28 @@
             }, 100);
         }
 
+        loadTheme(guiObj, theme) {
+            PIXI.utils.textureCache = {};
+            PIXI.utils.baseTextureCache = {};
+            if (this.guiContainer !== undefined) {
+                this.stage.removeChildAt(this.stage.getChildIndex(this.guiContainer));
+                this.guiContainer = undefined;
+            }
+
+            return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
+                this.guiContainer = EZGUI.create(guiObj, theme);
+                this.pause = true;
+                EZGUI.components.btnSave.on('click', (event) => {
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                EZGUI.components.btnCancel.on('click', (event) => {
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                this.stage.addChild(this.guiContainer);
+            });
+        }
     }
 
     /**

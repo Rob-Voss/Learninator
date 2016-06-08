@@ -14,19 +14,21 @@
          * @param {Agent} agent
          * @returns {Eye}
          */
-        constructor(angle, agent) {//position = new Vec(0, 0), range = 85, proximity = 85) {
+        constructor(angle, agent) {
             this.angle = angle;
+            this.agentAngle = agent.angle;
+            this.agentRadius = agent.radius;
             this.position = agent.position;
             this.proximity = agent.proximity;
             this.range = agent.range;
-            this.shape = new PIXI.Graphics();
+            this.graphics = new PIXI.Graphics();
             this.v1 = new Vec(
-                agent.position.x + agent.radius * Math.sin(agent.position.angle + angle),
-                agent.position.y + agent.radius * Math.cos(agent.position.angle + angle)
+                this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),
+                this.position.y + this.agentRadius * Math.cos(this.agentAngle + this.angle)
             );
             this.v2 = new Vec(
-                this.v1.x + agent.range * Math.sin(agent.position.angle + angle),
-                this.v1.y + agent.range * Math.cos(agent.position.angle + angle)
+                this.v1.x + this.range * Math.sin(this.agentAngle + this.angle),
+                this.v1.y + this.range * Math.cos(this.agentAngle + this.angle)
             );
             this.sensed = {
                 type: -1,
@@ -42,49 +44,49 @@
         /**
          * Draw the lines for the eyes
          */
-        draw(agent) {
-            let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.position.angle + this.angle),
-                eyeStartY = agent.position.y + agent.radius * Math.cos(agent.position.angle + this.angle),
-                eyeEndX = eyeStartX + this.sensed.proximity * Math.sin(agent.position.angle + this.angle),
-                eyeEndY = eyeStartY + this.sensed.proximity * Math.cos(agent.position.angle + this.angle);
+        draw() {
+            let eyeStartX = this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),
+                eyeStartY = this.position.y + this.agentRadius * Math.cos(this.agentAngle + this.angle),
+                eyeEndX = eyeStartX + this.sensed.proximity * Math.sin(this.agentAngle + this.angle),
+                eyeEndY = eyeStartY + this.sensed.proximity * Math.cos(this.agentAngle + this.angle);
 
             this.v1 = new Vec(eyeStartX, eyeStartY);
             this.v2 = new Vec(eyeEndX, eyeEndY);
-            this.shape.clear();
-            this.shape.moveTo(eyeStartX, eyeStartY);
+            this.graphics.clear();
+            this.graphics.moveTo(eyeStartX, eyeStartY);
             switch (this.sensed.type) {
                 case 1:
                     // It is noms
-                    this.shape.lineStyle(0.5, 0xFF0000, 1);
+                    this.graphics.lineStyle(1, 0xFF0000, 1);
                     break;
                 case 2:
                     // It is gnar gnar
-                    this.shape.lineStyle(0.5, 0x00FF00, 1);
+                    this.graphics.lineStyle(1, 0x00FF00, 1);
                     break;
                 case 3:
                 case 4:
                 case 5:
                     // Is it another Agent
-                    this.shape.lineStyle(0.5, 0x0000FF, 1);
+                    this.graphics.lineStyle(1, 0x0000FF, 1);
                     break;
                 default:
                     // Is it wall or nothing?
-                    this.shape.lineStyle(0.5, 0x000000, 1);
+                    this.graphics.lineStyle(1, 0x000000, 1);
                     break;
             }
-            this.shape.lineTo(eyeEndX, eyeEndY);
-            this.shape.endFill();
+            this.graphics.lineTo(eyeEndX, eyeEndY);
+            this.graphics.endFill();
         }
 
         /**
          * Sense the surroundings
          * @param {Agent} agent
          */
-        sense(agent) {
-            let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.position.angle + this.angle),
-                eyeStartY = agent.position.y + agent.radius * Math.cos(agent.position.angle + this.angle),
-                eyeEndX = eyeStartX + this.range * Math.sin(agent.position.angle + this.angle),
-                eyeEndY = eyeStartY + this.range * Math.cos(agent.position.angle + this.angle);
+        sense() {
+            let eyeStartX = this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),
+                eyeStartY = this.position.y + this.agentRadius * Math.cos(this.agentAngle + this.angle),
+                eyeEndX = eyeStartX + this.range * Math.sin(this.agentAngle + this.angle),
+                eyeEndY = eyeStartY + this.range * Math.cos(this.agentAngle + this.angle);
             this.v1 = new Vec(eyeStartX, eyeStartY);
             this.v2 = new Vec(eyeEndX, eyeEndY);
 

@@ -15,6 +15,7 @@
     "line": {
       "default": ""
     },
+    "scale": 0.5,
     "corner": {
       "default": ""
     },
@@ -99,7 +100,7 @@
       "default": ""
     },
     "bg": {
-      "default": "glassPanel_projection.png"
+      "default": ""
     },
     "bgPadding": 15,
     "padding": 5,
@@ -159,7 +160,7 @@
   },
   "GlassInput": {
     "bg": {
-      "default": "barVertical_shadow_mid.png"
+      "default": "glassPanel_bg.png"
     },
     "padding": 5,
     "corner": {
@@ -175,7 +176,7 @@
   },
   "GlassCheckbox": {
     "bg": {
-      "default": "barVertical_shadow_mid.png"
+      "default": "glassPanel_bg.png"
     },
     "corner": {
       "default": "buttonGlass_corner.png"
@@ -207,12 +208,29 @@
       "color": "white"
     }
   },
+  "GlassCheckbox": {
+    "image": {
+      "default": "glassPanel_bg.png"
+    },
+    "corner": {
+      "default": "glassButton_corner.png"
+    },
+    "line": {
+      "default": "glassButton_line.png"
+    },
+    "checkmark": "squareGreen.png",
+    "padding": 5,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
   "ShadowRoundWindow": {
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 12,
-    "padding": 10,
+    "bgPadding": 5,
+    "padding": 5,
     "corner": {
       "default": "dotShadow_corner.png"
     },
@@ -224,8 +242,8 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 5,
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "corner": {
       "default": "buttonShadow_corner.png"
     },
@@ -237,7 +255,7 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 5,
+    "bgPadding": 0,
     "padding": 5,
     "corner": {
       "default": "buttonShadow_corner.png"
@@ -250,8 +268,8 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 5,
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "corner": {
       "default": "buttonShadow_corner.png"
     },
@@ -263,7 +281,8 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "corner": {
       "default": ""
     },
@@ -271,13 +290,17 @@
       "default": ""
     },
     "font": {
-      "size": "10px",
+      "size": "12px",
       "color": "white"
     }
   },
   "ShadowButton": {
     "bg": {
-      "default": "barVertical_shadow_mid.png"
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
     },
     "corner": {
       "default": "buttonShadow_corner.png"
@@ -292,9 +315,14 @@
   },
   "ShadowInput": {
     "bg": {
-      "default": ""
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
     },
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "corner": {
       "default": "buttonShadow_corner.png"
     },
@@ -303,15 +331,26 @@
     },
     "font": {
       "size": "10px",
-      "color": "white"
+      "color": "black"
     }
   },
   "ShadowCheckbox": {
-    "image": {
-      "default": "squareShadow.png"
+    "bg": {
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
+    },
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
     },
     "checkmark": "squareGreen.png",
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "font": {
       "size": "10px",
       "color": "white"
@@ -319,10 +358,15 @@
   },
   "ShadowRadio": {
     "image": {
-      "default": "dotShadow.png"
+      "default": "dotShadow.png",
+      "down": "dotShadow.png",
+      "up": "dotShadow.png",
+      "hover": "dotWhite.png",
+      "out": "dotShadow.png"
     },
     "checkmark": "dotGreen.png",
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "font": {
       "size": "10px",
       "color": "white"
@@ -343,7 +387,7 @@
   },
   "MetalLayout": {
     "bg": {
-      "default": "metalPanel_bg.png"
+      "default": "metalPanel_plate_bg.png"
     },
     "bgPadding": 5,
     "padding": 5,
@@ -354,17 +398,93 @@
       "default": "metalPanel_line_t.png"
     }
   },
-  "MetalList": {
+  "MetalPlateLayout": {
     "bg": {
-      "default": "metalPanel_bg.png"
+      "default": "metalPanel_plate_bg.png"
     },
     "bgPadding": 5,
     "padding": 5,
     "corner": {
-      "default": "metalPanel_corner_tl.png"
+      "default": "metalPanel_plate_corner_tl.png"
     },
     "line": {
-      "default": "metalPanel_line_t.png"
+      "default": "metalPanel_plate_line_t.png"
+    }
+  },
+  "MetalList": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 5,
+    "padding": 5,
+    "corner": {
+      "default": "metalPanel_plate_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_plate_line_t.png"
+    }
+  },
+  "MetalButton": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "corner": {
+      "default": "metalPanel_plate_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_plate_line_t.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "black"
+    }
+  },
+  "MetalRadio": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "corner": {
+      "default": "metalPanel_plate_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_plate_line_t.png"
+    },
+    "checkmark": "dotGreen.png",
+    "font": {
+      "size": "10px",
+      "color": "black"
+    }
+  },
+  "MetalCheckbox": {
+    "bg": {
+      "default": "metalPanel_bg.png"
+    },
+    "corner": {
+      "default": "metalPanel_plate_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_plate_line_t.png"
+    },
+    "checkmark": "squareGreen.png",
+    "font": {
+      "size": "10px",
+      "color": "black"
+    }
+  },
+  "MetalInput": {
+    "bg": {
+      "default": "barHorizontal_white_mid.png"
+    },
+    "padding": 5,
+    "corner": {
+      "default": "metalPanel_plate_corner_tl.png"
+    },
+    "line": {
+      "default": "metalPanel_plate_line_t.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "black"
     }
   },
   "GreenMetalWindow": {

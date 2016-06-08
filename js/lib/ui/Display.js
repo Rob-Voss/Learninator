@@ -19,6 +19,7 @@
     var Display = function (pos, opts) {
         PIXI.Container.call(this);
         this.interactive = true;
+        this.layout = [];
 
         this.displayX = pos.x || 0;
         this.displayY = pos.y || 0;
@@ -27,9 +28,6 @@
         this.displayHeight = Utility.getOpt(opts, 'height', 100);
         this.displayRows = Utility.getOpt(opts, 'rows', 2);
         this.displayCols = Utility.getOpt(opts, 'cols', 1);
-        this.renderWidth = Utility.getOpt(opts.render, 'width', 200);
-        this.renderHeight = Utility.getOpt(opts.render, 'height', 200);
-
 
         // Background and border
         var margin = 4,
@@ -46,19 +44,25 @@
         this.titleText = new PIXI.Text(this.displayTitle, {font: "12px Arial", fill: "#FFFFFF", align: "left"});
         this.titleText.position.set(this.displayX + contentMargin, this.displayY + contentMargin);
         this.addChild(this.titleText);
-
-        for (var r = 0; r < this.displayRows; r++) {
-            for (var c = 0; c < this.displayCols; c++) {
-                let textObj = new PIXI.Text('R:' + r + ' C:' + c, {font: "10px Arial", fill: "#FFFFFF"}),
+        this.items = new PIXI.Container();
+        for (var y = 0; y < this.displayRows; y++) {
+            for (var x = 0; x < this.displayCols; x++) {
+                this.layout = [this.displayCols];
+                this.layout[x] = [this.displayRows];
+                let textObj = new PIXI.Text('R:' + y + 'C:' + x, {font: "10px Arial", fill: "#FF0000"}),
                     colW = (this.displayWidth / this.displayCols) / 2,
                     colH = (this.displayHeight / this.displayRows) / 2,
-                    x = margin + 6 + c * colW,
-                    y = margin + 6 + titleMargin + r * colH;
-                textObj.position.set(x, y);
-                this.addChild(textObj);
+                    ix = margin + 6 + x * colW,
+                    iy = margin + 6 + titleMargin + y * colH;
+                textObj.anchor = new PIXI.Point(0, 0);
+                textObj.position.set(ix, iy);
+                this.items.addChild(textObj);
+                this.layout[x][y] = textObj;
             }
         }
+        this.addChild(this.items);
 
+        return this;
     };
 
     Display.prototype = new PIXI.Container();

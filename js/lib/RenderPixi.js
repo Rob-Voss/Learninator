@@ -4,10 +4,8 @@
  *
  * @class RenderPixi
  */
-
-var RenderPixi = {};
-
-(function () {
+(function (global) {
+    "use strict";
 
     // Matter aliases
     var Engine = Matter.Engine,
@@ -30,170 +28,24 @@ var RenderPixi = {};
         Vector = Matter.Vector,
         Vertices = Matter.Vertices;
 
-    /**
-     * Description
-     * @method body
-     * @param {Matter.Engine} engine
-     * @param {Matter.Body} body
-     */
-    RenderPixi.body = function (engine, body) {
-        var render = engine.render,
-            bodyRender = body.render;
+    class RenderPixi {
 
-        if (!bodyRender.visible) {
-            return;
-        }
-        if (bodyRender.sprite && bodyRender.sprite.texture) {
-            var spriteId = 'b-' + body.id,
-                sprite = render.sprites[spriteId],
-                spriteContainer = render.spriteContainer;
-
-            // initialise body sprite if not existing
-            if (!sprite) {
-                sprite = render.sprites[spriteId] = _createBodySprite(render, body);
-            }
-            // add to scene graph if not already there
-            if (Common.indexOf(spriteContainer.children, sprite) === -1) {
-                spriteContainer.addChild(sprite);
-            }
-            // update body sprite
-            sprite.position.x = body.position.x;
-            sprite.position.y = body.position.y;
-            sprite.rotation = body.angle;
-            sprite.scale.x = bodyRender.sprite.xScale || 1;
-            sprite.scale.y = bodyRender.sprite.yScale || 1;
-        } else {
-            var primitiveId = 'b-' + body.id,
-                primitive = render.primitives[primitiveId],
-                container = render.container;
-
-            // initialise body primitive if not existing
-            if (!primitive) {
-                primitive = render.primitives[primitiveId] = _createBodyPrimitive(render, body);
-                primitive.initialAngle = body.angle;
-            }
-
-            // update body primitive
-            primitive.position.x = body.position.x;
-            primitive.position.y = body.position.y;
-            primitive.rotation = body.angle - primitive.initialAngle;
-
-            // add to scene graph if not already there
-            if (Common.indexOf(container.children, primitive) === -1) {
-                container.addChild(primitive);
-            }
-        }
-    };
-
-    /**
-     * Clears the scene graph
-     * @method clear
-     * @param {RenderPixi} render
-     */
-    RenderPixi.clear = function (render) {
-        var container = render.container,
-            spriteContainer = render.spriteContainer;
-
-        // clear stage container
-        while (container.children[0]) {
-            container.removeChild(container.children[0]);
-        }
-
-        // clear sprite batch
-        while (spriteContainer.children[0]) {
-            spriteContainer.removeChild(spriteContainer.children[0]);
-        }
-
-        var bgSprite = render.sprites['bg-0'];
-
-        // clear caches
-        render.textures = {};
-        render.sprites = {};
-        render.primitives = {};
-
-        // set background sprite
-        render.sprites['bg-0'] = bgSprite;
-        if (bgSprite) {
-            container.addChildAt(bgSprite, 0);
-        }
-        // add sprite batch back into container
-        render.container.addChild(render.spriteContainer);
-
-        // reset background state
-        render.currentBackground = null;
-
-        // reset bounds transforms
-        container.scale.set(1, 1);
-        container.position.set(0, 0);
-    };
-
-    /**
-     * Description
-     * @method constraint
-     * @param {Matter.Engine} engine
-     * @param {constraint} constraint
-     */
-    RenderPixi.constraint = function (engine, constraint) {
-        var render = engine.render,
-            bodyA = constraint.bodyA,
-            bodyB = constraint.bodyB,
-            pointA = constraint.pointA,
-            pointB = constraint.pointB,
-            container = render.container,
-            constraintRender = constraint.render,
-            primitiveId = 'c-' + constraint.id,
-            primitive = render.primitives[primitiveId];
-
-        // initialise constraint primitive if not existing
-        if (!primitive) {
-            primitive = render.primitives[primitiveId] = new PIXI.Graphics();
-        }
-        // don't render if constraint does not have two end points
-        if (!constraintRender.visible || !constraint.pointA || !constraint.pointB) {
-            primitive.clear();
-            return;
-        }
-
-        // add to scene graph if not already there
-        if (Common.indexOf(container.children, primitive) === -1) {
-            container.addChild(primitive);
-        }
-        // render the constraint on every update, since they can change dynamically
-        primitive.clear();
-        primitive.beginFill(0, 0);
-        primitive.lineStyle(constraintRender.lineWidth, Common.colorToNumber(constraintRender.strokeStyle), 1);
-
-        if (bodyA) {
-            primitive.moveTo(bodyA.position.x + pointA.x, bodyA.position.y + pointA.y);
-        } else {
-            primitive.moveTo(pointA.x, pointA.y);
-        }
-
-        if (bodyB) {
-            primitive.lineTo(bodyB.position.x + pointB.x, bodyB.position.y + pointB.y);
-        } else {
-            primitive.lineTo(pointB.x, pointB.y);
-        }
-
-        primitive.endFill();
-    };
-
-    /**
-     * Creates a new Pixi.js WebGL renderer
-     * @method create
-     * @param {object} options
-     * @return {RenderPixi} A new renderer
-     */
-    RenderPixi.create = function (options) {
-        var defaults = {
-            controller: RenderPixi,
-            element: null,
-            canvas: null,
-            renderer: null,
-            container: null,
-            spriteContainer: null,
-            pixiOptions: null,
-            options: {
+        /**
+         * Creates a new Pixi.js WebGL renderer
+         * @method create
+         * @param {object} options
+         * @return {RenderPixi} A new renderer
+         */
+        constructor(options) {
+            this.controller = RenderPixi;
+            this.engine = null;
+            this.element = null;
+            this.canvas = null;
+            this.renderer = null;
+            this.container = null;
+            this.spriteContainer = null;
+            this.pixiOptions = null;
+            this.options = {
                 width: 800,
                 height: 600,
                 background: '#fafafa',
@@ -212,223 +64,368 @@ var RenderPixi = {};
                 showAngleIndicator: false,
                 showIds: false,
                 showShadows: false
-            }
-        };
-
-        var render = Common.extend(defaults, options),
-            transparent = !render.options.wireframes && render.options.background === 'transparent';
-
-        // init pixi
-        render.pixiOptions = render.pixiOptions || {
-                view: render.canvas,
-                transparent: transparent,
-                antialias: true,
-                backgroundColor: options.background
             };
+            Common.extend(this, options);
 
-        render.renderer = render.renderer || new PIXI.autoDetectRenderer(render.options.width, render.options.height, render.pixiOptions);
-        render.container = render.container || new PIXI.Container();
-        render.spriteContainer = render.spriteContainer || new PIXI.Container();
-        render.canvas = render.canvas || render.renderer.view;
-        render.bounds = render.bounds || {
-                min: {
-                    x: 0,
-                    y: 0
-                },
-                max: {
-                    x: render.options.width,
-                    y: render.options.height
-                }
-            };
+            this.transparent = !this.options.wireframes && this.options.background === 'transparent';
+            this.pixiOptions = this.pixiOptions || {
+                    view: this.canvas,
+                    transparent: this.transparent,
+                    antialias: true,
+                    backgroundColor: this.options.background
+                };
 
-        // caches
-        render.textures = {};
-        render.sprites = {};
-        render.primitives = {};
+            this.renderer = this.renderer || new PIXI.autoDetectRenderer(this.options.width, this.options.height, this.pixiOptions);
+            this.container = this.container || new PIXI.Container();
+            this.spriteContainer = this.spriteContainer || new PIXI.Container();
+            this.canvas = this.canvas || this.renderer.view;
+            this.context = this.canvas || this.renderer.context;
+            this.bounds = this.bounds || {
+                    min: {
+                        x: 0,
+                        y: 0
+                    },
+                    max: {
+                        x: this.options.width,
+                        y: this.options.height
+                    }
+                };
 
-        // use a sprite batch for performance
-        render.container.addChild(render.spriteContainer);
+            // Caches
+            this.textures = {};
+            this.sprites = {};
+            this.primitives = {};
 
-        // insert canvas
-        if (Common.isElement(render.element)) {
-            render.element.appendChild(render.canvas);
-        } else {
-            Common.log('No "render.element" passed, "render.canvas" was not inserted into document.', 'warn');
-        }
+            this.container.addChild(this.spriteContainer);
 
-        // prevent menus on canvas
-        render.canvas.oncontextmenu = function () {
-            return false;
-        };
-        render.canvas.onselectstart = function () {
-            return false;
-        };
-
-        return render;
-    };
-
-    /**
-     * Sets the background of the canvas
-     * @method setBackground
-     * @param {RenderPixi} render
-     * @param {string} background
-     */
-    RenderPixi.setBackground = function (render, background) {
-        if (render.currentBackground !== background) {
-            var isColor = background.indexOf && background.indexOf('#') !== -1,
-                bgSprite = render.sprites['bg-0'];
-
-            if (isColor) {
-                // if solid background color
-                var color = Common.colorToNumber(background);
-                render.renderer.backgroundColor = color;
-
-                // remove background sprite if existing
-                if (bgSprite) {
-                    render.container.removeChild(bgSprite);
-                }
+            // Insert canvas
+            if (Common.isElement(this.element)) {
+                this.element.appendChild(this.canvas);
             } else {
-                // initialise background sprite if needed
-                if (!bgSprite) {
-                    var texture = _getTexture(render, background);
-
-                    bgSprite = render.sprites['bg-0'] = new PIXI.Sprite(texture);
-                    bgSprite.position.x = 0;
-                    bgSprite.position.y = 0;
-                    render.container.addChildAt(bgSprite, 0);
-                }
+                Common.log('No "render.element" passed, "render.canvas" was not inserted into document.', 'warn');
             }
 
-            render.currentBackground = background;
-        }
-    };
+            // Prevent menus on canvas
+            this.canvas.oncontextmenu = function () {
+                return false;
+            };
+            this.canvas.onselectstart = function () {
+                return false;
+            };
 
-    /**
-     * Description
-     * @method world
-     * @param {Matter.Engine} engine
-     */
-    RenderPixi.world = function (engine) {
-        var render = engine.render,
-            world = engine.world,
-            renderer = render.renderer,
-            container = render.container,
-            options = render.options,
-            allBodies = Composite.allBodies(world),
-            allConstraints = Composite.allConstraints(world),
-            constraints = [],
-            bodies = [],
-            i;
-
-        var event = {
-            timestamp: engine.timing.timestamp
-        };
-
-        if (options.wireframes) {
-            RenderPixi.setBackground(render, options.wireframeBackground);
-        } else {
-            RenderPixi.setBackground(render, options.background);
+            return this;
         }
 
-        Events.trigger(render, 'beforeRender', event);
+        /**
+         * Description
+         * @method body
+         * @param {Matter.Body} body
+         */
+        body(body) {
+            if (!body.render.visible) {
+                return;
+            }
+            if (body.render.sprite && body.render.sprite.texture) {
+                var spriteId = 'b-' + body.id,
+                    sprite = this.sprites[spriteId];
 
-        if (options.hasBounds) {
-            world.bounds = render.bounds;
-            // handle bounds
-            var boundsWidth = render.bounds.max.x - render.bounds.min.x,
-                boundsHeight = render.bounds.max.y - render.bounds.min.y,
-                boundsScaleX = boundsWidth / render.options.width,
-                boundsScaleY = boundsHeight / render.options.height;
+                // initialise body sprite if not existing
+                if (!sprite) {
+                    sprite = this.sprites[spriteId] = _createBodySprite(this, body);
+                }
+                // add to scene graph if not already there
+                if (Common.indexOf(this.spriteContainer.children, sprite) === -1) {
+                    this.spriteContainer.addChild(sprite);
+                }
+                // update body sprite
+                sprite.position.x = body.position.x;
+                sprite.position.y = body.position.y;
+                sprite.rotation = body.angle;
+                sprite.scale.x = body.render.sprite.xScale || 1;
+                sprite.scale.y = body.render.sprite.yScale || 1;
+            } else {
+                var primitiveId = 'b-' + body.id,
+                    primitive = this.primitives[primitiveId];
 
-            // filter out bodies that are not in view
-            for (i = 0; i < allBodies.length; i++) {
-                var body = allBodies[i],
-                    over = Bounds.overlaps(body.bounds, render.bounds);
-                body.render.sprite.visible = over;
-                if (over) {
-                    bodies.push(body);
+                // initialise body primitive if not existing
+                if (!primitive) {
+                    primitive = this.primitives[primitiveId] = _createBodyPrimitive(this, body);
+                    primitive.initialAngle = body.angle;
+                }
+
+                // update body primitive
+                primitive.position.x = body.position.x;
+                primitive.position.y = body.position.y;
+                primitive.rotation = body.angle - primitive.initialAngle;
+
+                if (body.label === 'Agent') {
+                    for (let i = 0; i < body.entity.eyes.length; i++) {
+                        body.entity.eyes[i].draw();
+                        if (Common.indexOf(primitive.children, body.entity.eyes[i].graphics) === -1) {
+                            primitive.addChild(body.entity.eyes[i].graphics);
+                        }
+                    }
+                }
+                // add to scene graph if not already there
+                if (Common.indexOf(this.container.children, primitive) === -1) {
+                    this.container.addChild(primitive);
                 }
             }
+        }
 
-            // filter out constraints that are not in view
-            for (i = 0; i < allConstraints.length; i++) {
-                var constraint = allConstraints[i],
-                    bodyA = constraint.bodyA,
-                    bodyB = constraint.bodyB,
-                    pointAWorld = constraint.pointA,
-                    pointBWorld = constraint.pointB;
-
-                if (bodyA) {
-                    pointAWorld = Vector.add(bodyA.position, constraint.pointA);
-                }
-                if (bodyB) {
-                    pointBWorld = Vector.add(bodyB.position, constraint.pointB);
-                }
-
-                if (!pointAWorld || !pointBWorld) {
-                    continue;
-                }
-                if (Bounds.contains(render.bounds, pointAWorld) || Bounds.contains(render.bounds, pointBWorld)) {
-                    constraints.push(constraint);
-                }
+        /**
+         * Clears the scene graph
+         * @method clear
+         */
+        clear() {
+            // Clear stage container
+            while (this.container.children[0]) {
+                this.container.removeChild(this.container.children[0]);
             }
 
-            // transform the view
-            container.scale.set(1 / boundsScaleX, 1 / boundsScaleY);
-            container.position.set(-render.bounds.min.x * (1 / boundsScaleX), -render.bounds.min.y * (1 / boundsScaleY));
-        } else {
-            constraints = allConstraints;
+            // Clear sprite batch
+            while (this.spriteContainer.children[0]) {
+                this.spriteContainer.removeChild(this.spriteContainer.children[0]);
+            }
+
+            var bgSprite = this.sprites['bg-0'];
+
+            // Clear caches
+            this.textures = {};
+            this.sprites = {};
+            this.primitives = {};
+
+            // Set background sprite
+            this.sprites['bg-0'] = bgSprite;
+            if (bgSprite) {
+                this.container.addChildAt(bgSprite, 0);
+            }
+            // Add sprite batch back into container
+            this.container.addChild(this.spriteContainer);
+
+            // Reset background state
+            this.currentBackground = null;
+
+            // Reset bounds transforms
+            this.container.scale.set(1, 1);
+            this.container.position.set(0, 0);
         }
 
-        for (i = 0; i < bodies.length; i++) {
-            RenderPixi.body(engine, bodies[i]);
-        }
-        for (i = 0; i < constraints.length; i++) {
-            RenderPixi.constraint(engine, constraints[i]);
+        /**
+         * Description
+         * @method constraint
+         * @param {constraint} constraint
+         */
+        constraint(constraint) {
+            var bodyA = constraint.bodyA,
+                bodyB = constraint.bodyB,
+                pointA = constraint.pointA,
+                pointB = constraint.pointB,
+                constraintRender = constraint.render,
+                primitiveId = 'c-' + constraint.id,
+                primitive = this.primitives[primitiveId];
+
+            // initialise constraint primitive if not existing
+            if (!primitive) {
+                primitive = this.primitives[primitiveId] = new PIXI.Graphics();
+            }
+            // don't render if constraint does not have two end points
+            if (!constraintRender.visible || !constraint.pointA || !constraint.pointB) {
+                primitive.clear();
+                return;
+            }
+
+            // add to scene graph if not already there
+            if (Common.indexOf(this.container.children, primitive) === -1) {
+                this.container.addChild(primitive);
+            }
+            // render the constraint on every update, since they can change dynamically
+            primitive.clear();
+            primitive.beginFill(0, 0);
+            primitive.lineStyle(constraintRender.lineWidth, Common.colorToNumber(constraintRender.strokeStyle), 1);
+
+            if (bodyA) {
+                primitive.moveTo(bodyA.position.x + pointA.x, bodyA.position.y + pointA.y);
+            } else {
+                primitive.moveTo(pointA.x, pointA.y);
+            }
+
+            if (bodyB) {
+                primitive.lineTo(bodyB.position.x + pointB.x, bodyB.position.y + pointB.y);
+            } else {
+                primitive.lineTo(pointB.x, pointB.y);
+            }
+
+            primitive.endFill();
         }
 
-        if (options.showBounds) {
-            RenderPixi.bodyBounds(engine, bodies, renderer.context);
-        }
-        if (options.showAxes || options.showAngleIndicator) {
-            RenderPixi.bodyAxes(engine, bodies, renderer.context);
-        }
-        if (options.showPositions) {
-            RenderPixi.bodyPositions(engine, bodies, renderer.context);
-        }
-        if (options.showVelocity) {
-            RenderPixi.bodyVelocity(engine, bodies, renderer.context);
-        }
-        if (options.showIds) {
-            RenderPixi.bodyIds(engine, bodies, renderer.context);
-        }
-        if (options.showSeparations) {
-            RenderPixi.separations(engine, engine.pairs.list, renderer.context);
-        }
-        if (options.showCollisions) {
-            RenderPixi.collisions(engine, engine.pairs.list, renderer.context);
-        }
-        if (options.showVertexNumbers) {
-            RenderPixi.vertexNumbers(engine, bodies, renderer.context);
-        }
-        if (options.showMousePosition) {
-            RenderPixi.mousePosition(engine, render.mouse, renderer.context);
-        }
-        if (options.showBroadphase && engine.broadphase.controller === Grid) {
-            RenderPixi.grid(engine, engine.broadphase, renderer.context);
-        }
-        if (options.showDebug) {
-            RenderPixi.debug(engine, renderer.context);
-        }
-        if (options.hasBounds) {
-            // revert view transforms
-            renderer.context.setTransform(options.pixelRatio, 0, 0, options.pixelRatio, 0, 0);
+        /**
+         * Continuously updates the render canvas on the `requestAnimationFrame` event.
+         * @method run
+         */
+        run() {
+            var _this = this;
+            (function loop(time) {
+                _this.frameRequestId = requestAnimationFrame(loop);
+                _this.world();
+            })();
         }
 
-        renderer.render(container);
+        /**
+         * Sets the background of the canvas
+         * @method setBackground
+         * @param {string} background
+         */
+        setBackground(background) {
+            if (this.currentBackground !== background) {
+                var isColor = background.indexOf && background.indexOf('#') !== -1,
+                    bgSprite = this.sprites['bg-0'];
 
-        Events.trigger(render, 'afterRender', event);
-    };
+                if (isColor) {
+                    // if solid background color
+                    var color = Common.colorToNumber(background);
+                    this.renderer.backgroundColor = color;
+
+                    // remove background sprite if existing
+                    if (bgSprite) {
+                        this.container.removeChild(bgSprite);
+                    }
+                } else {
+                    // initialise background sprite if needed
+                    if (!bgSprite) {
+                        var texture = _getTexture(this, background);
+
+                        bgSprite = this.sprites['bg-0'] = new PIXI.Sprite(texture);
+                        bgSprite.position.x = 0;
+                        bgSprite.position.y = 0;
+                        this.container.addChildAt(bgSprite, 0);
+                    }
+                }
+
+                this.currentBackground = background;
+            }
+        }
+
+        /**
+         * Description
+         * @method world
+         */
+        world() {
+            var allBodies = Composite.allBodies(this.engine.world),
+                allConstraints = Composite.allConstraints(this.engine.world),
+                constraints = [],
+                bodies = [],
+                event = {
+                    timestamp: this.engine.timing.timestamp
+                };
+
+            if (this.options.wireframes) {
+                this.setBackground(this.options.wireframeBackground);
+            } else {
+                this.setBackground(this.options.background);
+            }
+
+            Events.trigger(this, 'beforeRender', event);
+
+            if (this.options.hasBounds) {
+                this.engine.world.bounds = this.bounds;
+                // Handle bounds
+                var boundsWidth = this.bounds.max.x - this.bounds.min.x,
+                    boundsHeight = this.bounds.max.y - this.bounds.min.y,
+                    boundsScaleX = boundsWidth / this.options.width,
+                    boundsScaleY = boundsHeight / this.options.height;
+
+                // Hide bodies that are not in view
+                for (let i = 0; i < allBodies.length; i++) {
+                    var body = allBodies[i],
+                        over = Bounds.overlaps(body.bounds, this.bounds);
+                    body.render.sprite.visible = over;
+                    if (over) {
+                        bodies.push(body);
+                    }
+                }
+
+                // Hide constraints that are not in view
+                for (let i = 0; i < allConstraints.length; i++) {
+                    var constraint = allConstraints[i],
+                        bodyA = constraint.bodyA,
+                        bodyB = constraint.bodyB,
+                        pointAWorld = constraint.pointA,
+                        pointBWorld = constraint.pointB;
+
+                    if (bodyA) {
+                        pointAWorld = Vector.add(bodyA.position, constraint.pointA);
+                    }
+                    if (bodyB) {
+                        pointBWorld = Vector.add(bodyB.position, constraint.pointB);
+                    }
+
+                    if (!pointAWorld || !pointBWorld) {
+                        continue;
+                    }
+                    if (Bounds.contains(this.bounds, pointAWorld) || Bounds.contains(this.bounds, pointBWorld)) {
+                        constraints.push(constraint);
+                    }
+                }
+
+                // transform the view
+                this.container.scale.set(1 / boundsScaleX, 1 / boundsScaleY);
+                this.container.position.set(-this.bounds.min.x * (1 / boundsScaleX), -this.bounds.min.y * (1 / boundsScaleY));
+            } else {
+                constraints = allConstraints;
+            }
+
+            for (let i = 0; i < bodies.length; i++) {
+                this.body(bodies[i]);
+            }
+
+            for (let i = 0; i < constraints.length; i++) {
+                this.constraint(constraints[i]);
+            }
+
+            if (this.options.showBounds) {
+                this.bodyBounds(bodies);
+            }
+            if (this.options.showAxes || this.options.showAngleIndicator) {
+                this.bodyAxes(bodies);
+            }
+            if (this.options.showPositions) {
+                this.bodyPositions(bodies);
+            }
+            if (this.options.showVelocity) {
+                this.bodyVelocity(bodies);
+            }
+            if (this.options.showIds) {
+                this.bodyIds(bodies);
+            }
+            if (this.options.showSeparations) {
+                this.separations(this.engine.pairs.list);
+            }
+            if (this.options.showCollisions) {
+                this.collisions(this.engine.pairs.list);
+            }
+            if (this.options.showVertexNumbers) {
+                this.vertexNumbers(bodies);
+            }
+            if (this.options.showMousePosition) {
+                this.mousePosition(this.mouse);
+            }
+            if (this.options.showBroadphase && this.broadphase.controller === Grid) {
+                this.grid(this.broadphase);
+            }
+            if (this.options.showDebug) {
+                this.debug();
+            }
+            if (this.options.hasBounds) {
+                // revert view transforms
+                this.renderer.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
+            }
+
+            this.renderer.render(this.container);
+
+            Events.trigger(this, 'afterRender', event);
+        }
+    }
 
     /**
      * Creates a body sprite
@@ -493,24 +490,23 @@ var RenderPixi = {};
             // angle indicator
             if (options.showAngleIndicator || options.showAxes) {
                 primitive.beginFill(0, 0);
-
                 if (options.wireframes) {
                     primitive.lineStyle(1, strokeStyleWireframeIndicator, 1);
                 } else {
                     primitive.lineStyle(1, strokeStyleIndicator);
                 }
-
                 primitive.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
                 primitive.lineTo(((part.vertices[0].x + part.vertices[part.vertices.length - 1].x) / 2 - body.position.x),
                     ((part.vertices[0].y + part.vertices[part.vertices.length - 1].y) / 2 - body.position.y));
-
                 primitive.endFill();
             }
         }
 
         if (body.label === 'Agent') {
-            for (let i = 0; i < body.entity.numEyes; i++) {
-                primitive.addChild(body.entity.eyes[i].shape);
+            for (let i = 0; i < body.entity.eyes.length; i++) {
+                let eye = body.entity.eyes[i];
+                eye.draw();
+                primitive.addChild(eye.graphics);
             }
         }
 
@@ -541,7 +537,7 @@ var RenderPixi = {};
      * @param {HTMLElement} canvas
      * @return {Number} pixel ratio
      */
-    var _getPixelRatio = function(canvas) {
+    var _getPixelRatio = function (canvas) {
         var context = canvas.getContext('2d'),
             devicePixelRatio = window.devicePixelRatio || 1,
             backingStorePixelRatio = context.webkitBackingStorePixelRatio || context.mozBackingStorePixelRatio
@@ -550,5 +546,6 @@ var RenderPixi = {};
 
         return devicePixelRatio / backingStorePixelRatio;
     };
+    global.RenderPixi = RenderPixi;
 
-}).call(this);
+}(this));

@@ -1,8 +1,3 @@
-var Matter = Matter || {},
-    Utility = Utility || {},
-    PhysicalAgent = PhysicalAgent || {},
-    PhysicalEntity = PhysicalEntity || {};
-
 (function (global) {
     "use strict";
 
@@ -11,12 +6,12 @@ var Matter = Matter || {},
         World = Matter.World,
         Bodies = Matter.Bodies,
         Body = Matter.Body,
+        Bounds = Matter.Bounds,
         Common = Matter.Common,
         Composite = Matter.Composite,
         Events = Matter.Events,
         MouseConstraint = Matter.MouseConstraint,
         Mouse = Matter.Mouse,
-        Render = Matter.Render,
         Vector = Matter.Vector,
 
     // Canvas
@@ -42,7 +37,20 @@ var Matter = Matter || {},
             positionIterations: 10,
             velocityIterations: 10,
             metrics: {
-                extended: true
+                extended: true,
+                narrowDetections: 0,
+                narrowphaseTests: 0,
+                narrowReuse: 0,
+                narrowReuseCount: 0,
+                midphaseTests: 0,
+                broadphaseTests: 0,
+                narrowEff: 0.0001,
+                midEff: 0.0001,
+                broadEff: 0.0001,
+                collisions: 0,
+                buckets: 0,
+                bodies: 0,
+                pairs: 0
             },
             timing: {
                 timeScale: 1
@@ -50,7 +58,6 @@ var Matter = Matter || {},
         },
         renderOpts = {
             element: container,
-            // controller: RenderPixi,
             options: {
                 background: '#585858',
                 pixelRatio: 1,
@@ -66,6 +73,7 @@ var Matter = Matter || {},
                 showDebug: false,
                 showIds: false,
                 showInternalEdges: false,
+                showMousePosition: false,
                 showPositions: false,
                 showShadows: false,
                 showSeparations: false,
@@ -103,14 +111,16 @@ var Matter = Matter || {},
             this.width = renderOpts.options.width = width;
             this.height = renderOpts.options.height = height;
             this.engine = renderOpts.engine = Engine.create(engineOpts);
-            this.render = Render.create(renderOpts);
+            this.render = new RenderPixi(renderOpts);
+            // this.render = new Renderer(renderOpts);
             this.runner = Engine.run(this.engine);
             this.engine.world.gravity = {x: 0, y: 0};
             this.mouseConstraint = MouseConstraint.create(this.engine, {
                 element: this.render.canvas
             });
             this.render.mouse = this.mouseConstraint.mouse;
-            Render.run(this.render);
+            this.render.run();
+            this.engine.metrics.timing = this.runner;
 
             this.addWalls();
             this.addAgents();
@@ -120,15 +130,113 @@ var Matter = Matter || {},
             this.setWorldEvents();
 
             this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
-            // World.add(this.engine.world, this.mouseConstraint);
             if (useTools) {
                 this.useInspector = useInspector;
                 this.isMobile = isMobile;
+                this.guiOptions = {
+                    broadphase: 'grid',
+                    amount: 1,
+                    size: 40,
+                    sides: 4,
+                    density: 0.001,
+                    restitution: 0,
+                    friction: 0.1,
+                    frictionStatic: 0.5,
+                    frictionAir: 0.01,
+                    offset: { x: 0, y: 0 },
+                    renderer: 'canvas',
+                    chamfer: 0,
+                    isRecording: false
+                };
                 // create a Matter.Gui
-                this.gui = Gui.create(this);
+                this.gui = Gui.create(this.engine, this.runner, this.render, this.guiOptions);
                 this.initControls();
-                Gui.update(this.gui);
+                Gui.update(this.gui, this.gui.datGui);
             }
+        }
+
+        setViewport(x, y) {
+            this.viewportCenter = {
+                x: this.width * 0.5,
+                y: this.height * 0.5
+            };
+
+            // make the world bounds a little bigger than the render bounds
+            this.engine.world.bounds.min.x = -x;
+            this.engine.world.bounds.min.y = -y;
+            this.engine.world.bounds.max.x = this.width + x;
+            this.engine.world.bounds.max.y = this.height + y;
+
+            // keep track of current bounds scale (view zoom)
+            this.boundsScaleTarget = 1;
+            this.boundsScale = {x: 1, y: 1};
+
+            // use the engine tick event to control our view
+            Events.on(this.engine, 'beforeTick', () => {
+                // mouse wheel controls zoom
+                var scaleFactor = this.render.mouse.wheelDelta * -0.1;
+                if (scaleFactor !== 0) {
+                    if ((scaleFactor < 0 && this.boundsScale.x >= 0.6) || (scaleFactor > 0 && this.boundsScale.x <= 1.4)) {
+                        this.boundsScaleTarget += scaleFactor;
+                    }
+                }
+
+                // if scale has changed
+                if (Math.abs(this.boundsScale.x - this.boundsScaleTarget) > 0.01) {
+                    // smoothly tween scale factor
+                    scaleFactor = (this.boundsScaleTarget - this.boundsScale.x) * 0.2;
+                    this.boundsScale.x += scaleFactor;
+                    this.boundsScale.y += scaleFactor;
+
+                    // scale the render bounds
+                    this.render.bounds.max.x = this.render.bounds.min.x + this.render.options.width * this.boundsScale.x;
+                    this.render.bounds.max.y = this.render.bounds.min.y + this.render.options.height * this.boundsScale.y;
+
+                    // translate so zoom is from centre of view
+                    this.translate = {
+                        x: this.render.options.width * scaleFactor * -0.5,
+                        y: this.render.options.height * scaleFactor * -0.5
+                    };
+
+                    Bounds.translate(this.render.bounds, this.translate);
+
+                    // update mouse
+                    Mouse.setScale(this.render.mouse, this.boundsScale);
+                    Mouse.setOffset(this.render.mouse, this.render.bounds.min);
+                }
+
+                // get vector from mouse relative to centre of viewport
+                var deltaCenter = Vector.sub(this.render.mouse.absolute, this.viewportCenter),
+                    centerDist = Vector.magnitude(deltaCenter);
+
+                // translate the view if mouse has moved over 50px from the center of viewport
+                if (centerDist > 50) {
+                    // create a vector to translate the view, allowing the user to control view speed
+                    var direction = Vector.normalise(deltaCenter),
+                        speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
+
+                    this.translate = Vector.mult(direction, speed);
+
+                    // prevent the view moving outside the world bounds
+                    if (this.render.bounds.min.x + this.translate.x < this.engine.world.bounds.min.x)
+                        this.translate.x = this.engine.world.bounds.min.x - this.render.bounds.min.x;
+
+                    if (this.render.bounds.max.x + this.translate.x > this.engine.world.bounds.max.x)
+                        this.translate.x = this.engine.world.bounds.max.x - this.render.bounds.max.x;
+
+                    if (this.render.bounds.min.y + this.translate.y < this.engine.world.bounds.min.y)
+                        this.translate.y = this.engine.world.bounds.min.y - this.render.bounds.min.y;
+
+                    if (this.render.bounds.max.y + this.translate.y > this.engine.world.bounds.max.y)
+                        this.translate.y = this.engine.world.bounds.max.y - this.render.bounds.max.y;
+
+                    // move the view
+                    Bounds.translate(this.render.bounds, this.translate);
+
+                    // we must update the mouse too
+                    Mouse.setOffset(this.render.mouse, this.render.bounds.min);
+                }
+            });
         }
 
         /**
@@ -199,8 +307,8 @@ var Matter = Matter || {},
                     type = Utility.Maths.randi(1, 3);
                 if (type === 1) {
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(redColor, -20),
-                        fillStyle: Common.shadeColor(redColor, -20)
+                        strokeStyle: Common.shadeColor(greenColor, -20),
+                        fillStyle: Common.shadeColor(greenColor, -20)
                     };
                     body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
                 } else {
@@ -208,8 +316,8 @@ var Matter = Matter || {},
                         radius: 30
                     };
                     entityOpt.render = {
-                        strokeStyle: Common.shadeColor(greenColor, -20),
-                        fillStyle: Common.shadeColor(greenColor, -20)
+                        strokeStyle: Common.shadeColor(redColor, -20),
+                        fillStyle: Common.shadeColor(redColor, -20)
                     };
                     body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
                 }
@@ -462,9 +570,8 @@ var Matter = Matter || {},
             Events.on(this.runner, 'beforeUpdate', (event) => {
                 let bodies = Composite.allBodies(this.engine.world);
                 for (let i = 0; i < bodies.length; i++) {
-                    let body = bodies[i];
-                    if (!body.isStatic) {
-                        this.checkBounds(body);
+                    if (!bodies[i].isStatic) {
+                        this.checkBounds(bodies[i]);
                     }
                 }
             });
@@ -478,9 +585,9 @@ var Matter = Matter || {},
             });
 
             Events.on(this.render, 'afterRender', (event) => {
-                for (let i = 0; i < this.agents.length; i++) {
-                    this.agents[i].draw(this.render.context);
-                }
+                // for (let i = 0; i < this.agents.length; i++) {
+                //     this.agents[i].draw(this.render.context);
+                // }
             });
 
             Events.on(this.runner, 'afterTick', (event) => {

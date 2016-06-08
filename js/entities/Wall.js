@@ -25,13 +25,27 @@
             this.len = this.v1.distanceTo(this.v2);
             this.angle = this.v1.angleBetween(this.v2);
             this.rotation = this.angle * Math.PI / 180;
-            this.shape = new PIXI.Graphics();
+            this.graphics = new PIXI.Graphics();
             this.fontOpts = {font: "12px Arial", fill: "#000000", align: "center"};
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
+            this.graphics = null;
+            if (this.useSprite) {
+                this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
+                this.sprite = new PIXI.Sprite(this.texture);
+                this.sprite.width = this.width;
+                this.sprite.height = this.height;
+                this.sprite.anchor.set(0.5, 0.5);
+                this.graphics = this.sprite;
+            } else {
+                this.shape = new PIXI.Graphics();
+                this.graphics = this.shape;
+            }
+
             this.draw();
-            this.shape.addChild(this.cheatsContainer);
+
+            this.graphics.addChild(this.cheatsContainer);
 
             return this;
         }
@@ -71,13 +85,17 @@
          * @returns {Wall}
          */
         draw() {
-            this.shape.clear();
-            this.shape.lineStyle(1, 0x000000);
-            this.shape.beginFill(0x000000);
-            this.shape.moveTo(this.v1.x, this.v1.y);
-            this.shape.lineTo(this.v2.x, this.v2.y);
-            this.shape.endFill();
-            this.bounds = this.shape.getBounds();
+            if (this.useSprite) {
+                this.graphics.position.set(this.position.x, this.position.y);
+            } else {
+                this.graphics.clear();
+                this.graphics.lineStyle(1, 0x000000);
+                this.graphics.beginFill(0x000000);
+                this.graphics.moveTo(this.v1.x, this.v1.y);
+                this.graphics.lineTo(this.v2.x, this.v2.y);
+                this.graphics.endFill();
+            }
+            this.bounds = this.graphics.getBounds();
 
             this.updateCheats();
 

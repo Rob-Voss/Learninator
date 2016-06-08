@@ -32,13 +32,50 @@
                 <div id="flotreward" style="width:600px; height: 400px;"></div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Show Solution
+                </button>
+                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Fast
+                </button>
+                <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Normal
+                </button>
+                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                    Slow
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 <script>
     var world = world || {};
 
+    var goslow = function() {
+        world.stepsPerTick = 1;
+    };
+    var gonormal = function(){
+        world.stepsPerTick = 10;
+    };
+    var gofast = function() {
+        world.stepsPerTick = 25;
+    };
+
+    /**
+     *
+     */
+    function solve() {
+        world.maze.solve();
+        world.maze.drawSolution();
+        world.stage.addChild(world.maze.cheatsContainer);
+        world.renderer.render(world.stage);
+    }
+
     function start() {
         world = new WaterWorld();
+        datGUI(world);
     }
 </script>
 
@@ -50,6 +87,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/external/rl.js"></script>
@@ -64,11 +102,11 @@
 <script src="js/lib/grid/Grid.js"></script>
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/QuadTree.js"></script>
-<script src="js/lib/Window.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Eye.js"></script>
 <script src="js/entities/Agent.js"></script>
 <script src="js/entities/Wall.js"></script>
+<script src="js/lib/ui/Dat.js"></script>
 <script src="js/environments/World.js"></script>
 <script src="js/environments/WaterWorld.js"></script>
 

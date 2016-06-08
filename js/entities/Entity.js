@@ -90,17 +90,17 @@
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            let graphicObj = null;
+            this.graphics = null;
             if (this.useSprite) {
                 this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
                 this.sprite = new PIXI.Sprite(this.texture);
                 this.sprite.width = this.width;
                 this.sprite.height = this.height;
                 this.sprite.anchor.set(0.5, 0.5);
-                graphicObj = this.sprite;
+                this.graphics = this.sprite;
             } else {
                 this.shape = new PIXI.Graphics();
-                graphicObj = this.shape;
+                this.graphics = this.shape;
             }
 
             this.draw();
@@ -108,40 +108,40 @@
             if (this.interactive === true) {
                 this.isOver = false;
                 this.isDown = false;
-                graphicObj.interactive = true;
-                graphicObj
-                    .on('mousedown', (e, data) => {
+                this.graphics.interactive = true;
+                this.graphics
+                    .on('mousedown', (e) => {
+                        this.onMouseDown(e);
+                    })
+                    .on('touchstart', (e) => {
                         this.onDragStart(e);
                     })
-                    .on('touchstart', (e, data) => {
-                        this.onDragStart(e);
+                    .on('mouseup', (e) => {
+                        this.onMouseUp(e);
                     })
-                    .on('mouseup', (e, data) => {
-                        this.onDragEnd();
+                    .on('mouseupoutside', (e) => {
+                        this.onDragEnd(e);
                     })
-                    .on('mouseupoutside', (e, data) => {
-                        this.onDragEnd();
+                    .on('touchend', (e) => {
+                        this.onDragEnd(e);
                     })
-                    .on('touchend', (e, data) => {
-                        this.onDragEnd();
+                    .on('touchendoutside', (e) => {
+                        this.onDragEnd(e);
                     })
-                    .on('touchendoutside', (e, data) => {
-                        this.onDragEnd();
+                    .on('mouseover', (e) => {
+                        this.onMouseOver(e);
                     })
-                    .on('mouseover', (e, data) => {
-                        this.onMouseOver();
+                    .on('mouseout', (e) => {
+                        this.onMouseOut(e);
                     })
-                    .on('mouseout', (e, data) => {
-                        this.onMouseOut();
+                    .on('mousemove', (e) => {
+                        this.onDragMove(e);
                     })
-                    .on('mousemove', (e, data) => {
-                        this.onDragMove();
-                    })
-                    .on('touchmove', (e, data) => {
-                        this.onDragMove();
+                    .on('touchmove', (e) => {
+                        this.onDragMove(e);
                     });
             }
-            graphicObj.addChild(this.cheatsContainer);
+            this.graphics.addChild(this.cheatsContainer);
 
             return this;
         }
@@ -307,19 +307,19 @@
          */
         draw() {
             if (this.useSprite) {
-                this.sprite.position.set(this.position.x, this.position.y);
+                this.graphics.position.set(this.position.x, this.position.y);
             } else {
-                this.shape.clear();
-                this.shape.lineStyle(0.5, 0x000000, 0.8);
-                this.shape.beginFill(this.color);
+                this.graphics.clear();
+                this.graphics.lineStyle(0.5, 0x000000, 0.8);
+                this.graphics.beginFill(this.color);
                 if (this.type === 2) {
                     this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
-                    this.shape.drawPolygon(this.vertices);
+                    this.graphics.drawPolygon(this.vertices);
                 } else {
-                    this.shape.drawCircle(this.position.x, this.position.y, this.radius);
+                    this.graphics.drawCircle(this.position.x, this.position.y, this.radius);
                 }
-                this.shape.endFill();
-                this.bounds = this.shape.getBounds();
+                this.graphics.endFill();
+                this.bounds = this.graphics.getBounds();
             }
 
             this.updateCheats();
@@ -451,7 +451,6 @@
          */
         onDragStart(event) {
             this.data = event.data;
-            this.interactionTarget = event.target;
             this.alpha = 0.5;
             this.dragging = true;
 
@@ -463,9 +462,10 @@
          *
          * @returns {Entity}
          */
-        onDragMove() {
+        onDragMove(event) {
+            this.data = event.data;
             if (this.dragging) {
-                let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
+                let newPosition = this.data.getLocalPosition(event.target.parent);
                 this.position.set(newPosition.x, newPosition.y);
             }
 
@@ -477,15 +477,15 @@
          *
          * @returns {Entity}
          */
-        onDragEnd() {
+        onDragEnd(event) {
+            this.data = event.data;
             this.alpha = 1;
             this.dragging = false;
-            let newPosition = this.data.getLocalPosition(this.interactionTarget.parent);
-            this.position.set(newPosition.x, newPosition.y);
+            let newPosition = this.data.getLocalPosition(event.target.parent);
+            this.graphics.position.set(newPosition.x, newPosition.y);
 
             // set the interaction data to null
             this.data = null;
-            this.interactionTarget = null;
 
             return this;
         }
@@ -495,7 +495,8 @@
          *
          * @returns {Entity}
          */
-        onMouseDown() {
+        onMouseDown(event) {
+            this.data = event.data;
             this.isDown = true;
             this.alpha = 1;
 
@@ -507,7 +508,8 @@
          *
          * @returns {Entity}
          */
-        onMouseUp() {
+        onMouseUp(event) {
+            this.data = event.data;
             this.isDown = false;
 
             return this;
@@ -518,7 +520,8 @@
          *
          * @returns {Entity}
          */
-        onMouseOver() {
+        onMouseOver(event) {
+            this.data = event.data;
             this.isOver = true;
             if (this.isDown) {
                 return this;
@@ -532,7 +535,8 @@
          *
          * @returns {Entity}
          */
-        onMouseOut() {
+        onMouseOut(event) {
+            this.data = event.data;
             this.isOver = false;
             if (this.isDown) {
                 return this;

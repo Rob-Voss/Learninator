@@ -9,30 +9,30 @@ function datGUI (world) {
         cFolder = wGUI.addFolder('World Options');
     cFolder.add(world, 'pause').listen().name('Pause');
 
-    for (var go in world.options) {
-        if (world.options.hasOwnProperty(go)) {
-            let ty = typeof world.options[go];
+    for (var go in world) {
+        if (world.hasOwnProperty(go)) {
+            let ty = typeof world[go];
             if (ty !== 'object') {
                 if (go === 'cheats') {
-                    cFolder.add(world.options, go).listen().name(go);
+                    cFolder.add(world, go).listen().name(go);
                 }
             } else {
                let folder = cFolder.addFolder(go.charAt(0).toUpperCase() + go.slice(1));
-                for (var gp in world.options[go]) {
-                    if (world.options[go].hasOwnProperty(gp)) {
-                        let typ = typeof world.options[go][gp];
+                for (var gp in world[go]) {
+                    if (world[go].hasOwnProperty(gp)) {
+                        let typ = typeof world[go][gp];
                         if (typ !== 'object') {
-                            folder.add(world.options[go], gp).listen().name(gp);
+                            folder.add(world[go], gp).listen().name(gp);
                         } else {
-                            let ifolder = folder.addFolder(gp.charAt(0).toUpperCase() + gp.slice(1));
-                            for (var gpa in world.options[go][gp]) {
-                                if (world.options[go][gp].hasOwnProperty(gpa)) {
-                                    let typ = typeof world.options[go][gp][gpa];
-                                    if (typ !== 'object') {
-                                        ifolder.add(world.options[go][gp], gpa).listen().name(gpa);
-                                    }
-                                }
-                            }
+                            // let ifolder = folder.addFolder(gp.charAt(0).toUpperCase() + gp.slice(1));
+                            // for (var gpa in world[go][gp]) {
+                            //     if (world[go][gp].hasOwnProperty(gpa)) {
+                            //         let typ = typeof world[go][gp][gpa];
+                            //         if (typ !== 'object' && typ !== 'undefined') {
+                            //             ifolder.add(world[go][gp], gpa).listen().name(gpa);
+                            //         }
+                            //     }
+                            // }
                         }
                     }
                 }

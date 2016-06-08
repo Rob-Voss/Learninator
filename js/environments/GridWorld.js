@@ -296,7 +296,6 @@
      * Initialize the Flot class
      */
     GridWorld.prototype.initFlot = function () {
-        let self = this;
         this.container = document.getElementById('flotreward');
         // flot stuff
         this.nflot = 1000;
@@ -320,7 +319,7 @@
             };
         }
 
-        this.plot = $.plot(self.container, self.series, {
+        this.plot = $.plot(this.container, this.series, {
             grid: {
                 borderWidth: 1,
                 minBorderMargin: 20,
@@ -344,10 +343,10 @@
             }
         });
 
-        setInterval(function () {
-            self.series[0].data = self.getFlotRewards();
-            self.plot.setData(self.series);
-            self.plot.draw();
+        setInterval(() => {
+            this.series[0].data = this.getFlotRewards();
+            this.plot.setData(this.series);
+            this.plot.draw();
         }, 100);
     };
 

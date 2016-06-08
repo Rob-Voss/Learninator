@@ -24,6 +24,7 @@
             this.id = 'agent-' + body.id;
             this.body = body;
             this.body.label = 'Agent';
+            this.angle = this.body.angle;
             this.position = this.body.position;
             this.radius = this.body.circleRadius;
             this.type = entityTypes.indexOf(this.body.label);
@@ -122,7 +123,7 @@
             return this;
         }
 
-        draw(context) {
+        draw() {
             for (let i = 0; i < this.numEyes; i++) {
                 let eye = this.eyes[i],
                     type = eye.sensed.type;
@@ -133,11 +134,11 @@
                         break;
                     case 1:
                         // It is noms
-                        context.strokeStyle = '#FF0000';
+                        context.strokeStyle = '#00FF00';
                         break;
                     case 2:
                         // It is gnar gnar
-                        context.strokeStyle = '#00FF00';
+                        context.strokeStyle = '#FF0000';
                         break;
                     case 3:
                     case 4:
@@ -146,7 +147,6 @@
                         context.strokeStyle = '#0000FF';
                         break;
                     default:
-                        // Is it wall or nothing?
                         context.strokeStyle = '#FFFFFF';
                         break;
                 }

@@ -8,6 +8,7 @@
 
     function start() {
         world = new MatterWorld(600, 600);
+//        world.setViewport(200, 200);
     }
 </script>
 <body onload="start();">
@@ -21,17 +22,20 @@
 <script src="https://cdn.rawgit.com/schteppe/poly-decomp.js/master/build/decomp.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.10.0/matter.js"></script>
 
-<!--<script src="js/lib/external/matter-tools.js"></script>-->
+<script src="js/lib/external/matter-tools.js"></script>
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/graphing/FlotGraph.js"></script>
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Point.js"></script>
 <script src="js/lib/Vec.js"></script>
+<script src="js/lib/RenderPixi.js"></script>
+<script src="js/lib/Renderer.js"></script>
 
 <script src="js/entities/Eye.js"></script>
 <script src="js/entities/PhysicalEntity.js"></script>
 <script src="js/entities/PhysicalAgent.js"></script>
 <script src="js/environments/MatterWorld.js"></script>
+
 </body>
 </html>

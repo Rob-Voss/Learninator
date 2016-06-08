@@ -395,6 +395,20 @@
         }
 
     }
+
+    // Agent.prototype.tick = () => {
+    //     if (this.sid === -1) {
+    //         this.sid = setInterval(() => {
+    //             for (let k = 0; k < this.stepsPerTick; k++) {
+    //
+    //             }
+    //         }, 20);
+    //     } else {
+    //         clearInterval(this.sid);
+    //         this.sid = -1;
+    //     }
+    // };
+
     global.Agent = Agent;
 
 }(this));

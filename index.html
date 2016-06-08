@@ -112,6 +112,29 @@
         <div class="row">
             <div class="col-md-2">
                 <a href="#">
+                    <img class="img-responsive" src="img/thumbs/GridWorld.png" width="200px" height="200px" alt="">
+                </a>
+            </div>
+            <div class="col-md-10">
+                <h3>Grid World</h3>
+                <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s original demo, I had already made a Maze
+                    generator and grid based positioning. This resulted in me making a new Maze every
+                    reload instead of relying on a hard-coded environment state and instead could adjust
+                    and generate the states via the generated Maze.
+                    I added in some visible walls and the ability for the environment to dynamically generate a maze and fill
+                    in the rewards and states based on its layout. For example dead ends are a -1 reward now. and the last
+                    square that would be the exit from the maze is the +1 reward. As of right now the start is in the upper
+                    left corner and the exit is in the lower right corner still.</p>
+                <a class=" btn btn-primary
+            " href="GridWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-2">
+                <a href="#">
                     <img class="img-responsive" src="img/thumbs/MazeWorld.png" width="200px" height="200px" alt="">
                 </a>
             </div>
@@ -127,29 +150,24 @@
         </div>
 
         <hr>
-
         <div class="row">
             <div class="col-md-2">
                 <a href="#">
-                    <img class="img-responsive" src="img/thumbs/GridWorld.png" width="200px" height="200px" alt="">
+                    <img class="img-responsive" src="img/thumbs/HexMazeWorld.png" width="200px" height="200px" alt="">
                 </a>
             </div>
             <div class="col-md-10">
-            <h3>Grid World</h3>
-            <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s original demo, I had already made a Maze
-                generator and grid based positioning. This resulted in me making a new Maze every
-                reload instead of relying on a hard-coded environment state and instead could adjust
-                and generate the states via the generated Maze.
-                I added in some visible walls and the ability for the environment to dynamically generate a maze and fill
-                in the rewards and states based on its layout. For example dead ends are a -1 reward now. and the last
-                square that would be the exit from the maze is the +1 reward. As of right now the start is in the upper
-                left corner and the exit is in the lower right corner still.</p>
-            <a class=" btn btn-primary
-            " href="GridWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
+                <h3>Hex Maze World</h3>
+                <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s Deep Q Learning demo using his <a
+                        href="https://github.com/karpathy/convnetjs">ConvNetJS</a>
+                    libraries. I wanted to again add in a random Maze for the environment and be able to
+                    modify how many walls etc. that the agents would encounter.</p>
+                <a class="btn btn-primary" href="HexMazeWorld.html">View Project <span
+                        class="glyphicon glyphicon-chevron-right"></span></a>
+            </div>
         </div>
-    </div>
 
-    <hr>
+        <hr>
 
 </div>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>

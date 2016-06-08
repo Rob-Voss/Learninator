@@ -133,11 +133,11 @@ var EntityRLDQN = EntityRLDQN || {};
             if (vv > 0) {
                 red = 255 - vv * ms;
                 blue = 255 - vv * ms;
-                this.color = parseInt(Utility.Maths.rgbToHex(red, 255, blue));
+                this.color = parseInt(Utility.rgbToHex(red, 255, blue));
             } else {
                 green = 255 + vv * ms;
                 blue = 255 + vv * ms;
-                this.color = parseInt(Utility.Maths.rgbToHex(255, green, blue));
+                this.color = parseInt(Utility.rgbToHex(255, green, blue));
             }
             this.lastReward = r;
 

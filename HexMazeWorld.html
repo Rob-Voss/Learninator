@@ -12,42 +12,6 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
-    <script>
-        /**
-         * Global world object
-         * @type {HexMazeWorld}
-         */
-        var world = world || {};
-
-        var goslow = function() {
-            world.stepsPerTick = 1;
-        };
-        var gonormal = function(){
-            world.stepsPerTick = 10;
-        };
-        var gofast = function() {
-            world.stepsPerTick = 25;
-        };
-
-        /**
-         *
-         */
-        function solve() {
-            world.maze.solve();
-            world.maze.drawSolution();
-            world.stage.addChild(world.maze.cheatsContainer);
-            world.renderer.render(world.stage);
-        }
-
-        /**
-         * Create existence!
-         */
-        function start() {
-            world = new HexMazeWorld();
-//            datGUI(world);
-        }
-
-    </script>
     <link rel="import" href="/templates/twitch-nav.html">
 </head>
 <body onload="start();">
@@ -60,29 +24,71 @@
                     <small>Funsies</small>
                 </h2>
                 <div id="game-container"></div>
-                <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
-                    Show Solution
-                </button>
-                <button class="btn btn-primary" onclick="world.agents[0].tick();" style="width:170px;height:50px;margin-bottom:5px;">
-                    Start TD Learning
-                </button>
-                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">Go
-                    Fast
-                </button>
-                <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">Go
-                    Normal
-                </button>
-                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">Go
-                    Slow
-                </button>
-
             </div>
             <div class="col-md-6">
                 <div id="flotreward" style="width:600px; height: 400px;"></div>
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+
+            <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                Show Solution
+            </button>
+            <button class="btn btn-primary" onclick="world.agents[0].tick();" style="width:170px;height:50px;margin-bottom:5px;">
+            Start Learning
+            </button>
+            <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                Fast
+            </button>
+            <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                Normal
+            </button>
+            <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                Slow
+            </button>
+        </div>
+    </div>
 </div>
+<script>
+    /**
+     * Global world object
+     * @type {HexMazeWorld}
+     */
+    var world = world || {};
+
+    var goslow = function() {
+        world.stepsPerTick = 1;
+    };
+    var gonormal = function(){
+        world.stepsPerTick = 10;
+    };
+    var gofast = function() {
+        world.stepsPerTick = 25;
+    };
+
+    /**
+     *
+     */
+    function solve() {
+        world.maze.solve();
+        world.maze.drawSolution();
+        world.stage.addChild(world.maze.cheatsContainer);
+        world.renderer.render(world.stage);
+    }
+
+    /**
+     * Create existence!
+     */
+    function start() {
+        world = new HexMazeWorld();
+//        let disp = new Display(new Vec(300, 300), {title:'Options', width:200, height:200, rows: 4, cols: 4});
+//        world.stage.addChild(disp);
+//        datGUI(world);
+    }
+
+</script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
@@ -113,6 +119,10 @@
 <script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
+
+<script src="js/lib/ui/Dat.js"></script>
+<script src="js/lib/ui/Display.js"></script>
+<script src="js/lib/external/EZGUI.js"></script>
 
 <script src="js/entities/Eye.js"></script>
 <script src="js/entities/Entity.js"></script>

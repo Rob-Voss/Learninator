@@ -5,7 +5,6 @@
         CollisionDetector = global.CollisionDetector || {},
         Entity = global.Entity || {},
         EntityRLDQN = global.EntityRLDQN || {},
-        FlotGraph = global.FlotGraph || {},
         Wall = global.Wall || {},
         Vec = global.Vec || {};
 
@@ -77,8 +76,12 @@
             this.resizable = this.rendererOpts.resizable;
             this.stage = new PIXI.Container();
             this.grid = Utility.getOpt(worldOpts, 'grid', false);
+            if (this.grid) {
+                this.stage.addChild(this.grid.cellsContainer);
+            }
             this.maze = Utility.getOpt(worldOpts, 'maze', false);
             this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
+            this.theme = Utility.getOpt(worldOpts, 'theme', 'space');
             this.cheats = Utility.getOpt(worldOpts, 'cheats', {
                 id: false,
                 name: false,
@@ -96,10 +99,9 @@
                     bounds: this.cheats.bounds
                 }
             });
-            if (this.grid) {
-                this.stage.addChild(this.grid.cellsContainer);
-            }
 
+            this.sid = -1;
+            this.stepsPerTick = 1;
             this.clock = 0;
             this.pause = false;
 
@@ -114,13 +116,28 @@
 
             this.agents = agents || [];
             this.entityAgents = [];
-            this.numAgents = this.agents.length;
+            this.agentOpts = Utility.getOpt(worldOpts, 'agentOpts', {});
+            this.agentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
             this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
             this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
             this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {});
-            this.entityOpts.cheats = this.cheats;
+            this.entityOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
             this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {});
-            this.entityAgentOpts.cheats = this.cheats;
+            this.entityAgentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
+            this.settings = {
+                pause: this.pause,
+                simSpeed: this.simSpeed,
+                cheats: JSON.parse(JSON.stringify(this.cheats)),
+                agents: {
+                    cheats: JSON.parse(JSON.stringify(this.cheats))
+                },
+                entities: {
+                    cheats: JSON.parse(JSON.stringify(this.cheats))
+                },
+                grid: this.cheats,
+                maze: this.cheats,
+
+            };
 
             this.walls = walls;
             if (!this.walls) {
@@ -154,7 +171,7 @@
             // Walls
             this.addWalls();
             // Add the entities
-            this.addEntities(this.numEntities);
+            this.addEntities();
             // Population of Agents that are considered 'smart' entities for the environment
             this.addEntityAgents();
             // Population of Agents for the environment
@@ -171,23 +188,22 @@
          * Initialize the world
          */
         init() {
-            if (document.getElementById('flotreward')) {
-                this.rewards = new FlotGraph(this.agents);
-            }
-            var animate = (timestamp) => {
-                var timeSinceLast,
-                    now = new Date().getTime() / 1000;
+            var animate = () => {
+                var now = new Date().getTime() / 1000;
                 if (!this.pause) {
-                    timeSinceLast = now - this.lastTime;
+                    this.deltaTime = now - this.lastTime;
                     this.lastTime = now;
-                    this.tick(timeSinceLast);
+                    for (let k = 0; k < this.stepsPerTick; k++) {
+                        this.tick(this.deltaTime);
+                    }
                 }
                 this.renderer.render(this.stage);
                 requestAnimationFrame(animate);
             };
 
+            this.deltaTime = 0;
             this.lastTime = new Date().getTime() / 1000;
-            requestAnimationFrame(animate);
+            animate();
         }
 
         /**
@@ -197,10 +213,10 @@
         addAgents() {
             // Add the agents
             for (let a = 0; a < this.agents.length; a++) {
-                let agent = this.agents[a].shape || this.agents[a].sprite;
+                let agent = this.agents[a].graphics;
                 if (this.agents[a].eyes !== undefined) {
                     for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
-                        agent.addChild(this.agents[a].eyes[ei].shape);
+                        agent.addChild(this.agents[a].eyes[ei].graphics);
                     }
                 }
                 if (this.agents[a].hexStyles !== undefined) {
@@ -235,9 +251,9 @@
                 startXY.vx = Math.random() * 5 - 2.5;
                 startXY.vy = Math.random() * 5 - 2.5;
                 let entityAgent = new EntityRLDQN(startXY, this.entityAgentOpts),
-                    entity = entityAgent.shape || entityAgent.sprite;
+                    entity = entityAgent.graphics;
                 for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
-                    entity.addChild(entityAgent.eyes[ei].shape);
+                    entity.addChild(entityAgent.eyes[ei].graphics);
                 }
                 this.entityAgents.push(entityAgent);
                 this.populationContainer.addChild(entity);
@@ -252,16 +268,17 @@
          * @parameter {number} number
          * @returns {World}
          */
-        addEntities(number = 1) {
+        addEntities(number = null) {
             let startXY,
-                r = this.entityOpts.radius;
+                r = this.entityOpts.radius,
+                num = (number) ? number : this.numEntities;
 
             // Populating the world
-            for (let k = 0; k < number; k++) {
+            for (let k = 0; k < num; k++) {
                 if (this.grid && this.grid.startCell !== undefined) {
-                    let numb = Math.floor(Math.random() * this.grid.cells.length),
-                        startCell = this.grid.cells[numb],
-                        randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 -r), this.grid.cellSize / 2 -r);
+                    let n = Math.floor(Math.random() * this.grid.cells.length),
+                        startCell = this.grid.cells[n],
+                        randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 - r), this.grid.cellSize / 2 - r);
                     startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
                     this.entityOpts.gridLocation = startCell;
                 } else {
@@ -275,7 +292,7 @@
                 let type = Utility.Maths.randi(1, 3),
                     entity = new Entity(type, startXY, this.entityOpts);
 
-                this.populationContainer.addChild(entity.shape || entity.sprite);
+                this.populationContainer.addChild(entity.graphics);
                 this.population.set(entity.id, entity);
             }
 
@@ -288,8 +305,8 @@
          */
         addWalls() {
             // Add the walls to the world
-            this.walls.forEach((wall, id) => {
-                this.populationContainer.addChild(wall.shape);
+            this.walls.forEach((wall) => {
+                this.populationContainer.addChild(wall.graphics);
                 this.population.set(wall.id, wall);
             });
 
@@ -304,7 +321,7 @@
         deleteEntity(id) {
             if (this.population.has(id)) {
                 let entity = this.population.get(id),
-                    entityIdx = this.populationContainer.getChildIndex(entity.shape || entity.sprite);
+                    entityIdx = this.populationContainer.getChildIndex(entity.graphics);
                 this.populationContainer.removeChildAt(entityIdx);
                 this.population.delete(id);
             }
@@ -381,6 +398,32 @@
             }
 
             return this;
+        }
+
+        /**
+         *
+         * @param guiObj
+         * @param theme
+         */
+        loadTheme(guiObj, theme) {
+            PIXI.utils.textureCache = {};
+            PIXI.utils.baseTextureCache = {};
+
+            return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
+                this.guiContainer = EZGUI.create(guiObj, theme);
+                this.pause = true;
+                EZGUI.components.btnSave.on('click', (event) => {
+                    this.event = event;
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                EZGUI.components.btnCancel.on('click', (event) => {
+                    this.event = event;
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                this.stage.addChild(this.guiContainer);
+            });
         }
     }
     global.World = World;

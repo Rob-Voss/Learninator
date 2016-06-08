@@ -22,7 +22,7 @@
                     position: false
                 },
                 renderOpts = {
-                    antialiasing: true,
+                    antialiasing: false,
                     autoResize: false,
                     resizable: false,
                     transparent: false,

@@ -16,15 +16,15 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,//window.devicePixelRatio,
-                    width: 800,
-                    height: 800
+                    resolution: window.devicePixelRatio,
+                    width: 1000,
+                    height: 1000
                 },
                 cheats = {
                     id: false,
                     name: false,
                     angle: false,
-                    bounds: true,
+                    bounds: false,
                     direction: false,
                     gridLocation: false,
                     position: false
@@ -48,9 +48,9 @@
                     width: renderOpts.width,
                     height: renderOpts.height,
                     buffer: 0,
-                    cellSize: 20,
+                    cellSize: 10,
                     cellSpacing: 0,
-                    size: 8,
+                    size: 4,
                     pointy: false,
                     fill: false,
                     cheats: cheats
