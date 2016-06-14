@@ -111,8 +111,8 @@
             this.width = renderOpts.options.width = width;
             this.height = renderOpts.options.height = height;
             this.engine = renderOpts.engine = Engine.create(engineOpts);
-            this.render = new RenderPixi(renderOpts);
-            // this.render = new Renderer(renderOpts);
+            // this.render = new RenderPixi(renderOpts);
+            this.render = new Renderer(renderOpts);
             this.runner = Engine.run(this.engine);
             this.engine.world.gravity = {x: 0, y: 0};
             this.mouseConstraint = MouseConstraint.create(this.engine, {

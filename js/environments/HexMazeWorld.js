@@ -39,7 +39,7 @@
                     cellSize: 20,
                     cellSpacing: 0,
                     pointy: false,
-                    fill: true,
+                    fill: false,
                     cheats: cheats
                 },
                 orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
@@ -79,6 +79,7 @@
                 new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
                     {
                         brainType: 'RL.TDAgent',
+                        cheats: {id:true},
                         env: {
                             allowedActions: (s) => {
                                 return this.allowedActions(s);
@@ -130,6 +131,7 @@
                 new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
                     {
                         brainType: 'RL.TDAgent',
+                        cheats: {id:true},
                         env: {
                             allowedActions: (s) => {
                                 return this.allowedActions(s);

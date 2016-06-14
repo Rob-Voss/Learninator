@@ -89,17 +89,29 @@
             }
 
             // Set the brain options
-            this.brainOpts = Utility.getOpt(opts, 'spec', {
-                update: "qlearn", // qlearn | sarsa
-                gamma: 0.9, // discount factor, [0, 1)
-                epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
-                alpha: 0.005, // value function learning rate
-                experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
-                experienceSize: 10000, // size of experience
-                learningStepsPerIteration: 5,
-                tdErrorClamp: 1.0, // for robustness
-                numHiddenUnits: 100 // number of neurons in hidden layer
-            });
+            let dqnBrainOpts = {
+                    update: "qlearn", // qlearn | sarsa
+                    gamma: 0.9, // discount factor, [0, 1)
+                    epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                    alpha: 0.005, // value function learning rate
+                    experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
+                    experienceSize: 10000, // size of experience
+                    learningStepsPerIteration: 5,
+                    tdErrorClamp: 1.0, // for robustness
+                    numHiddenUnits: 100 // number of neurons in hidden layer
+                },
+                tdBrainOpts = {
+                    update: 'qlearn', // 'qlearn' or 'sarsa'
+                    gamma: 0.9, // discount factor, [0, 1)
+                    epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                    alpha: 0.1, // value function learning rate
+                    lambda: 0.9, // eligibility trace decay, [0,1). 0 = no eligibility traces
+                    replacingTraces: true, // use replacing or accumulating traces
+                    planN: 50, // number of planning steps per iteration. 0 = no planning
+                    smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
+                    beta: 0.1 // learning rate for smooth policy update
+                };
+            this.brainOpts = Utility.getOpt(opts, 'spec', (this.brainType === 'RL.DQNAgent') ? dqnBrainOpts : tdBrainOpts);
 
             // The Agent's environment
             this.env = Utility.getOpt(opts, 'env', {

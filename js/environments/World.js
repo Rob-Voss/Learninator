@@ -127,16 +127,19 @@
             this.settings = {
                 pause: this.pause,
                 simSpeed: this.simSpeed,
-                cheats: JSON.parse(JSON.stringify(this.cheats)),
+                cheats: this.cheats,
                 agents: {
-                    cheats: JSON.parse(JSON.stringify(this.cheats))
+                    cheats: this.agentOpts.cheats
                 },
                 entities: {
+                    cheats: this.entityOpts.cheats
+                },
+                grid: {
                     cheats: JSON.parse(JSON.stringify(this.cheats))
                 },
-                grid: this.cheats,
-                maze: this.cheats,
-
+                maze: {
+                    cheats: JSON.parse(JSON.stringify(this.cheats))
+                }
             };
 
             this.walls = walls;

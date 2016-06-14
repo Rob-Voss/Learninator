@@ -73,6 +73,7 @@ var EntityRLDQN = EntityRLDQN || {};
                         case 1:
                         case 2:
                         case 3:
+                            break;
                         case 4:
                             // Other Agents
                             this.force.x = collisionObj.target.vx;

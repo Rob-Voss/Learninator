@@ -78,8 +78,8 @@
             this.renderer = this.renderer || new PIXI.autoDetectRenderer(this.options.width, this.options.height, this.pixiOptions);
             this.container = this.container || new PIXI.Container();
             this.spriteContainer = this.spriteContainer || new PIXI.Container();
-            this.canvas = this.canvas || this.renderer.view;
-            this.context = this.canvas || this.renderer.context;
+            this.canvas = this.renderer.view;
+            this.context = this.canvas.getContext('2d');
             this.bounds = this.bounds || {
                     min: {
                         x: 0,
@@ -418,7 +418,7 @@
             }
             if (this.options.hasBounds) {
                 // revert view transforms
-                this.renderer.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
+                // this.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
             }
 
             this.renderer.render(this.container);

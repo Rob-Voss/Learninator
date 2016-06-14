@@ -80,7 +80,6 @@
 
         /**
          * Sense the surroundings
-         * @param {Agent} agent
          */
         sense() {
             let eyeStartX = this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),

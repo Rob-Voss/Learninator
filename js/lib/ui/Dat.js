@@ -7,32 +7,22 @@
 function datGUI (world) {
     var wGUI = new dat.GUI({resizable: true, autoPlace: true, name: 'World Controls'}),
         cFolder = wGUI.addFolder('World Options');
-    cFolder.add(world, 'pause').listen().name('Pause');
+    // cFolder.add(world, 'pause').listen().name('Pause');
 
-    for (var go in world) {
-        if (world.hasOwnProperty(go)) {
-            let ty = typeof world[go];
+    for (var go in world.settings) {
+        if (world.settings.hasOwnProperty(go)) {
+            let ty = typeof world.settings[go];
             if (ty !== 'object') {
                 if (go === 'cheats') {
-                    cFolder.add(world, go).listen().name(go);
+                    cFolder.add(world.settings, go).listen().name(go);
                 }
             } else {
                let folder = cFolder.addFolder(go.charAt(0).toUpperCase() + go.slice(1));
-                for (var gp in world[go]) {
-                    if (world[go].hasOwnProperty(gp)) {
-                        let typ = typeof world[go][gp];
+                for (var gp in world.settings[go]) {
+                    if (world.settings[go].hasOwnProperty(gp)) {
+                        let typ = typeof world.settings[go][gp];
                         if (typ !== 'object') {
-                            folder.add(world[go], gp).listen().name(gp);
-                        } else {
-                            // let ifolder = folder.addFolder(gp.charAt(0).toUpperCase() + gp.slice(1));
-                            // for (var gpa in world[go][gp]) {
-                            //     if (world[go][gp].hasOwnProperty(gpa)) {
-                            //         let typ = typeof world[go][gp][gpa];
-                            //         if (typ !== 'object' && typ !== 'undefined') {
-                            //             ifolder.add(world[go][gp], gpa).listen().name(gpa);
-                            //         }
-                            //     }
-                            // }
+                            folder.add(world.settings[go], gp).listen().name(gp);
                         }
                     }
                 }
