@@ -43,8 +43,10 @@
          * Create existence!
          */
         function start() {
-            world = new MazeWorld();
+            PIXI.loader.add("../../img/treasureHunter.json").load(() => {
+                world = new MazeWorld();
 //            datGUI(world);
+            });
         }
 
     </script>
@@ -92,7 +94,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 
 <!-- markdown -->

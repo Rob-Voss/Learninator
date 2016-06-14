@@ -85,15 +85,6 @@
                 learningStepsPerIteration: 5,
                 tdErrorClamp: 1.0,
                 numHiddenUnits: 100
-                // update: "qlearn", // qlearn | sarsa
-                // gamma: 0.75, // discount factor, [0, 1)
-                // epsilon: 0.1, // initial epsilon for epsilon-greedy policy, [0, 1)
-                // alpha: 0.01, // value function learning rate
-                // experienceAddEvery: 25, // number of time steps before we add another experience to replay memory
-                // experienceSize: 5000, // size of experience
-                // learningStepsPerIteration: 10,
-                // tdErrorClamp: 1.0, // for robustness
-                // numHiddenUnits: 100 // number of neurons in hidden layer
             });
 
             // The Agent's environment
@@ -323,7 +314,7 @@
                         this.eyes[i].sensed.velocity.x = collision.body.velocity.x;
                         this.eyes[i].sensed.velocity.y = collision.body.velocity.y;
                         if (isNaN(this.eyes[i].sensed.proximity)) {
-                            console.log();
+                            console.log('NaN');
                         }
                     }
                 }
@@ -371,9 +362,7 @@
             this.brain.learn(this.digestion);
             this.epsilon = this.brain.epsilon;
             this.digestion = 0;
-if (this.lastReward > 1) {
-    console.log();
-}
+
             return this;
         }
 

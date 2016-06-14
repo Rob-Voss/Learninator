@@ -67,7 +67,7 @@
         treasure.graphics.y = gameScene.height / 2 - treasure.graphics.height / 2;
         treasure.graphics.vx = 0;
         treasure.graphics.vy = 0;
-                gameScene.addChild(treasure.graphics);
+        gameScene.addChild(treasure.graphics);
 
         //Explorer
         if (agentO === null) {
@@ -331,14 +331,14 @@
 
         // Compute distances
         let dx1 = agent.graphics.x - target.graphics.x, // Distance from Noms
-            dy1 = agent.graphics.y - target.graphics.y, // Distance from Noms
-            dx2 = agent.graphics.x - enemy.graphics.x, // Distance from Agent
-            dy2 = agent.graphics.y - enemy.graphics.y, // Distance from Agent
-            d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-            d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
-            // Compute reward we want to go close to Agent we like
-            r = -d1 * 0.01,
-            eRng = enemy.graphics.width * 2;
+                dy1 = agent.graphics.y - target.graphics.y, // Distance from Noms
+                dx2 = agent.graphics.x - enemy.graphics.x, // Distance from Agent
+                dy2 = agent.graphics.y - enemy.graphics.y, // Distance from Agent
+                d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
+                d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
+                // Compute reward we want to go close to Agent we like
+                r = -d1 * 0.01,
+                eRng = enemy.graphics.width * 2;
 
         if (d2 < eRng) {
             // but if we're too close to the bad Agent that's bad

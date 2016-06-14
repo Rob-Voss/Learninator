@@ -44,53 +44,50 @@ var HexShape = HexShape || {};
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            let graphicObj = null;
             if (this.useSprite) {
                 this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                this.sprite = new PIXI.Sprite(this.texture);
-                this.sprite.width = this.width;
-                this.sprite.height = this.height;
-                this.sprite.anchor.set(0.5, 0.5);
-                graphicObj = this.sprite;
+                this.graphics = new PIXI.Sprite(this.texture);
+                this.graphics.width = this.width;
+                this.graphics.height = this.height;
+                this.graphics.anchor.set(0.5, 0.5);
             } else {
-                this.shape = new PIXI.Graphics();
-                graphicObj = this.shape;
+                this.graphics = new PIXI.Graphics();
             }
 
             this.draw();
 
-            graphicObj.interactive = true;
-            graphicObj
+            this.graphics.interactive = true;
+            this.graphics
                 .on('mousedown', (event) => {
                     this.event = event;
                     this.data = event.data;
-                    // this.color = 0x00FF00;
+                    this.color = 0x00FF00;
                     this.alpha = 1;
                     this.isDown = true;
                     this.draw();
                 })
                 .on('mouseup', (event) => {
                     this.event = event;
-                    // this.color = this.colorForHex(this.q, this.r, this.s);
+                    this.color = this.colorForHex(this.q, this.r, this.s);
                     this.alpha = 0.2;
                     this.isDown = false;
                     this.draw();
                 })
                 .on('mouseover', (event) => {
                     this.event = event;
-                    // this.color = 0xFF0000;
+                    this.color = 0xFF0000;
                     this.alpha = 0.5;
                     this.isOver = true;
                     this.draw();
                 })
                 .on('mouseout', (event) => {
                     this.event = event;
-                    // this.color = this.colorForHex(this.q, this.r, this.s);
+                    this.color = this.colorForHex(this.q, this.r, this.s);
                     this.alpha = 0.2;
                     this.isOver = false;
                     this.draw();
                 });
-            graphicObj.addChild(this.cheatsContainer);
+            this.graphics.addChild(this.cheatsContainer);
 
             return this;
         }

@@ -20,60 +20,59 @@
             this.v1 = v1;
             this.v2 = v2;
             this.cheats = cheats || false;
-            this.width = (this.v2.x - this.v1.x <= 0) ? 1 : this.v2.x - this.v1.x;
-            this.height = (this.v2.y - this.v1.y <= 0) ? 1 : this.v2.y - this.v1.y;
+            this.angle = this.v1.angleBetween(this.v2, true);
             this.len = this.v1.distanceTo(this.v2);
-            this.angle = this.v1.angleBetween(this.v2);
-            this.rotation = this.angle * Math.PI / 180;
-            this.graphics = new PIXI.Graphics();
+            this.rotation = this.v1.angleBetween(this.v2);
+            this.position = this.v1.getPointBetween(this.v2, 50);
+            this.width = (this.angle !== 0) ? 5 : this.len;
+            this.height = (this.angle !== 0) ? this.len : 5;
             this.fontOpts = {font: "12px Arial", fill: "#000000", align: "center"};
+
+            // this.useSprite = true;
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            this.graphics = null;
             if (this.useSprite) {
-                this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                this.sprite = new PIXI.Sprite(this.texture);
-                this.sprite.width = this.width;
-                this.sprite.height = this.height;
-                this.sprite.anchor.set(0.5, 0.5);
-                this.graphics = this.sprite;
+                this.sprites = PIXI.loader.resources["../../img/treasureHunter.json"].textures;
+                this.graphics = new PIXI.Sprite(this.sprites[(this.angle !== 0) ? 'vertical-wall.png' : 'horizontal-wall.png']);
+                // this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
+                // this.sprite = new PIXI.Sprite(this.texture);
+                this.graphics.width = this.width;
+                this.graphics.height = this.height;
+                this.graphics.x = this.position.x;
+                this.graphics.y = this.position.y;
+                this.graphics.anchor.set(0.5, 0.5);
             } else {
-                this.shape = new PIXI.Graphics();
-                this.graphics = this.shape;
+                this.graphics = new PIXI.Graphics();
             }
-
             this.draw();
-
             this.graphics.addChild(this.cheatsContainer);
 
             return this;
         }
 
         addCheats() {
-            let midWall = this.v1.getPointBetween(this.v2, 50);
-
             if (this.cheats.id && this.idText === undefined) {
                 this.idText = new PIXI.Text(this.id.substring(0, 6), this.fontOpts);
                 this.idText.anchor = new PIXI.Point(0.5, 0.5);
-                this.idText.rotation = this.angle;
-                this.idText.position.set(midWall.x, midWall.y);
+                this.idText.rotation = this.rotation;
+                this.idText.position.set(this.position.x, this.position.y);
                 this.cheatsContainer.addChild(this.idText);
             }
 
             if (this.cheats.direction && this.directionText === undefined) {
                 this.directionText = new PIXI.Text(this.direction, this.fontOpts);
                 this.directionText.anchor = new PIXI.Point(0.5, 0.5);
-                this.directionText.rotation = this.angle;
-                this.directionText.position.set(midWall.x + 5, midWall.y + 5);
+                this.directionText.rotation = this.rotation;
+                this.directionText.position.set(this.position.x + 5, this.position.y + 5);
                 this.cheatsContainer.addChild(this.directionText);
             }
 
             if (this.cheats.angle && this.angleInd === undefined) {
                 this.angleInd = new PIXI.Text(Utility.Strings.flt2str(this.angle, 2), this.fontOpts);
                 this.angleInd.anchor = new PIXI.Point(0.5, 0.5);
-                this.angleInd.rotation = this.angle;
-                this.angleInd.position.set(midWall.x - 5, midWall.y - 5);
+                this.angleInd.rotation = this.rotation;
+                this.angleInd.position.set(this.position.x - 5, this.position.y - 5);
                 this.cheatsContainer.addChild(this.angleInd);
             }
 
@@ -86,7 +85,9 @@
          */
         draw() {
             if (this.useSprite) {
-                this.graphics.position.set(this.position.x, this.position.y);
+                this.graphics.x = this.position.x;
+                this.graphics.y = this.position.y;
+                this.graphics.anchor.set(0.5, 0.5);
             } else {
                 this.graphics.clear();
                 this.graphics.lineStyle(1, 0x000000);

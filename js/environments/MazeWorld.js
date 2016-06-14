@@ -40,6 +40,7 @@
                     cellSpacing: 0,
                     fill: true,
                     closed: false,
+                    useSprite: true,
                     cheats: cheats
                 },
                 grid = new Grid(gridOpts),

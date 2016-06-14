@@ -71,19 +71,19 @@
                             v2 = cell.corners[2];
                             break;
                         case 2:
-                            v1 = cell.corners[2];
-                            v2 = cell.corners[3];
+                            v1 = cell.corners[3];
+                            v2 = cell.corners[2];
                             break;
                         case 3:
-                            v1 = cell.corners[3];
-                            v2 = cell.corners[0];
+                            v1 = cell.corners[0];
+                            v2 = cell.corners[3];
                             break;
                     }
 
                     cell.neighbors[dir] = this.getCellAt(neighb.x, neighb.y);
                     cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
                 }
-                this.cellsContainer.addChild(cell.shape);
+                this.cellsContainer.addChild(cell.graphics);
             });
             this.startCell = this.getCellAt(this.cells[0].x, this.cells[0].y);
 

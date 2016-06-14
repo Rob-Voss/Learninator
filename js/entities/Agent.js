@@ -8,7 +8,7 @@
 
         /**
          * Options for the Agent
-         * @typedef {Object} agentOpts
+         * @typedef {object} agentOpts
          * @property {boolean} worker - Is the Agent a Web Worker
          * @property {string} brainType - The type of Brain to use
          * @property {number} numActions - The number of actions the Agent can take
@@ -18,22 +18,9 @@
          * @property {number} range - The range of the Agent's eyes
          * @property {number} proximity - The proximity of the Agent's eyes
          * @property {cheatOpts} cheats - The cheats to display
-         * @property {brainOpts} spec - The brain options
+         * @property {object} specTD - The brain options
+         * @property {object} specDQN - The brain options
          * @property {envObject} env - The environment
-         */
-
-        /**
-         * The options for the Agents brain
-         * @typedef {Object} brainOpts
-         * @property {string} update - qlearn | sarsa
-         * @property {number} gamma - Discount factor [0, 1]
-         * @property {number} epsilon - Initial epsilon for epsilon-greedy policy [0, 1]
-         * @property {number} alpha - Value function learning rate
-         * @property {number} experienceAddEvery - Number of time steps before we add another experience to replay memory
-         * @property {number} experienceSize - Size of experience
-         * @property {number} learningStepsPerIteration - Number of steps to go through during one tick
-         * @property {number} tdErrorClamp - For robustness
-         * @property {number} numHiddenUnits - Number of neurons in hidden layer
          */
 
         /**
@@ -89,29 +76,29 @@
             }
 
             // Set the brain options
-            let dqnBrainOpts = {
-                    update: "qlearn", // qlearn | sarsa
-                    gamma: 0.9, // discount factor, [0, 1)
-                    epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
-                    alpha: 0.005, // value function learning rate
-                    experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
-                    experienceSize: 10000, // size of experience
-                    learningStepsPerIteration: 5,
-                    tdErrorClamp: 1.0, // for robustness
-                    numHiddenUnits: 100 // number of neurons in hidden layer
-                },
-                tdBrainOpts = {
-                    update: 'qlearn', // 'qlearn' or 'sarsa'
-                    gamma: 0.9, // discount factor, [0, 1)
-                    epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
-                    alpha: 0.1, // value function learning rate
-                    lambda: 0.9, // eligibility trace decay, [0,1). 0 = no eligibility traces
-                    replacingTraces: true, // use replacing or accumulating traces
-                    planN: 50, // number of planning steps per iteration. 0 = no planning
-                    smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
-                    beta: 0.1 // learning rate for smooth policy update
-                };
-            this.brainOpts = Utility.getOpt(opts, 'spec', (this.brainType === 'RL.DQNAgent') ? dqnBrainOpts : tdBrainOpts);
+            this.brainOpts = [];
+            this.brainOpts.DQNAgent = Utility.getOpt(opts, 'specDQN', {
+                update: "qlearn", // qlearn | sarsa
+                gamma: 0.9, // discount factor, [0, 1)
+                epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                alpha: 0.005, // value function learning rate
+                experienceAddEvery: 5, // number of time steps before we add another experience to replay memory
+                experienceSize: 10000, // size of experience
+                learningStepsPerIteration: 5,
+                tdErrorClamp: 1.0, // for robustness
+                numHiddenUnits: 100 // number of neurons in hidden layer
+            });
+            this.brainOpts.TDAgent = Utility.getOpt(opts, 'specTD', {
+                update: 'qlearn', // 'qlearn' or 'sarsa'
+                gamma: 0.9, // discount factor, [0, 1)
+                epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                alpha: 0.1, // value function learning rate
+                lambda: 0, // eligibility trace decay, [0,1). 0 = no eligibility traces
+                replacingTraces: true, // use replacing or accumulating traces
+                planN: 50, // number of planning steps per iteration. 0 = no planning
+                smoothPolicyUpdate: true, // non-standard, updates policy smoothly to follow max_a Q
+                beta: 0.1 // learning rate for smooth policy update
+            });
 
             // The Agent's environment
             this.env = Utility.getOpt(opts, 'env', {
@@ -317,7 +304,7 @@
             var brain = this.brainType.split('.');
             // If it's a worker then we have to load it a bit different
             if (!this.worker) {
-                this.brain = new global[brain[0]][brain[1]](this.env, this.brainOpts);
+                this.brain = new global[brain[0]][brain[1]](this.env, this.brainOpts[brain[1]]);
 
                 return this;
             } else {

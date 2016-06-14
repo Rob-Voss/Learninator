@@ -38,32 +38,31 @@
          * @param {cheatOpts} opts.cheats - The cheats to display
          * @returns {Entity}
          */
-        constructor(type, position = new Vec(5, 5), opts) {
-            let typeOf = typeof type;
-            if (typeOf === 'string') {
+        constructor(type, position, opts) {
+            this.id = Utility.Strings.guid();
+            if (typeof type === 'string') {
                 this.type = Entity.entityTypes.indexOf(type);
                 this.typeName = type;
-                this.color = Entity.hexStyles[this.type];
                 this.name = (this.name === undefined) ? type : this.name;
-            } else if (typeOf === 'number') {
+            } else if (typeof type === 'number') {
                 this.type = type || 1;
                 this.typeName = Entity.entityTypes[this.type];
-                this.color = Entity.hexStyles[this.type];
                 this.name = (this.name === undefined) ? Entity.entityTypes[this.type] : this.name;
             }
-
-            this.id = Utility.Strings.guid();
+            this.color = Entity.hexStyles[this.type];
+            this.alpha = 1;
             this.options = opts || {
-                    radius: 10,
-                    interactive: false,
-                    useSprite: false,
-                    moving: false,
-                    cheats: false
-                };
+                radius: 10,
+                interactive: false,
+                useSprite: false,
+                moving: false,
+                cheats: false
+            };
             // Remember the old position and angle
-            this.position = position;
+            this.position = position || new Vec(5, 5);
+            this.angle = this.position.getAngle();
             this.oldPosition = this.position.clone();
-            this.oldAngle = this.position.angle;
+            this.oldAngle = this.angle;
             this.force = new Vec(0, 0);
 
             this.radius = Utility.getOpt(this.options, 'radius', undefined);
@@ -73,7 +72,6 @@
             this.interactive = Utility.getOpt(this.options, 'interactive', false);
             this.moving = Utility.getOpt(this.options, 'moving', false);
             this.useSprite = Utility.getOpt(this.options, 'useSprite', false);
-
             this.cheats = Utility.getOpt(this.options, 'cheats', false);
             this.direction = Utility.getDirection(this.position.getAngle(true));
 
@@ -84,9 +82,6 @@
             this.collisions = [];
             this.gridLocation = Utility.getOpt(this.options, 'gridLocation', {});
             this.cleanUp = false;
-            if (this.type === 2) {
-                this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
-            }
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
@@ -311,7 +306,7 @@
             } else {
                 this.graphics.clear();
                 this.graphics.lineStyle(0.5, 0x000000, 0.8);
-                this.graphics.beginFill(this.color);
+                this.graphics.beginFill(this.color, this.alpha);
                 if (this.type === 2) {
                     this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
                     this.graphics.drawPolygon(this.vertices);

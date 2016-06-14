@@ -24,7 +24,6 @@
             this.size = size;
             this.fill = fill;
             this.cheats = cheats;
-            this.useSprite = false;
             this.isOver = false;
             this.isDown = false;
             this.color = 0xFFFFFF;
@@ -44,41 +43,22 @@
                 new Vec(this.x * this.size, this.y * this.size + this.size)
             ];
 
-            for (let c = 0; c < this.corners.length; c++) {
-                let x1 = this.corners[c].x,
-                    y1 = this.corners[c].y,
-                    x2, y2;
-                if (c !== this.corners.length - 1) {
-                    x2 = this.corners[c + 1].x;
-                    y2 = this.corners[c + 1].y;
-                } else {
-                    x2 = this.corners[0].x;
-                    y2 = this.corners[0].y;
-                }
-                let v1 = new Vec(x1, y1),
-                    v2 = new Vec(x2, y2);
-                this.walls.push(new Wall(v1, v2));
-            }
-
+            this.useSprite = false;
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            let graphicObj = null;
             if (this.useSprite) {
-                this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                this.sprite = new PIXI.Sprite(this.texture);
-                this.sprite.width = this.width;
-                this.sprite.height = this.height;
-                this.sprite.anchor.set(0.5, 0.5);
-                graphicObj = this.sprite;
+                this.sprites = PIXI.loader.resources["../../img/treasureHunter.json"].textures;
+                this.graphics = new PIXI.Sprite(this.sprites['floor.png']);
+                // this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
+                // this.graphics = new PIXI.Sprite(this.texture);
+                this.graphics.width = this.size;
+                this.graphics.height = this.size;
+                this.graphics.anchor.set(0.5, 0.5);
             } else {
-                this.shape = new PIXI.Graphics();
-                graphicObj = this.shape;
+                this.graphics = new PIXI.Graphics();
             }
-
-            this.draw();
-
-            graphicObj.interactive = true;
-            graphicObj
+            this.graphics.interactive = true;
+            this.graphics
                 .on('mousedown', (event) => {
                     this.event = event;
                     this.data = event.data;
@@ -108,7 +88,8 @@
                     this.isOver = false;
                     this.draw();
                 });
-            graphicObj.addChild(this.cheatsContainer);
+            this.draw();
+            this.graphics.addChild(this.cheatsContainer);
 
             return this;
         }
@@ -141,19 +122,19 @@
          */
         draw() {
             if (this.useSprite) {
-                this.sprite.position.set(this.center.x, this.center.y);
+                this.graphics.position.set(this.center.x, this.center.y);
             } else {
-                this.shape.clear();
-                this.shape.color = this.color;
-                this.shape.lineStyle(0, 0x000000, this.alpha);
+                this.graphics.clear();
+                this.graphics.color = this.color;
+                this.graphics.lineStyle(0, 0x000000, this.alpha);
                 if (this.fill) {
-                    this.shape.beginFill(this.color, this.alpha);
+                    this.graphics.beginFill(this.color, this.alpha);
                 }
-                this.shape.drawRect(this.corners[0].x, this.corners[0].y, this.size, this.size);
+                this.graphics.drawRect(this.corners[0].x, this.corners[0].y, this.size, this.size);
                 if (this.fill) {
-                    this.shape.endFill();
+                    this.graphics.endFill();
                 }
-                this.bounds = this.shape.getBounds();
+                this.bounds = this.graphics.getBounds();
 
                 if (this.reward !== null && this.value !== null) {
                     let rew = this.reward.toFixed(1),
@@ -166,9 +147,9 @@
                         });
                         this.rewardText.anchor = new PIXI.Point(0.5, 0.5);
                         this.rewardText.position.set(this.center.x, this.center.y - 8);
-                        this.shape.addChild(this.rewardText);
+                        this.graphics.addChild(this.rewardText);
                     } else {
-                        this.rewardText = this.shape.getChildAt(this.shape.getChildIndex(this.rewardText));
+                        this.rewardText = this.graphics.getChildAt(this.graphics.getChildIndex(this.rewardText));
                         this.rewardText.text = rew !== "0.0" ? 'R' + rew : '';
                     }
 
@@ -180,9 +161,9 @@
                         });
                         this.valueText.anchor = new PIXI.Point(0.5, 0.5);
                         this.valueText.position.set(this.center.x, this.center.y);
-                        this.shape.addChild(this.valueText);
+                        this.graphics.addChild(this.valueText);
                     } else {
-                        this.valueText = this.shape.getChildAt(this.shape.getChildIndex(this.valueText));
+                        this.valueText = this.graphics.getChildAt(this.graphics.getChildIndex(this.valueText));
                         this.valueText.text = val !== "0.00" ? val : '';
                     }
                 }
