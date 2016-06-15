@@ -14,41 +14,50 @@ var HexShape = HexShape || {};
         /**
          *
          * @param {Hex|object} hex
-         * @param {number} size
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {boolean} cheats
+         * @param {gridOpts} opts
          * @returns {HexShape}
          * @constructor
          */
-        constructor(hex, size = 20, layout, fill = false, cheats = false) {
+        constructor(hex, layout, opts = false) {
             super(hex.q, hex.r, hex.s);
-
-            this.walls = [];
-            this.reward = null;
-            this.value = null;
-            this.size = size;
-            this.fill = fill;
-            this.cheats = cheats;
-            this.center = layout.hexToPixel(this);
-            this.corners = layout.polygonCorners(this);
+            this.layout = layout;
+            this.size = Utility.getOpt(opts, 'size', 10);
+            this.cellSize = Utility.getOpt(opts, 'cellSize', 50);
+            this.cellSpacing = Utility.getOpt(opts, 'cellSpacing', 0);
+            this.pointy = Utility.getOpt(opts, 'pointy', false);
+            this.useSprite = Utility.getOpt(opts, 'useSprite', false);
+            this.fill = Utility.getOpt(opts, 'fill', false);
+            this.cheats = Utility.getOpt(opts, 'cheats', false);
+            this.center = this.layout.hexToPixel(this);
+            this.corners = this.layout.polygonCorners(this);
             this.corners.forEach((corner) => {
                 this.polyCorners.push(corner.x, corner.y);
             });
+            this.height = this.cellSize * 2;
+            this.width = Math.sqrt(3) / 2 * this.height;
 
-            this.useSprite = false;
             this.isOver = false;
             this.isDown = false;
-            this.color = this.colorForHex(this.q, this.r, this.s);
-            this.alpha = 0.2;
+            this.reward = null;
+            this.value = null;
+            this.walls = [];
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
+            this.color = this.colorForHex(this.q, this.r, this.s);
+            this.alpha = 1;
             if (this.useSprite) {
-                this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                this.graphics = new PIXI.Sprite(this.texture);
+                this.graphics = new PIXI.Sprite.fromFrame('dirt_0' + Utility.Maths.randi(1, 9) + '.png');
+                this.graphics.position.x = this.center.x;
+                this.graphics.position.y = this.center.y;
                 this.graphics.width = this.width;
                 this.graphics.height = this.height;
+                this.graphics.alpha = this.alpha;
+                if (!this.pointy) {
+                    this.graphics.rotation = 0.523599;
+                }
+                this.bounds = this.graphics.getBounds();
                 this.graphics.anchor.set(0.5, 0.5);
             } else {
                 this.graphics = new PIXI.Graphics();
@@ -62,14 +71,14 @@ var HexShape = HexShape || {};
                     this.event = event;
                     this.data = event.data;
                     this.color = 0x00FF00;
-                    this.alpha = 1;
+                    this.alpha = 0.7;
                     this.isDown = true;
                     this.draw();
                 })
                 .on('mouseup', (event) => {
                     this.event = event;
                     this.color = this.colorForHex(this.q, this.r, this.s);
-                    this.alpha = 0.2;
+                    this.alpha = 1;
                     this.isDown = false;
                     this.draw();
                 })
@@ -83,7 +92,7 @@ var HexShape = HexShape || {};
                 .on('mouseout', (event) => {
                     this.event = event;
                     this.color = this.colorForHex(this.q, this.r, this.s);
-                    this.alpha = 0.2;
+                    this.alpha = 1;
                     this.isOver = false;
                     this.draw();
                 });
@@ -163,19 +172,21 @@ var HexShape = HexShape || {};
          */
         draw() {
             if (this.useSprite) {
-                this.sprite.position.set(this.center.x, this.center.y);
+                this.graphics.position.x = this.center.x;
+                this.graphics.position.y = this.center.y;
+                this.graphics.alpha = this.alpha;
             } else {
-                this.shape.clear();
-                this.shape.color = this.color;
-                this.shape.lineStyle(0, 0x000000, 0);
+                this.graphics.clear();
+                this.graphics.color = this.color;
+                this.graphics.lineStyle(0, 0x000000, 0);
                 if (this.fill) {
-                    this.shape.beginFill(this.color, this.alpha);
+                    this.graphics.beginFill(this.color, this.alpha);
                 }
-                this.shape.drawPolygon(this.polyCorners);
+                this.graphics.drawPolygon(this.polyCorners);
                 if (this.fill) {
-                    this.shape.endFill();
+                    this.graphics.endFill();
                 }
-                this.bounds = this.shape.getBounds();
+                this.bounds = this.graphics.getBounds();
 
                 if (this.reward !== null && this.value !== null) {
                     let rew = this.reward.toFixed(1),

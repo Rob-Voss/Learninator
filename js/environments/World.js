@@ -32,6 +32,7 @@
          * @property {number} numEntityAgents - The number of EntityAgents to spawn
          * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
          * @property {Grid} grid - The grid to use
+         * @property {Maze} maze - The maze to use
          */
 
         /**

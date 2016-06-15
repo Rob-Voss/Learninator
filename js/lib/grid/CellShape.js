@@ -13,29 +13,25 @@
          * @constructor
          *
          * @param {Cell} cell
-         * @param {number} size
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {CellShape}
          */
-        constructor(cell, size, fill = false, cheats = false) {
+        constructor(cell, opts) {
             super(cell.x, cell.y, cell.z);
-
-            this.size = size;
-            this.fill = fill;
-            this.cheats = cheats;
+            this.size = Utility.getOpt(opts, 'cellSize', 50);
+            this.pointy = Utility.getOpt(opts, 'pointy', false);
+            this.useSprite = Utility.getOpt(opts, 'useSprite', false);
+            this.fill = Utility.getOpt(opts, 'fill', false);
+            this.cheats = Utility.getOpt(opts, 'cheats', false);
             this.isOver = false;
             this.isDown = false;
             this.color = 0xFFFFFF;
             this.alpha = 1;
-
             this.walls = [];
-
             this.center = new Vec(
                 this.x * this.size + (this.size / 2),
                 this.y * this.size + (this.size / 2)
             );
-
             this.corners = [
                 new Vec(this.x * this.size, this.y * this.size),
                 new Vec(this.x * this.size + this.size, this.y * this.size),
@@ -43,14 +39,10 @@
                 new Vec(this.x * this.size, this.y * this.size + this.size)
             ];
 
-            this.useSprite = false;
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
             if (this.useSprite) {
-                this.sprites = PIXI.loader.resources["../../img/treasureHunter.json"].textures;
-                this.graphics = new PIXI.Sprite(this.sprites['floor.png']);
-                // this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                // this.graphics = new PIXI.Sprite(this.texture);
+                this.graphics = new PIXI.Sprite.fromFrame('floor.png');
                 this.graphics.width = this.size;
                 this.graphics.height = this.size;
                 this.graphics.anchor.set(0.5, 0.5);
@@ -122,7 +114,8 @@
          */
         draw() {
             if (this.useSprite) {
-                this.graphics.position.set(this.center.x, this.center.y);
+                this.graphics.position.x = this.center.x;
+                this.graphics.position.y = this.center.y;
             } else {
                 this.graphics.clear();
                 this.graphics.color = this.color;

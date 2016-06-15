@@ -113,7 +113,7 @@
                         radius: 10,
                         collision: false,
                         interactive: false,
-                        useSprite: false,
+                        useSprite: true,
                         worker: false
                     }
                 )
@@ -140,9 +140,6 @@
                                 a = agent.brain.act(state),
                                 // run it through environment dynamics
                                 obs = this.sampleNextState(state, a);
-
-                            // allow opportunity for the agent to learn
-                            agent.brain.learn(obs.r);
                             // evolve environment to next state
                             this.state = obs.ns;
 
@@ -152,7 +149,8 @@
                                 agent.brain.resetEpisode();
 
                                 agent.gridLocation = this.grid.getCellAt(0, 0);
-                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
+                                agent.graphics.position.x = agent.position.x = agent.gridLocation.center.x;
+                                agent.graphics.position.y = agent.position.y = agent.gridLocation.center.y;
                                 this.state = this.startState();
 
                                 // record the reward achieved
@@ -163,7 +161,8 @@
                                 agent.nStepsCounter = 0;
                             } else {
                                 agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
-                                agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
+                                agent.graphics.position.x = agent.position.x = agent.gridLocation.center.x;
+                                agent.graphics.position.y = agent.position.y = agent.gridLocation.center.y;
                             }
                             // Check them for collisions
                             this.check(agent);
@@ -173,13 +172,23 @@
                                 this.check(agent.eyes[ae]);
                             }
 
+                            // Just testing if throwing items at it and +/- rewards for
+                            // them will distract the agent
                             if (agent.collisions.length > 0) {
-                                console.log('Ouch I hit sumfin');
+                                for (let c = 0; c < agent.collisions.length; c++) {
+                                    let col = agent.collisions[c];
+                                    if (col.entity.type === 1) {
+                                        obs.r += 0.1;
+                                    } else if (col.entity.type === 2) {
+                                        obs.r -= 0.1;
+                                    }
+                                    col.entity.cleanUp = true;
+                                }
                             }
+                            // allow opportunity for the agent to learn
+                            agent.brain.learn(obs.r);
 
                             this.tick();
-                            agent.draw();
-                            this.drawGrid();
                         }
                     }, 20);
                 } else {
@@ -212,13 +221,9 @@
                     // Tick them
                     entity.tick();
 
-                    if (entity.useSprite) {
-                        entity.sprite.position.set(entity.position.x, entity.position.y);
-                    }
-
-                    if (entity.cleanUp === true || (entity.type === 2 || entity.type === 1)) {
+                    if (entity.type === 2 || entity.type === 1) {
                         popCount++;
-                        if (entity.age > 5000) {
+                        if (entity.age > 5000 || entity.cleanUp === true) {
                             this.deleteEntity(entity.id);
                             popCount--;
                         }
@@ -231,6 +236,7 @@
             if (popCount < this.numEntities) {
                 this.addEntities(this.numEntities - popCount);
             }
+            this.drawGrid();
 
             return this;
         }

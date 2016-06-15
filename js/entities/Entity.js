@@ -74,28 +74,24 @@
             this.useSprite = Utility.getOpt(this.options, 'useSprite', false);
             this.cheats = Utility.getOpt(this.options, 'cheats', false);
             this.direction = Utility.getDirection(this.position.getAngle(true));
+            this.gridLocation = Utility.getOpt(this.options, 'gridLocation', {});
 
             this.age = 0;
             this.speed = 1;
             this.rot1 = 0.0;
             this.rot2 = 0.0;
             this.collisions = [];
-            this.gridLocation = Utility.getOpt(this.options, 'gridLocation', {});
             this.cleanUp = false;
 
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
-            this.graphics = null;
             if (this.useSprite) {
-                this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                this.sprite = new PIXI.Sprite(this.texture);
-                this.sprite.width = this.width;
-                this.sprite.height = this.height;
-                this.sprite.anchor.set(0.5, 0.5);
-                this.graphics = this.sprite;
+                this.graphics = new PIXI.Sprite.fromFrame((this.type === 4) ? 'explorer.png' : this.typeName.replace(' ', '') + '.png');
+                this.graphics.position.x = this.position.x;
+                this.graphics.position.y = this.position.y;
+                this.graphics.anchor.set(0.5, 0.5);
             } else {
-                this.shape = new PIXI.Graphics();
-                this.graphics = this.shape;
+                this.graphics = new PIXI.Graphics();
             }
 
             this.draw();
@@ -302,7 +298,8 @@
          */
         draw() {
             if (this.useSprite) {
-                this.graphics.position.set(this.position.x, this.position.y);
+                this.graphics.position.x = this.position.x;
+                this.graphics.position.y = this.position.y;
             } else {
                 this.graphics.clear();
                 this.graphics.lineStyle(0.5, 0x000000, 0.8);

@@ -17,9 +17,13 @@
                     resizable: false,
                     transparent: false,
                     resolution: window.devicePixelRatio,
-                    width: 1000,
-                    height: 1000
+                    width: 600,
+                    height: 600
                 },
+                /**
+                 *
+                 * @type {cheatsOpts}
+                 */
                 cheats = {
                     id: false,
                     name: false,
@@ -29,6 +33,10 @@
                     gridLocation: false,
                     position: false
                 },
+                /**
+                 *
+                 * @type {agentOpts}
+                 */
                 agentOpts = {
                     brainType: 'RL.DQNAgent',
                     worker: false,
@@ -44,29 +52,34 @@
                     useSprite: false,
                     cheats: cheats
                 },
+                /**
+                 *
+                 * @type {gridOpts}
+                 */
                 gridOpts = {
                     width: renderOpts.width,
                     height: renderOpts.height,
                     buffer: 0,
-                    cellSize: 10,
+                    size: 5,
+                    cellSize: 50,
                     cellSpacing: 0,
-                    size: 4,
                     pointy: false,
+                    useSprite: true,
                     fill: false,
                     cheats: cheats
                 },
                 orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-                size = new Point(gridOpts.width / gridOpts.cellSize, gridOpts.height / gridOpts.cellSize),
+                size = new Point(gridOpts.cellSize, gridOpts.cellSize),
                 origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
                 layout = new Layout(orientation, size, origin),
-                shape = HexGrid.shapeRectangle(gridOpts.size, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats, gridOpts.pointy),
-                // shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeRing(0, 0, 2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeParallelogram(-1, -2, 1, 1, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTriangle1(2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                // shape = HexGrid.shapeTriangle2(2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-                grid = new HexGrid(gridOpts, shape, layout),
+                cells = HexGrid.shapeRectangle(layout, gridOpts);
+                // cells = HexGrid.shapeHexagon(layout, gridOpts);
+                // cells = HexGrid.shapeRing(0, 0, layout, gridOpts);
+                // cells = HexGrid.shapeParallelogram(-1, -2, 1, 1, layout, gridOpts);
+                // cells = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, layout, gridOpts);
+                // cells = HexGrid.shapeTriangle1(2, layout, gridOpts);
+                // cells = HexGrid.shapeTriangle2(2, layout, gridOpts);
+                let grid = new HexGrid(layout, cells, gridOpts),
                 maze = new Maze(grid.init()),
                 agents = [
                     new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts),
@@ -78,7 +91,7 @@
                     grid: maze.grid,
                     maze: maze,
                     collision: {
-                        type: 'grid'
+                        type: 'brute'
                     },
                     numEntities: 20,
                     entityOpts: {
@@ -96,8 +109,6 @@
             // this.agents[1].load('zoo/wateragent.json');
 
             this.init();
-
-            datGUI(this);
 
             return this;
         }

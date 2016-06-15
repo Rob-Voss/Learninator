@@ -7,9 +7,12 @@
 
     <title>Maze World</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
+          rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
     <script>
@@ -19,13 +22,13 @@
          */
         var world = world || {};
 
-        var goslow = function() {
+        var goslow = function () {
             world.stepsPerTick = 1;
         };
-        var gonormal = function(){
+        var gonormal = function () {
             world.stepsPerTick = 10;
         };
-        var gofast = function() {
+        var gofast = function () {
             world.stepsPerTick = 25;
         };
 
@@ -39,11 +42,44 @@
             world.renderer.render(world.stage);
         }
 
+        function newMaze() {
+            let gridOpts = {
+                    width: world.width,
+                    height: world.height,
+                    buffer: 0,
+                    size: 10,
+                    cellSize: 40,
+                    cellSpacing: 0,
+                    fill: true,
+                    closed: false,
+                    useSprite: true
+                },
+                grid = new Grid(gridOpts),
+                maze = new Maze(grid.init());
+            world.walls.forEach((wall) => {
+                let idx = world.populationContainer.getChildIndex(wall.graphics);
+                world.populationContainer.removeChildAt(idx);
+                world.population.delete(wall.id);
+            });
+            let idx = world.stage.getChildIndex(world.grid.cellsContainer);
+            world.stage.removeChildAt(idx);
+            world.stage.addChild(grid.cellsContainer);
+
+            world.maze = maze;
+            world.walls = maze.walls;
+            world.grid = grid;
+
+            world.addWalls();
+            world.reset();
+            world.initFlot();
+            world.drawGrid();
+        }
+
         /**
          * Create existence!
          */
         function start() {
-            PIXI.loader.add("../../img/treasureHunter.json").load(() => {
+            PIXI.loader.add("img/treasureHunter.json").load(() => {
                 world = new MazeWorld();
 //            datGUI(world);
             });
@@ -73,16 +109,23 @@
                 <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
                     Show Solution
                 </button>
-                <button class="btn btn-primary" onclick="world.agents[0].tick();" style="width:170px;height:50px;margin-bottom:5px;">
-                Start Learning
+                <button class="btn btn-primary" onclick="newMaze();" style="width:150px;height:50px;margin-bottom:5px;">
+                    New Maze
                 </button>
-                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                <button class="btn btn-primary" onclick="world.agents[0].tick();"
+                        style="width:170px;height:50px;margin-bottom:5px;">
+                    Start Learning
+                </button>
+                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Go
                     Fast
                 </button>
-                <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                <button class="btn btn-success" onclick="gonormal();"
+                        style="width:150px;height:50px;margin-bottom:5px;">Go
                     Normal
                 </button>
-                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">Go
+                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">
+                    Go
                     Slow
                 </button>
             </div>

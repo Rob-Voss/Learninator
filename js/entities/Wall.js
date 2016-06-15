@@ -9,39 +9,38 @@
          *
          * @param {Vec} v1
          * @param {Vec} v2
-         * @param {boolean} cheats
          * @param {number} direction
+         * @param {object} options
          * @returns {Wall}
          */
-        constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), cheats, direction) {
+        constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), direction, options) {
             this.id = Utility.Strings.guid();
-            this.type = 0;
-            this.direction = direction || 0;
             this.v1 = v1;
             this.v2 = v2;
-            this.cheats = cheats || false;
-            this.angle = this.v1.angleBetween(this.v2, true);
+            this.options = options || false;
+            this.useSprite = options.useSprite || false;
+            this.sprite = options.sprite || false;
+            this.cheats = options.cheats || false;
+            this.direction = direction || 0;
+            this.type = 0;
+            let tmpAngle = Math.round(this.v1.angleBetween(this.v2, true));
+            this.angle = tmpAngle < 0 ? tmpAngle + 360 : tmpAngle;
+            this.rotation = this.angle * Math.PI / 180;
             this.len = this.v1.distanceTo(this.v2);
-            this.rotation = this.v1.angleBetween(this.v2);
             this.position = this.v1.getPointBetween(this.v2, 50);
             this.width = (this.angle !== 0) ? 5 : this.len;
             this.height = (this.angle !== 0) ? this.len : 5;
             this.fontOpts = {font: "12px Arial", fill: "#000000", align: "center"};
 
-            // this.useSprite = true;
-
             // Add a container to hold our display cheats
             this.cheatsContainer = new PIXI.Container();
             if (this.useSprite) {
-                this.sprites = PIXI.loader.resources["../../img/treasureHunter.json"].textures;
-                this.graphics = new PIXI.Sprite(this.sprites[(this.angle !== 0) ? 'vertical-wall.png' : 'horizontal-wall.png']);
-                // this.texture = PIXI.Texture.fromImage('img/' + this.typeName.replace(' ', '') + '.png');
-                // this.sprite = new PIXI.Sprite(this.texture);
+                this.graphics = new PIXI.Sprite.fromFrame(this.sprite);
+                this.graphics.anchor.set(0.5, 0.5);
                 this.graphics.width = this.width;
                 this.graphics.height = this.height;
-                this.graphics.x = this.position.x;
-                this.graphics.y = this.position.y;
-                this.graphics.anchor.set(0.5, 0.5);
+                // this.graphics.rotation = this.v1.angleBetween(this.v2);
+                this.graphics.rotation = this.rotation;
             } else {
                 this.graphics = new PIXI.Graphics();
             }
@@ -85,12 +84,13 @@
          */
         draw() {
             if (this.useSprite) {
-                this.graphics.x = this.position.x;
-                this.graphics.y = this.position.y;
-                this.graphics.anchor.set(0.5, 0.5);
+                this.graphics.position.x = this.position.x;
+                this.graphics.position.y = this.position.y;
+                // this.graphics.rotation = this.v1.angleBetween(this.v2);
+                this.graphics.rotation = this.rotation;
             } else {
                 this.graphics.clear();
-                this.graphics.lineStyle(1, 0x000000);
+                this.graphics.lineStyle(2, 0x0000FF);
                 this.graphics.beginFill(0x000000);
                 this.graphics.moveTo(this.v1.x, this.v1.y);
                 this.graphics.lineTo(this.v2.x, this.v2.y);

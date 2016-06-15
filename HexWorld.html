@@ -26,7 +26,10 @@
         };
 
         function start() {
-            world = new HexWorld();
+            PIXI.loader.add("img/hexagon.json").load(() => {
+                world = new HexWorld();
+                datGUI(this);
+            });
         }
     </script>
     <link rel="import" href="/templates/twitch-nav.html">

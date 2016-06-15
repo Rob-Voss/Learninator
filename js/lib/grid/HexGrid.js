@@ -15,22 +15,29 @@
          * @name HexGrid
          * @constructor
          *
-         * @param {object} opts
-         * @param {Array} cells
          * @param {Layout} layout
+         * @param {Array} cells
+         * @param {gridOpts} opts
          * @returns {HexGrid}
          */
-        constructor(opts, cells, layout) {
+        constructor(layout, cells, opts) {
             let orientation = (opts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-                size = new Point(opts.width / opts.cellSize, opts.height / opts.cellSize),
-                origin = new Point(opts.width / 2, opts.height / 2),
-                lay = layout || new Layout(orientation, size, origin),
-                cs = cells || HexGrid.shapeHexagon(opts.size, opts.cellSize, lay, opts.fill, opts.cheats);
-            super(opts, cs, lay);
+                width = opts.size || opts.width / opts.cellSize,
+                height = opts.size || opts.height / opts.cellSize,
+                size = new Point(width, height),
+                origin = new Point(opts.width / 2, opts.height / 2);
+            layout = layout || new Layout(orientation, size, origin);
+            cells = cells || HexGrid.shapeHexagon(layout, opts);
+            super(layout, cells, opts);
+            this.layout = layout;
 
             return this;
         }
 
+        /**
+         * Initialize the Grid
+         * @returns {HexGrid}
+         */
         init() {
             this.mapCells();
             this.cellsContainer = new PIXI.Container();
@@ -44,35 +51,39 @@
 
                     switch (dir) {
                         case 0:
-                            v1 = cell.corners[(!this.pointy) ? 0 : 5];
-                            v2 = cell.corners[0 + ad];
+                            v1 = cell.corners[ad ? 0 : 5];
+                            v2 = cell.corners[ad ? 1 : 0];
                             break;
                         case 1:
-                            v1 = cell.corners[(!this.pointy) ? 0 : 5];
-                            v2 = cell.corners[4 + ad];
+                            v1 = cell.corners[ad ? 0 : 5];
+                            v2 = cell.corners[ad ? 5 : 4];
                             break;
                         case 2:
-                            v1 = cell.corners[4 + ad];
-                            v2 = cell.corners[3 + ad];
+                            v1 = cell.corners[3 + ad];
+                            v2 = cell.corners[4 + ad];
                             break;
                         case 3:
-                            v1 = cell.corners[3 + ad];
-                            v2 = cell.corners[2 + ad];
+                            v1 = cell.corners[2 + ad];
+                            v2 = cell.corners[3 + ad];
                             break;
                         case 4:
-                            v1 = cell.corners[2 + ad];
-                            v2 = cell.corners[1 + ad];
+                            v1 = cell.corners[1 + ad];
+                            v2 = cell.corners[2 + ad];
                             break;
                         case 5:
-                            v1 = cell.corners[1 + ad];
-                            v2 = cell.corners[0 + ad];
+                            v1 = cell.corners[0 + ad];
+                            v2 = cell.corners[1 + ad];
                             break;
                     }
 
                     cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
-                    cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
+                    cell.walls[dir] = new Wall(v1, v2, dir, {
+                        cheats: this.cheats,
+                        useSprite: false,
+                        sprite: 'stone_wall.png'
+                    });
                 }
-                this.cellsContainer.addChild(cell.shape);
+                this.cellsContainer.addChild(cell.graphics);
             });
             this.startCell = this.getCellAt(this.cells[0].q, this.cells[0].r);
 
@@ -343,21 +354,18 @@
 
         /**
          * Create a Hexagon of Hexes
-         * @param {number} size
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeHexagon(size, cellSize, layout, fill, cheats) {
+        static shapeHexagon(layout, opts) {
             var hexes = [];
-            for (let q = -size; q <= size; q++) {
-                var r1 = Math.max(-size, -q - size),
-                    r2 = Math.min(size, -q + size);
+            for (let q = -opts.size / 2; q <= opts.size / 2; q++) {
+                var r1 = Math.max(-opts.size / 2, -q - opts.size / 2),
+                    r2 = Math.min(opts.size / 2, -q + opts.size / 2);
                 for (let r = r1; r <= r2; r++) {
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hex = new HexShape(cell, layout, opts);
                     hexes.push(hex);
                 }
             }
@@ -370,18 +378,16 @@
          * @param {number} r1
          * @param {number} q2
          * @param {number} r2
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeParallelogram(q1, r1, q2, r2, cellSize, layout, fill, cheats) {
+        static shapeParallelogram(q1, r1, q2, r2, layout, opts) {
             var hexes = [];
             for (let q = q1; q <= q2; q++) {
                 for (let r = r1; r <= r2; r++) {
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hex = new HexShape(cell, layout, opts);
                     hexes.push(hex);
                 }
             }
@@ -390,26 +396,22 @@
 
         /**
          * Create a rectangle of Hexes
-         * @param {number} w - width
-         * @param {number} h - height
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeRectangle(w, h, cellSize, layout, fill, cheats, pointy = false) {
+        static shapeRectangle(layout, opts) {
             var hexes = [],
-                r1 = -Math.floor(w / 2),
-                r2 = r1 + w,
-                q1 = -Math.floor(h / 2),
-                q2 = q1 + h;
-            if (!pointy) {
+                r1 = -Math.floor(opts.size / 2),
+                r2 = r1 + opts.size,
+                q1 = -Math.floor(opts.size / 2),
+                q2 = q1 + opts.size;
+            if (!opts.pointy) {
                 for (let q = q1; q < q2; q++) {
                     let qOffset = -Math.floor(q / 2);
                     for (let r = r1 + qOffset; r < r2 + qOffset; r++) {
                         let cell = new Hex(q, r, -q - r),
-                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                            hex = new HexShape(cell, layout, opts);
                         hexes.push(hex);
                     }
                 }
@@ -418,7 +420,7 @@
                     let rOffset = -Math.floor(r / 2);
                     for (let q = q1 + rOffset; q < q2 + rOffset; q++) {
                         let cell = new Hex(q, r, -q - r),
-                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                            hex = new HexShape(cell, layout, opts);
                         hexes.push(hex);
                     }
                 }
@@ -431,24 +433,21 @@
          * Create a ring of Hexes
          * @param {number} q
          * @param {number} r
-         * @param {number} radius
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeRing(q, r, radius, cellSize, layout, fill, cheats) {
+        static shapeRing(q, r, layout, opts) {
             var i, j, len, moveDirection, moveDirectionIndex, moveDirections, ref, hexes = [];
             moveDirections = [[1, 0], [0, -1], [-1, 0], [-1, 1], [0, 1], [1, 0], [1, -1]];
             for (moveDirectionIndex = i = 0, len = moveDirections.length; i < len; moveDirectionIndex = ++i) {
                 moveDirection = moveDirections[moveDirectionIndex];
-                for (j = 0, ref = radius - 1; 0 <= ref ? j <= ref : j >= ref; 0 <= ref ? j++ : j--) {
+                for (j = 0, ref = opts.size / 2 - 1; 0 <= ref ? j <= ref : j >= ref; 0 <= ref ? j++ : j--) {
                     q += moveDirection[0];
                     r += moveDirection[1];
                     if (moveDirectionIndex !== 0) {
                         let cell = new Hex(q, r, -q - r),
-                            hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                            hex = new HexShape(cell, layout, opts);
                         hexes.push(hex);
                     }
                 }
@@ -464,13 +463,11 @@
          * @param minR
          * @param maxR
          * @param toCube
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeTrapezoidal(minQ, maxQ, minR, maxR, toCube, cellSize, layout, fill, cheats) {
+        static shapeTrapezoidal(minQ, maxQ, minR, maxR, toCube, layout, opts) {
             var q, r, _g3, _g2,
                 hexes = [],
                 _g1 = minQ,
@@ -482,7 +479,7 @@
                 while (_g3 < _g2) {
                     r = _g3++;
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hex = new HexShape(cell, layout, opts);
                     hexes.push(hex);
                 }
             }
@@ -491,19 +488,16 @@
 
         /**
          * Create a triangle of Hexes
-         * @param {number} size
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeTriangle1(size, cellSize, layout, fill, cheats) {
+        static shapeTriangle1(layout, opts) {
             var hexes = [];
-            for (let q = 0; q <= size; q++) {
-                for (let r = 0; r <= size - q; r++) {
+            for (let q = 0; q <= opts.size; q++) {
+                for (let r = 0; r <= opts.size - q; r++) {
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hex = new HexShape(cell, layout, opts);
                     hexes.push(hex);
                 }
             }
@@ -512,19 +506,16 @@
 
         /**
          * Create a triangle of Hexes
-         * @param {number} size
-         * @param {number} cellSize
          * @param {Layout} layout
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeTriangle2(size, cellSize, layout, fill, cheats) {
+        static shapeTriangle2(layout, opts) {
             var hexes = [];
-            for (let q = 0; q <= size; q++) {
-                for (let r = size - q; r <= size; r++) {
+            for (let q = 0; q <= opts.size; q++) {
+                for (let r = opts.size - q; r <= opts.size; r++) {
                     let cell = new Hex(q, r, -q - r),
-                        hex = new HexShape(cell, cellSize, layout, fill, cheats);
+                        hex = new HexShape(cell, layout, opts);
                     hexes.push(hex);
                 }
             }
@@ -640,6 +631,7 @@
     };
 
     Layout.prototype = {
+
         /**
          *
          * @param {Hex} hex

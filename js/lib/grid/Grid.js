@@ -9,6 +9,21 @@
         CellShape = global.CellShape || {},
         Point = global.Point || {};
 
+    /**
+     * The grid options
+     * @typedef {Object} gridOpts
+     * @property {number} width
+     * @property {number} height
+     * @property {number} buffer
+     * @property {number} size
+     * @property {number} cellSize
+     * @property {number} cellSpacing
+     * @property {boolean} pointy
+     * @property {boolean} useSprite
+     * @property {boolean} fill
+     * @property {cheatsOpts} cheats
+     */
+
     class Grid {
 
         /**
@@ -16,20 +31,12 @@
          * @name Grid
          * @constructor
          *
-         * @param {object} opts - The options for the Grid
-         * @param {number} opts.width - The width
-         * @param {number} opts.height - The height
-         * @param {boolean} opts.cheats - The display flag
-         * @param {number} opts.buffer - The buffer
-         * @param {number} opts.size -
-         * @param {number} opts.cellSize -
-         * @param {number} opts.cellSpacing -
-         * @param {boolean} opts.pointy -
-         * @param {boolean} opts.fill -
+         * @param {Layout} layout -
          * @param {Array} cells -
+         * @param {gridOpts} opts - The options for the Grid
          * @returns {Grid}
          */
-        constructor(opts, cells, layout = false) {
+        constructor(layout, cells,  opts) {
             this.width = Utility.getOpt(opts, 'width', 600);
             this.height = Utility.getOpt(opts, 'height', 600);
             this.buffer = Utility.getOpt(opts, 'buffer', 0);
@@ -37,6 +44,7 @@
             this.cellSize = Utility.getOpt(opts, 'cellSize', 20);
             this.cellSpacing = Utility.getOpt(opts, 'cellSpacing', 0);
             this.pointy = Utility.getOpt(opts, 'pointy', false);
+            this.useSprite = Utility.getOpt(opts, 'useSprite', false);
             this.fill = Utility.getOpt(opts, 'fill', false);
             this.cheats = Utility.getOpt(opts, 'cheats', false);
             this.xCount = this.width / this.cellSize;
@@ -81,7 +89,7 @@
                     }
 
                     cell.neighbors[dir] = this.getCellAt(neighb.x, neighb.y);
-                    cell.walls[dir] = new Wall(v1, v2, this.cheats, dir);
+                    cell.walls[dir] = new Wall(v1, v2, dir, {cheats: this.cheats, sprite: 'stone_wall.png'});
                 }
                 this.cellsContainer.addChild(cell.graphics);
             });
@@ -268,19 +276,15 @@
 
         /**
          * Create a rectangle of Cells
-         * @param {number} w
-         * @param {number} h
-         * @param {number} size
-         * @param {boolean} fill
-         * @param {object} cheats
+         * @param {gridOpts} opts
          * @returns {Array}
          */
-        static shapeRectangle(w, h, size, fill, cheats) {
+        static shapeRectangle(opts) {
             let cells = [];
-            for (let x = 0; x < w; x++) {
-                for (let y = 0; y < h; y++) {
+            for (let x = 0; x < opts.size; x++) {
+                for (let y = 0; y < opts.size; y++) {
                     let cell = new Cell(x, y),
-                        cellShape = new CellShape(cell, size, fill, cheats);
+                        cellShape = new CellShape(cell, opts);
                     cells.push(cellShape);
                 }
             }
