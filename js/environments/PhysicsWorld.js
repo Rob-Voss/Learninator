@@ -122,7 +122,7 @@ if (window.MatterTools) {
          */
         constructor(agents, worldOpts, renderOpts) {
             var self = this;
-            this.rendererOpts = renderOpts || {
+            this.renderOpts = renderOpts || {
                     antialiasing: false,
                     autoResize: false,
                     resolution: window.devicePixelRatio,
@@ -137,9 +137,9 @@ if (window.MatterTools) {
             this.agents = agents || [];
             this.entityAgents = [];
 
-            this.width = this.rendererOpts.width;
-            this.height = this.rendererOpts.height;
-            this.resizable = this.rendererOpts.resizable;
+            this.width = this.renderOpts.width;
+            this.height = this.renderOpts.height;
+            this.resizable = this.renderOpts.resizable;
 
             this.clock = 0;
             this.pause = false;
@@ -150,7 +150,7 @@ if (window.MatterTools) {
             this.engine = Engine.create(container, engineOpts);
             this.canvas = this.engine.render.canvas;
 
-            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
+            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
             this.renderer.backgroundColor = 0xFFFFFF;
 
             this.renderer.view.style.pos = "absolute";
@@ -251,7 +251,7 @@ if (window.MatterTools) {
                     entity.addChild(entityAgent.eyes[ei].shape);
                 }
                 this.entityAgents.push(entityAgent);
-                this.populationContainer.addChild(entity);
+                this.entityLayer.addChild(entity);
                 this.population.set(entityAgent.id, entityAgent);
             }
 
@@ -378,8 +378,8 @@ if (window.MatterTools) {
         deleteEntity(id) {
             if (this.population.has(id)) {
                 let entity    = this.population.get(id),
-                    entityIdx = this.populationContainer.getChildIndex(entity.shape || entity.sprite);
-                this.populationContainer.removeChildAt(entityIdx);
+                    entityIdx = this.entityLayer.getChildIndex(entity.shape || entity.sprite);
+                this.entityLayer.removeChildAt(entityIdx);
                 this.population.delete(id);
             }
             return this;
@@ -408,7 +408,7 @@ if (window.MatterTools) {
          * @returns {PhysicsWorld}
          */
         populate(worldOpts) {
-            this.populationContainer = new PIXI.Container();
+            this.entityLayer = new PIXI.Container();
             this.population = new Map();
 
             // Number of agents
@@ -434,7 +434,7 @@ if (window.MatterTools) {
             // Add the entities
             this.addEntities(this.numEntities);
 
-            this.stage.addChild(this.populationContainer);
+            this.stage.addChild(this.entityLayer);
 
             return this;
         }

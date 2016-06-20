@@ -22,7 +22,7 @@
             this.world = new p2.World({
                 gravity: [0, -0.5]
             });
-            this.rendererOpts = {
+            this.renderOpts = {
                 antialiasing: false,
                 autoResize: false,
                 resolution: window.devicePixelRatio,
@@ -33,9 +33,9 @@
                 height: 600
             };
 
-            this.width = this.rendererOpts.width;
-            this.height = this.rendererOpts.height;
-            this.resizable = this.rendererOpts.resizable;
+            this.width = this.renderOpts.width;
+            this.height = this.renderOpts.height;
+            this.resizable = this.renderOpts.resizable;
 
             // Pixi.js zoom level
             this.zoom = 50;
@@ -46,7 +46,7 @@
 
             // Create the canvas in which the game will show, and a
             // generic container for all the graphical objects
-            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
+            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
             this.renderer.backgroundColor = 0xCCCCCC;
             // Put the renderer on screen in the corner
             this.renderer.view.style.pos = "absolute";
@@ -146,7 +146,7 @@
          * @returns {WaterWorldP2}
          */
         addBodies(bodies) {
-            this.entities = [];
+            this.entityLayer = [];
             for (let i = 0; i < bodies.length; i++) {
                 let entity = bodies[i];
                 entity.body.addShape(entity.shape);
@@ -171,7 +171,7 @@
                         break;
                 }
 
-                this.entities.push(entity);
+                this.entityLayer.push(entity);
                 // Add the body to our world
                 this.world.addBody(entity.body);
                 // Add the body to our container
@@ -223,8 +223,8 @@
          * @returns {WaterWorldP2}
          */
         tick() {
-            for (let i = 0; i < this.entities.length; i++) {
-                let entity = this.entities[i];
+            for (let i = 0; i < this.entityLayer.length; i++) {
+                let entity = this.entityLayer[i];
                 if (entity.remove) {
                     this.world.removeBody(entity.body);
                 }

@@ -383,10 +383,10 @@
             worldOpts.grid = maze.grid;
             super(agents, maze.walls, worldOpts, renderOpts);
 
-            this.entities = [];
+            this.entityLayer = [];
             for (let [id, entity] of this.population.entries()) {
                 if (entity.type !== 3) {
-                    this.entities[0] = entity;
+                    this.entityLayer[0] = entity;
                 }
             }
             this.agents[0].setTarget(this.agents[1]);
@@ -423,8 +423,8 @@
             for (let step = 0; step < nStep; step++) {
                 // ai here
                 // update internal states
-                this.agents[0].getState(this.entities[0]);
-                this.agents[1].getState(this.entities[0]);
+                this.agents[0].getState(this.entityLayer[0]);
+                this.agents[1].getState(this.entityLayer[0]);
                 // push states to brain
                 this.agents[0].brain.setCurrentInputState(this.agents[0], this.agents[1]);
                 this.agents[1].brain.setCurrentInputState(this.agents[1], this.agents[0]);

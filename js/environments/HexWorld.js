@@ -12,13 +12,14 @@
          */
         constructor() {
             let renderOpts = {
-                    antialiasing: false,
+                    antialiasing: true,
                     autoResize: false,
-                    resizable: false,
+                    background: 0xDDDDDD,
+                    resizable: true,
                     transparent: false,
                     resolution: window.devicePixelRatio,
-                    width: 600,
-                    height: 600
+                    width: 800,
+                    height: 800
                 },
                 /**
                  *
@@ -60,8 +61,8 @@
                     width: renderOpts.width,
                     height: renderOpts.height,
                     buffer: 0,
-                    size: 5,
-                    cellSize: 50,
+                    size: 2,
+                    cellSize: 100,
                     cellSpacing: 0,
                     pointy: false,
                     useSprite: true,
@@ -72,8 +73,8 @@
                 size = new Point(gridOpts.cellSize, gridOpts.cellSize),
                 origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
                 layout = new Layout(orientation, size, origin),
-                cells = HexGrid.shapeRectangle(layout, gridOpts);
-                // cells = HexGrid.shapeHexagon(layout, gridOpts);
+                // cells = HexGrid.shapeRectangle(layout, gridOpts);
+                cells = HexGrid.shapeHexagon(layout, gridOpts);
                 // cells = HexGrid.shapeRing(0, 0, layout, gridOpts);
                 // cells = HexGrid.shapeParallelogram(-1, -2, 1, 1, layout, gridOpts);
                 // cells = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, layout, gridOpts);

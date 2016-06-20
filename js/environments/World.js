@@ -1,3 +1,4 @@
+
 (function (global) {
     "use strict";
 
@@ -8,19 +9,44 @@
         Wall = global.Wall || {},
         Vec = global.Vec || {};
 
-    class World {
-
+    const
         /**
          * The flags for what to display for 'cheats'
          * @typedef {Object} cheatsOpts
          * @property {boolean} id
          * @property {boolean} name
+         * @property {boolean} angle
+         * @property {boolean} bounds
          * @property {boolean} direction
          * @property {boolean} gridLocation
          * @property {boolean} position
-         * @property {boolean} walls
          */
-
+        cheatOptsDef = {
+            id: false,
+            name: false,
+            angle: false,
+            bounds: false,
+            direction: false,
+            gridLocation: false,
+            position: false
+        },
+        /**
+         *
+         * @type {{type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}}
+         */
+        collisionOptsDef = {
+            type: 'quad',
+            maxChildren: 10,
+            maxDepth: 30,
+            cheats: {
+                bounds: cheatOptsDef.bounds
+            }
+        },
+        /**
+         *
+         * @type {Element}
+         */
+        element = document.body.querySelector('#game-container'),
         /**
          * Options for the World
          * @typedef {Object} worldOpts
@@ -34,7 +60,29 @@
          * @property {Grid} grid - The grid to use
          * @property {Maze} maze - The maze to use
          */
-
+        worldOptsDef = {
+            simSpeed: 1,
+            collision: collisionOptsDef,
+            cheats: cheatOptsDef,
+            numEntities: 20,
+            entityOpts: {
+                radius: 10,
+                collision: true,
+                interactive: true,
+                useSprite: false,
+                moving: true,
+                cheats: cheatOptsDef
+            },
+            numEntityAgents: 0,
+            entityAgentOpts: {
+                radius: 10,
+                collision: true,
+                interactive: true,
+                useSprite: false,
+                moving: true,
+                cheats: cheatOptsDef
+            }
+        },
         /**
          * Options for the World renderer
          * @typedef {Object} renderOpts
@@ -48,6 +96,19 @@
          * @property {number} width - The width
          * @property {number} height - The height
          */
+        renderOptsDef = {
+            antialiasing: false,
+            autoResize: false,
+            background: 0xFFFFFF,
+            resolution: window.devicePixelRatio,
+            resizable: false,
+            transparent: false,
+            noWebGL: true,
+            width: 600,
+            height: 600
+        };
+
+    class World {
 
         /**
          * Make a World
@@ -61,69 +122,42 @@
          * @returns {World}
          */
         constructor(agents, walls, worldOpts, renderOpts) {
-            this.rendererOpts = renderOpts || {
-                    antialiasing: false,
-                    autoResize: false,
-                    resolution: window.devicePixelRatio,
-                    resizable: false,
-                    transparent: false,
-                    noWebGL: true,
-                    width: 600,
-                    height: 600
-                };
-            this.options = worldOpts;
-            this.width = this.rendererOpts.width;
-            this.height = this.rendererOpts.height;
-            this.resizable = this.rendererOpts.resizable;
-            this.stage = new PIXI.Container();
-            this.grid = Utility.getOpt(worldOpts, 'grid', false);
-            if (this.grid) {
-                this.stage.addChild(this.grid.cellsContainer);
-            }
-            this.maze = Utility.getOpt(worldOpts, 'maze', false);
-            this.simSpeed = Utility.getOpt(worldOpts, 'simSpeed', 1);
-            this.theme = Utility.getOpt(worldOpts, 'theme', 'space');
-            this.cheats = Utility.getOpt(worldOpts, 'cheats', {
-                id: false,
-                name: false,
-                angle: false,
-                bounds: false,
-                direction: false,
-                gridLocation: false,
-                position: false
-            });
-            this.collision = Utility.getOpt(worldOpts, 'collision', {
-                type: 'quad',
-                maxChildren: 10,
-                maxDepth: 30,
-                cheats: {
-                    bounds: this.cheats.bounds
-                }
-            });
+            this.walls = walls;
+            this.renderOpts = renderOpts || renderOptsDef;
+            this.options = worldOpts || worldOptsDef;
+            this.grid = Utility.getOpt(this.options, 'grid', false);
+            this.maze = Utility.getOpt(this.options, 'maze', false);
+            this.simSpeed = Utility.getOpt(this.options, 'simSpeed', 1);
+            this.theme = Utility.getOpt(this.options, 'theme', 'space');
+            this.cheats = Utility.getOpt(this.options, 'cheats', cheatOptsDef);
+            this.collision = Utility.getOpt(this.options, 'collision', collisionOptsDef);
 
             this.sid = -1;
             this.stepsPerTick = 1;
             this.clock = 0;
             this.pause = false;
+            this.width = this.renderOpts.width;
+            this.height = this.renderOpts.height;
+            this.resizable = this.renderOpts.resizable;
 
-            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.rendererOpts);
-            this.renderer.backgroundColor = 0xFFFFFF;
+            this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
+            this.renderer.backgroundColor = this.renderOpts.background;
             this.renderer.view.style.pos = "absolute";
             this.renderer.view.style.top = "0px";
             this.renderer.view.style.left = "0px";
-
-            this.populationContainer = new PIXI.Container();
-            this.population = new Map();
+            this.canvas = this.renderer.view;
+            // Actually place the renderer onto the page for display
+            element.appendChild(this.canvas);
 
             this.agents = agents || [];
             this.entityAgents = [];
-            this.agentOpts = Utility.getOpt(worldOpts, 'agentOpts', {});
+            this.agentOpts = Utility.getOpt(this.options, 'agentOpts', {});
             this.agentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
-            this.numEntities = Utility.getOpt(worldOpts, 'numEntities', 5);
-            this.numEntityAgents = Utility.getOpt(worldOpts, 'numEntityAgents', 0);
-            this.entityOpts = Utility.getOpt(worldOpts, 'entityOpts', {});
+            this.numEntities = Utility.getOpt(this.options, 'numEntities', 0);
+            this.numEntityAgents = Utility.getOpt(this.options, 'numEntityAgents', 0);
+            this.entityOpts = Utility.getOpt(this.options, 'entityOpts', {});
             this.entityOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
-            this.entityAgentOpts = Utility.getOpt(worldOpts, 'entityAgentOpts', {});
+            this.entityAgentOpts = Utility.getOpt(this.options, 'entityAgentOpts', {});
             this.entityAgentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
             this.settings = {
                 pause: this.pause,
@@ -132,7 +166,7 @@
                 agents: {
                     cheats: this.agentOpts.cheats
                 },
-                entities: {
+                entityLayer: {
                     cheats: this.entityOpts.cheats
                 },
                 grid: {
@@ -143,34 +177,23 @@
                 }
             };
 
-            this.walls = walls;
-            if (!this.walls) {
-                this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats, 'Top'));
-                this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Right'));
-                this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Bottom'));
-                this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats, 'Left'));
-            }
+            this.population = new Map();
+            this.stage = new PIXI.Container();
+            this.worldLayer = new PIXI.Container();
+            this.staticLayer = new PIXI.Container();
+            this.entityLayer = new PIXI.Container();
+            this.uiLayer = new PIXI.Container();
+            this.gridLayer = (this.grid) ? this.grid.cellsContainer : new PIXI.Container();
+            this.worldLayer.addChild(this.staticLayer);
+            this.worldLayer.addChild(this.entityLayer);
+            this.worldLayer.addChild(this.gridLayer);
+            this.stage.addChild(this.worldLayer);
+            this.stage.addChild(this.uiLayer);
 
-            // Actually place the renderer onto the page for display
-            document.body.querySelector('#game-container').appendChild(this.renderer.view);
-
-            if (this.resizable) {
-                var resize = () => {
-                    // Determine which screen dimension is most constrained
-                    let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
-                    // Scale the view appropriately to fill that dimension
-                    this.stage.scale.x = this.stage.scale.y = ratio;
-                    // Update the renderer dimensions
-                    this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
-                };
-
-                // Listen for and adapt to changes to the screen size, e.g.,
-                // user changing the window or rotating their device
-                window.addEventListener("resize", resize);
-
-                // Size the renderer to fill the screen
-                resize();
-            }
+            this.camera = new Camera(this.worldLayer, element);
+            // this.interactions = new PIXI.interaction.InteractionManager(this.renderer);
+            this.stage.addChild(this.camera);
+            this.camera.update();
 
             // Walls
             this.addWalls();
@@ -180,8 +203,6 @@
             this.addEntityAgents();
             // Population of Agents for the environment
             this.addAgents();
-            // Add the population container to the stage
-            this.stage.addChild(this.populationContainer);
 
             CollisionDetector.apply(this, [this.collision]);
 
@@ -193,20 +214,20 @@
          */
         init() {
             var animate = () => {
-                var now = new Date().getTime() / 1000;
                 if (!this.pause) {
-                    this.deltaTime = now - this.lastTime;
-                    this.lastTime = now;
+                    this.deltaTime = this.time() - this.lastTime;
+                    this.lastTime = this.time();
                     for (let k = 0; k < this.stepsPerTick; k++) {
                         this.tick(this.deltaTime);
                     }
                 }
+                this.camera.update();
                 this.renderer.render(this.stage);
                 requestAnimationFrame(animate);
             };
 
             this.deltaTime = 0;
-            this.lastTime = new Date().getTime() / 1000;
+            this.lastTime = this.time();
             animate();
         }
 
@@ -226,7 +247,7 @@
                 if (this.agents[a].hexStyles !== undefined) {
                     this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
                 }
-                this.populationContainer.addChild(agent);
+                this.entityLayer.addChild(agent);
                 this.population.set(this.agents[a].id, this.agents[a]);
             }
 
@@ -260,7 +281,7 @@
                     entity.addChild(entityAgent.eyes[ei].graphics);
                 }
                 this.entityAgents.push(entityAgent);
-                this.populationContainer.addChild(entity);
+                this.entityLayer.addChild(entity);
                 this.population.set(entityAgent.id, entityAgent);
             }
 
@@ -296,7 +317,7 @@
                 let type = Utility.Maths.randi(1, 3),
                     entity = new Entity(type, startXY, this.entityOpts);
 
-                this.populationContainer.addChild(entity.graphics);
+                this.entityLayer.addChild(entity.graphics);
                 this.population.set(entity.id, entity);
             }
 
@@ -308,9 +329,15 @@
          * @returns {World}
          */
         addWalls() {
+            if (!this.walls) {
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats, 'Top'));
+                this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Right'));
+                this.walls.push(new Wall(new Vec(1, this.height - 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Bottom'));
+                this.walls.push(new Wall(new Vec(1, 1), new Vec(1, this.height - 1), this.cheats, 'Left'));
+            }
             // Add the walls to the world
             this.walls.forEach((wall) => {
-                this.populationContainer.addChild(wall.graphics);
+                this.staticLayer.addChild(wall.graphics);
                 this.population.set(wall.id, wall);
             });
 
@@ -325,11 +352,84 @@
         deleteEntity(id) {
             if (this.population.has(id)) {
                 let entity = this.population.get(id),
-                    entityIdx = this.populationContainer.getChildIndex(entity.graphics);
-                this.populationContainer.removeChildAt(entityIdx);
+                    entityIdx = this.entityLayer.getChildIndex(entity.graphics);
+                this.entityLayer.removeChildAt(entityIdx);
                 this.population.delete(id);
             }
             return this;
+        }
+
+        /**
+         *
+         * @param guiObj
+         * @param theme
+         */
+        loadTheme(guiObj, theme) {
+            PIXI.utils.textureCache = {};
+            PIXI.utils.baseTextureCache = {};
+
+            return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
+                this.guiContainer = EZGUI.create(guiObj, theme);
+                this.pause = true;
+                EZGUI.components.btnSave.on('click', (event) => {
+                    this.event = event;
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                EZGUI.components.btnCancel.on('click', (event) => {
+                    this.event = event;
+                    this.guiContainer.visible = false;
+                    this.pause = false;
+                });
+                this.stage.addChild(this.guiContainer);
+            });
+        }
+
+        /**
+         *
+         * @param event
+         */
+        onWheel(event) {
+            let factor = 1,
+                // Firefox has "detail" prop with opposite sign to std wheelDelta
+                delta = event.wheelDelta || -event.detail,
+                localPt = new PIXI.Point(),
+                point = new PIXI.Point(event.pageX, event.pageY);
+            PIXI.interaction.InteractionData.prototype.getLocalPosition(this.stage, localPt, point);
+
+            if (delta > 0) {
+                // Zoom in
+                factor = 1.1;
+            } else {
+                // Zoom out
+                factor = 1 / 1.1;
+            }
+
+            this.stage.pivot = localPt;
+            this.stage.position = point;
+            this.stage.scale.set(this.stage.scale.x * factor);
+        }
+
+        /**
+         * Toggles pause
+         */
+        pauseToggle() {
+            this.pause = !this.pause;
+            if (!this.pause) {
+                this.lastTime = this.time();
+            }
+        }
+
+        /**
+         *
+         */
+        setSize() {
+            // Determine which screen dimension is most constrained
+            let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+            // Scale the view appropriately to fill that dimension
+            this.stage.scale.x = this.stage.scale.y = ratio;
+            // Update the renderer dimensions
+            this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
         }
 
         /**
@@ -405,29 +505,11 @@
         }
 
         /**
-         *
-         * @param guiObj
-         * @param theme
+         * Return the time
+         * @returns {number}
          */
-        loadTheme(guiObj, theme) {
-            PIXI.utils.textureCache = {};
-            PIXI.utils.baseTextureCache = {};
-
-            return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
-                this.guiContainer = EZGUI.create(guiObj, theme);
-                this.pause = true;
-                EZGUI.components.btnSave.on('click', (event) => {
-                    this.event = event;
-                    this.guiContainer.visible = false;
-                    this.pause = false;
-                });
-                EZGUI.components.btnCancel.on('click', (event) => {
-                    this.event = event;
-                    this.guiContainer.visible = false;
-                    this.pause = false;
-                });
-                this.stage.addChild(this.guiContainer);
-            });
+        time() {
+            return new Date().getTime() / 1000;
         }
     }
     global.World = World;

@@ -58,11 +58,11 @@
             switch (this.sensed.type) {
                 case 1:
                     // It is noms
-                    this.graphics.lineStyle(1, 0xFF0000, 1);
+                    this.graphics.lineStyle(1, 0x00FF00, 1);
                     break;
                 case 2:
                     // It is gnar gnar
-                    this.graphics.lineStyle(1, 0x00FF00, 1);
+                    this.graphics.lineStyle(1, 0xFF0000, 1);
                     break;
                 case 3:
                 case 4:

@@ -19,7 +19,8 @@
         }
 
         /**
-         * Adds the supplied p2 body to the game's world and creates a corresponding null Container object for rendering.
+         * Adds the supplied p2 body to the game's world and creates a
+         * corresponding null Container object for rendering.
          * Also adds the body to this GameObject's bodies collection
          * @param  {Body} body
          * @return {GameObject} gameObject

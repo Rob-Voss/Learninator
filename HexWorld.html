@@ -25,10 +25,20 @@
             world.stepsPerTick = 25;
         };
 
+        /**
+         *
+         */
+        function solve() {
+            world.maze.solve();
+            world.maze.drawSolution();
+            world.stage.addChild(world.maze.cheatsContainer);
+            world.renderer.render(world.stage);
+        }
+
         function start() {
             PIXI.loader.add("img/hexagon.json").load(() => {
                 world = new HexWorld();
-                datGUI(this);
+//                datGUI(this);
             });
         }
     </script>
@@ -77,7 +87,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
 
 <script src="js/lib/external/rl.js"></script>
@@ -100,6 +110,7 @@
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/ui/Dat.js"></script>
+<script src="js/lib/Camera.js"></script>
 
 <script src="js/environments/World.js"></script>
 <script src="js/environments/HexWorld.js"></script>

@@ -82,7 +82,11 @@
      * Sets up the Pixi view
      */
     PixiAdapter.prototype.setupView = function () {
-        var self = this, renderer = this.renderer, view = this.renderer.view, container = this.container, deviceScale = this.deviceScale;
+        var self = this,
+            renderer = this.renderer,
+            view = this.renderer.view,
+            container = this.container,
+            deviceScale = this.deviceScale;
 
         view.style.position = 'absolute';
 

@@ -24,6 +24,33 @@
      * @property {cheatsOpts} cheats
      */
 
+    /**
+     * Grid class
+     *
+     * @typedef {Grid} Grid
+     * @property {number} width
+     * @property {number} height
+     * @property {number} buffer
+     * @property {number} size
+     * @property {number} cellSize
+     * @property {number} cellSpacing
+     * @property {boolean} pointy
+     * @property {boolean} useSprite
+     * @property {boolean} fill
+     * @property {number} cheats
+     * @property {number} xCount
+     * @property {number} yCount
+     * @property {number} cellWidth
+     * @property {number} cellHeight
+     * @property {number} layout
+     * @property {Cell} startCell
+     * @property {array} cells
+     * @property {array} path
+     * @property {array} removedEdges
+     * @property {array} walls
+     * @property {Map} map
+     * @property {PIXI.Container} cellsContainer
+     */
     class Grid {
 
         /**
@@ -32,7 +59,7 @@
          * @constructor
          *
          * @param {Layout} layout -
-         * @param {Array} cells -
+         * @param {array} cells -
          * @param {gridOpts} opts - The options for the Grid
          * @returns {Grid}
          */
@@ -52,18 +79,18 @@
             this.cellWidth = (this.width - this.buffer) / this.xCount;
             this.cellHeight = (this.height - this.buffer) / this.yCount;
             this.layout = layout || {};
-            this.cells = cells || Grid.shapeRectangle(this.xCount, this.yCount, this.cellSize, this.fill, this.cheats);
+            this.cells = cells || Grid.shapeRectangle(opts);
             this.path = [];
             this.removedEdges = [];
             this.walls = [];
             this.map = new Map();
+            this.cellsContainer = new PIXI.Container();
+            this.mapCells();
 
             return this;
         }
 
         init() {
-            this.mapCells();
-            this.cellsContainer = new PIXI.Container();
             this.cells.forEach((cell) => {
                 for (let dir = 0; dir < 4; dir++) {
                     let neighb = cell.neighbor(cell, dir),

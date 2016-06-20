@@ -57,8 +57,8 @@
                 grid = new Grid(gridOpts),
                 maze = new Maze(grid.init());
             world.walls.forEach((wall) => {
-                let idx = world.populationContainer.getChildIndex(wall.graphics);
-                world.populationContainer.removeChildAt(idx);
+                let idx = world.entityLayer.getChildIndex(wall.graphics);
+                world.entityLayer.removeChildAt(idx);
                 world.population.delete(wall.id);
             });
             let idx = world.stage.getChildIndex(world.grid.cellsContainer);

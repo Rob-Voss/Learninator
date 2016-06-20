@@ -53,25 +53,10 @@ var Utility = Utility || {};
     };
 
     /**
-     * Get the object with the matching id property
-     *
-     * @param element
-     * @param index
-     * @param array
-     * @returns {boolean}
-     */
-    Utility.getId = function (element, index, array) {
-        if (element.id === this) {
-            return true;
-        }
-        return false;
-    };
-
-    /**
      * Syntactic sugar function for getting default parameter values
      * @param {Object} opt
      * @param {String} fieldName
-     * @param {Mixed} defaultValue
+     * @param {*} defaultValue
      * @returns {*}
      */
     Utility.getOpt = function (opt, fieldName, defaultValue) {
