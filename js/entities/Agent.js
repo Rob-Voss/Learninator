@@ -1,10 +1,10 @@
 (function(global) {
-  "use strict";
+  'use strict';
 
   class Eye {
 
     /**
-     * @name Eye
+     * Eye
      * @constructor
      *
      * Eye sensor has a maximum range and senses entities and walls
@@ -126,6 +126,7 @@
 
     }
   }
+
   class Agent extends Entity {
 
     /**
@@ -147,8 +148,7 @@
 
     /**
      * Initialize the Agent
-     * @name Agent
-     * @extends Entity
+     * @extends {Entity}
      * @constructor
      *
      * @param {Vec} position - The x, y location
@@ -260,12 +260,13 @@
         inputArray[ae * this.numTypes] = 1.0;
         inputArray[ae * this.numTypes + 1] = 1.0;
         inputArray[ae * this.numTypes + 2] = 1.0;
-        inputArray[ae * this.numTypes + 3] = eye.sensed.velocity.x; // velocity information of the sensed target
+        // velocity information of the sensed target
+        inputArray[ae * this.numTypes + 3] = eye.sensed.velocity.x;
         inputArray[ae * this.numTypes + 4] = eye.sensed.velocity.y;
         if (eye.sensed.type !== -1) {
           // sensedType is 0 for wall, 1 for food and 2 for poison.
           // lets do a 1-of-k encoding into the input array
-          inputArray[ae * this.numTypes + eye.sensed.type] = eye.sensed.proximity / eye.range; // normalize to [0,1]
+          inputArray[ae * this.numTypes + eye.sensed.type] = eye.sensed.proximity / eye.range;
         }
       }
 
@@ -314,6 +315,7 @@
         }
       }
     }
+
     /**
      * Draws it
      * @return {Agent}
@@ -521,7 +523,6 @@
 
       return this;
     }
-
   }
 
   // Agent.prototype.tick = () => {
