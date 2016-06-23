@@ -19,7 +19,7 @@
          *
          * @param {number|string} type - A type id (wall,nom,gnar,agent)
          * @param {Matter.Body} body - The Matter.js body
-         * @returns {PhysicalEntity}
+         * @return {PhysicalEntity}
          */
         constructor(type, body) {
             this.id = Utility.Strings.guid();
@@ -50,7 +50,7 @@
         /**
          * Do work son
          * @param {Array} bodies
-         * @returns {PhysicalEntity}
+         * @return {PhysicalEntity}
          */
         tick(bodies) {
             this.age += 1;

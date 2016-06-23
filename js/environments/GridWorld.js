@@ -5,7 +5,7 @@
 
         /**
          * GridWorld Environment
-         * @returns {GridWorld}
+         * @return {GridWorld}
          * @name GridWorld
          * @extends World
          * @constructor
@@ -282,7 +282,7 @@
     /**
      * zip rewards into flot data
      * @param {Number} an
-     * @returns {Array}
+     * @return {Array}
      */
     GridWorld.prototype.getFlotRewards = function () {
         let res = [];
@@ -516,7 +516,7 @@
     /**
      * Tick the environment
      * @param {number} timeSinceLast
-     * @returns {World}
+     * @return {World}
      */
     GridWorld.prototype.tick = function (timeSinceLast) {
         if (this.sid === -1) {
@@ -569,7 +569,7 @@
     /**
      * Return the allowed actions based on the current state/cell
      * @param {number} s - State
-     * @returns {Array}
+     * @return {Array}
      */
     GridWorld.prototype.allowedActions = function (s) {
         let x = this.sToX(s),
@@ -595,7 +595,7 @@
 
     /**
      * Return the number of actions
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.getMaxNumActions = function () {
         return this.grid.startCell.directions.length;
@@ -603,7 +603,7 @@
 
     /**
      * Return the number of states
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.getNumStates = function () {
         return this.grid.cells.length;
@@ -613,7 +613,7 @@
      *
      * @param {Number} s
      * @param {Number} a
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.nextStateDistribution = function (s, a) {
         let ns, nx, ny,
@@ -665,7 +665,7 @@
 
     /**
      * Return a rand state
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.randomState = function () {
         return Math.floor(Math.random() * this.grid.cells.length);
@@ -723,7 +723,7 @@
      * @param {Number} s
      * @param {Number} a
      * @param {Number} ns
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.reward = function (s, a, ns) {
         return this.Rarr[s];
@@ -732,7 +732,7 @@
     /**
      * Convert the state to an x
      * @param {Number} s
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.sToX = function (s) {
         return Math.floor(s / this.grid.xCount);
@@ -741,7 +741,7 @@
     /**
      * Convert the state to a y
      * @param {Number} s
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.sToY = function (s) {
         return s % this.grid.yCount;
@@ -751,7 +751,7 @@
      * Convert an x, y to the state
      * @param {Number} x
      * @param {Number} y
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.xyToS = function (x, y) {
         return x * this.grid.xCount + y;
@@ -761,7 +761,7 @@
      * Observe the raw reward of being in s, taking a, and ending up in ns
      * @param {Number} s
      * @param {Number} a
-     * @returns {{ns: (*|Number), r: (*|Number)}}
+     * @return {{ns: (*|Number), r: (*|Number)}}
      */
     GridWorld.prototype.sampleNextState = function (s, a) {
         let ns = this.nextStateDistribution(s, a),
@@ -783,7 +783,7 @@
 
     /**
      * Return the starting state
-     * @returns {Number}
+     * @return {Number}
      */
     GridWorld.prototype.startState = function () {
         return 0;

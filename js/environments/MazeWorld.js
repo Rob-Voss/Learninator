@@ -9,7 +9,7 @@
          * @extends World
          * @constructor
          *
-         * @returns {MazeWorld}
+         * @return {MazeWorld}
          */
         constructor() {
             var cheats = {
@@ -207,7 +207,7 @@
         /**
          * Tick the environment
          * @param {number} timeSinceLast
-         * @returns {World}
+         * @return {World}
          */
         tick(timeSinceLast) {
             this.updatePopulation();
@@ -338,7 +338,7 @@
         /**
          * zip rewards into flot data
          * @param {Number} an
-         * @returns {Array}
+         * @return {Array}
          */
         getFlotRewards() {
             let res = [];
@@ -411,7 +411,7 @@
     /**
      * Return the allowed actions based on the current state/cell
      * @param {number} s - State
-     * @returns {Array}
+     * @return {Array}
      */
     MazeWorld.prototype.allowedActions = function (s) {
         let x = this.sToX(s),
@@ -437,7 +437,7 @@
 
     /**
      * Return the number of actions
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.getMaxNumActions = function () {
         return this.grid.startCell.directions.length;
@@ -445,7 +445,7 @@
 
     /**
      * Return the number of states
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.getNumStates = function () {
         return this.grid.cells.length;
@@ -455,7 +455,7 @@
      *
      * @param {Number} s
      * @param {Number} a
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.nextStateDistribution = function (s, a) {
         let ns, nx, ny,
@@ -507,7 +507,7 @@
 
     /**
      * Return a rand state
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.randomState = function () {
         return Math.floor(Math.random() * this.grid.cells.length);
@@ -565,7 +565,7 @@
      * @param {Number} s
      * @param {Number} a
      * @param {Number} ns
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.reward = function (s, a, ns) {
         return this.Rarr[s];
@@ -574,7 +574,7 @@
     /**
      * Convert the state to an x
      * @param {Number} s
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.sToX = function (s) {
         return Math.floor(s / this.grid.xCount);
@@ -583,7 +583,7 @@
     /**
      * Convert the state to a y
      * @param {Number} s
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.sToY = function (s) {
         return s % this.grid.yCount;
@@ -593,7 +593,7 @@
      * Convert an x, y to the state
      * @param {Number} x
      * @param {Number} y
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.xyToS = function (x, y) {
         return x * this.grid.xCount + y;
@@ -603,7 +603,7 @@
      * Observe the raw reward of being in s, taking a, and ending up in ns
      * @param {Number} s
      * @param {Number} a
-     * @returns {{ns: (*|Number), r: (*|Number)}}
+     * @return {{ns: (*|Number), r: (*|Number)}}
      */
     MazeWorld.prototype.sampleNextState = function (s, a) {
         let ns = this.nextStateDistribution(s, a),
@@ -625,7 +625,7 @@
 
     /**
      * Return the starting state
-     * @returns {Number}
+     * @return {Number}
      */
     MazeWorld.prototype.startState = function () {
         return 0;

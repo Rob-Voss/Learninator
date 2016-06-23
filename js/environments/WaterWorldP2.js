@@ -15,7 +15,7 @@
          * @name WaterWorldP2
          * @constructor
          *
-         * @returns {WaterWorldP2}
+         * @return {WaterWorldP2}
          */
         constructor() {
             // Init p2.js
@@ -143,7 +143,7 @@
 
         /**
          * @param {Array} bodies
-         * @returns {WaterWorldP2}
+         * @return {WaterWorldP2}
          */
         addBodies(bodies) {
             this.entityLayer = [];
@@ -220,7 +220,7 @@
 
         /**
          * Tick the environment
-         * @returns {WaterWorldP2}
+         * @return {WaterWorldP2}
          */
         tick() {
             for (let i = 0; i < this.entityLayer.length; i++) {

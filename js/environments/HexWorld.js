@@ -8,7 +8,7 @@
          * @extends World
          * @constructor
          *
-         * @returns {HexWorld}
+         * @return {HexWorld}
          */
         constructor() {
             let renderOpts = {

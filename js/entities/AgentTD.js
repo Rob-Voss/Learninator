@@ -15,7 +15,7 @@ var Agent = Agent || {},
          *
          * @param {Vec} position - The x, y location
          * @param {agentOpts} opts - The Agent options
-         * @returns {AgentTD}
+         * @return {AgentTD}
          */
         constructor(position, opts) {
             super(position, opts);

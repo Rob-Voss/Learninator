@@ -11,7 +11,7 @@ var EvolveWorld = EvolveWorld || {},
      * @extends World
      * @constructor
      *
-     * @returns {EvolveWorld}
+     * @return {EvolveWorld}
      */
     function EvolveWorld() {
         let self = this;

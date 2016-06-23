@@ -118,7 +118,7 @@ if (window.MatterTools) {
          * @param {Array} agents
          * @param {worldOpts} worldOpts
          * @param {renderOpts} renderOpts
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         constructor(agents, worldOpts, renderOpts) {
             var self = this;
@@ -237,7 +237,7 @@ if (window.MatterTools) {
 
         /**
          * Add some dumb/agent entities
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         addEntityAgents() {
             for (let k = 0; k < this.numEntityAgents; k++) {
@@ -261,7 +261,7 @@ if (window.MatterTools) {
         /**
          * Add new agents
          * @parameter {number} number
-         * @returns {Array}
+         * @return {Array}
          */
         addAgents(number = 1) {
             let agents = [];
@@ -321,7 +321,7 @@ if (window.MatterTools) {
         /**
          * Add new entities
          * @parameter {number} number
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         addEntities(number = 1) {
             // Populating the world
@@ -373,7 +373,7 @@ if (window.MatterTools) {
         /**
          * Remove the entity from the world
          * @param {string} id
-         * @returns {World}
+         * @return {World}
          */
         deleteEntity(id) {
             if (this.population.has(id)) {
@@ -387,7 +387,7 @@ if (window.MatterTools) {
 
         /**
          * Draws the world
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         draw() {
             for (let [id, entity] of this.population.entries()) {
@@ -405,7 +405,7 @@ if (window.MatterTools) {
 
         /**
          * Set up the population
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         populate(worldOpts) {
             this.entityLayer = new PIXI.Container();
@@ -441,7 +441,7 @@ if (window.MatterTools) {
 
         /**
          * Tick the environment
-         * @returns {PhysicsWorld}
+         * @return {PhysicsWorld}
          */
         tick() {
             this.clock++;

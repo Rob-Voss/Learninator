@@ -2,7 +2,7 @@
     "use strict";
 
     class AgentRLTD extends Agent {
-        
+
         /**
          * Initialize the AgentRLTD
          * @name AgentRLTD
@@ -11,7 +11,7 @@
          *
          * @param {Vec} position - The x, y location
          * @param {agentOpts} opts - The Agent options
-         * @returns {AgentRLTD}
+         * @return {AgentRLTD}
          */
         constructor(position, opts) {
             super(position, opts);

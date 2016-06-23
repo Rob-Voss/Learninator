@@ -38,7 +38,7 @@
      * @param {number} action0
      * @param {number} reward0
      * @param {number} state1
-     * @returns {Experience}
+     * @return {Experience}
      */
     function Experience(state0, action0, reward0, state1) {
         this.state0 = state0;
@@ -57,7 +57,7 @@
      * @constructor
      *
      * @param {brainOpts} opts
-     * @returns {TDAgent}
+     * @return {TDAgent}
      */
     function TDAgent(opts) {
         // In number of time steps, of temporal memory
@@ -205,7 +205,7 @@
          * Returns a random action
          * In the future we can set some actions to be more or less likely
          * at "rest"/default state.
-         * @returns {number}
+         * @return {number}
          */
         randomAction: function () {
             if (this.randomActionDistribution.length === 0) {
@@ -226,7 +226,7 @@
          * Compute the value of doing any action in this state and return the
          * argmax action and its value
          * @param {type} s
-         * @returns {Object}
+         * @return {Object}
          */
         policy: function (s) {
             let sVol = new convnetjs.Vol(1, 1, this.netInputs);
@@ -251,7 +251,7 @@
          * Return s = (x,a,x,a,x,a,xt) state vector.
          * It's a concatenation of last windowSize (x,a) pairs and current state x
          * @param {Array} xt
-         * @returns {Array}
+         * @return {Array}
          */
         getNetInput: function (xt) {
             let w = [];
@@ -277,7 +277,7 @@
         /**
          * Compute forward (behavior) pass given the input neuron signals from body
          * @param {Array} inputArray
-         * @returns {number}
+         * @return {number}
          */
         act: function (inputArray) {
             let netInput, action;
@@ -323,7 +323,7 @@
         /**
          * Learn
          * @param {number} reward
-         * @returns {TDAgent}
+         * @return {TDAgent}
          */
         learn: function (reward) {
             this.latestReward = reward;

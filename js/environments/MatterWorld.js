@@ -103,7 +103,7 @@
          *
          * @param {number} width
          * @param {number} height
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         constructor(width = 600, height = 600) {
             this.clock = 0;
@@ -242,7 +242,7 @@
         /**
          * Add new agents
          * @parameter {number} number
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         addAgents(number = 1) {
             // Populating the world
@@ -286,7 +286,7 @@
         /**
          * Add new entities
          * @parameter {number} number
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         addEntities(number = 1) {
             let bodies = [];
@@ -334,7 +334,7 @@
         /**
          * Add Bodies and Graphics to the scene
          * @param {Array} items
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         addMatter(items) {
             World.add(this.engine.world, items);
@@ -344,7 +344,7 @@
 
         /**
          * Add walls to the world
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         addWalls() {
             // Ground
@@ -431,7 +431,7 @@
 
         /**
          * Set up the GUI for MatterTools
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         initControls() {
             // need to add mouse constraint back in after gui clear or load is pressed
@@ -476,7 +476,7 @@
 
         /**
          * Set the events for the World to respond to remove/add
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         setWorldEvents() {
             // Body Add Events
@@ -502,7 +502,7 @@
 
         /**
          * Set the Engine's events during collisions
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         setEngineEvents() {
             // Collision Events
@@ -550,7 +550,7 @@
 
         /**
          * Set the Runner's events for updates
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         setRunnerEvents() {
             // Tick Events
@@ -604,7 +604,7 @@
          * @param {Matter.Body} body
          * @param {Matter.Vector} position
          * @param {Matter.Vector} force
-         * @returns {MatterWorld}
+         * @return {MatterWorld}
          */
         updateBody(body, position, force) {
             body.entity.force = force;

@@ -327,7 +327,7 @@
          * Returns a copy of the nth best chromosome
          * if one isn't provided it returns first one, which is the best one
          * @param n
-         * @returns {*}
+         * @return {*}
          */
         getChromosome(n) {
             n = n || 0;
@@ -344,7 +344,7 @@
         /**
          * This function is passed to trainer.
          * @param chromosome
-         * @returns {Number} - result -1=c1 beat 22, 1=c2 beat c1, 0=tie
+         * @return {Number} - result -1=c1 beat 22, 1=c2 beat c1, 0=tie
          */
         matchFunction(chromosome1, chromosome2) { // this function is passed to trainer.
             var result = 0,
@@ -370,7 +370,7 @@
          * @extends World
          * @constructor
          *
-         * @returns {WaterWorldGA}
+         * @return {WaterWorldGA}
          */
         constructor() {
             let grid = new Grid(gridOptions),
@@ -416,7 +416,7 @@
         /**
          *
          * @param nStep
-         * @returns {number}
+         * @return {number}
          */
         update(nStep) {
             let result = 0;

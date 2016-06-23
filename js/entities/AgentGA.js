@@ -54,7 +54,7 @@
          *
          * @param x
          * @param precision
-         * @returns {string}
+         * @return {string}
          */
         arrayToString(x, precision) {
             var result = "[";
@@ -145,7 +145,7 @@
          *
          * @param {Vec} position - The x, y location
          * @param {agentOpts} opts - The Agent options
-         * @returns {AgentGA}
+         * @return {AgentGA}
          */
         constructor(position, opts) {
             // super(position, opts);
@@ -189,7 +189,7 @@
 
         /**
          * Returns game state for this agent
-         * @returns {{x: number, y: *, vx: number, vy: *, bx: number, by: *, bvx: number, bvy: *}|*}
+         * @return {{x: number, y: *, vx: number, vy: *, bx: number, by: *, bvx: number, bvy: *}|*}
          */
         getState(entity) {
             // complete game state for this agent.  used by neural network.

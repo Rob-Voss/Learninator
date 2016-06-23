@@ -50,7 +50,7 @@ var R = {}, // the Recurrent library
          * http://en.wikipedia.org/wiki/Cauchy_distribution
          * @param m
          * @param gamma
-         * @returns {}
+         * @return {}
          */
         randc = function (m, gamma) {
             return m + gamma * 0.01 * randn(0.0, 1.0) / randn(0.0, 1.0);
@@ -58,7 +58,7 @@ var R = {}, // the Recurrent library
         /**
          * helper function returns array of zeros of length n and uses typed arrays if available
          * @param n
-         * @returns {*}
+         * @return {*}
          */
         zeros = function (n) {
             if (typeof n === 'undefined' || isNaN(n)) {
@@ -99,7 +99,7 @@ var R = {}, // the Recurrent library
          * Slow but careful accessor function we want row-major order
          * @param row
          * @param col
-         * @returns {*}
+         * @return {*}
          */
         get: function (row, col) {
             var ix = (this.d * row) + col;
@@ -139,7 +139,7 @@ var R = {}, // the Recurrent library
         },
         /**
          *
-         * @returns {}
+         * @return {}
          */
         toJSON: function () {
             var json = {};
@@ -168,7 +168,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param {Object} b
-     * @returns {Mat}
+     * @return {Mat}
      */
     var copyMat = function (b) {
             var a = new Mat(b.n, b.d);
@@ -180,7 +180,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param {Net} net
-     * @returns {Net}
+     * @return {Net}
      */
     var copyNet = function (net) {
         // nets are (k,v) pairs with k = string key, v = Mat()
@@ -227,7 +227,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param net
-     * @returns {}
+     * @return {}
      */
     var netToJSON = function (net) {
         var j = {};
@@ -243,7 +243,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param j
-     * @returns {}
+     * @return {}
      */
     var netFromJSON = function (j) {
         var net = {};
@@ -274,7 +274,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param net
-     * @returns {Mat}
+     * @return {Mat}
      */
     var netFlattenGrads = function (net) {
         var n = 0;
@@ -305,7 +305,7 @@ var R = {}, // the Recurrent library
      * @param d
      * @param mu
      * @param std
-     * @returns {Mat}
+     * @return {Mat}
      */
     var randMat = function (n, d, mu, std) {
         var m = new Mat(n, d);
@@ -398,7 +398,7 @@ var R = {}, // the Recurrent library
          * Pluck a row of m with index ix and return it as col vector
          * @param m
          * @param ix
-         * @returns {Mat}
+         * @return {Mat}
          */
         rowPluck: function (m, ix) {
             assert(ix >= 0 && ix < m.n);
@@ -423,7 +423,7 @@ var R = {}, // the Recurrent library
         /**
          * tanh nonlinearity
          * @param m
-         * @returns {Mat}
+         * @return {Mat}
          */
         tanh: function (m) {
             var out = new Mat(m.n, m.d),
@@ -448,7 +448,7 @@ var R = {}, // the Recurrent library
         /**
          * Sigmoid nonlinearity
          * @param m
-         * @returns {Mat}
+         * @return {Mat}
          */
         sigmoid: function (m) {
             var out = new Mat(m.n, m.d),
@@ -473,7 +473,7 @@ var R = {}, // the Recurrent library
         /**
          *
          * @param m
-         * @returns {Mat}
+         * @return {Mat}
          */
         relu: function (m) {
             var out = new Mat(m.n, m.d),
@@ -496,7 +496,7 @@ var R = {}, // the Recurrent library
          * Multiply matrices m1 * m2
          * @param m1
          * @param m2
-         * @returns {Mat}
+         * @return {Mat}
          */
         mul: function (m1, m2) {
             assert(m1.d === m2.n, 'matmul dimensions misaligned');
@@ -541,7 +541,7 @@ var R = {}, // the Recurrent library
          *
          * @param m1
          * @param m2
-         * @returns {Mat}
+         * @return {Mat}
          */
         add: function (m1, m2) {
             assert(m1.w.length === m2.w.length);
@@ -565,7 +565,7 @@ var R = {}, // the Recurrent library
          * m1 m2 are both column vectors
          * @param m1
          * @param m2
-         * @returns {Mat}
+         * @return {Mat}
          */
         dot: function (m1, m2) {
             assert(m1.w.length === m2.w.length);
@@ -591,7 +591,7 @@ var R = {}, // the Recurrent library
          *
          * @param m1
          * @param m2
-         * @returns {Mat}
+         * @return {Mat}
          */
         eltmul: function (m1, m2) {
             assert(m1.w.length === m2.w.length);
@@ -618,7 +618,7 @@ var R = {}, // the Recurrent library
     /**
      *
      * @param m
-     * @returns {Mat}
+     * @return {Mat}
      */
     var softMax = function (m) {
         var out = new Mat(m.n, m.d), // probability volume
@@ -666,7 +666,7 @@ var R = {}, // the Recurrent library
          * @param stepSize
          * @param regc
          * @param clipVal
-         * @returns {{}}
+         * @return {{}}
          */
         step: function (model, stepSize, regc, clipVal) {
             var solverStats = {},
@@ -715,7 +715,7 @@ var R = {}, // the Recurrent library
      * @param inputSize
      * @param hiddenSizes
      * @param outputSize
-     * @returns {}
+     * @return {}
      */
     var initLSTM = function (inputSize, hiddenSizes, outputSize) {
             // hidden size should be a list
@@ -753,7 +753,7 @@ var R = {}, // the Recurrent library
          * @param {Array} hiddenSizes
          * @param x is 1D column vector with observation
          * @param {Object} prev is a struct containing hidden and cell from previous iteration
-         * @returns {}
+         * @return {}
          */
     var forwardLSTM = function (G, model, hiddenSizes, x, prev) {
             var hiddenPrevs = [],
@@ -821,7 +821,7 @@ var R = {}, // the Recurrent library
     /**
      * helper function for computing sigmoid
      * @param x
-     * @returns {number}
+     * @return {number}
      */
     var sig = function (x) {
         return 1.0 / (1 + Math.exp(-x));
@@ -830,7 +830,7 @@ var R = {}, // the Recurrent library
     /**
      * argmax of array w
      * @param w
-     * @returns {number}
+     * @return {number}
      */
     var maxI = function (w) {
         var maxv = w[0],
@@ -849,7 +849,7 @@ var R = {}, // the Recurrent library
     /**
      * sample argmax from w, assuming w are probabilities that sum to one
      * @param w
-     * @returns {number}
+     * @return {number}
      */
     var sampleI = function (w) {
         var r = randf(0, 1),
@@ -871,7 +871,7 @@ var R = {}, // the Recurrent library
      * @param opt
      * @param field_name
      * @param default_value
-     * @returns {*}
+     * @return {*}
      */
     var getOpt = function (opt, field_name, default_value) {
                 if (typeof opt === 'undefined') {
@@ -894,7 +894,7 @@ var R = {}, // the Recurrent library
     /**
          *
          * @param p
-         * @returns {number}
+         * @return {number}
          */
     var sampleWeighted = function (p) {
             var r = Math.random();
@@ -955,7 +955,7 @@ var R = {}, // the Recurrent library
         /**
          * Behave according to the learned policy
          * @param s
-         * @returns {*}
+         * @return {*}
          */
         act: function (s) {
             var poss = this.env.allowedActions(s),
@@ -1120,7 +1120,7 @@ var R = {}, // the Recurrent library
         /**
          * Act according to epsilon greedy policy
          * @param s
-         * @returns {*}
+         * @return {*}
          */
         act: function (s) {
             var poss = this.env.allowedActions(s),
@@ -1370,7 +1370,7 @@ var R = {}, // the Recurrent library
      *
      * @param {Object} env
      * @param {Object} opt
-     * @returns {DQNAgent}
+     * @return {DQNAgent}
      * @name DQNAgent
      * @constructor
      *
@@ -1435,7 +1435,7 @@ var R = {}, // the Recurrent library
         },
         /**
          *
-         * @returns {{}}
+         * @return {{}}
          */
         toJSON: function () {
             // save function
@@ -1466,7 +1466,7 @@ var R = {}, // the Recurrent library
          * @param net
          * @param s
          * @param needsBackprop
-         * @returns {*}
+         * @return {*}
          */
         forwardQ: function (net, s, needsBackprop) {
             var G = new R.Graph(needsBackprop);
@@ -1479,7 +1479,7 @@ var R = {}, // the Recurrent library
         /**
          *
          * @param {Array} slist
-         * @returns {Number|number}
+         * @return {Number|number}
          */
         act: function (slist) {
             // convert to a Mat column vector
@@ -1541,7 +1541,7 @@ if (isNaN(tderror)) {
          * @param r0
          * @param s1
          * @param a1
-         * @returns {number}
+         * @return {number}
          */
         learnFromTuple: function (s0, a0, r0, s1, a1) {
             // want: Q(s,a) = r + gamma * max_a' Q(s',a')
@@ -1628,7 +1628,7 @@ if (isNaN(tderror)) {
          *
          * @param s
          * @param needsBackprop
-         * @returns {{}}
+         * @return {{}}
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
@@ -1646,7 +1646,7 @@ if (isNaN(tderror)) {
          *
          * @param s
          * @param needsBackprop
-         * @returns {{}}
+         * @return {{}}
          */
         forwardValue: function (s, needsBackprop) {
             var net = this.baselineNet,
@@ -1663,7 +1663,7 @@ if (isNaN(tderror)) {
         /**
          *
          * @param slist
-         * @returns {Mat}
+         * @return {Mat}
          */
         act: function (slist) {
             // convert to a Mat column vector
@@ -1828,7 +1828,7 @@ if (isNaN(tderror)) {
         /**
          *
          * @param sList
-         * @returns {Mat}
+         * @return {Mat}
          */
         act: function (sList) {
             // convert to a Mat column vector
@@ -1987,7 +1987,7 @@ if (isNaN(tderror)) {
          *
          * @param s
          * @param needsBackprop
-         * @returns {{}}
+         * @return {{}}
          */
         forwardActor: function (s, needsBackprop) {
             var net = this.actorNet,
@@ -2004,7 +2004,7 @@ if (isNaN(tderror)) {
         /**
          *
          * @param sList
-         * @returns {Mat}
+         * @return {Mat}
          */
         act: function (sList) {
             // convert to a Mat column vector
@@ -2048,7 +2048,7 @@ if (isNaN(tderror)) {
         /**
          *
          * @param s
-         * @returns {Mat}
+         * @return {Mat}
          */
         utilJacobianAt: function (s) {
             var uJacobian = new R.Mat(this.nTheta, this.na);
@@ -2209,7 +2209,7 @@ if (isNaN(tderror)) {
         },
         /**
          * Returns an exact copy of itself (into new memory, doesn't return reference)
-         * @returns {Chromosome}
+         * @return {Chromosome}
          */
         clone: function () {
             var newGene = zeros(this.gene.length);
@@ -2234,7 +2234,7 @@ if (isNaN(tderror)) {
     /**
      * Counts the number of weights and biases in the network
      * @param net
-     * @returns {number}
+     * @return {number}
      */
     function getNetworkSize(net) {
         var layer = null,
@@ -2297,7 +2297,7 @@ if (isNaN(tderror)) {
     /**
      * Gets all the weight/biases from network in a floatArray
      * @param net
-     * @returns {Array}
+     * @return {Array}
      */
     function getGeneFromNetwork(net) {
         var gene = [],
@@ -2345,7 +2345,7 @@ if (isNaN(tderror)) {
     /**
      * Returns a FloatArray copy of real numbered array x.
      * @param x
-     * @returns {*}
+     * @return {*}
      */
     function copyFloatArray(x) {
         var N = x.length,
@@ -2443,7 +2443,7 @@ if (isNaN(tderror)) {
          * Has to pass in fitness function.
          * returns best fitness
          * @param {type} fitFunc
-         * @returns {number}
+         * @return {number}
          */
         train: function (fitFunc) {
             var bestFitFunc = function (nTrial, net) {
@@ -2607,7 +2607,7 @@ if (isNaN(tderror)) {
      * @param {number} nInput Number of real inputs to the system (ie, 2).  so actual number of input is Niput + nSp
      * @param {number} nHidden Number of hidden neurons in each sub population (ie, 16)
      * @param {Array} genes (optional) array of nSp genes (floatArrays) to initialise the network (pretrained)
-     * @returns {ESPNet}
+     * @return {ESPNet}
      * @name ESPNet
      * @constructor
      */
@@ -2657,7 +2657,7 @@ if (isNaN(tderror)) {
     ESPNet.prototype = {
         /**
          * Feeds output back to last bit of input vector
-         * @returns {undefined}
+         * @return {undefined}
          */
         feedback: function () {
             var i,
@@ -2671,7 +2671,7 @@ if (isNaN(tderror)) {
          * Input is a vector of length this.nInput of real numbers this function also
          * grabs the previous most recent output and put it into the internal input vector
          * @param {type} input
-         * @returns {undefined}
+         * @return {undefined}
          */
         setInput: function (input) {
             var i,
@@ -2684,7 +2684,7 @@ if (isNaN(tderror)) {
         },
         /**
          * Returns array of output of each nSp neurons after a forward pass.
-         * @returns {Array}
+         * @return {Array}
          */
         forward: function () {
             var i, j,
@@ -2706,14 +2706,14 @@ if (isNaN(tderror)) {
         },
         /**
          * Return total number of weights and biases in a single sub nn.
-         * @returns {number}
+         * @return {number}
          */
         getNetworkSize: function () {
             return getNetworkSize(this.net[0]); // each network has identical architecture.
         },
         /**
          * Return an array of nSp genes (floatArrays of length getNetworkSize())
-         * @returns {Array}
+         * @return {Array}
          */
         getGenes: function () {
             var i,
@@ -2728,7 +2728,7 @@ if (isNaN(tderror)) {
         /**
          * Genes is an array of nSp genes (floatArrays)
          * @param {type} genes
-         * @returns {undefined}
+         * @return {undefined}
          */
         pushGenes: function (genes) {
             var i,
@@ -2831,7 +2831,7 @@ if (isNaN(tderror)) {
         /**
          * Has to pass in fitness function.  returns best fitness
          * @param {type} fitFunc
-         * @returns {number}
+         * @return {number}
          */
         train: function (fitFunc) {
             var i, j, k, m, N, nSp,
@@ -2848,7 +2848,7 @@ if (isNaN(tderror)) {
              * Return best fitness run nTrial times
              * @param nTrial
              * @param net
-             * @returns {number}
+             * @return {number}
              */
             var bestFitFunc = function (nTrial, net) {
                 var bestFitness = -10000000000000000,
@@ -2866,7 +2866,7 @@ if (isNaN(tderror)) {
              * Create a new array filled with genes from an array of chromosomes
              * returns an array of nSp floatArrays
              * @param s
-             * @returns {Array}
+             * @return {Array}
              */
             function getGenesFromChromosomes(s) {
                 var g = [];
@@ -2879,7 +2879,7 @@ if (isNaN(tderror)) {
             /**
              * Makes a copy of an array of gene, helper function
              * @param s
-             * @returns {Array}
+             * @return {Array}
              */
             function makeCopyOfGenes(s) {
                 var g = [];
@@ -2904,7 +2904,7 @@ if (isNaN(tderror)) {
              * Sort the list of chromosomes according to their fitness
              * @param a
              * @param b
-             * @returns {number}
+             * @return {number}
              */
             function compareChromosomes(a, b) {
                 if ((a.fitness / a.nTrial) > (b.fitness / b.nTrial)) {

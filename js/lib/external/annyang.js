@@ -526,7 +526,7 @@
          *
          * @param type Name of event type to remove callback from
          * @param callback The callback function to remove
-         * @returns undefined
+         * @return undefined
          * @method removeCallback
          */
         removeCallback: function (type, callback) {
@@ -565,7 +565,7 @@
          * Returns the instance of the browser's SpeechRecognition object used by annyang.
          * Useful in case you want direct access to the browser's Speech Recognition engine.
          *
-         * @returns SpeechRecognition The browser's Speech Recognizer currently used by annyang
+         * @return SpeechRecognition The browser's Speech Recognizer currently used by annyang
          * @method getSpeechRecognizer
          */
         getSpeechRecognizer: function () {
@@ -588,7 +588,7 @@
          * ````
          *
          * @param string|array sentences A sentence as a string or an array of strings of possible sentences
-         * @returns undefined
+         * @return undefined
          * @method trigger
          */
         trigger: function (sentences) {

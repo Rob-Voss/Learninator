@@ -52,7 +52,7 @@
          * @extends World
          * @constructor
          *
-         * @returns {WaterWorld}
+         * @return {WaterWorld}
          */
         constructor() {
             let cheats      = {

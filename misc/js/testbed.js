@@ -3,7 +3,7 @@
 //existing C++ code a pain in the butt. This function can be used
 //to make everything in the Box2D namespace available without
 //needing to do that.
-/*function using(ns, pattern) {    
+/*function using(ns, pattern) {
     if (pattern == undefined) {
         // import all
         for (var name in ns) {
@@ -21,7 +21,7 @@
                 //console.log(ns[name]);
                 this[name] = ns[name];
             }
-        }       
+        }
     }
 }*/
 
@@ -37,14 +37,14 @@ var world = null;
 var mouseJointGroundBody;
 var canvas;
 var context;
-var myDebugDraw;        
+var myDebugDraw;
 var mouseDownQueryCallback;
 var visibleFixturesQueryCallback;
-var mouseJoint = null;        
+var mouseJoint = null;
 var run = true;
 var frameTime60 = 0;
 var statusUpdateCounter = 0;
-var showStats = false;        
+var showStats = false;
 var mouseDown = false;
 var shiftDown = false;
 var originTransform;
@@ -55,15 +55,15 @@ var mousePosPixel = {
 var prevMousePosPixel = {
     x: 0,
     y: 0
-};        
+};
 var mousePosWorld = {
     x: 0,
     y: 0
-};        
+};
 var canvasOffset = {
     x: 0,
     y: 0
-};        
+};
 var viewCenterPixel = {
     x:320,
     y:240
@@ -76,9 +76,9 @@ function myRound(val,places) {
         c *= 10;
     return Math.round(val*c)/c;
 }
-        
+
 function getWorldPointFromPixelPoint(pixelPoint) {
-    return {                
+    return {
         x: (pixelPoint.x - canvasOffset.x)/PTM,
         y: (pixelPoint.y - (canvas.height - canvasOffset.y))/PTM
     };
@@ -127,27 +127,27 @@ var getBodyCB = function(fixture) {
 };
 
 function startMouseJoint() {
-    
+
     if ( mouseJoint != null )
         return;
-    
+
     // Make a small box.
     var aabb = new b2AABB();
-    var d = 0.001;            
+    var d = 0.001;
     aabb.lowerBound.Set(mousePosWorld.x - d, mousePosWorld.y - d);
     aabb.upperBound.Set(mousePosWorld.x + d, mousePosWorld.y + d);
-    
-    // Query the world for overlapping shapes.            
+
+    // Query the world for overlapping shapes.
     mouseDownQueryCallback.m_fixture = null;
     mouseDownQueryCallback.m_point.Set(mousePosWorld.x, mousePosWorld.y);
     world.QueryAABB(mouseDownQueryCallback, aabb);
     if (mouseDownQueryCallback.m_fixture)
     {
         var body = mouseDownQueryCallback.m_fixture.GetBody();
-        
+
     /*selectedBody = null;
-    world.QueryAABB(getBodyCB, aabb);    
-    if (selectedBody)    
+    world.QueryAABB(getBodyCB, aabb);
+    if (selectedBody)
     {
         var body = selectedBody;*/
         var md = new b2MouseJointDef();
@@ -156,13 +156,13 @@ function startMouseJoint() {
         md.target.Set(mousePosWorld.x, mousePosWorld.y);
         md.maxForce = 1000 * body.GetMass();
         md.collideConnected = true;
-        
+
         mouseJoint = world.CreateJoint(md);
         body.SetAwake(true);
     }
 }
 
-function onMouseDown(canvas, evt) {            
+function onMouseDown(canvas, evt) {
     updateMousePos(canvas, evt);
     if ( !mouseDown )
         startMouseJoint();
@@ -216,10 +216,10 @@ function onKeyDown(canvas, evt) {
     else if ( evt.keyCode == 16 ) {//shift
         shiftDown = true;
     }
-    
+
     if ( window['currentTest'] && window['currentTest']['onKeyDown'] )
         window['currentTest']['onKeyDown'](canvas, evt);
-    
+
     draw();
 }
 
@@ -227,7 +227,7 @@ function onKeyUp(canvas, evt) {
     if ( evt.keyCode == 16 ) {//shift
         shiftDown = false;
     }
-    
+
     if ( window['currentTest'] && window['currentTest']['onKeyUp'] )
         window['currentTest']['onKeyUp'](canvas, evt);
 }
@@ -249,7 +249,7 @@ function zoomOut() {
     canvasOffset.y -= (newViewCenterWorld.y-currentViewCenterWorld.y) * PTM;
     draw();
 }
-        
+
 function updateDebugDrawCheckboxesFromWorld() {
     var flags = myDebugDraw.GetFlags();
     document.getElementById('drawShapesCheck').checked = (( flags & e_shapeBit ) != 0);
@@ -285,37 +285,37 @@ function updateContinuousRefreshStatus() {
 }
 
 function init() {
-    
+
     canvas = document.getElementById("canvas");
     context = canvas.getContext( '2d' );
-    
+
     canvasOffset.x = canvas.width/2;
     canvasOffset.y = canvas.height/2;
-    
+
     canvas.addEventListener('mousemove', function(evt) {
         onMouseMove(canvas,evt);
     }, false);
-    
+
     canvas.addEventListener('mousedown', function(evt) {
         onMouseDown(canvas,evt);
     }, false);
-    
+
     canvas.addEventListener('mouseup', function(evt) {
         onMouseUp(canvas,evt);
     }, false);
-    
+
     canvas.addEventListener('mouseout', function(evt) {
         onMouseOut(canvas,evt);
     }, false);
-    
+
     canvas.addEventListener('keydown', function(evt) {
         onKeyDown(canvas,evt);
     }, false);
-    
+
     canvas.addEventListener('keyup', function(evt) {
         onKeyUp(canvas,evt);
     }, false);
-    
+
     myDebugDraw = new b2DebugDraw();
     myDebugDraw.SetSprite(document.getElementById("canvas").getContext("2d"));
     myDebugDraw.SetDrawScale(1.0);
@@ -323,9 +323,9 @@ function init() {
     myDebugDraw.SetLineThickness(1.0);
     myDebugDraw.SetXFormScale(0.25);
     myDebugDraw.SetFlags(b2DebugDraw.e_shapeBit /*| b2DebugDraw.e_jointBit*/);
-    
+
     originTransform = new b2Transform();
-    
+
     var MouseDownQueryCallback = function() {
         this.m_fixture = null;
         this.m_point = new b2Vec2();
@@ -339,10 +339,10 @@ function init() {
         }
         return true;
     };
-    
+
     mouseDownQueryCallback = new MouseDownQueryCallback();
-      
-    
+
+
     var VisibleFixturesQueryCallback = function() {
         this.m_fixtures = [];
     }
@@ -350,12 +350,12 @@ function init() {
         this.m_fixtures.push(fixture);
         return true;
     };
-    
+
     viewAABB = new b2AABB();
     visibleFixturesQueryCallback = new VisibleFixturesQueryCallback();
 }
 
-function changeTest() {    
+function changeTest() {
     resetScene();
     if ( window['currentTest'] && window['currentTest']['setNiceViewCenter'] )
         window['currentTest']['setNiceViewCenter']();
@@ -364,27 +364,27 @@ function changeTest() {
 }
 
 function createWorld() {
-    
+
     var sceneInfoDiv = document.getElementById('sceneinfo');
     var commentsDiv = document.getElementById('testcomments');
     sceneInfoDiv.innerHTML = "Loading...";
     commentsDiv.innerHTML = "";
-    
-    if ( world != null ) 
+
+    if ( world != null )
         //Box2D.destroy(world);
         world = null;
-        
+
     world = new b2World( new b2Vec2(0.0, -10.0) );
     //world = new Box2D.Dynamics.b2World(new Box2D.Common.Math.b2Vec2(0, 9.8) /* gravity */, true /* allowSleep */);
     world.SetDebugDraw(myDebugDraw);
-    
+
     mouseJointGroundBody = world.CreateBody( new b2BodyDef() );
-    
+
     var e = document.getElementById("testSelection");
     var v = e.options[e.selectedIndex].value;
-    
+
     eval( "window['currentTest']= new "+v+"();" );
-    
+
     window['currentTest']['setup']();
 }
 
@@ -394,10 +394,10 @@ function getWorldInfo() {
     var numJoints = 0;
     for (b = world.m_bodyList; b; b = b.m_next) {
         numBodies++;
-        for (f = b.m_fixtureList; f; f = f.m_next) 
+        for (f = b.m_fixtureList; f; f = f.m_next)
             numFixtures++;
     }
-    for (j = world.m_jointList; j; j = j.m_next) 
+    for (j = world.m_jointList; j; j = j.m_next)
         numJoints++;
     return ""+numBodies+" bodies, "+numFixtures+" fixtures, "+numJoints+" joints";
 }
@@ -412,7 +412,7 @@ function resetScene() {
 //the RUBE scenes are loaded via jQuery post, so the draw() call above usually
 //does not catch them. Call this at the end of the post function.
 function doAfterLoading() {
-    
+
     if ( world.images ) {
         for (var i = 0; i < world.images.length; i++) {
             var imageObj = new Image();
@@ -420,41 +420,41 @@ function doAfterLoading() {
             world.images[i].imageObj = imageObj;
         }
     }
-    
+
     var sceneInfoDiv = document.getElementById('sceneinfo');
     sceneInfoDiv.innerHTML = "Scene info: "+getWorldInfo();;
-    
+
     var comments = "";
     if ( window['currentTest']['getComments'] )
         comments = window['currentTest']['getComments']();
     var commentsDiv = document.getElementById('testcomments');
     commentsDiv.innerHTML = "About: "+comments;
-    
+
     resettingScene = false;
-    
+
     draw();
 }
 
 function step(timestamp) {
-    
+
     if ( resettingScene )
         return;
-    
-    if ( window['currentTest'] && window['currentTest']['step'] ) 
+
+    if ( window['currentTest'] && window['currentTest']['step'] )
         window['currentTest']['step']();
-    
+
     if ( ! showStats ) {
         world.Step(1/60, 10, 6);
         draw();
         //logBodyPositions();
         return;
     }
-    
+
     var current = Date.now();
     world.Step(1/60, 10, 6);
     var frametime = (Date.now() - current);
     frameTime60 = frameTime60 * (59/60) + frametime * (1/60);
-    
+
     draw();
     statusUpdateCounter++;
     if ( statusUpdateCounter > 20 ) {
@@ -464,15 +464,15 @@ function step(timestamp) {
 }
 
 function setColorFromBodyType(color, b) {
-    if (b.IsActive() == false) 
+    if (b.IsActive() == false)
         color.Set(0.5, 0.5, 0.3);
-     else if (b.GetType() == b2_staticBody) 
+     else if (b.GetType() == b2_staticBody)
         color.Set(0.5, 0.9, 0.5);
-     else if (b.GetType() == b2_kinematicBody) 
+     else if (b.GetType() == b2_kinematicBody)
         color.Set(0.5, 0.5, 0.9);
-     else if (b.IsAwake() == false) 
-        color.Set(0.6, 0.6, 0.6);                
-     else 
+     else if (b.IsAwake() == false)
+        color.Set(0.6, 0.6, 0.6);
+     else
         color.Set(0.9, 0.7, 0.7);
 }
 
@@ -493,17 +493,17 @@ function drawLinePolygon(poly, xf) {
 }
 
 function draw() {
-    
+
     //black background
     context.fillStyle = 'rgb(0,0,0)';
     context.fillRect( 0, 0, canvas.width, canvas.height );
-    
-    context.save();   
+
+    context.save();
         context.translate(canvasOffset.x, canvasOffset.y);
         context.scale(1,-1);
         context.scale(PTM,PTM);
         context.lineWidth /= PTM;
-        
+
         //draw images
         context.save();
             context.scale(1,-1);
@@ -516,7 +516,7 @@ function draw() {
                             var bodyPos = world.images[i].body.GetPosition();
                             context.translate(bodyPos.x, -bodyPos.y);
                             context.rotate(-world.images[i].body.GetAngle());
-                            
+
                             //image position in body
                             var imageLocalCenter = world.images[i].center;
                             context.translate(imageLocalCenter.x, -imageLocalCenter.y);
@@ -531,14 +531,14 @@ function draw() {
                 }
             }
         context.restore();
-        
+
         myDebugDraw.DrawTransform(originTransform);
-        
+
         var flags = myDebugDraw.GetFlags();
         myDebugDraw.SetFlags(flags & ~e_shapeBit);
         world.DrawDebugData();
         myDebugDraw.SetFlags(flags);
-                
+
         if (( flags & e_shapeBit ) != 0) {
             //query the world for visible fixtures
             var currentViewCenterWorld = getWorldPointFromPixelPoint( viewCenterPixel );
@@ -549,7 +549,7 @@ function draw() {
             visibleFixturesQueryCallback.m_fixtures = [];
             world.QueryAABB(visibleFixturesQueryCallback, viewAABB);
             var f, b, xf, s;
-            var color = new b2Color(0, 0, 0);            
+            var color = new b2Color(0, 0, 0);
             var circleFixtures = [];
             var polygonFixtures = [];
             var staticPolygonFixtures = [];
@@ -576,11 +576,11 @@ function draw() {
             for (var i = 0; i < polygonFixtures.length; i++) {
                 f = polygonFixtures[i];
                 b = f.GetBody();
-                if (b.GetType() == b2_staticBody) 
+                if (b.GetType() == b2_staticBody)
                     staticPolygonFixtures.push(f);
-                else if (b.GetType() == b2_kinematicBody) 
+                else if (b.GetType() == b2_kinematicBody)
                     kinematicPolygonFixtures.push(f);
-                else 
+                else
                     dynamicPolygonFixtures.push(f);
             }
             context.strokeStyle = "rgb(128,230,128)";
@@ -595,7 +595,7 @@ function draw() {
             }
             context.closePath();
             context.stroke();
-            
+
             context.strokeStyle = "rgb(128,128,230)";
             context.beginPath();//draw all kinematic polygons as one path
             for (var i = 0; i < kinematicPolygonFixtures.length; i++) {
@@ -608,7 +608,7 @@ function draw() {
             }
             context.closePath();
             context.stroke();
-            
+
             context.strokeStyle = "rgb(230,178,178)";
             context.beginPath();//draw all dynamic polygons as one path
             for (var i = 0; i < dynamicPolygonFixtures.length; i++) {
@@ -622,7 +622,7 @@ function draw() {
             context.closePath();
             context.stroke();
         }
-        
+
         if ( mouseJoint != null ) {
             //mouse joint is not drawn with regular joints in debug draw
             var p1 = mouseJoint.GetAnchorB();
@@ -633,7 +633,7 @@ function draw() {
             context.lineTo(p2.x,p2.y);
             context.stroke();
         }
-        
+
     context.restore();
 }
 
@@ -654,11 +654,11 @@ function updateStats() {
 }
 
 window.requestAnimFrame = (function(){
-    return  window.requestAnimationFrame       || 
-            window.webkitRequestAnimationFrame || 
-            window.mozRequestAnimationFrame    || 
-            window.oRequestAnimationFrame      || 
-            window.msRequestAnimationFrame     || 
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            window.oRequestAnimationFrame      ||
+            window.msRequestAnimationFrame     ||
             function( callback ){
               window.setTimeout(callback, 1000 / 60);
             };
@@ -779,7 +779,7 @@ var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,
       b2FrictionJoint = Box2D.Dynamics.Joints.b2FrictionJoint,
       b2FrictionJointDef = Box2D.Dynamics.Joints.b2FrictionJointDef;
 
-window['onload'] = function doOnload() {   
+window['onload'] = function doOnload() {
     /*
     using(Box2D.Common, "b2.+");
     using(Box2D.Common.Math, "b2.+");
@@ -789,9 +789,9 @@ window['onload'] = function doOnload() {
     using(Box2D.Dynamics.Joints, "b2.+");
     using(Box2D.Dynamics.b2Body, "b2.+");//b2_dynamicBody etc
     */
-    init();
-    changeTest();
-    animate();
+    // init();
+    // changeTest();
+    // animate();
 }
 
 //these need to be kept global for closure advanced optimization
@@ -811,7 +811,7 @@ function ttt(ns, recurse) {
         base += "['"+parts[i]+"']";
     //if ( ns.endsWith('prototype') )
     //    recurse = false;
-    for (var name in eval(ns)) {        
+    for (var name in eval(ns)) {
         console.log(base+"['"+name+"'] = "+ns+"."+name+";");
         //if ( typeof eval(ns+"."+name) == 'function' ) {
             if ( recurse )

@@ -13,7 +13,7 @@ var WaterWorldEX = WaterWorldEX || {},
          * @extends World
          * @constructor
          *
-         * @returns {WaterWorldEX}
+         * @return {WaterWorldEX}
          */
         constructor() {
             let renderOpts = {

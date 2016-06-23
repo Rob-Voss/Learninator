@@ -109,7 +109,7 @@ var FlotGraph = FlotGraph || {},
         /**
          * zip rewards into flot data
          * @param {number} a
-         * @returns {Array}
+         * @return {Array}
          */
         getFlotRewards: function (a) {
             var res = [];

@@ -9,7 +9,7 @@
          * @extends World
          * @constructor
          *
-         * @returns {HexMazeWorld}
+         * @return {HexMazeWorld}
          */
         constructor() {
             var cheats = {
@@ -515,7 +515,7 @@
         /**
          * Tick the environment
          * @param {number} timeSinceLast
-         * @returns {HexMazeWorld}
+         * @return {HexMazeWorld}
          */
         tick(timeSinceLast) {
             this.updatePopulation();
@@ -649,7 +649,7 @@
         /**
          * zip rewards into flot data
          * @param {number} an
-         * @returns {Array}
+         * @return {Array}
          */
         getFlotRewards(an = 0) {
             let res = [];
@@ -746,7 +746,7 @@
     /**
      * Return the allowed actions based on the current state/cell
      * @param {number} s - State
-     * @returns {Array}
+     * @return {Array}
      */
     HexMazeWorld.prototype.allowedActions = function (s) {
         let cell = this.grid.cells[s],
@@ -775,7 +775,7 @@
 
     /**
      * Return the number of actions
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.getMaxNumActions = function () {
         return this.grid.startCell.directions.length;
@@ -783,7 +783,7 @@
 
     /**
      * Return the number of states
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.getNumStates = function () {
         return this.grid.cells.length;
@@ -793,7 +793,7 @@
      *
      * @param {number} s
      * @param {number} a
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.nextStateDistribution = function (s, a) {
         let ns,
@@ -818,7 +818,7 @@
 
     /**
      * Return a rand state
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.randomState = function () {
         return Math.floor(Math.random() * this.grid.cells.length);
@@ -853,7 +853,7 @@
      * @param {number} s
      * @param {number} a
      * @param {number} ns
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.reward = function (s, a, ns) {
         return this.Rarr[s];
@@ -862,7 +862,7 @@
     /**
      * Convert the state to a q
      * @param {number} s
-     * @returns {number} q
+     * @return {number} q
      */
     HexMazeWorld.prototype.sToX = function (s) {
         return this.grid.cells[s].q;
@@ -871,7 +871,7 @@
     /**
      * Convert the state to a r
      * @param {number} s
-     * @returns {number} r
+     * @return {number} r
      */
     HexMazeWorld.prototype.sToY = function (s) {
         return this.grid.cells[s].r;
@@ -881,7 +881,7 @@
      * Convert an x, y to the state
      * @param {number} q
      * @param {number} r
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.xyToS = function (q, r) {
         let cell = this.grid.getCellAt(q, r),
@@ -894,7 +894,7 @@
      * Observe the raw reward of being in s, taking a, and ending up in ns
      * @param {number} s
      * @param {number} a
-     * @returns {{ns: (*|Number), r: (*|Number)}}
+     * @return {{ns: (*|Number), r: (*|Number)}}
      */
     HexMazeWorld.prototype.sampleNextState = function (s, a) {
         let ns = this.nextStateDistribution(s, a),
@@ -916,7 +916,7 @@
 
     /**
      * Return the starting state
-     * @returns {number}
+     * @return {number}
      */
     HexMazeWorld.prototype.startState = function () {
         return 0;

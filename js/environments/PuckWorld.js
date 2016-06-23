@@ -12,7 +12,7 @@ var PuckWorld = PuckWorld || {},
      * @extends World
      * @constructor
      *
-     * @returns {PuckWorld}
+     * @return {PuckWorld}
      */
     function PuckWorld() {
         let self = this;
@@ -97,7 +97,7 @@ var PuckWorld = PuckWorld || {},
     /**
      * Return the number of states
      *
-     * @returns {number}
+     * @return {number}
      */
     PuckWorld.prototype.getNumStates = function () {
         return 8; // x,y,vx,vy, puck dx,dy
@@ -106,7 +106,7 @@ var PuckWorld = PuckWorld || {},
     /**
      * Return the number of actions
      *
-     * @returns {number}
+     * @return {number}
      */
     PuckWorld.prototype.getMaxNumActions = function () {
         return 5; // left, right, up, down, nothing

@@ -1,9 +1,6 @@
 (function (global) {
     "use strict";
 
-    var Utility = global.Utility,
-        Vec = global.Vec || {};
-
     /**
      * Options for the cheats to display
      * @typedef {Object} cheatOpts
@@ -36,7 +33,7 @@
          * @param {Vec} position - The x, y location
          * @param {entityOpts} opts - The Entity options
          * @param {cheatOpts} opts.cheats - The cheats to display
-         * @returns {Entity}
+         * @return {Entity}
          */
         constructor(type, position, opts) {
             this.id = Utility.Strings.guid();
@@ -139,7 +136,7 @@
 
         /**
          * Set up the cheat displays
-         * @returns {Entity}
+         * @return {Entity}
          */
         addCheats() {
             this.txtOpts = {font: "10px Arial", fill: "#000000", align: "center"};
@@ -202,7 +199,7 @@
 
         /**
          * Update the cheats if they are on
-         * @returns {Entity}
+         * @return {Entity}
          */
         updateCheats() {
             this.addCheats();
@@ -294,7 +291,7 @@
 
         /**
          * Draws it
-         * @returns {Entity}
+         * @return {Entity}
          */
         draw() {
             if (this.useSprite) {
@@ -346,7 +343,7 @@
 
         /**
          * Move around
-         * @returns {Entity}
+         * @return {Entity}
          */
         move() {
             for (let i = 0; i < this.collisions.length; i++) {
@@ -423,7 +420,7 @@
 
         /**
          * Do work son
-         * @returns {Entity}
+         * @return {Entity}
          */
         tick() {
             this.age += 1;
@@ -439,7 +436,7 @@
          * Perform the start of a drag
          *
          * @param {MouseEvent} event
-         * @returns {Entity}
+         * @return {Entity}
          */
         onDragStart(event) {
             this.data = event.data;
@@ -452,7 +449,7 @@
         /**
          * Perform the move of a drag
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onDragMove(event) {
             this.data = event.data;
@@ -467,7 +464,7 @@
         /**
          * Perform the end of a drag
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onDragEnd(event) {
             this.data = event.data;
@@ -485,7 +482,7 @@
         /**
          * Perform the action for mouse down
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onMouseDown(event) {
             this.data = event.data;
@@ -498,7 +495,7 @@
         /**
          * Perform the action for mouse up
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onMouseUp(event) {
             this.data = event.data;
@@ -510,7 +507,7 @@
         /**
          * Perform the action for mouse over
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onMouseOver(event) {
             this.data = event.data;
@@ -525,7 +522,7 @@
         /**
          * Perform the action for mouse out
          *
-         * @returns {Entity}
+         * @return {Entity}
          */
         onMouseOut(event) {
             this.data = event.data;
@@ -540,6 +537,12 @@
     Entity.entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'];
     Entity.styles = ['black', 'green', 'red',  'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'];
     Entity.hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
-    global.Entity = Entity;
 
+    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+        module.exports = {
+            Entity: Entity
+        };
+    } else {
+        global.Entity = Entity;
+    }
 }(this));

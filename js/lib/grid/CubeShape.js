@@ -1,25 +1,23 @@
-(function (global) {
-    "use strict";
+(function(global) {
+  'use strict';
 
-    class CubeShape extends Cube {
-        /**
-         * A Cube
-         * @name Cube
-         * @constructor
-         *
-         * @param {number} x
-         * @param {number} y
-         * @param {number} z
-         * @param {Layout} layout
-         * @returns {Cube}
-         */
-        constructor(x, y, z) {
-            super(x, y, z);
+  class CubeShape extends Cube {
+    /**
+     * A Cube
+     * @constructor
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     * @param {Layout} layout
+     * @return {Cube}
+     */
+    constructor(x, y, z) {
+      super(x, y, z);
 
-            return this;
-        }
+      return this;
     }
-
-    global.CubeShape = CubeShape;
+  };
+  global.CubeShape = CubeShape;
 
 })(this);

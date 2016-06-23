@@ -13,7 +13,7 @@ var Agent = global.Agent || {};
          *
          * @param {Vec} position - The x, y location
          * @param {entityOpts} opts - The Entity options
-         * @returns {EntityRLDQN}
+         * @return {EntityRLDQN}
          */
         constructor(position, opts) {
             opts.radius = 20;
@@ -49,7 +49,7 @@ var Agent = global.Agent || {};
 
         /**
          * Get the current state
-         * @returns {EntityRLDQN}
+         * @return {EntityRLDQN}
          */
         act() {
             this.state = [

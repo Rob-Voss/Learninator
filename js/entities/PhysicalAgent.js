@@ -18,7 +18,7 @@
          *
          * @param {Matter.Body} body - The Matter.Body
          * @param {agentOpts} opts - The Agent options
-         * @returns {PhysicalAgent}
+         * @return {PhysicalAgent}
          */
         constructor(body, opts) {
             this.id = 'agent-' + body.id;
@@ -184,7 +184,7 @@
 
         /**
          * Reset or set up the Agent
-         * @returns {PhysicalAgent}
+         * @return {PhysicalAgent}
          */
         reset() {
             var brain = this.brainType.split('.');
@@ -247,7 +247,7 @@
         /**
          * Tick the agent
          * @param {Matter.Engine} engine
-         * @returns {PhysicalAgent}
+         * @return {PhysicalAgent}
          */
         tick(bodies) {
             this.age += 1;

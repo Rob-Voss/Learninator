@@ -21,7 +21,7 @@ var RewardGraph = RewardGraph || {},
      * @constructor
      *
      * @param {rewardOpts} opts
-     * @returns {RewardGraph}
+     * @return {RewardGraph}
      */
     var RewardGraph = function (opts) {
         this.canvas = Utility.getOpt(opts, 'canvas', document.getElementById("rewardGraph"));
@@ -66,7 +66,7 @@ var RewardGraph = RewardGraph || {},
          * Add a point to the graph
          * @param {number} step
          * @param {number} yl
-         * @returns {undefined}
+         * @return {undefined}
          */
         addPoint: function (step, idx, yl) {
             // in ms
@@ -107,7 +107,7 @@ var RewardGraph = RewardGraph || {},
         },
         /**
          * Draw it
-         * @returns {undefined}
+         * @return {undefined}
          */
         drawPoints: function () {
             let pad = 25,

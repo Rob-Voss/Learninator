@@ -11,7 +11,7 @@
          * @param {Vec} v2
          * @param {number} direction
          * @param {object} options
-         * @returns {Wall}
+         * @return {Wall}
          */
         constructor(v1 = new Vec(0, 0), v2 = new Vec(0, 0), direction, options) {
             this.id = Utility.Strings.guid();
@@ -80,7 +80,7 @@
 
         /**
          *
-         * @returns {Wall}
+         * @return {Wall}
          */
         draw() {
             if (this.useSprite) {
@@ -138,6 +138,14 @@
             return this;
         }
     }
-    global.Wall = Wall;
+
+    if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+        module.exports = {
+            Wall: Wall
+        };
+    } else {
+        global.Wall = Wall;
+    }
+
 
 }(this));

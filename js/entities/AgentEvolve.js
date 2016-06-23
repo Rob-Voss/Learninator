@@ -39,7 +39,7 @@ var Brain = Brain || {},
          * Brain takes inputs and sets its outputs
          * @param s1
          * @param s2
-         * @returns {{out0: number, out1: *}}
+         * @return {{out0: number, out1: *}}
          */
         tick(s1, s2) {
             this.act[0] = s1; // Set inputs

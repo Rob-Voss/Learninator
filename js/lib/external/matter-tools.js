@@ -1860,7 +1860,7 @@ dat.controllers.Controller = (function (common) {
          *
          * @param {Function} fnc This function will be called whenever the value
          * is modified via this Controller.
-         * @returns {dat.controllers.Controller} this
+         * @return {dat.controllers.Controller} this
          */
         onChange: function(fnc) {
           this.__onChange = fnc;
@@ -1874,7 +1874,7 @@ dat.controllers.Controller = (function (common) {
          *
          * @param {Function} fnc This function will be called whenever
          * someone "finishes" changing the value via this Controller.
-         * @returns {dat.controllers.Controller} this
+         * @return {dat.controllers.Controller} this
          */
         onFinishChange: function(fnc) {
           this.__onFinishChange = fnc;
@@ -1898,7 +1898,7 @@ dat.controllers.Controller = (function (common) {
         /**
          * Gets the value of <code>object[property]</code>
          *
-         * @returns {Object} The current value of <code>object[property]</code>
+         * @return {Object} The current value of <code>object[property]</code>
          */
         getValue: function() {
           return this.object[this.property];
@@ -1907,14 +1907,14 @@ dat.controllers.Controller = (function (common) {
         /**
          * Refreshes the visual display of a Controller in order to keep sync
          * with the object's current value.
-         * @returns {dat.controllers.Controller} this
+         * @return {dat.controllers.Controller} this
          */
         updateDisplay: function() {
           return this;
         },
 
         /**
-         * @returns {Boolean} true if the value has deviated from initialValue
+         * @return {Boolean} true if the value has deviated from initialValue
          */
         isModified: function() {
           return this.initialValue !== this.getValue()
@@ -2370,7 +2370,7 @@ dat.controllers.NumberController = (function (Controller, common) {
          *
          * @param {Number} minValue The minimum value for
          * <code>object[property]</code>
-         * @returns {dat.controllers.NumberController} this
+         * @return {dat.controllers.NumberController} this
          */
         min: function(v) {
           this.__min = v;
@@ -2382,7 +2382,7 @@ dat.controllers.NumberController = (function (Controller, common) {
          *
          * @param {Number} maxValue The maximum value for
          * <code>object[property]</code>
-         * @returns {dat.controllers.NumberController} this
+         * @return {dat.controllers.NumberController} this
          */
         max: function(v) {
           this.__max = v;
@@ -2397,7 +2397,7 @@ dat.controllers.NumberController = (function (Controller, common) {
          * dat.controllers.NumberController
          * @default if minimum and maximum specified increment is 1% of the
          * difference otherwise stepValue is 1
-         * @returns {dat.controllers.NumberController} this
+         * @return {dat.controllers.NumberController} this
          */
         step: function(v) {
           this.__step = v;
@@ -3617,7 +3617,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
         /**
          * @param object
          * @param property
-         * @returns {dat.controllers.Controller} The new controller that was added.
+         * @return {dat.controllers.Controller} The new controller that was added.
          * @instance
          */
         add: function(object, property) {
@@ -3636,7 +3636,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
         /**
          * @param object
          * @param property
-         * @returns {dat.controllers.ColorController} The new controller that was added.
+         * @return {dat.controllers.ColorController} The new controller that was added.
          * @instance
          */
         addColor: function(object, property) {
@@ -3678,7 +3678,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
 
         /**
          * @param name
-         * @returns {dat.gui.GUI} The new folder.
+         * @return {dat.gui.GUI} The new folder.
          * @throws {Error} if this GUI already has a folder by the specified
          * name
          * @instance
@@ -3805,7 +3805,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
         },
 
         /**
-         * @returns {dat.gui.GUI} the topmost parent GUI of a nested GUI.
+         * @return {dat.gui.GUI} the topmost parent GUI of a nested GUI.
          * @instance
          */
         getRoot: function() {
@@ -3817,7 +3817,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
         },
 
         /**
-         * @returns {Object} a JSON object representing the current state of
+         * @return {Object} a JSON object representing the current state of
          * this GUI as well as its remembered properties.
          * @instance
          */
@@ -5706,7 +5706,7 @@ Resurrect.GLOBAL = (0, eval)('this');
 /**
  * Escape special regular expression characters in a string.
  * @param {string} string
- * @returns {string} The string escaped for exact matches.
+ * @return {string} The string escaped for exact matches.
  * @see http://stackoverflow.com/a/6969486
  */
 Resurrect.escapeRegExp = function (string) {
@@ -5740,7 +5740,7 @@ Resurrect.NamespaceResolver = function(scope) {
  * Gets the prototype of the given property name from an object. If
  * not found, it throws an error.
  * @param {string} name
- * @returns {Object}
+ * @return {Object}
  * @method
  */
 Resurrect.NamespaceResolver.prototype.getPrototype = function(name) {
@@ -5755,7 +5755,7 @@ Resurrect.NamespaceResolver.prototype.getPrototype = function(name) {
 /**
  * Get the prototype name for an object, to be fetched later with getPrototype.
  * @param {Object} object
- * @returns {?string} Null if the constructor is Object.
+ * @return {?string} Null if the constructor is Object.
  * @method
  */
 Resurrect.NamespaceResolver.prototype.getName = function(object) {
@@ -5794,7 +5794,7 @@ Resurrect.Node = function(html) {
 
 /**
  * @param {string} type
- * @returns {Function} A function that tests for type.
+ * @return {Function} A function that tests for type.
  */
 Resurrect.is = function(type) {
     var string = '[object ' + type + ']';
@@ -5818,7 +5818,7 @@ Resurrect.isAtom = function(object) {
 
 /**
  * @param {*} object
- * @returns {boolean} True if object is a primitive or a primitive wrapper.
+ * @return {boolean} True if object is a primitive or a primitive wrapper.
  */
 Resurrect.isPrimitive = function(object) {
     return object == null ||
@@ -5832,7 +5832,7 @@ Resurrect.isPrimitive = function(object) {
 /**
  * Create a reference (encoding) to an object.
  * @param {(Object|undefined)} object
- * @returns {Object}
+ * @return {Object}
  * @method
  */
 Resurrect.prototype.ref = function(object) {
@@ -5848,7 +5848,7 @@ Resurrect.prototype.ref = function(object) {
 /**
  * Lookup an object in the table by reference object.
  * @param {Object} ref
- * @returns {(Object|undefined)}
+ * @return {(Object|undefined)}
  * @method
  */
 Resurrect.prototype.deref = function(ref) {
@@ -5858,7 +5858,7 @@ Resurrect.prototype.deref = function(ref) {
 /**
  * Put a temporary identifier on an object and store it in the table.
  * @param {Object} object
- * @returns {number} The unique identifier number.
+ * @return {number} The unique identifier number.
  * @method
  */
 Resurrect.prototype.tag = function(object) {
@@ -5882,7 +5882,7 @@ Resurrect.prototype.tag = function(object) {
  * Create a builder object (encoding) for serialization.
  * @param {string} name The name of the constructor.
  * @param value The value to pass to the constructor.
- * @returns {Object}
+ * @return {Object}
  * @method
  */
 Resurrect.prototype.builder = function(name, value) {
@@ -5895,7 +5895,7 @@ Resurrect.prototype.builder = function(name, value) {
 /**
  * Build a value from a deserialized builder.
  * @param {Object} ref
- * @returns {Object}
+ * @return {Object}
  * @method
  * @see http://stackoverflow.com/a/14378462
  * @see http://nullprogram.com/blog/2013/03/24/
@@ -5918,7 +5918,7 @@ Resurrect.prototype.build = function(ref) {
 /**
  * Dereference or build an object or value from an encoding.
  * @param {Object} ref
- * @returns {(Object|undefined)}
+ * @return {(Object|undefined)}
  * @method
  */
 Resurrect.prototype.decode = function(ref) {
@@ -5933,7 +5933,7 @@ Resurrect.prototype.decode = function(ref) {
 
 /**
  * @param {Object} object
- * @returns {boolean} True if the provided object is tagged for serialization.
+ * @return {boolean} True if the provided object is tagged for serialization.
  * @method
  */
 Resurrect.prototype.isTagged = function(object) {
@@ -5944,7 +5944,7 @@ Resurrect.prototype.isTagged = function(object) {
  * Visit root and all its ancestors, visiting atoms with f.
  * @param {*} root
  * @param {Function} f
- * @returns {*} A fresh copy of root to be serialized.
+ * @return {*} A fresh copy of root to be serialized.
  * @method
  */
 Resurrect.prototype.visit = function(root, f) {
@@ -5977,7 +5977,7 @@ Resurrect.prototype.visit = function(root, f) {
 /**
  * Manage special atom values, possibly returning an encoding.
  * @param {*} atom
- * @returns {*}
+ * @return {*}
  * @method
  */
 Resurrect.prototype.handleAtom = function(atom) {
@@ -6004,7 +6004,7 @@ Resurrect.prototype.handleAtom = function(atom) {
 /**
  * Hides intrusive keys from a user-supplied replacer.
  * @param {Function} replacer function of two arguments (key, value)
- * @returns {Function} A function that skips the replacer for intrusive keys.
+ * @return {Function} A function that skips the replacer for intrusive keys.
  * @method
  */
 Resurrect.prototype.replacerWrapper = function(replacer) {
@@ -6061,7 +6061,7 @@ Resurrect.prototype.stringify = function(object, replacer, space) {
 /**
  * Restore the __proto__ of the given object to the proper value.
  * @param {Object} object
- * @returns {Object} Its argument.
+ * @return {Object} Its argument.
  * @method
  */
 Resurrect.prototype.fixPrototype = function(object) {
@@ -6091,7 +6091,7 @@ Resurrect.prototype.fixPrototype = function(object) {
 /**
  * Deserialize an encoded object, restoring circularity and behavior.
  * @param {string} string
- * @returns {*} The decoded object or value.
+ * @return {*} The decoded object or value.
  * @method
  */
 Resurrect.prototype.resurrect = function(string) {

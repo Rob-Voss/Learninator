@@ -59,7 +59,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
          * @param {number} depth
          * @param {number} maxChildren
          * @param {number} maxDepth
-         * @returns {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
+         * @return {{x: *, y: *, width: *, height: *, depth: *, retrieve: Function, insert: Function, findInsertNode: Function, findOverlappingNodes: Function, divide: Function, clear: Function, getNodes: Function}}
          */
         node = function (x, y, width, height, depth, maxChildren, maxDepth) {
             var items = new Map(), // holds all items
@@ -135,7 +135,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
                 /**
                  * Find a node the item should be inserted in.
                  * @param {Array|Object} item
-                 * @returns {number}
+                 * @return {number}
                  */
                 findInsertNode: function (item) {
                     let wD = this.width / 2,
@@ -314,7 +314,7 @@ var QuadTree = QuadTree || {}; // global var for the quadtree
              * @param {Array|Object} selector
              * @param {Function} callback
              * @param {Node} instance
-             * @returns {Node}
+             * @return {Node}
              */
             retrieve: function (selector, callback, instance) {
                 return this.root.retrieve(selector, callback, instance);
