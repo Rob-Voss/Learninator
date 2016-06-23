@@ -24,6 +24,7 @@
                 renderOpts = {
                     antialiasing: false,
                     autoResize: false,
+                    backgroundColor: 0xFFFFFF,
                     resizable: false,
                     transparent: false,
                     resolution: window.devicePixelRatio,
@@ -46,7 +47,7 @@
                 size = new Point(gridOpts.width / gridOpts.cellSize, gridOpts.height / gridOpts.cellSize),
                 origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
                 layout = new Layout(orientation, size, origin),
-                shape = HexGrid.shapeRectangle(gridOpts.size, gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats, gridOpts.pointy),
+                shape = HexGrid.shapeRectangle(layout, gridOpts),
                 // shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
                 // shape = HexGrid.shapeRing(0, 0, 2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
                 // shape = HexGrid.shapeParallelogram(-1, -2, 1, 1, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),

@@ -81,13 +81,14 @@
       let delta = event.wheelDelta || -event.detail,
       localPt = new PIXI.Point(),
       point = new PIXI.Point(event.pageX, event.pageY),
+      factor = (delta > 0) ? 1.1 : 1 / 1.1,
       interaction = PIXI.interaction.InteractionData;
       interaction.prototype.getLocalPosition(this.parent, localPt, point);
 
       this.worldLayer.pivot = localPt;
       this.worldLayer.position = point;
-      this.worldLayer.scale.x *= (delta > 0) ? 1.1 : 1 / 1.1;
-      this.worldLayer.scale.y *= (delta > 0) ? 1.1 : 1 / 1.1;
+      this.worldLayer.scale.x *= factor;
+      this.worldLayer.scale.y *= factor;
     }
 
     /**

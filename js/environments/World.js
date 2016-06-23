@@ -1,111 +1,110 @@
-(function (global) {
+(function(global) {
   'use strict';
 
   var Utility = global.Utility || {},
-    CollisionDetector = global.CollisionDetector || {},
-    Entity = global.Entity || {},
-    EntityRLDQN = global.EntityRLDQN || {},
-    Wall = global.Wall || {},
-    Vec = global.Vec || {};
+      CollisionDetector = global.CollisionDetector || {},
+      Entity = global.Entity || {},
+      EntityRLDQN = global.EntityRLDQN || {},
+      Wall = global.Wall || {},
+      Vec = global.Vec || {};
 
-  const
-    /**
-     * The flags for what to display for 'cheats'
-     * @typedef {Object} cheatsOpts
-     * @property {boolean} id
-     * @property {boolean} name
-     * @property {boolean} angle
-     * @property {boolean} bounds
-     * @property {boolean} direction
-     * @property {boolean} gridLocation
-     * @property {boolean} position
-     */
-    cheatOptsDef = {
-      id: false,
-      name: false,
-      angle: false,
-      bounds: false,
-      direction: false,
-      gridLocation: false,
-      position: false
-    },
-    /**
-     *
-     * @type {{type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}}
-     */
-    collisionOptsDef = {
-      type: 'quad',
-      maxChildren: 10,
-      maxDepth: 30,
-      cheats: {
-        bounds: cheatOptsDef.bounds
-      }
-    },
-    /**
-     *
-     * @type {Element}
-     */
-    element = document.body.querySelector('#game-container'),
-    /**
-     * Options for the World
-     * @typedef {Object} worldOpts
-     * @property {number} simSpeed - The speed of the simulation
-     * @property {collisionOpts} collision - The collision definition
-     * @property {cheatsOpts} cheats - The cheats definition
-     * @property {number} numEntities - The number of Entities to spawn
-     * @property {entityOpts} entityOpts - The Entity options to use for them
-     * @property {number} numEntityAgents - The number of EntityAgents to spawn
-     * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
-     * @property {Grid} grid - The grid to use
-     * @property {Maze} maze - The maze to use
-     */
-    worldOptsDef = {
-      simSpeed: 1,
-      collision: collisionOptsDef,
-      cheats: cheatOptsDef,
-      numEntities: 20,
-      entityOpts: {
-        radius: 10,
-        collision: true,
-        interactive: true,
-        useSprite: false,
-        moving: true,
-        cheats: cheatOptsDef
+  /**
+   * The flags for what to display for 'cheats'
+   * @typedef {Object} cheatsOpts
+   * @property {boolean} id
+   * @property {boolean} name
+   * @property {boolean} angle
+   * @property {boolean} bounds
+   * @property {boolean} direction
+   * @property {boolean} gridLocation
+   * @property {boolean} position
+   */
+  const cheatOptsDef = {
+        id: false,
+        name: false,
+        angle: false,
+        bounds: false,
+        direction: false,
+        gridLocation: false,
+        position: false
       },
-      numEntityAgents: 0,
-      entityAgentOpts: {
-        radius: 10,
-        collision: true,
-        interactive: true,
-        useSprite: false,
-        moving: true,
-        cheats: cheatOptsDef
-      }
-    },
-    /**
-     * Options for the World renderer
-     * @typedef {Object} renderOpts
-     * @property {HTMLCanvasElement} view - the canvas to use as a view, optional
-     * @property {boolean} transparent - If the render view is transparent, default false
-     * @property {boolean} antialias - sets antialias (only applicable in chrome at the moment)
-     * @property {boolean} preserveDrawingBuffer - enables drawing buffer preservation, enable this if you
-     *      need to call toDataUrl on the webgl context
-     * @property {number} resolution - the resolution of the renderer, retina would be 2
-     * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
-     * @property {number} width - The width
-     * @property {number} height - The height
-     */
-    renderOptsDef = {
-      antialiasing: false,
-      autoResize: false,
-      background: 0xFFFFFF,
-      resolution: window.devicePixelRatio,
-      resizable: false,
-      transparent: false,
-      noWebGL: true,
-      width: 600,
-      height: 600
-    };
+      /**
+       *
+       * @type {{type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}}
+       */
+      collisionOptsDef = {
+        type: 'quad',
+        maxChildren: 10,
+        maxDepth: 30,
+        cheats: {
+          bounds: cheatOptsDef.bounds
+        }
+      },
+      /**
+       *
+       * @type {Element}
+       */
+      element = document.body.querySelector('#game-container'),
+      /**
+       * Options for the World
+       * @typedef {Object} worldOpts
+       * @property {number} simSpeed - The speed of the simulation
+       * @property {collisionOpts} collision - The collision definition
+       * @property {cheatsOpts} cheats - The cheats definition
+       * @property {number} numEntities - The number of Entities to spawn
+       * @property {entityOpts} entityOpts - The Entity options to use for them
+       * @property {number} numEntityAgents - The number of EntityAgents to spawn
+       * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
+       * @property {Grid} grid - The grid to use
+       * @property {Maze} maze - The maze to use
+       */
+      worldOptsDef = {
+        simSpeed: 1,
+        collision: collisionOptsDef,
+        cheats: cheatOptsDef,
+        numEntities: 20,
+        entityOpts: {
+          radius: 10,
+          collision: true,
+          interactive: true,
+          useSprite: false,
+          moving: true,
+          cheats: cheatOptsDef
+        },
+        numEntityAgents: 0,
+        entityAgentOpts: {
+          radius: 10,
+          collision: true,
+          interactive: true,
+          useSprite: false,
+          moving: true,
+          cheats: cheatOptsDef
+        }
+      },
+      /**
+       * Options for the World renderer
+       * @typedef {Object} renderOpts
+       * @property {boolean} antialiasing - sets antialias (only applicable in chrome at the moment)
+       * @property {HTMLCanvasElement} view - the canvas to use as a view, optional
+       * @property {boolean} transparent - If the render view is transparent, default false
+       * @property {boolean} preserveDrawingBuffer - enables drawing buffer preservation, enable this if you
+       *      need to call toDataUrl on the webgl context
+       * @property {number} resolution - the resolution of the renderer, retina would be 2
+       * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
+       * @property {number} width - The width
+       * @property {number} height - The height
+       */
+      renderOptsDef = {
+        antialiasing: false,
+        autoResize: false,
+        background: 0xFFFFFF,
+        resolution: window.devicePixelRatio,
+        resizable: false,
+        transparent: false,
+        noWebGL: true,
+        width: 600,
+        height: 600
+      };
 
   class World {
 
@@ -139,10 +138,10 @@
       this.resizable = this.renderOpts.resizable;
 
       this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
-      this.renderer.backgroundColor = this.renderOpts.background;
-      this.renderer.view.style.pos = "absolute";
-      this.renderer.view.style.top = "0px";
-      this.renderer.view.style.left = "0px";
+      this.renderer.backgroundColor = this.renderOpts.backgroundColor;
+      this.renderer.view.style.pos = 'absolute';
+      this.renderer.view.style.top = '0px';
+      this.renderer.view.style.left = '0px';
       this.canvas = this.renderer.view;
       // Actually place the renderer onto the page for display
       element.appendChild(this.canvas);
@@ -211,7 +210,7 @@
      * Initialize the world
      */
     init() {
-      var animate = () => {
+      let animate = () => {
         if (!this.pause) {
           this.deltaTime = this.time() - this.lastTime;
           this.lastTime = this.time();
@@ -258,23 +257,23 @@
      */
     addEntityAgents() {
       let startXY,
-        r = this.entityAgentOpts.radius;
+          r = this.entityAgentOpts.radius;
       for (let k = 0; k < this.numEntityAgents; k++) {
         if (this.grid && this.grid.startCell !== undefined) {
           let numb = Math.floor(Math.random() * this.grid.cells.length),
-            startCell = this.grid.cells[numb],
-            randAdd = Utility.Maths.randi(-7, 7);
+              startCell = this.grid.cells[numb],
+              randAdd = Utility.Maths.randi(-7, 7);
           startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
         } else {
           startXY = new Vec(
-            Utility.Maths.randi(r, this.width - r),
-            Utility.Maths.randi(r, this.height - r)
+              Utility.Maths.randi(r, this.width - r),
+              Utility.Maths.randi(r, this.height - r)
           );
         }
         startXY.vx = Math.random() * 5 - 2.5;
         startXY.vy = Math.random() * 5 - 2.5;
         let entityAgent = new EntityRLDQN(startXY, this.entityAgentOpts),
-          entity = entityAgent.graphics;
+            entity = entityAgent.graphics;
         for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
           entity.addChild(entityAgent.eyes[ei].graphics);
         }
@@ -293,27 +292,27 @@
      */
     addEntities(number = null) {
       let startXY,
-        r = this.entityOpts.radius,
-        num = (number) ? number : this.numEntities;
+          r = this.entityOpts.radius,
+          num = (number) ? number : this.numEntities;
 
       // Populating the world
       for (let k = 0; k < num; k++) {
         if (this.grid && this.grid.startCell !== undefined) {
           let n = Math.floor(Math.random() * this.grid.cells.length),
-            startCell = this.grid.cells[n],
-            randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 - r), this.grid.cellSize / 2 - r);
+              startCell = this.grid.cells[n],
+              randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 - r), this.grid.cellSize / 2 - r);
           startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
           this.entityOpts.gridLocation = startCell;
         } else {
           startXY = new Vec(
-            Utility.Maths.randi(r, this.width - r),
-            Utility.Maths.randi(r, this.height - r)
+              Utility.Maths.randi(r, this.width - r),
+              Utility.Maths.randi(r, this.height - r)
           );
         }
         startXY.vx = Utility.Maths.randf(-3, 3);
         startXY.vy = Utility.Maths.randf(-3, 3);
         let type = Utility.Maths.randi(1, 3),
-          entity = new Entity(type, startXY, this.entityOpts);
+            entity = new Entity(type, startXY, this.entityOpts);
 
         this.entityLayer.addChild(entity.graphics);
         this.population.set(entity.id, entity);
@@ -349,9 +348,10 @@
      */
     deleteEntity(id) {
       if (this.population.has(id)) {
-        let entity = this.population.get(id),
-          entityIdx = this.entityLayer.getChildIndex(entity.graphics);
-        this.entityLayer.removeChildAt(entityIdx);
+        let entity = this.population.get(id);
+        this.entityLayer.removeChildAt(
+            this.entityLayer.getChildIndex(entity.graphics)
+        );
         this.population.delete(id);
       }
       return this;
@@ -388,24 +388,18 @@
      * @param event
      */
     onWheel(event) {
-      let factor = 1,
-        // Firefox has "detail" prop with opposite sign to std wheelDelta
-        delta = event.wheelDelta || -event.detail,
-        localPt = new PIXI.Point(),
-        point = new PIXI.Point(event.pageX, event.pageY);
-      PIXI.interaction.InteractionData.prototype.getLocalPosition(this.stage, localPt, point);
-
-      if (delta > 0) {
-        // Zoom in
-        factor = 1.1;
-      } else {
-        // Zoom out
-        factor = 1 / 1.1;
-      }
+      // Firefox has "detail" prop with opposite sign to std wheelDelta
+      let delta = event.wheelDelta || -event.detail,
+          localPt = new PIXI.Point(),
+          point = new PIXI.Point(event.pageX, event.pageY),
+          factor = (delta > 0) ? 1.1 : 1 / 1.1,
+          interaction = PIXI.interaction.InteractionData;
+      interaction.prototype.getLocalPosition(this.parent, localPt, point);
 
       this.stage.pivot = localPt;
       this.stage.position = point;
-      this.stage.scale.set(this.stage.scale.x * factor);
+      this.stage.scale.x *= factor;
+      this.stage.scale.y *= factor;
     }
 
     /**
@@ -452,9 +446,9 @@
           entity.tick();
 
           let top = this.height - (this.height - entity.radius),
-            bottom = this.height - entity.radius,
-            left = this.width - (this.width - entity.radius),
-            right = this.width - entity.radius;
+              bottom = this.height - entity.radius,
+              left = this.width - (this.width - entity.radius),
+              right = this.width - entity.radius;
 
           // Tweak them
           if (entity.position.x < left) {

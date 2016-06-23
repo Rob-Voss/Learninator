@@ -30,7 +30,7 @@
      * @param {Entity} tar
      */
     this.check = function(tar) {
-      let region;
+      let self = this, region;
       tar.collisions = [];
 
       /**
@@ -45,29 +45,29 @@
 
         if (tar.v1 !== undefined && ent.radius !== undefined) {
           // Eye and Entity
-          cObj = () => this.linePointIntersect(tar.v1, tar.v2, ent.position, ent.radius);
+          cObj = self.linePointIntersect(tar.v1, tar.v2, ent.position, ent.radius);
         } else if (tar.v1 !== undefined && ent.v1 !== undefined) {
           // Eye and Wall
-          cObj = () => this.lineIntersect(tar.v1, tar.v2, ent.v1, ent.v2);
+          cObj = self.lineIntersect(tar.v1, tar.v2, ent.v1, ent.v2);
         } else if (tar.radius !== undefined && ent.radius !== undefined) {
           // Entities
-          cObj = () => this.circleCircleCollide(ent, tar);
+          cObj = self.circleCircleCollide(ent, tar);
         } else if (tar.radius !== undefined && ent.v1 !== undefined) {
           // Wall
-          cObj = () => this.linePointIntersect(ent.v1, ent.v2, tar.position, tar.radius);
+          cObj = self.linePointIntersect(ent.v1, ent.v2, tar.position, tar.radius);
         }
 
         if (cObj) {
           cObj.entity = ent;
-          if (tar.v1 !== undefined) {
+          if (tar.v1 !== undefined && cObj.vecI) {
             cObj.distance = tar.v1.distanceTo(cObj.vecI);
           }
           if (tar.radius !== undefined && ent.v1 !== undefined) {
             cObj.vx = 0;
             cObj.vy = 0;
           } else {
-            cObj.vx = cObj.vecI.vx;
-            cObj.vy = cObj.vecI.vy;
+            cObj.vx = (cObj.vecI) ? cObj.vecI.vx : 0;
+            cObj.vy = (cObj.vecI) ? cObj.vecI.vy : 0;
           }
           tar.collisions.push(cObj);
         }
@@ -80,14 +80,14 @@
         case 'grid':
           if (tar.gridLocation) {
             if (tar.gridLocation.population !== undefined) {
-              for (let ent of tar.gridLocation.population.entries()) {
+              for (let [key, ent] of tar.gridLocation.population.entries()) {
                 checkIt(ent);
               }
             }
           }
           break;
         case 'brute':
-          for (let ent of this.population.entries()) {
+          for (let [key, ent] of this.population.entries()) {
             checkIt(ent);
           }
           break;
@@ -490,7 +490,7 @@
      */
     overlaps(bounds) {
       return (bounds.min.x <= this.max.x && bounds.max.x >= this.min.x &&
-          bounds.max.y >= this.min.y && bounds.min.y <= this.max.y);
+      bounds.max.y >= this.min.y && bounds.min.y <= this.max.y);
     }
 
     /**

@@ -123,7 +123,7 @@
      * @return {Hex}
      */
     neighbor(hex, dir) {
-      return this.add(hex, Hex.hexDirections[dir]);
+      return HexShape.add(hex, Hex.hexDirections[dir]);
     }
 
     /**

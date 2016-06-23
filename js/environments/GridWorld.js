@@ -41,7 +41,7 @@
                     closed: false,
                     cheats: cheats
                 },
-                grid = new Grid(gridOpts),
+                grid = new Grid(null, null, gridOpts),
                 maze = new Maze(grid.init()),
                 worldOpts = {
                     simSpeed: 1,

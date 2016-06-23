@@ -24,6 +24,7 @@
                 renderOpts = {
                     antialiasing: false,
                     autoResize: false,
+                    backgroundColor: 0xFFFFFF,
                     resizable: false,
                     transparent: false,
                     resolution: 1,//window.devicePixelRatio,
@@ -43,7 +44,7 @@
                     useSprite: true,
                     cheats: cheats
                 },
-                grid = new Grid(gridOpts),
+                grid = new Grid(null, null, gridOpts),
                 maze = new Maze(grid.init()),
                 worldOpts = {
                     simSpeed: 1,
