@@ -226,14 +226,14 @@
                 down = keyboard(40);
 
         //Left arrow key `press` method
-        left.press = function () {
+        left.press = function() {
             //Change the explorer's velocity when the key is pressed
             explorer.graphics.vx = -1;
             explorer.graphics.vy = 0;
         };
 
         //Left arrow key `release` method
-        left.release = function () {
+        left.release = function() {
             //If the left arrow has been released, and the right arrow isn't down,
             //and the explorer isn't moving vertically:
             //Stop the explorer
@@ -243,33 +243,33 @@
         };
 
         //Up
-        up.press = function () {
+        up.press = function() {
             explorer.graphics.vy = -1;
             explorer.graphics.vx = 0;
         };
-        up.release = function () {
+        up.release = function() {
             if (!down.isDown && explorer.graphics.vx === 0) {
                 explorer.graphics.vy = 0;
             }
         };
 
         //Right
-        right.press = function () {
+        right.press = function() {
             explorer.graphics.vx = 1;
             explorer.graphics.vy = 0;
         };
-        right.release = function () {
+        right.release = function() {
             if (!left.isDown && explorer.graphics.vy === 0) {
                 explorer.graphics.vx = 0;
             }
         };
 
         //Down
-        down.press = function () {
+        down.press = function() {
             explorer.graphics.vy = 1;
             explorer.graphics.vx = 0;
         };
-        down.release = function () {
+        down.release = function() {
             if (!up.isDown && explorer.graphics.vx === 0) {
                 explorer.graphics.vy = 0;
             }
@@ -365,7 +365,7 @@
         //contain(explorer, stage);
 
         //Loop through all the sprites in the `enemies` array
-        blobs.forEach(function (blob) {
+        blobs.forEach(function(blob) {
             agentTick(blob, door, treasure);
 
             //Check the blob's screen boundaries
@@ -544,9 +544,11 @@
         key.press = undefined;
         key.release = undefined;
         //The `downHandler`
-        key.downHandler = function (event) {
+        key.downHandler = function(event) {
             if (event.keyCode === key.code) {
-                if (key.isUp && key.press) key.press();
+                if (key.isUp && key.press) {
+                    key.press();
+                }
                 key.isDown = true;
                 key.isUp = false;
             }
@@ -554,9 +556,11 @@
         };
 
         //The `upHandler`
-        key.upHandler = function (event) {
+        key.upHandler = function(event) {
             if (event.keyCode === key.code) {
-                if (key.isDown && key.release) key.release();
+                if (key.isDown && key.release) {
+                    key.release();
+                }
                 key.isDown = false;
                 key.isUp = true;
             }
