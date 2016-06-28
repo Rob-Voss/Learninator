@@ -49,12 +49,12 @@
       this.color = Entity.hexStyles[this.type];
       this.alpha = 1;
       this.options = opts || {
-        radius: 10,
-        interactive: false,
-        useSprite: false,
-        moving: false,
-        cheats: false
-      };
+            radius: 10,
+            interactive: false,
+            useSprite: false,
+            moving: false,
+            cheats: false
+          };
       // Remember the old position and angle
       this.position = position || new Vec(5, 5);
       this.angle = this.position.getAngle();
@@ -83,7 +83,7 @@
       // Add a container to hold our display cheats
       this.cheatsContainer = new PIXI.Container();
       let typeName = this.typeName.replace(' ', ''),
-      sprite = (this.type === 4) ? 'explorer' : typeName;
+          sprite = (this.type === 4) ? 'explorer' : typeName;
       if (this.useSprite) {
         this.graphics = new PIXI.Sprite.fromFrame(sprite + '.png');
         this.graphics.position.x = this.position.x;
@@ -100,16 +100,16 @@
         this.isDown = false;
         this.graphics.interactive = true;
         this.graphics
-            .on('mousedown', (e) => this.onMouseDown(e))
-            .on('touchstart', (e) => this.onDragStart(e))
-            .on('mouseup', (e) => this.onMouseUp(e))
-            .on('mouseupoutside', (e) => this.onDragEnd(e))
-            .on('touchend', (e) => this.onDragEnd(e))
-            .on('touchendoutside', (e) => this.onDragEnd(e))
-            .on('mouseover', (e) => this.onMouseOver(e))
-            .on('mouseout', (e) => this.onMouseOut(e))
-            .on('mousemove', (e) => this.onDragMove(e))
-            .on('touchmove', (e) => this.onDragMove(e));
+        .on('mousedown', (e) => this.onMouseDown(e))
+        .on('touchstart', (e) => this.onDragStart(e))
+        .on('mouseup', (e) => this.onMouseUp(e))
+        .on('mouseupoutside', (e) => this.onDragEnd(e))
+        .on('touchend', (e) => this.onDragEnd(e))
+        .on('touchendoutside', (e) => this.onDragEnd(e))
+        .on('mouseover', (e) => this.onMouseOver(e))
+        .on('mouseout', (e) => this.onMouseOut(e))
+        .on('mousemove', (e) => this.onDragMove(e))
+        .on('touchmove', (e) => this.onDragMove(e));
       }
       this.graphics.addChild(this.cheatsContainer);
 
@@ -125,7 +125,7 @@
         let dirV = new Vec(
             this.position.x + this.radius * Math.sin(this.position.direction),
             this.position.y + this.radius * Math.cos(this.position.direction)
-            );
+        );
         this.anglePointer = new PIXI.Graphics();
         this.anglePointer.lineStyle(2, 0x000000, 2);
         this.anglePointer.moveTo(this.position.x, this.position.y);
@@ -135,7 +135,7 @@
 
       if (this.cheats.id && this.idText === undefined) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 3);
+            y = this.position.y + (this.radius * 3);
         this.idText = new PIXI.Text(this.id.substring(0, 10), this.txtOpts);
         this.idText.position.set(x, y);
         this.cheatsContainer.addChild(this.idText);
@@ -143,7 +143,7 @@
 
       if (this.cheats.direction && this.directionText === undefined) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 4);
+            y = this.position.y + (this.radius * 4);
         this.directionText = new PIXI.Text(this.direction, this.txtOpts);
         this.directionText.position.set(x, y);
         this.cheatsContainer.addChild(this.directionText);
@@ -151,7 +151,7 @@
 
       if (this.cheats.name && this.nameText === undefined) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 2);
+            y = this.position.y + (this.radius * 2);
         this.nameText = new PIXI.Text(this.name, this.txtOpts);
         this.nameText.position.set(x, y);
         this.cheatsContainer.addChild(this.nameText);
@@ -159,11 +159,11 @@
 
       if (this.cheats.position && this.posText === undefined) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 1),
-        textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) +
-            ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
-        textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) +
-            ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
+            y = this.position.y + (this.radius * 1),
+            textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) +
+                ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
+            textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) +
+                ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
 
         this.posText = new PIXI.Text(textP + textV, this.txtOpts);
         this.posText.position.set(x, y);
@@ -172,8 +172,8 @@
 
       if (this.cheats.gridLocation && this.gridText === undefined) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * -0.5),
-        text = '(' + this.gridLocation.toString() + ')';
+            y = this.position.y + (this.radius * -0.5),
+            text = '(' + this.gridLocation.toString() + ')';
         this.gridText = new PIXI.Text(text, this.txtOpts);
         this.gridText.position.set(x, y);
         this.cheatsContainer.addChild(this.gridText);
@@ -181,7 +181,7 @@
 
       if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
         let h = this.bounds.height,
-        w = this.bounds.width;
+            w = this.bounds.width;
         this.boundsRect = new PIXI.Graphics();
         this.boundsRect.lineStyle(1, 0xFF0000, 1);
         this.boundsRect.drawRect(this.bounds.x, this.bounds.y, w, h);
@@ -218,7 +218,7 @@
 
       if (this.cheats.id) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 3);
+            y = this.position.y + (this.radius * 3);
         this.idText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.idText)
         );
@@ -234,7 +234,7 @@
 
       if (this.cheats.name) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 2);
+            y = this.position.y + (this.radius * 2);
         this.nameText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.nameText)
         );
@@ -250,7 +250,7 @@
 
       if (this.cheats.direction) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 4);
+            y = this.position.y + (this.radius * 4);
         this.directionText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.directionText)
         );
@@ -267,11 +267,11 @@
 
       if (this.cheats.position) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * 1),
-        textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) +
-            ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
-        textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) +
-            ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
+            y = this.position.y + (this.radius * 1),
+            textP = 'Pos(' + Utility.Strings.flt2str(this.position.x, 0) +
+                ', ' + Utility.Strings.flt2str(this.position.y, 0) + ')',
+            textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) +
+                ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
         this.posText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.posText)
         );
@@ -288,8 +288,8 @@
 
       if (this.cheats.gridLocation) {
         let x = this.position.x + this.radius,
-        y = this.position.y + (this.radius * -0.5),
-        idx = this.cheatsContainer.getChildIndex(this.gridText);
+            y = this.position.y + (this.radius * -0.5),
+            idx = this.cheatsContainer.getChildIndex(this.gridText);
         this.gridText = this.cheatsContainer.getChildAt(idx);
         this.gridText.text = this.gridLocation.toString();
         this.gridText.position.set(x, y);
@@ -303,7 +303,7 @@
 
       if (this.cheats.bounds) {
         let h = this.bounds.height,
-        w = this.bounds.width;
+            w = this.bounds.width;
         this.boundsRect.clear();
         this.boundsRect.lineStyle(1, 0xFF0000, 1);
         this.boundsRect.drawRect(this.bounds.x, this.bounds.y, w, h);
@@ -325,7 +325,7 @@
      */
     draw() {
       let x = this.position.x,
-      y = this.position.y;
+          y = this.position.y;
       if (this.useSprite) {
         this.graphics.position.x = x;
         this.graphics.position.y = y;
@@ -369,7 +369,7 @@
         angle = i * 2 * Math.PI / points - Math.PI / 2 + a;
         radius = i % 2 === 0 ? radA : radB;
         let px = x + radius * Math.cos(angle),
-        py = y + radius * Math.sin(angle);
+            py = y + radius * Math.sin(angle);
         vertices.push(px, py);
       }
 
@@ -393,9 +393,9 @@
                   this.position,
                   cObj.vecI
                   ).unitVector(),
-              // Set the new circle velocity by reflecting
-              // the old velocity in `bounceLineNormal`.
-              dot = this.position.vx * bLN.x + this.position.vy * bLN.y;
+                  // Set the new circle velocity by reflecting
+                  // the old velocity in `bounceLineNormal`.
+                  dot = this.position.vx * bLN.x + this.position.vy * bLN.y;
 
               this.force.x -= 2 * dot * bLN.x;
               this.force.y -= 2 * dot * bLN.y;
@@ -582,7 +582,7 @@
   Entity.styles = ['black', 'green', 'red', 'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'];
   Entity.hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
 
-  // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
   if (typeof process !== 'undefined') {
     module.exports = {
       Entity: Entity
@@ -590,4 +590,5 @@
   } else {
     global.Entity = Entity;
   }
+
 }(this));

@@ -14,13 +14,12 @@
      *
      * @param {number} x
      * @param {number} y
-     * @param {number} z
      * @return {Cell}
      */
-    constructor(x = 0, y = 0, z = 0) {
+    constructor(x, y) {
       this.x = x;
       this.y = y;
-      this.z = z || -x - y;
+      this.z = -x - y;
       this.center = new Point(0, 0);
       this.visited = false;
       this.parent = null;
@@ -114,13 +113,22 @@
 
       return this;
     }
-  };
+  }
+
   Cell.cellDirections = [
     new Cell(0, -1),
     new Cell(1, 0),
     new Cell(0, 1),
     new Cell(-1, 0)
   ];
-  global.Cell = Cell;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      Cell: Cell
+    };
+  } else {
+    global.Cell = Cell;
+  }
 
 }(this));

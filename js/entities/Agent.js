@@ -1,7 +1,9 @@
 (function(global) {
   'use strict';
 
-  class Eye {
+//import Entity from './Entity.js';
+
+  /*export*/ class Eye {
 
     /**
      * Eye
@@ -46,8 +48,8 @@
     draw(agent) {
       let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
           eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = eyeStartX + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-          eyeEndY = eyeStartY + this.sensed.proximity * Math.cos(agent.angle + this.angle);
+          eyeEndX = agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+          eyeEndY = agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle);
 
       this.v1 = new Vec(eyeStartX, eyeStartY);
       this.v2 = new Vec(eyeEndX, eyeEndY);
@@ -83,8 +85,8 @@
     sense(agent) {
       let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
           eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = eyeStartX + this.range * Math.sin(agent.angle + this.angle),
-          eyeEndY = eyeStartY + this.range * Math.cos(agent.angle + this.angle);
+          eyeEndX = agent.position.x + this.range * Math.sin(agent.angle + this.angle),
+          eyeEndY = agent.position.y + this.range * Math.cos(agent.angle + this.angle);
       this.v1 = new Vec(eyeStartX, eyeStartY);
       this.v2 = new Vec(eyeEndX, eyeEndY);
 
@@ -127,7 +129,7 @@
     }
   }
 
-  class Agent extends Entity {
+  /*export default*/ class Agent extends Entity {
 
     /**
      * Options for the Agent
@@ -525,20 +527,8 @@
     }
   }
 
-  // Agent.prototype.tick = () => {
-  //     if (this.sid === -1) {
-  //         this.sid = setInterval(() => {
-  //             for (let k = 0; k < this.stepsPerTick; k++) {
-  //
-  //             }
-  //         }, 20);
-  //     } else {
-  //         clearInterval(this.sid);
-  //         this.sid = -1;
-  //     }
-  // };
-
-  if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
     module.exports = {
       Eye: Eye,
       Agent: Agent

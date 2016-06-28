@@ -15,6 +15,7 @@
    *
    * @param {collisionOpts} opts
    */
+  /*export default*/
   let CollisionDetector = function(opts) {
     this.cdType = opts.type;
     if (this.cdType === 'grid') {
@@ -171,10 +172,8 @@
       if (d === 0.0) {
         return false;
       } // parallel lines
-      let u1 = ((l2.x - l1.x) * (p1.y - l1.y) - (l2.y - l1.y) * (p1.x - l1.x)),
-          u2 = ((p2.x - p1.x) * (p1.y - l1.y) - (p2.y - p1.y) * (p1.x - l1.x)),
-          ua = u1 / d,
-          ub = u2 / d;
+      let ua = ((l2.x - l1.x) * (p1.y - l1.y) - (l2.y - l1.y) * (p1.x - l1.x)) / d,
+          ub = ((p2.x - p1.x) * (p1.y - l1.y) - (p2.y - p1.y) * (p1.x - l1.x)) / d;
       if (ua > 0.0 && ua < 1.0 && ub > 0.0 && ub < 1.0) {
         let vecI = new Vec(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
         return {
@@ -220,13 +219,12 @@
       }
     };
   };
-  global.CollisionDetector = CollisionDetector;
 
   /**
    * QuadTree CD
    * @constructor
    */
-  var QuadCD = function() {
+  let QuadCD = function() {
     this.nodes = [];
     // init the quadtree
     let args = {
@@ -298,7 +296,6 @@
       }
     };
   };
-  global.QuadCD = QuadCD;
 
   /**
    * Grid CD
@@ -362,7 +359,6 @@
       this.drawRegions();
     };
   };
-  global.GridCD = GridCD;
 
   /**
    * Brute Force CD
@@ -404,7 +400,6 @@
       this.drawRegions();
     };
   };
-  global.BruteCD = BruteCD;
 
   class AABB {
     /**
@@ -522,6 +517,22 @@
       this.max.y = vec.y + deltaY;
     }
   }
-  global.AABB = AABB;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      AABB: AABB,
+      BruteCD: BruteCD,
+      CollisionDetector: CollisionDetector,
+      GridCD: GridCD,
+      QuadCD: QuadCD
+    };
+  } else {
+    global.AABB = AABB;
+    global.BruteCD = BruteCD;
+    global.CollisionDetector = CollisionDetector;
+    global.GridCD = GridCD;
+    global.QuadCD = QuadCD;
+  }
 
 }(this));

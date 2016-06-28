@@ -202,11 +202,13 @@
     }
   }
 
-  if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
     module.exports = {
       Maze: Maze
     };
   } else {
     global.Maze = Maze;
   }
+
 }(this));

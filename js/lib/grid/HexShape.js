@@ -75,7 +75,7 @@
         })
         .on('mouseup', (event) => {
             this.event = event;
-            this.color = this.colorForHex(this.q, this.r, this.s);
+            this.color = HexShape.colorForHex(this.q, this.r, this.s);
             this.alpha = 1;
             this.isDown = false;
             this.draw();
@@ -89,7 +89,7 @@
         })
         .on('mouseout', (event) => {
             this.event = event;
-            this.color = this.colorForHex(this.q, this.r, this.s);
+            this.color = HexShape.colorForHex(this.q, this.r, this.s);
             this.alpha = 1;
             this.isOver = false;
             this.draw();

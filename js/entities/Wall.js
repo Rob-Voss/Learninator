@@ -1,6 +1,11 @@
 (function(global) {
   'use strict';
 
+//import 'PIXI';
+//import Utility from '../lib/Utility.js';
+//import Vec from '../lib/Vec.js';
+
+  /*export default*/
   class Wall {
 
     /**
@@ -116,7 +121,7 @@
       if (this.cheats.id) {
         this.idText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.idText)
-            );
+        );
         this.idText.text = this.id.substring(0, 6);
       } else {
         if (this.idText !== undefined) {
@@ -130,7 +135,7 @@
       if (this.cheats.direction) {
         this.directionText = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.directionText)
-            );
+        );
         this.directionText.text = this.direction;
       } else {
         if (this.directionText !== undefined) {
@@ -144,7 +149,7 @@
       if (this.cheats.angle) {
         this.angleInd = this.cheatsContainer.getChildAt(
             this.cheatsContainer.getChildIndex(this.angleInd)
-            );
+        );
         this.angleInd.text = Utility.Strings.flt2str(this.angle, 2);
       } else {
         if (this.angleInd !== undefined) {
@@ -159,7 +164,7 @@
     }
   }
 
-  // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
   if (typeof process !== 'undefined') {
     module.exports = {
       Wall: Wall

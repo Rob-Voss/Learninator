@@ -1,10 +1,9 @@
 (function(global) {
   "use strict";
 
-  const entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'];
-
-  // Matter aliases
-  var Body = Matter.Body,
+  const entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'],
+      // Matter aliases
+      Body = Matter.Body,
       Vector = Matter.Vector,
       Query = Matter.Query;
 
@@ -21,116 +20,27 @@
      */
     constructor(angle, agent) {
       this.angle = angle;
-      this.agentAngle = agent.angle;
+      this.agentAngle = agent.body.angle;
       this.agentRadius = agent.radius;
-      this.agentId = agent.id;
-      this.position = agent.position;
-      this.proximity = agent.proximity;
-      this.range = agent.range;
+      this.position = agent.body.position;
       this.graphics = new PIXI.Graphics();
-      this.v1 = new Vec(
-          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+      this.v1 = Vector.create(
+          this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),
+          this.position.y + this.agentRadius * Math.cos(this.agentAngle + this.angle)
       );
-      this.v2 = new Vec(
-          this.v1.x + this.range * Math.sin(agent.angle + this.angle),
-          this.v1.y + this.range * Math.cos(agent.angle + this.angle)
+      this.v2 = Vector.create(
+          this.v1.x + agent.range * Math.sin(this.agentAngle + this.angle),
+          this.v1.y + agent.range * Math.cos(this.agentAngle + this.angle)
       );
       this.sensed = {
         type: -1,
         position: this.v2,
-        proximity: this.proximity,
-        velocity: new Vec(0, 0)
+        proximity: agent.proximity,
+        velocity: Vector.create(0, 0)
       };
       this.collisions = [];
 
       return this;
-    }
-
-    /**
-     * Draw the lines for the eyes
-     */
-    draw(agent) {
-      let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = eyeStartX + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-          eyeEndY = eyeStartY + this.sensed.proximity * Math.cos(agent.angle + this.angle);
-
-      this.v1 = new Vec(eyeStartX, eyeStartY);
-      this.v2 = new Vec(eyeEndX, eyeEndY);
-      this.graphics.clear();
-      this.graphics.moveTo(eyeStartX, eyeStartY);
-      switch (this.sensed.type) {
-        case 1:
-          // It is noms
-          this.graphics.lineStyle(1, 0x00FF00, 1);
-          break;
-        case 2:
-          // It is gnar gnar
-          this.graphics.lineStyle(1, 0xFF0000, 1);
-          break;
-        case 3:
-        case 4:
-        case 5:
-          // Is it another Agent
-          this.graphics.lineStyle(1, 0x0000FF, 1);
-          break;
-        default:
-          // Is it wall or nothing?
-          this.graphics.lineStyle(1, 0x000000, 1);
-          break;
-      }
-      this.graphics.lineTo(eyeEndX, eyeEndY);
-      this.graphics.endFill();
-    }
-
-    /**
-     * Sense the surroundings
-     */
-    sense(agent) {
-      let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = eyeStartX + this.range * Math.sin(agent.angle + this.angle),
-          eyeEndY = eyeStartY + this.range * Math.cos(agent.angle + this.angle);
-      this.v1 = new Vec(eyeStartX, eyeStartY);
-      this.v2 = new Vec(eyeEndX, eyeEndY);
-
-      // Reset our eye data
-      this.sensed = {
-        type: -1,
-        position: this.v2,
-        proximity: this.range,
-        velocity: new Vec(0, 0)
-      };
-
-      if (this.collisions.length > 1) {
-        let closeObj;
-        for (let i = 0; i < this.collisions.length; i++) {
-          if (closeObj === undefined) {
-            closeObj = this.collisions[i];
-          }
-          closeObj = (this.collisions[i].distance <= closeObj.distance) ? this.collisions[i] : closeObj;
-        }
-        this.collisions = [closeObj];
-      }
-
-      for (let i = 0; i < this.collisions.length; i++) {
-        let closeObj = this.collisions[i];
-        if (closeObj !== undefined && closeObj.id !== this.agentId) {
-          if (closeObj.distance <= this.range) {
-            this.sensed.type = closeObj.entity.type;
-            this.sensed.proximity = closeObj.distance;
-            this.sensed.position = closeObj.vecI;
-            if ('vx' in closeObj.vecI) {
-              this.sensed.velocity.x = closeObj.vecI.vx;
-              this.sensed.velocity.y = closeObj.vecI.vy;
-            } else {
-              this.sensed.velocity = new Vec(0, 0);
-            }
-          }
-        }
-      }
-
     }
   }
 
@@ -138,7 +48,6 @@
 
     /**
      * Initialize the Agent
-     * @name PhysicalAgent
      * @extends Entity
      * @constructor
      *
@@ -155,7 +64,7 @@
       this.radius = this.body.circleRadius;
       this.type = entityTypes.indexOf(this.body.label);
       this.speed = 1;
-      this.force = {x: 0, y: 0};
+      this.force = Vector.create(0, 0);
       this.name = 'Physical Agent';
       this.age = 0;
       this.action = 0;
@@ -230,63 +139,13 @@
       if (this.eyes === undefined) {
         this.eyes = [];
         for (let k = 0; k < this.numEyes; k++) {
-          let eye = new Eye(k * 0.21, this);
-          this.eyes.push(eye);
+          this.eyes.push(new Eye(k * 0.21, this));
         }
       }
 
       this.reset();
 
       return this;
-    }
-
-    draw() {
-      for (let i = 0; i < this.numEyes; i++) {
-        let eye = this.eyes[i],
-            type = eye.sensed.type;
-
-        switch (type) {
-          case 0:
-            context.strokeStyle = '#000000';
-            break;
-          case 1:
-            // It is noms
-            context.strokeStyle = '#00FF00';
-            break;
-          case 2:
-            // It is gnar gnar
-            context.strokeStyle = '#FF0000';
-            break;
-          case 3:
-          case 4:
-          case 5:
-            // Is it another Agent
-            context.strokeStyle = '#0000FF';
-            break;
-          default:
-            context.strokeStyle = '#FFFFFF';
-            break;
-        }
-
-        let eyeStartX = this.body.position.x + this.radius * Math.sin(this.body.angle + eye.angle),
-            eyeStartY = this.body.position.y + this.radius * Math.cos(this.body.angle + eye.angle),
-            eyeEndX = eye.sensed.position.x,
-            eyeEndY = eye.sensed.position.y;
-        eye.v1 = Vector.create(eyeStartX, eyeStartY);
-        eye.v2 = Vector.create(eyeEndX, eyeEndY);
-
-        // Draw the agent's line of sights
-        context.beginPath();
-        context.moveTo(eye.v1.x, eye.v1.y);
-        context.lineTo(eye.v2.x, eye.v2.y);
-        context.stroke();
-        if (type !== -1) {
-          // Show a little box
-          context.rect(eye.v2.x - 2.5, eye.v2.y - 2.5, 5, 5);
-          context.fillStyle = context.strokeStyle;
-          context.fill();
-        }
-      }
     }
 
     /**
@@ -313,7 +172,7 @@
      * @return {PhysicalAgent}
      */
     reset() {
-      var brain = this.brainType.split('.');
+      let brain = this.brainType.split('.');
       // If it's a worker then we have to load it a bit different
       if (!this.worker) {
         this.brain = new global[brain[0]][brain[1]](this.env, this.brainOpts);
@@ -372,7 +231,7 @@
 
     /**
      * Tick the agent
-     * @param {Matter.Engine} engine
+     * @param {array} bodies
      * @return {PhysicalAgent}
      */
     tick(bodies) {
@@ -381,20 +240,21 @@
 
       let ne = this.numEyes * this.numTypes,
           input = new Array(this.numStates);
-      for (let i = 0; i < this.numEyes; i++) {
+      for (let i = 0; i < this.eyes.length; i++) {
+        let eye = this.eyes[i];
         // Check for Ray collisions
-        this.eyes[i].v1 = Vector.create(
-            this.body.position.x + (this.radius + 2) * Math.sin(this.body.angle + this.eyes[i].angle),
-            this.body.position.y + (this.radius + 2) * Math.cos(this.body.angle + this.eyes[i].angle)
+        eye.v1 = Vector.create(
+            this.body.position.x + this.radius * Math.sin(this.body.angle + eye.angle),
+            this.body.position.y + this.radius * Math.cos(this.body.angle + eye.angle)
         );
-        this.eyes[i].v2 = Vector.create(
-            this.eyes[i].v1.x + this.range * Math.sin(this.body.angle + this.eyes[i].angle),
-            this.eyes[i].v1.y + this.range * Math.cos(this.body.angle + this.eyes[i].angle)
+        eye.v2 = Vector.create(
+            eye.v1.x + this.range * Math.sin(this.body.angle + eye.angle),
+            eye.v1.y + this.range * Math.cos(this.body.angle + eye.angle)
         );
-        let collisions = Query.ray(bodies, this.eyes[i].v1, this.eyes[i].v2, 1);
+        let collisions = Query.ray(bodies, eye.v1, eye.v2, 1);
 
         // Reset our eye data
-        this.eyes[i].sensed = {
+        eye.sensed = {
           type: -1,
           proximity: this.range,
           position: this.eyes[i].v2,
@@ -403,65 +263,57 @@
 
         // Loop through the Ray collisions and record what the eyes saw
         for (let ic = 0; ic < collisions.length; ic++) {
-          let collision = collisions[ic], dx, dy, vecI;
+          let collision = collisions[ic], vecI;
           if (collision.bodyA.id !== this.body.id) {
             if (collision.body.entity.type === 0) {
-              let topBottom = collision.body.entity.width > collision.body.entity.height,
-                  leftRight = collision.body.entity.width < collision.body.entity.height,
-                  pathV1 = this.eyes[i].v1,
-                  pathV2 = this.eyes[i].v2,
-                  lineV1 = Vector.create(
-                      collision.body.entity.x,
-                      collision.body.entity.y
-                  ),
-                  lineV2 = Vector.create(
-                      collision.body.entity.x + (topBottom) ? collision.body.entity.width : 0,
-                      collision.body.entity.y + (leftRight) ? collision.body.entity.height : 0
-                  ),
-                  denom = (lineV2.y - lineV1.y) * (pathV2.x - pathV1.x) - (lineV2.x - lineV1.x) * (pathV2.y - pathV1.y);
+              let entity = collision.body.entity,
+                  p1 = eye.v1, p2 = eye.v2,
+                  l1 = Vector.create(entity.x, entity.y),
+                  l2 = Vector.create(entity.x + entity.width, entity.y + entity.height),
+                  denom = (l2.y - l1.y) * (p2.x - p1.x) - (l2.x - l1.x) * (p2.y - p1.y);
               if (denom !== 0.0) {
-                let ua = ((lineV2.x - lineV1.x) * (pathV1.y - lineV1.y) - (lineV2.y - lineV1.y) * (pathV1.x - lineV1.x)) / denom,
-                    ub = ((pathV2.x - pathV1.x) * (pathV1.y - lineV1.y) - (pathV2.y - pathV1.y) * (pathV1.x - lineV1.x)) / denom;
+                let ua = ((l2.x - l1.x) * (p1.y - l1.y) - (l2.y - l1.y) * (p1.x - l1.x)) / denom,
+                    ub = ((p2.x - p1.x) * (p1.y - l1.y) - (p2.y - p1.y) * (p1.x - l1.x)) / denom;
                 if (ua > 0.0 && ua < 1.0 && ub > 0.0 && ub < 1.0) {
-                  vecI = Vector.create(pathV1.x + ua * (pathV2.x - pathV1.x), pathV1.y + ua * (pathV2.y - pathV1.y));
-                  this.eyes[i].sensed.position.x = vecI.x;
-                  this.eyes[i].sensed.position.y = vecI.y;
+                  vecI = Vector.create(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+                  eye.sensed.position = vecI;
                 }
               }
             } else {
-              this.eyes[i].sensed.position.x = collision.body.position.x;
-              this.eyes[i].sensed.position.y = collision.body.position.y;
+              let vecI = Vector.create(collision.body.position.x, collision.body.position.y);
+              eye.sensed.position = vecI;
             }
-            let dx = collision.body.position.x - this.eyes[i].sensed.position.x,
-                dy = collision.body.position.y - this.eyes[i].sensed.position.y;
 
-            this.eyes[i].sensed.type = collision.body.entity.type;
-            this.eyes[i].sensed.proximity = Math.sqrt(dx * dx + dy * dy);
-            this.eyes[i].sensed.velocity.x = collision.body.velocity.x;
-            this.eyes[i].sensed.velocity.y = collision.body.velocity.y;
-            if (isNaN(this.eyes[i].sensed.proximity)) {
-              console.log('NaN');
+            let dx = this.body.position.x - eye.sensed.position.x,
+                dy = this.body.position.y - eye.sensed.position.y,
+                dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > this.range) {
+              //console.log(dist);
             }
+            eye.sensed.type = collision.body.entity.type;
+            eye.sensed.proximity = dist;
+            eye.sensed.velocity.x = collision.body.velocity.x;
+            eye.sensed.velocity.y = collision.body.velocity.y;
           }
         }
 
         // Populate the sensory input array
-        input[i * this.numTypes + 0] = 1;
+        input[i * this.numTypes] = 1;
         input[i * this.numTypes + 1] = 1;
         input[i * this.numTypes + 2] = 1;
-        input[i * this.numTypes + 3] = this.eyes[i].sensed.velocity.x; // velocity information of the sensed target
-        input[i * this.numTypes + 4] = this.eyes[i].sensed.velocity.y;
-        if (this.eyes[i].sensed.type !== -1) {
-          // sensedType is 0 for wall, 1 for food and 2 for poison.
-          // lets do a 1-of-k encoding into the input array
-          // normalize to [0,1]
-          let inputVal = this.eyes[i].sensed.proximity / this.eyes[i].range;
-          input[i * this.numTypes + this.eyes[i].sensed.type] = inputVal;
+        // velocity information of the sensed target
+        input[i * this.numTypes + 3] = eye.sensed.velocity.x;
+        input[i * this.numTypes + 4] = eye.sensed.velocity.y;
+        if (eye.sensed.type !== -1) {
+          // sensedType is 0 for wall, 1 for food and 2 for poison. lets
+          // do a 1-of-k encoding into the input array normalize to [0,1]
+          let inputId = i * this.numTypes + eye.sensed.type;
+          input[inputId] = eye.sensed.proximity / eye.range;
         }
       }
 
       // proprioceptive and orientation
-      input[ne + 0] = this.body.velocity.x;
+      input[ne] = this.body.velocity.x;
       input[ne + 1] = this.body.velocity.y;
 
       this.action = this.brain.act(input);

@@ -1,6 +1,9 @@
 (function(global) {
   'use strict';
 
+  const toRadian = Math.PI / 180,
+      toDegree = 180 / Math.PI;
+
   class Point {
 
     /**
@@ -17,11 +20,7 @@
 
       return this;
     }
-  };
-  global.Point = Point;
-
-  const toRadian = Math.PI / 180,
-      toDegree = 180 / Math.PI;
+  }
 
   class Vec {
 
@@ -775,6 +774,14 @@
     return new Vec(x, y);
   };
 
-  global.Vec = Vec;
+  if (typeof process !== 'undefined') { // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+    module.exports = {
+      Point: Point,
+      Vec: Vec
+    };
+  } else {
+    global.Point = Point;
+    global.Vec = Vec;
+  }
 
 }(this));

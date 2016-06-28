@@ -30,7 +30,7 @@
             renderer = autoDetectRenderer(512, 512);
     document.body.appendChild(renderer.view);
 
-    loader.add("images/treasureHunter.json").load(setup);
+    loader.add("../img/treasureHunter.json").load(setup);
 
     //Define variables that might be used in more
     //than one function
@@ -45,7 +45,7 @@
 
         //Make the sprites and add them to the `gameScene`
         //Create an alias for the texture atlas frame ids
-        id = resources["images/treasureHunter.json"].textures;
+        id = resources["../img/treasureHunter.json"].textures;
 
         //Dungeon
         dungeon = new Sprite(id["dungeon.png"]);

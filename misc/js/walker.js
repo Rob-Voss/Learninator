@@ -1,7 +1,7 @@
 var MOVE_LEFT = 0x01;
 var MOVE_RIGHT = 0x02;
 
-var walker = function () {
+var Walker = function () {
     //constructor
     this.walkerJoints = [];
     this.chassisBody = null;
@@ -10,7 +10,7 @@ var walker = function () {
     // return this;
 };
 
-walker.prototype.setup = function (world) {
+Walker.prototype.setup = function (world) {
     var tmp = this;
     jQuery.get("js/walker.json", (jso) => {
         if (loadSceneFromRUBE(jso)) {
@@ -24,12 +24,12 @@ walker.prototype.setup = function (world) {
         if (bodies.length > 0) {
             tmp.chassisBody = bodies[0];
         }
-        return tmp;//doAfterLoading();
+        doAfterLoading();
     });
 
 };
 
-walker.prototype.step = function () {
+Walker.prototype.step = function () {
     //this function will be called at the beginning of every time step
     this.updateMotorSpeed();
 
@@ -42,7 +42,7 @@ walker.prototype.step = function () {
     }
 };
 
-walker.prototype.updateMotorSpeed = function () {
+Walker.prototype.updateMotorSpeed = function () {
     if (this.walkerJoints.length < 1) {
         return;
     }
@@ -58,7 +58,7 @@ walker.prototype.updateMotorSpeed = function () {
     }
 };
 
-walker.prototype.onKeyDown = function (canvas, evt) {
+Walker.prototype.onKeyDown = function (canvas, evt) {
     if (evt.keyCode === 74) {//j
         this.moveFlags |= MOVE_LEFT;
         this.updateMotorSpeed();
@@ -69,7 +69,7 @@ walker.prototype.onKeyDown = function (canvas, evt) {
     }
 };
 
-walker.prototype.onKeyUp = function (canvas, evt) {
+Walker.prototype.onKeyUp = function (canvas, evt) {
     if (evt.keyCode === 74) {//j
         this.moveFlags &= ~MOVE_LEFT;
         this.updateMotorSpeed();

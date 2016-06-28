@@ -1,93 +1,89 @@
+import 'PIXI';
+
 (function(global) {
   'use strict';
 
-  /**
-   *
-   * @param {object} opts
-   * @constructor
-   */
-  let TileMap = function(opts) {
-    PIXI.Container.call(this);
+  class TileMap extends PIXI.DisplayObject {
 
-    this.interactive = true;
+    /**
+     *
+     * @param {object} opts
+     * @constructor
+     */
+    constructor(opts) {
+      super();
+      this.interactive = true;
+      this.tileSize = opts.tileMap.size;
+      this.tilesWidth = opts.tileMap.width;
+      this.tilesHeight = opts.tileMap.height;
+      this.mapWidth = opts.render.width;
+      this.mapHeight = opts.render.height;
+      this.menu = opts.menu;
+      this.zoom = 2;
+      this.scale.x = this.scale.y = this.zoom;
+      this.data = {};
+      this.startLocation = new Vec(0, 0);
+      // Fill the map with tiles
+      this.generateMap();
+      // Variables and functions for moving the map
+      this.mouseOverGraphics = new PIXI.Graphics();
+      this.mouseOverTileCoords = [0, 0];
+      this.mouseOverPoint = [0, 0];
 
-    this.tileSize = opts.tileMap.size;
-    this.tilesWidth = opts.tileMap.width;
-    this.tilesHeight = opts.tileMap.height;
-    this.mapWidth = opts.render.width;
-    this.mapHeight = opts.render.height;
-    this.menu = opts.menu;
+      this.selectedGraphics = new PIXI.Graphics();
+      this.selectedTileCoords = [0, 0];
+      this.mousePressPoint = [0, 0];
 
-    this.zoom = 2;
-    this.scale.x = this.scale.y = this.zoom;
-    this.data = {};
+      this.addChild(this.selectedGraphics);
+      this.addChild(this.mouseOverGraphics);
 
-    this.startLocation = new Vec(0, 0);
+      this.mousedown = this.touchstart = function(event) {
+        this.data = event.data;
+        if (this.data.getLocalPosition(this.parent).x > this.menu.width) {
+          this.dragging = true;
+          this.mousePressPoint[0] = this.data.getLocalPosition(this.parent).x - this.position.x;
+          this.mousePressPoint[1] = this.data.getLocalPosition(this.parent).y - this.position.y;
 
-    // fill the map with tiles
-    this.generateMap();
+          this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
+              Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
+        }
+      };
 
-    // variables and functions for moving the map
-    this.mouseOverGraphics = new PIXI.Graphics();
-    this.mouseOverTileCoords = [0, 0];
-    this.mouseOverPoint = [0, 0];
+      this.mouseup = this.mouseupoutside = this.touchend = this.touchendoutside = function(event) {
+        this.data = event.data;
+        this.dragging = false;
+      };
 
-    this.selectedGraphics = new PIXI.Graphics();
-    this.selectedTileCoords = [0, 0];
-    this.mousePressPoint = [0, 0];
+      this.mousemove = this.touchmove = function(event) {
+        this.data = event.data;
+        if (this.dragging) {
+          let position = this.data.getLocalPosition(this.parent);
+          this.position.x = position.x - this.mousePressPoint[0];
+          this.position.y = position.y - this.mousePressPoint[1];
 
-    this.addChild(this.selectedGraphics);
-    this.addChild(this.mouseOverGraphics);
+          this.constrainTileMap();
+        } else {
+          this.mouseOverPoint[0] = this.data.getLocalPosition(this.parent).x - this.position.x;
+          this.mouseOverPoint[1] = this.data.getLocalPosition(this.parent).y - this.position.y;
 
-    this.mousedown = this.touchstart = function(event) {
-      this.data = event.data;
-      if (this.data.getLocalPosition(this.parent).x > this.menu.width) {
-        this.dragging = true;
-        this.mousePressPoint[0] = this.data.getLocalPosition(this.parent).x - this.position.x;
-        this.mousePressPoint[1] = this.data.getLocalPosition(this.parent).y - this.position.y;
-
-        this.selectTile(Math.floor(this.mousePressPoint[0] / (this.tileSize * this.zoom)),
-            Math.floor(this.mousePressPoint[1] / (this.tileSize * this.zoom)));
-      }
+          this.mouseOverTileCoords = [
+            Math.floor(this.mouseOverPoint[0] / (this.tileSize * this.zoom)),
+            Math.floor(this.mouseOverPoint[1] / (this.tileSize * this.zoom))
+          ];
+          this.mouseOverGraphics.clear();
+          this.mouseOverGraphics.lineStyle(1, 0xFFFFFF, 1);
+          this.mouseOverGraphics.beginFill(0x000000, 0);
+          this.mouseOverGraphics.drawRect(
+              this.mouseOverTileCoords[0] * this.tileSize,
+              this.mouseOverTileCoords[1] * this.tileSize,
+              this.tileSize - 1,
+              this.tileSize - 1
+          );
+          this.mouseOverGraphics.endFill();
+        }
+      };
     };
-
-    this.mouseup = this.mouseupoutside = this.touchend = this.touchendoutside = function(event) {
-      this.data = event.data;
-      this.dragging = false;
-    };
-
-    this.mousemove = this.touchmove = function(event) {
-      this.data = event.data;
-      if (this.dragging) {
-        var position = this.data.getLocalPosition(this.parent);
-        this.position.x = position.x - this.mousePressPoint[0];
-        this.position.y = position.y - this.mousePressPoint[1];
-
-        this.constrainTileMap();
-      } else {
-        this.mouseOverPoint[0] = this.data.getLocalPosition(this.parent).x - this.position.x;
-        this.mouseOverPoint[1] = this.data.getLocalPosition(this.parent).y - this.position.y;
-
-        this.mouseOverTileCoords = [
-          Math.floor(this.mouseOverPoint[0] / (this.tileSize * this.zoom)),
-          Math.floor(this.mouseOverPoint[1] / (this.tileSize * this.zoom))
-        ];
-        this.mouseOverGraphics.clear();
-        this.mouseOverGraphics.lineStyle(1, 0xFFFFFF, 1);
-        this.mouseOverGraphics.beginFill(0x000000, 0);
-        this.mouseOverGraphics.drawRect(
-            this.mouseOverTileCoords[0] * this.tileSize,
-            this.mouseOverTileCoords[1] * this.tileSize,
-            this.tileSize - 1,
-            this.tileSize - 1
-        );
-        this.mouseOverGraphics.endFill();
-      }
-    };
-  };
-
-  TileMap.prototype = new PIXI.Container();
-  TileMap.prototype.constructor = TileMap;
+  }
 
   /**
    *
@@ -120,7 +116,7 @@
    *
    * @param {number} x
    * @param {number} y
-   * @return {DisplayObject}
+   * @return {PIXI.DisplayObject}
    */
   TileMap.prototype.getTile = function(x, y) {
     return this.getChildAt(x * this.tilesHeight + y);
@@ -306,7 +302,7 @@
   Menu.prototype.constructor = Menu;
 
   Menu.prototype.addMenuButton = function(text, x, y, obj, callback) {
-    var button = new PIXI.Text(text, {font: '40px Arial', fill: '#FFFFFF'});
+    let button = new PIXI.Text(text, {font: '40px Arial', fill: '#FFFFFF'});
     button.position.x = x;
     button.position.y = y;
     button.interactive = true;

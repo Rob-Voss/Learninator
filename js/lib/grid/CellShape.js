@@ -12,12 +12,14 @@
      * Create a CellShape
      * @constructor
      *
-     * @param {Cell} cell
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
      * @param {gridOpts} opts
      * @return {CellShape}
      */
-    constructor(cell, opts) {
-      super(cell.x, cell.y, cell.z);
+    constructor(x, y, opts) {
+      super(x, y);
       this.size = Utility.getOpt(opts, 'cellSize', 50);
       this.pointy = Utility.getOpt(opts, 'pointy', false);
       this.useSprite = Utility.getOpt(opts, 'useSprite', false);
@@ -195,7 +197,43 @@
 
       return this;
     }
+
+    add(a, b) {
+      super.add(a, b);
+    }
+
+    neighbor(cell, dir) {
+      super.neighbor(cell, dir);
+    }
+
+    pathToOrigin() {
+      super.pathToOrigin();
+    }
+
+    score() {
+      super.score();
+    }
+
+    toArray() {
+      super.toArray();
+    }
+
+    toString() {
+      super.toString();
+    }
+
+    visit() {
+      super.visit();
+    }
   }
-  global.CellShape = CellShape;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      CellShape: CellShape
+    };
+  } else {
+    global.CellShape = CellShape;
+  }
 
 }(this));

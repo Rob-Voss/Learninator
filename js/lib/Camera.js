@@ -1,10 +1,12 @@
+//import 'PIXI';
+
 (function(global) {
   'use strict';
 
   /**
    *
    */
-  class Camera extends PIXI.Container {
+  class Camera extends PIXI.DisplayObject {
 
     /**
      * A camera for you
@@ -79,10 +81,10 @@
     zoom(event) {
       // Firefox has "detail" prop with opposite sign to std wheelDelta
       let delta = event.wheelDelta || -event.detail,
-      localPt = new PIXI.Point(),
-      point = new PIXI.Point(event.pageX, event.pageY),
-      factor = (delta > 0) ? 1.1 : 1 / 1.1,
-      interaction = PIXI.interaction.InteractionData;
+          localPt = new PIXI.Point(),
+          point = new PIXI.Point(event.pageX, event.pageY),
+          factor = (delta > 0) ? 1.1 : 1 / 1.1,
+          interaction = PIXI.interaction.InteractionData;
       interaction.prototype.getLocalPosition(this.parent, localPt, point);
 
       this.worldLayer.pivot = localPt;
@@ -118,7 +120,15 @@
       // this.globalMousePosition.x; this.worldLayer.position.y = -(this.localMousePosition.y *
       // this.worldLayer.scale.y) + this.globalMousePosition.y;
     }
-  };
-  global.Camera = Camera;
+  }
+
+  // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      Camera: Camera
+    };
+  } else {
+    global.Camera = Camera;
+  }
 
 }(this));

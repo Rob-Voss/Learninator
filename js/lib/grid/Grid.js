@@ -110,7 +110,7 @@
               break;
           }
 
-          cell.neighbors[dir] = this.getCellAt(neighb.x, neighb.y);
+          cell.neighbors[dir] = (neighb) ? this.getCellAt(neighb.x, neighb.y) : null;
           cell.walls[dir] = new Wall(v1, v2, dir, {cheats: this.cheats, sprite: 'stone_wall.png'});
         }
         this.cellsContainer.addChild(cell.graphics);
@@ -251,15 +251,15 @@
      */
     neighbors(cell, all = false) {
       let neighbors = [], cells = [];
-      if (cell !== null) {
+      if (cell) {
         cells[0] = cell.neighbor(cell, 0);
         cells[1] = cell.neighbor(cell, 1);
         cells[2] = cell.neighbor(cell, 2);
         cells[3] = cell.neighbor(cell, 3);
-        neighbors[0] = this.getCellAt(cells[0].x, cells[0].y);
-        neighbors[1] = this.getCellAt(cells[1].x, cells[1].y);
-        neighbors[2] = this.getCellAt(cells[2].x, cells[2].y);
-        neighbors[3] = this.getCellAt(cells[3].x, cells[3].y);
+        neighbors[0] = (cells[0]) ? this.getCellAt(cells[0].x, cells[0].y) : null;
+        neighbors[1] = (cells[1]) ? this.getCellAt(cells[1].x, cells[1].y) : null;
+        neighbors[2] = (cells[2]) ? this.getCellAt(cells[2].x, cells[2].y) : null;
+        neighbors[3] = (cells[3]) ? this.getCellAt(cells[3].x, cells[3].y) : null;
       }
       return all ? cells : neighbors;
     }
@@ -304,7 +304,7 @@
       for (let x = 0; x < opts.size; x++) {
         for (let y = 0; y < opts.size; y++) {
           let cell = new Cell(x, y),
-              cellShape = new CellShape(cell, opts);
+              cellShape = new CellShape(x, y, opts);
           cells.push(cellShape);
         }
       }
@@ -328,6 +328,15 @@
       return unv;
     }
   }
-  global.Grid = Grid;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      Grid: Grid
+    };
+  } else {
+    global.Grid = Grid;
+  }
+
 
 }(this));
