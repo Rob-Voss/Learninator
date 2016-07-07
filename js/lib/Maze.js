@@ -67,10 +67,10 @@
     drawMaze() {
       let drawnEdges = [];
 
-      let edgeAlreadyDrawn = function(v1, v2) {
-        return _.detect(drawnEdges, function(edge) {
-              return _.include(edge, v1) && _.include(edge, v2);
-            }) !== undefined;
+      let edgeAlreadyDrawn = (v1, v2) => {
+        return drawnEdges.find((edge) => {
+          return edge.includes(v1) && edge.includes(v2);
+        }) !== undefined;
       };
 
       this.grid.cells.forEach((cell) => {
@@ -177,8 +177,8 @@
             openSet = [];
             return this;
           }
-          if (!_.include(closedSet, neighbor)) {
-            if (!_.include(openSet, neighbor)) {
+          if (neighbor && !closedSet.includes(neighbor)) {
+            if (!openSet.includes(neighbor)) {
               openSet.push(neighbor);
               neighbor.parent = searchCell;
               neighbor.heuristic = neighbor.score() + this.grid.getCellDistance(neighbor, targetCell);
@@ -186,10 +186,10 @@
           }
         }
         closedSet.push(searchCell);
-        openSet.remove(_.indexOf(openSet, searchCell));
+        openSet.splice(openSet.indexOf(searchCell), 1);
         searchCell = null;
 
-        _.each(openSet, function(cell) {
+        openSet.forEach((cell) => {
           if (!searchCell) {
             searchCell = cell;
           } else if (searchCell.heuristic > cell.heuristic) {

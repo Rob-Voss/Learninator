@@ -25,6 +25,7 @@
    */
   /*export default*/
   let Utility = {
+
     /**
      * Utility fun
      * @param condition
@@ -91,7 +92,7 @@
      * @param {number} r
      * @param {number} g
      * @param {number} b
-     * @return {string}
+     * @return {number}
      */
     rgbToHex(r, g, b) {
       return parseInt("0x" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1));
@@ -180,21 +181,14 @@
     /**
      *
      */
-    Arrays() {
-
-      /**
-       *
-       * @constructor
-       */
-      function Arrays() {
-      }
+    Arrays: {
 
       /**
        *
        * @param {Array} arr
        * @return {Array}
        */
-      Arrays.arrUnique = function(arr) {
+      arrUnique: function(arr) {
         var h = {}, output = [];
         for (var i = 0, n = arr.length; i < n; i++) {
           if (!h[arr[i]]) {
@@ -203,7 +197,7 @@
           }
         }
         return output;
-      };
+      },
 
       /**
        *
@@ -211,14 +205,14 @@
        * @param {object} elt
        * @return {boolean}
        */
-      Arrays.arrContains = function(arr, elt) {
+      arrContains: function(arr, elt) {
         for (var i = 0, n = arr.length; i < n; i++) {
           if (arr[i] === elt) {
             return i;
           }
         }
         return false;
-      };
+      },
 
       /**
        * Find an object in the array via id attribute
@@ -226,13 +220,11 @@
        * @param {string} id
        * @return {object}
        */
-      Arrays.findObject = function(ar, id) {
+      findObject: function(ar, id) {
         ar.map(function(el) {
           return el.id;
         }).indexOf(id);
-      };
-
-      return Arrays;
+      }
     },
 
     /**

@@ -146,25 +146,6 @@
     }
 
     /**
-     * Return a color for this Hex based on it's coords
-     * x = green, y = purple, z = blue
-     * @return {number}
-     */
-    static colorForHex(q, r, s) {
-      if (q === 0 && r === 0 && s === 0) {
-        return 0x000000;
-      } else if (q === 0) {
-        return 0x59981b;
-      } else if (r === 0) {
-        return 0x0077b3;
-      } else if (s === 0) {
-        return 0xb34db2;
-      } else {
-        return 0xC0C0C0;
-      }
-    }
-
-    /**
      *
      * @return {HexShape}
      */
@@ -276,6 +257,96 @@
 
       return this;
     }
+
+    diagonalNeighbor(hex, dir) {
+      return super.diagonalNeighbor(hex, dir);
+    }
+
+    distance(a, b) {
+      return super.distance(a, b);
+    }
+
+    lineDraw(a, b) {
+      return super.lineDraw(a, b);
+    }
+
+    neighbor(cell, dir) {
+      return super.neighbor(cell, dir);
+    }
+
+    pathToOrigin() {
+      return super.pathToOrigin();
+    }
+
+    score() {
+      return super.score();
+    }
+
+    toArray() {
+      return super.toArray();
+    }
+
+    toString() {
+      return super.toString();
+    }
+
+    visit() {
+      return super.visit();
+    }
+
+    /* Static Functions */
+
+    add(a, b) {
+      return Hex.add(a, b);
+    }
+
+    diagonals(dir) {
+      return Hex.diagonals(dir);
+    }
+
+    direction(dir) {
+      return Hex.direction(dir);
+    }
+
+    len(hex) {
+      return Hex.len(hex);
+    }
+
+    lerp(a, b, t) {
+      return Hex.lerp(a, b, t)
+    }
+
+    round(hex) {
+      return Hex.round(hex);
+    }
+
+    scale(hex, k) {
+      return Hex.scale(hex, k);
+    }
+
+    subtract(a, b) {
+      return Hex.subtract(a, b);
+    }
+
+    /**
+     * Return a color for this Hex based on it's coords
+     * x = green, y = purple, z = blue
+     * @return {number}
+     */
+    static colorForHex(q, r, s) {
+      if (q === 0 && r === 0 && s === 0) {
+        return 0x000000;
+      } else if (q === 0) {
+        return 0x59981b;
+      } else if (r === 0) {
+        return 0x0077b3;
+      } else if (s === 0) {
+        return 0xb34db2;
+      } else {
+        return 0xC0C0C0;
+      }
+    }
+
   }
   global.HexShape = HexShape;
 

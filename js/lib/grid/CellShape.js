@@ -199,31 +199,31 @@
     }
 
     add(a, b) {
-      super.add(a, b);
+      return super.add(a, b);
     }
 
     neighbor(cell, dir) {
-      super.neighbor(cell, dir);
+      return super.neighbor(cell, dir);
     }
 
     pathToOrigin() {
-      super.pathToOrigin();
+      return super.pathToOrigin();
     }
 
     score() {
-      super.score();
+      return super.score();
     }
 
     toArray() {
-      super.toArray();
+      return super.toArray();
     }
 
     toString() {
-      super.toString();
+      return super.toString();
     }
 
     visit() {
-      super.visit();
+      return super.visit();
     }
   }
 

@@ -130,13 +130,12 @@
       if (!c1 || !c2) {
         return false;
       }
-
       if (Math.abs(c1.x - c2.x) > 1 || Math.abs(c1.y - c2.y) > 1) {
         return false;
       }
 
-      let removedEdge = _.detect(this.removedEdges, function(edge) {
-        return _.include(edge, c1) && _.include(edge, c2);
+      let removedEdge = this.removedEdges.find((edge) => {
+        return edge.includes(c1) && edge.includes(c2);
       });
 
       return removedEdge === undefined;
@@ -148,28 +147,30 @@
      * @return {Array}
      */
     connectedNeighbors(cell) {
-      let con;
-      return _.select(this.neighbors(cell/*, true*/), (c0) => {
+      let con, results,
+          neighbors = this.neighbors(cell);
+      results = neighbors.filter((c0) => {
         con = this.areConnected(cell, c0);
-
         return con;
       });
+
+      return results;
     }
 
     /**
      * Returns all neighbors of this Cell that are NOT separated by an edge
      * This means there is a maze path between both cells.
-     * @param {Cell} cell
+     * @param {Cell|Hex} cell
      * @return {Array}
      */
     disconnectedNeighbors(cell) {
-      let disc, neighbors = this.neighbors(cell), results = [];
-      results = _.reject(neighbors, (c0) => {
+      let disc, results,
+          neighbors = this.neighbors(cell);
+      results = neighbors.filter((c0) => {
         if (c0 === false) {
           return true;
         }
-        disc = this.areConnected(cell, c0);
-
+        disc = !this.areConnected(cell, c0);
         return disc;
       });
 

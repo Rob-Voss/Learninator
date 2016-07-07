@@ -36,26 +36,6 @@
     }
 
     /**
-     * Add a Cell to another one
-     * @param {Cell|object} a
-     * @param {Cell|object} b
-     * @return {Cell}
-     */
-    add(a, b) {
-      return new Cell(a.x + b.x, a.y + b.y);
-    }
-
-    /**
-     * Get the neighbor
-     * @param {Cell|object} cell
-     * @param {number} dir
-     * @return {Cell}
-     */
-    neighbor(cell, dir) {
-      return this.add(cell, Cell.cellDirections[dir]);
-    }
-
-    /**
      * Calculate the path to the origin
      * @return {Array}
      */
@@ -113,6 +93,29 @@
 
       return this;
     }
+
+    /* Static Functions */
+
+    /**
+     * Add a Cell to another one
+     * @param {Cell|object} a
+     * @param {Cell|object} b
+     * @return {Cell}
+     */
+    static add(a, b) {
+      return new Cell(a.x + b.x, a.y + b.y);
+    }
+
+    /**
+     * Get the neighbor
+     * @param {Cell|object} cell
+     * @param {number} dir
+     * @return {Cell}
+     */
+    static neighbor(cell, dir) {
+      return Cell.add(cell, Cell.cellDirections[dir]);
+    }
+
   }
 
   Cell.cellDirections = [

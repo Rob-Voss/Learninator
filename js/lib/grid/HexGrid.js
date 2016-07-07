@@ -26,6 +26,50 @@
       return this;
     }
 
+    disconnectedNeighbors(cell) {
+      return super.disconnectedNeighbors(cell);
+    }
+
+    /**
+     * Get the cell at the axial coords
+     * @param {number} q
+     * @param {number} r
+     * @return {Hex|boolean}
+     */
+    getCellAt(q, r) {
+      let column = this.map.get(q),
+          row = column ? column.get(r) : false;
+
+      return row ? row.get(-q - r) : false;
+    }
+
+    /**
+     * Distance between two axial coords
+     * @param {Hex|HexShape} h1
+     * @param {Hex|HexShape} h2
+     * @return {number}
+     */
+    getCellDistance(h1, h2) {
+      return (Math.abs(h1.q - h2.q) + Math.abs(h1.r - h2.r) + Math.abs(h1.q + h1.r - h2.q - h2.r)) / 2;
+    }
+
+    /**
+     * Return the location of the entity within a grid
+     * @param {Entity} entity
+     * @return {Cell|boolean}
+     */
+    getGridLocation(entity) {
+      let center = new Point(
+              entity.bounds.x + entity.bounds.width / 2,
+              entity.bounds.y + entity.bounds.height / 2
+          ),
+          hex = this.layout.pixelToHex(center),
+          cube = this.roundCube(this.axialToCube(hex)),
+          hexR = this.cubeToAxial(cube);
+
+      return this.getCellAt(hexR.q, hexR.r);
+    }
+
     /**
      * Initialize the Grid
      * @return {HexGrid}
@@ -83,121 +127,6 @@
     }
 
     /**
-     * Convert from axial coords to Cube
-     * @param {Hex} hex
-     * @return {object}
-     */
-    static axialToCube(hex) {
-      return {
-        x: hex.q,
-        y: hex.r,
-        z: -hex.q - hex.r
-      };
-    }
-
-    /**
-     * Convert from Cube coords to axial
-     * @param {Cube} cube
-     * @return {object}
-     */
-    static cubeToAxial(cube) {
-      return {
-        q: cube.x,
-        r: cube.y,
-        s: -cube.x - cube.y
-      };
-    }
-
-    /**
-     * Returns true if there is an edge between c1 and c2
-     * @param {Hex|HexShape} h1
-     * @param {Hex|HexShape} h2
-     * @return {boolean}
-     */
-    areConnected(h1, h2) {
-      if (!h1 || !h2) {
-        return true;
-      }
-
-      let removedEdge = _.detect(this.removedEdges, function(edge) {
-        return _.include(edge, h1) && _.include(edge, h2);
-      });
-
-      return removedEdge === undefined;
-    }
-
-    /**
-     * Returns all neighbors of this Cell that are NOT separated by an edge
-     * This means there is a maze path between both cells.
-     * @param {Hex|HexShape} cell
-     * @return {Array}
-     */
-    disconnectedNeighbors(cell) {
-      let disc;
-      return _.reject(cell.neighbors, (c0) => {
-        disc = this.areConnected(cell, c0);
-
-        return disc;
-      });
-    }
-
-    /**
-     * Returns all neighbors of this Cell that aren't separated by an edge
-     * @param {Hex|HexShape} hex
-     * @return {Array}
-     */
-    unvisitedNeighbors(hex) {
-      let unv = [];
-      hex.neighbors.forEach((cell) => {
-        if (cell && !cell.visited) {
-          unv.push(cell);
-        }
-      });
-
-      return unv;
-    }
-
-    /**
-     * Get the cell at the axial coords
-     * @param {number} q
-     * @param {number} r
-     * @return {Hex|boolean}
-     */
-    getCellAt(q, r) {
-      let column = this.map.get(q),
-          row = column ? column.get(r) : false;
-
-      return row ? row.get(-q - r) : false;
-    }
-
-    /**
-     * Distance between two axial coords
-     * @param {Hex|HexShape} h1
-     * @param {Hex|HexShape} h2
-     * @return {number}
-     */
-    getCellDistance(h1, h2) {
-      return (Math.abs(h1.q - h2.q) + Math.abs(h1.r - h2.r) + Math.abs(h1.q + h1.r - h2.q - h2.r)) / 2;
-    }
-
-    /**
-     * Return the location of the entity within a grid
-     * @param {Entity} entity
-     * @return {Cell|boolean}
-     */
-    getGridLocation(entity) {
-      let center = new Point(
-              entity.bounds.x + entity.bounds.width / 2,
-              entity.bounds.y + entity.bounds.height / 2
-          ),
-          hex = this.layout.pixelToHex(center),
-          cube = this.roundCube(this.axialToCube(hex)),
-          hexR = this.cubeToAxial(cube);
-
-      return this.getCellAt(hexR.q, hexR.r);
-    }
-
-    /**
      * Add the cells to a hash map
      */
     mapCells() {
@@ -238,8 +167,8 @@
         let n = neighbors[i],
             q = hex.q + n.q,
             r = n.r,
-            cell = this.getCellAt(q, r),
-            neighbor = hex.direction(i);
+            cell = this.getCellAt(q, r);
+        let neighbor = hex.direction(i);
         result.push((!all) ? cell : neighbor);
       }
 
@@ -287,6 +216,50 @@
         q: q,
         r: r,
         s: -q - r
+      };
+    }
+
+    /**
+     * Returns all neighbors of this Cell that aren't separated by an edge
+     * @param {Hex|HexShape} hex
+     * @return {Array}
+     */
+    unvisitedNeighbors(hex) {
+      let unv = [];
+      hex.neighbors.forEach((cell) => {
+        if (cell && !cell.visited) {
+          unv.push(cell);
+        }
+      });
+
+      return unv;
+    }
+
+    /* Static Functions */
+
+    /**
+     * Convert from axial coords to Cube
+     * @param {Hex} hex
+     * @return {object}
+     */
+    static axialToCube(hex) {
+      return {
+        x: hex.q,
+        y: hex.r,
+        z: -hex.q - hex.r
+      };
+    }
+
+    /**
+     * Convert from Cube coords to axial
+     * @param {Cube} cube
+     * @return {object}
+     */
+    static cubeToAxial(cube) {
+      return {
+        q: cube.x,
+        r: cube.y,
+        s: -cube.x - cube.y
       };
     }
 

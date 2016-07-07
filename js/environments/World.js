@@ -223,7 +223,7 @@
           this.tick(this.deltaTime);
         }
       }
-      this.camera.update();
+      //this.camera.update();
       this.renderer.render(this.stage);
       requestAnimationFrame(animate);
     };

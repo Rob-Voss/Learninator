@@ -33,25 +33,6 @@
     }
 
     /**
-     * Add a Hex to another one
-     * @param {Hex} a
-     * @param {Hex} b
-     * @return {Hex}
-     */
-    static add(a, b) {
-      return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
-    }
-
-    /**
-     * Get the diagonal coords for this Hex
-     * @param {number} dir
-     * @return {Array}
-     */
-    static diagonals(dir) {
-      return Hex.hexDiagonals[dir];
-    }
-
-    /**
      * Get the neighbor
      * @param {Hex} hex
      * @param {number} dir
@@ -62,15 +43,6 @@
     }
 
     /**
-     * Get the direction
-     * @param {number} dir
-     * @return {*}
-     */
-    static direction(dir) {
-      return Hex.hexDirections[dir];
-    }
-
-    /**
      * Distance from another Hex
      * @param {Hex} a
      * @param {Hex} b
@@ -78,25 +50,6 @@
      */
     distance(a, b) {
       return this.len(this.subtract(a, b));
-    }
-
-    /**
-     * Get the length of the Hex
-     * @return {number}
-     */
-    static len(hex) {
-      return Math.trunc((Math.abs(hex.q) + Math.abs(hex.r) + Math.abs(hex.s)) / 2);
-    }
-
-    /**
-     * Perform a linear interpolation on the Hex
-     * @param {Hex} a
-     * @param {Hex} b
-     * @param {number} t
-     * @return {Hex}
-     */
-    static lerp(a, b, t) {
-      return new Hex(a.q + (b.q - a.q) * t, a.r + (b.r - a.r) * t);
     }
 
     /**
@@ -123,7 +76,7 @@
      * @return {Hex}
      */
     neighbor(hex, dir) {
-      return HexShape.add(hex, Hex.hexDirections[dir]);
+      return Hex.add(hex, Hex.hexDirections[dir]);
     }
 
     /**
@@ -141,6 +94,101 @@
       path.reverse();
 
       return path;
+    }
+
+    /**
+     * Score
+     * @return {number}
+     */
+    score() {
+      let total = 0,
+          p = this.parent;
+
+      while (p) {
+        ++total;
+        p = p.parent;
+      }
+
+      return total;
+    }
+
+    /**
+     * Get an array of coords
+     * @return {*[]}
+     */
+    toArray() {
+      return [this.q, this.r, this.s];
+    }
+
+    /**
+     * Convert coords to string
+     * @return {string}
+     */
+    toString() {
+      return this.toArray().join(',');
+    }
+
+    /**
+     * Mark it as visited
+     * @return {Hex}
+     */
+    visit() {
+      this.visited = true;
+
+      return this;
+    }
+
+    /* Static Functions */
+
+    /**
+     * Add a Hex to another one
+     * @param {Hex} a
+     * @param {Hex} b
+     * @return {Hex}
+     */
+    static add(a, b) {
+      return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
+    }
+
+    /**
+     * Get the diagonal coords for this Hex
+     * @param {number} dir
+     * @return {Array}
+     */
+    static diagonals(dir) {
+      return Hex.hexDiagonals[dir];
+    }
+
+    /**
+     * Get the direction
+     * @param {number} dir
+     * @return {*}
+     */
+    static direction(dir) {
+      return Hex.hexDirections[dir];
+    }
+
+    /**
+     * Get the length of the Hex
+     * @param {Hex} hex
+     * @return {number}
+     */
+    static len(hex) {
+      return Math.trunc((Math.abs(hex.q) + Math.abs(hex.r) + Math.abs(hex.s)) / 2);
+    }
+
+    /**
+     * Perform a linear interpolation on the Hex
+     * @param {Hex} a
+     * @param {Hex} b
+     * @param {number} t
+     * @return {Hex}
+     */
+    static lerp(a, b, t) {
+      let q = a.q + (b.q - a.q) * t,
+          r = a.r + (b.r - a.r) * t,
+          s = -q - r;
+      return new Hex(q, r, s);
     }
 
     /**
@@ -177,22 +225,6 @@
     }
 
     /**
-     * Score
-     * @return {number}
-     */
-    score() {
-      let total = 0,
-          p = this.parent;
-
-      while (p) {
-        ++total;
-        p = p.parent;
-      }
-
-      return total;
-    }
-
-    /**
      * Subtract a Hex
      * @param {Hex} a
      * @param {Hex} b
@@ -202,32 +234,11 @@
       return new Hex(a.q - b.q, a.r - b.r, a.s - b.s);
     }
 
-    /**
-     * Get an array of coords
-     * @return {*[]}
-     */
-    toArray() {
-      return [this.q, this.r, this.s];
-    }
-
-    /**
-     * Convert coords to string
-     * @return {string}
-     */
-    toString() {
-      return this.toArray().join(',');
-    }
-
-    /**
-     * Mark it as visited
-     * @return {Hex}
-     */
-    visit() {
-      this.visited = true;
-
-      return this;
-    }
   }
+  /**
+   *
+   * @type {*[]}
+   */
   Hex.hexDirections = [
     new Hex(1, 0, -1),
     new Hex(1, -1, 0),
@@ -236,6 +247,10 @@
     new Hex(-1, 1, 0),
     new Hex(0, 1, -1)
   ];
+  /**
+   *
+   * @type {*[]}
+   */
   Hex.hexDiagonals = [
     new Hex(2, -1, -1),
     new Hex(1, -2, 1),

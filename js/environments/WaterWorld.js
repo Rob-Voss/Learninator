@@ -4,7 +4,7 @@
   const renderOpts = {
         antialiasing: false,
         autoResize: false,
-        backgroundColor: 0xFFFFFF,
+        backgroundColor: 0xCCCCCC,
         resizable: false,
         transparent: false,
         resolution: 1,//window.devicePixelRatio,
@@ -62,7 +62,7 @@
         cellSpacing: 0,
         size: 3,
         pointy: false,
-        fill: false
+        fill: true
       };
 
   class WaterWorld extends World {
