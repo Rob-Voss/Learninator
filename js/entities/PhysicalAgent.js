@@ -22,6 +22,7 @@
       this.angle = angle;
       this.agentAngle = agent.body.angle;
       this.agentRadius = agent.radius;
+      this.range = agent.range;
       this.position = agent.body.position;
       this.graphics = new PIXI.Graphics();
       this.v1 = Vector.create(
@@ -309,6 +310,9 @@
           // do a 1-of-k encoding into the input array normalize to [0,1]
           let inputId = i * this.numTypes + eye.sensed.type;
           input[inputId] = eye.sensed.proximity / eye.range;
+          if (isNaN(input[inputId])) {
+            console.log(inputId + 'isNaN');
+          }
         }
       }
 
@@ -337,6 +341,11 @@
       this.position = this.body.position;
 
       this.lastReward = this.digestion;
+      if (this.lastReward > 1) {
+        console.log('lastReward greater than 1');
+      } else if (this.lastReward < -1) {
+        console.log('lastReward less than -1');
+      }
       this.brain.learn(this.digestion);
       this.epsilon = this.brain.epsilon;
       this.digestion = 0;

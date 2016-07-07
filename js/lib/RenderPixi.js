@@ -152,7 +152,7 @@
           strokeStyleWireframe = Common.colorToNumber('#bbb');
       if (body.render.sprite && body.render.sprite.texture) {
         mainGraphic = this.sprites[mainId];
-
+        // Create it if it doesn't exist in cache
         if (!mainGraphic) {
           mainGraphic = this.sprites[mainId] = _createBodySprite(this, body);
         }
@@ -160,7 +160,7 @@
         mainGraphic.scale.y = body.render.sprite.yScale || 1;
       } else {
         mainGraphic = this.primitives[mainId];
-
+        // Create it if it doesn't exist in cache
         if (!mainGraphic) {
           mainGraphic = this.primitives[mainId] = _createBodyPrimitive(this, body);
         }
@@ -169,7 +169,7 @@
       if (mainGraphic) {
         mainGraphic.position.x = body.position.x;
         mainGraphic.position.y = body.position.y;
-        mainGraphic.rotation = body.angle - mainGraphic.initialAngle;
+        mainGraphic.display.removeChildren();
 
         // Loop through all the parts
         for (let k = parts.length > 1 ? 1 : 0; k < parts.length; k++) {
@@ -181,8 +181,7 @@
           }
           if (part.render.sprite && part.render.sprite.texture) {
             partGraphic = this.sprites[partId];
-
-            // initialise body sprite if not existing
+            // Create it if it doesn't exist in cache
             if (!partGraphic) {
               partGraphic = this.sprites[partId] = _createBodySprite(this, part);
             }
@@ -190,12 +189,12 @@
             partGraphic.scale.y = body.render.sprite.yScale || 1;
           } else {
             partGraphic = this.primitives[partId];
-
-            // Set up body primitive if not existing
+            // Create it if it doesn't exist in cache
             if (!partGraphic) {
               partGraphic = this.primitives[partId] = _createBodyPrimitive(this, part);
             }
           }
+          partGraphic.display.removeChildren();
 
           partGraphic.clear();
           if (!this.options.wireframes) {
@@ -205,10 +204,12 @@
             partGraphic.beginFill(0, 0);
             partGraphic.lineStyle(1, strokeStyleWireframe, 1);
           }
-          // part polygon
+
           if (part.circleRadius) {
+            // If it's a circle
             partGraphic.drawCircle(part.position.x - body.position.x, part.position.y - body.position.y, part.circleRadius);
           } else {
+            // Or if it's a polygon
             partGraphic.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
 
             for (let j = 1; j < part.vertices.length; j++) {
@@ -225,15 +226,15 @@
           }
           partGraphic.endFill();
 
-          if (part.entity.eyes !== undefined) {
+          if (body.entity.eyes !== undefined) {
             for (let i = 0; i < part.entity.eyes.length; i++) {
-              let eye = part.entity.eyes[i],
-                  x = mainGraphic.position.x - body.position.x,
-                  y = mainGraphic.position.y - body.position.y,
-                  eyeStartX = x + part.circleRadius * Math.sin(part.angle + eye.angle),
-                  eyeStartY = y + part.circleRadius * Math.cos(part.angle + eye.angle),
-                  eyeEndX = x + eye.sensed.proximity * Math.sin(part.angle + eye.angle),
-                  eyeEndY = y + eye.sensed.proximity * Math.cos(part.angle + eye.angle);
+              let eye = body.entity.eyes[i],
+                  x = part.position.x - body.position.x,
+                  y = part.position.y - body.position.y,
+                  eyeStartX = x + body.circleRadius * Math.sin(body.angle + eye.angle),
+                  eyeStartY = y + body.circleRadius * Math.cos(body.angle + eye.angle),
+                  eyeEndX = x + eye.sensed.proximity * Math.sin(body.angle + eye.angle),
+                  eyeEndY = y + eye.sensed.proximity * Math.cos(body.angle + eye.angle);
               eye.v1 = Vector.create(eyeStartX, eyeStartY);
               eye.v2 = Vector.create(eyeEndX, eyeEndY);
 
@@ -256,14 +257,177 @@
     }
 
     /**
+     * Draws body angle indicators and axes
+     * @private
+     * @method bodyAxes
+     * @param {Matter.Body} body
+     */
+    bodyAxes(body) {
+      if (!body.render.visible) {
+        return;
+      }
+      let mainGraphic,
+          bodyId = 'b-' + body.id,
+          parts = body.parts;
+
+      if (body.render.sprite && body.render.sprite.texture) {
+        mainGraphic = this.sprites[bodyId];
+      } else {
+        mainGraphic = this.primitives[bodyId];
+      }
+
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let partGraphic,
+              part = body.parts[j],
+              primitiveId = 'b-' + body.id,
+              strokeStyleIndicator = Common.colorToNumber('#FF3333'),
+              strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C');
+
+          if (body.render.sprite && body.render.sprite.texture) {
+            partGraphic = this.sprites[primitiveId];
+          } else {
+            partGraphic = this.primitives[primitiveId];
+          }
+
+          if (partGraphic) {
+            if (!partGraphic.angleIndicator) {
+              partGraphic.angleIndicator = new PIXI.Graphics();
+            }
+            if (this.options.wireframes) {
+              partGraphic.angleIndicator.lineStyle(1, strokeStyleWireframeIndicator, 1);
+            } else {
+              partGraphic.angleIndicator.lineStyle(1, strokeStyleIndicator);
+            }
+            partGraphic.angleIndicator.clear();
+            partGraphic.angleIndicator.beginFill(0, 0);
+            if (this.options.showAxes) {
+              // Render all axes
+              for (let k = 0; k < part.axes.length; k++) {
+                let axis = part.axes[k];
+                partGraphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
+                partGraphic.angleIndicator.lineTo(part.position.x + axis.x * 20, part.position.y + axis.y * 20);
+              }
+            } else {
+              for (let k = 0; k < part.axes.length; k++) {
+                // render a single axis indicator
+                partGraphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
+                partGraphic.angleIndicator.lineTo(((part.vertices[0].x + part.vertices[part.vertices.length - 1].x) / 2 - body.position.x),
+                    ((part.vertices[0].y + part.vertices[part.vertices.length - 1].y) / 2 - body.position.y));
+              }
+            }
+            partGraphic.angleIndicator.endFill();
+            mainGraphic.display.addChild(partGraphic.angleIndicator);
+          }
+        }
+      }
+    }
+
+    /**
+     * Draws body bounds
+     * @private
+     * @method bodyBounds
+     * @param {Matter.Body} body
+     */
+    bodyBounds(body) {
+      if (!body.render.visible) {
+        return;
+      }
+      let mainGraphic,
+          primitiveId = 'b-' + body.id,
+          parts = body.parts;
+
+      if (body.render.sprite && body.render.sprite.texture) {
+        mainGraphic = this.sprites[primitiveId];
+      } else {
+        mainGraphic = this.primitives[primitiveId];
+      }
+
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let partGraphic, strokeStyle,
+              part = parts[j],
+              partId = 'b-' + part.id;
+          if (part.render.sprite && part.render.sprite.texture) {
+            partGraphic = this.sprites[partId];
+          } else {
+            partGraphic = this.primitives[partId];
+          }
+          if (partGraphic) {
+            if (!partGraphic.boundsBox) {
+              partGraphic.boundsBox = new PIXI.Graphics();
+            }
+
+            if (this.options.wireframes) {
+              strokeStyle = 'rgba(255,255,255,0.08)';
+            } else {
+              strokeStyle = 'rgba(0,0,0,0.1)';
+            }
+            partGraphic.boundsBox.clear();
+            partGraphic.boundsBox.beginFill(0, 0);
+            partGraphic.boundsBox.lineStyle(1, Common.colorToNumber(strokeStyle), 1);
+            partGraphic.boundsBox.drawRect(
+                body.position.x - body.bounds.max.x,
+                body.position.y - body.bounds.max.y,
+                body.bounds.max.x - body.bounds.min.x,
+                body.bounds.max.y - body.bounds.min.y
+            );
+            partGraphic.boundsBox.endFill();
+            mainGraphic.display.addChild(partGraphic.boundsBox);
+          }
+        }
+      }
+    }
+
+    /**
+     * Display the body ids
+     * @param {Matter.Body} body
+     */
+    bodyIds(body) {
+      if (!body.render.visible) {
+        return;
+      }
+      let mainGraphic,
+          primitiveId = 'b-' + body.id,
+          parts = body.parts;
+
+      if (body.render.sprite && body.render.sprite.texture) {
+        mainGraphic = this.sprites[primitiveId];
+      } else {
+        mainGraphic = this.primitives[primitiveId];
+      }
+
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let partGraphic,
+              part = parts[j],
+              partId = 'b-' + part.id,
+              x = part.position.x - body.position.x,
+              y = part.position.y - body.position.y,
+              textOpts = {font: '10px Arial', fill: '#000000', align: 'center'};
+          if (part.render.sprite && part.render.sprite.texture) {
+            partGraphic = this.sprites[partId];
+          } else {
+            partGraphic = this.primitives[partId];
+          }
+          if (partGraphic) {
+            if (!partGraphic.idText) {
+              partGraphic.idText = new PIXI.Text(body.id, textOpts);
+            }
+            partGraphic.idText.position.set(x, y);
+            partGraphic.display.addChild(partGraphic.idText);
+          }
+        }
+      }
+    }
+
+    /**
      * Draws body positions
      * @private
      * @method bodyPositions
-     * @param {render} render
-     * @param {body[]} bodies
-     * @param {RenderingContext} context
+     * @param {Matter.Body} body
      */
-    bodyPositions(render, bodies, context) {
+    bodyPositions(body) {
       //var c = context,
       //    engine = render.engine,
       //    options = render.options,
@@ -315,25 +479,49 @@
      * Draws body velocity
      * @private
      * @method bodyVelocity
-     * @param {render} render
-     * @param {body[]} bodies
-     * @param {RenderingContext} context
+     * @param {Matter.Body} body
      */
-    bodyVelocity(render, bodies, context) {
-      //var c = context;
-      //
-      //c.beginPath();
-      //
-      //for (var i = 0; i < bodies.length; i++) {
-      //  var body = bodies[i];
-      //
-      //  if (!body.render.visible)
-      //    continue;
-      //
-      //  c.moveTo(body.position.x, body.position.y);
-      //  c.lineTo(body.position.x + (body.position.x - body.positionPrev.x) * 2, body.position.y +
-      // (body.position.y - body.positionPrev.y) * 2); }  c.lineWidth = 3; c.strokeStyle = 'cornflowerblue';
-      // c.stroke();
+    bodyVelocity(body) {
+      if (!body.render.visible) {
+        return;
+      }
+      let mainGraphic,
+          primitiveId = 'b-' + body.id,
+          parts = body.parts;
+      if (body.render.sprite && body.render.sprite.texture) {
+        mainGraphic = this.sprites[primitiveId];
+      } else {
+        mainGraphic = this.primitives[primitiveId];
+      }
+
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let partGraphic,
+              part = parts[j],
+              partId = 'b-' + part.id;
+          if (part.render.sprite && part.render.sprite.texture) {
+            partGraphic = this.sprites[partId];
+          } else {
+            partGraphic = this.primitives[partId];
+          }
+          if (partGraphic) {
+            if (!partGraphic.velocityIndicator) {
+              partGraphic.velocityIndicator = new PIXI.Graphics();
+            }
+            let x = part.position.x - body.position.x,
+                y = part.position.y - body.position.y,
+                px = x + (part.positionPrev.x - body.position.x),
+                py = y + (part.positionPrev.y - body.position.y);
+            partGraphic.velocityIndicator.clear();
+            partGraphic.velocityIndicator.beginFill(0, 0);
+            partGraphic.velocityIndicator.lineStyle(1, 0x6495ED, 1);
+            partGraphic.velocityIndicator.moveTo(x, y);
+            partGraphic.velocityIndicator.lineTo(px * 2, py * 2);
+            partGraphic.velocityIndicator.endFill();
+            partGraphic.display.addChild(partGraphic.velocityIndicator);
+          }
+        }
+      }
     }
 
     /**
@@ -513,163 +701,6 @@
       //
       //c.lineWidth = 1;
       //c.stroke();
-    }
-
-    /**
-     * Draws body angle indicators and axes
-     * @private
-     * @method bodyAxes
-     * @param {render} render
-     * @param {body[]} bodies
-     * @param {RenderingContext} context
-     */
-    bodyAxes(body) {
-      if (!body.render.visible) {
-        return;
-      }
-      let mainGraphic,
-          bodyId = 'b-' + body.id,
-          parts = body.parts;
-
-      if (body.render.sprite && body.render.sprite.texture) {
-        mainGraphic = this.sprites[bodyId];
-      } else {
-        mainGraphic = this.primitives[bodyId];
-      }
-
-      if (mainGraphic) {
-        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-          let graphic,
-              part = body.parts[j],
-              primitiveId = 'b-' + body.id,
-              strokeStyleIndicator = Common.colorToNumber('#FF3333'),
-              strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C');
-
-          if (body.render.sprite && body.render.sprite.texture) {
-            graphic = this.sprites[primitiveId];
-          } else {
-            graphic = this.primitives[primitiveId];
-          }
-
-          if (graphic) {
-            if (!graphic.angleIndicator) {
-              graphic.angleIndicator = new PIXI.Graphics();
-              mainGraphic.display.addChild(graphic.angleIndicator);
-            }
-            if (this.options.wireframes) {
-              graphic.angleIndicator.lineStyle(1, strokeStyleWireframeIndicator, 1);
-            } else {
-              graphic.angleIndicator.lineStyle(1, strokeStyleIndicator);
-            }
-            graphic.angleIndicator.clear();
-            graphic.angleIndicator.beginFill(0, 0);
-            if (this.options.showAxes) {
-              // render all axes
-              for (let k = 0; k < part.axes.length; k++) {
-                let axis = part.axes[k];
-                graphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
-                graphic.angleIndicator.lineTo(part.position.x + axis.x * 20, part.position.y + axis.y * 20);
-              }
-            } else {
-              for (let k = 0; k < part.axes.length; k++) {
-                // render a single axis indicator
-                graphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
-                graphic.angleIndicator.lineTo(((part.vertices[0].x + part.vertices[part.vertices.length - 1].x) / 2 - body.position.x),
-                    ((part.vertices[0].y + part.vertices[part.vertices.length - 1].y) / 2 - body.position.y));
-              }
-            }
-            graphic.angleIndicator.endFill();
-          }
-        }
-      }
-    }
-
-    /**
-     * Draws body bounds
-     * @private
-     * @method bodyBounds
-     * @param {render} render
-     * @param {body[]} bodies
-     * @param {RenderingContext} context
-     */
-    bodyBounds(body) {
-      if (!body.render.visible) {
-        return;
-      }
-      let mainGraphic,
-          primitiveId = 'b-' + body.id,
-          parts = body.parts;
-
-      if (body.render.sprite && body.render.sprite.texture) {
-        mainGraphic = this.sprites[primitiveId];
-      } else {
-        mainGraphic = this.primitives[primitiveId];
-      }
-
-      if (mainGraphic) {
-        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-          let graphic, strokeStyle,
-              part = parts[j],
-              partId = 'b-' + part.id;
-          if (part.render.sprite && part.render.sprite.texture) {
-            graphic = this.sprites[partId];
-          } else {
-            graphic = this.primitives[partId];
-          }
-          if (graphic) {
-            if (!graphic.boundsBox) {
-              graphic.boundsBox = new PIXI.Graphics();
-              mainGraphic.display.addChild(graphic.boundsBox);
-            }
-
-            if (this.options.wireframes) {
-              strokeStyle = 'rgba(255,255,255,0.08)';
-            } else {
-              strokeStyle = 'rgba(0,0,0,0.1)';
-            }
-            graphic.boundsBox.clear();
-            graphic.boundsBox.beginFill(0, 0);
-            graphic.boundsBox.lineStyle(1, Common.colorToNumber(strokeStyle), 1);
-            graphic.boundsBox.drawRect(
-                body.position.x - body.bounds.max.x,
-                body.position.y - body.bounds.max.y,
-                body.bounds.max.x - body.bounds.min.x,
-                body.bounds.max.y - body.bounds.min.y
-            );
-            graphic.boundsBox.endFill();
-          }
-        }
-      }
-    }
-
-    /**
-     * Display the body ids
-     * @param body
-     */
-    bodyIds(body) {
-      if (!body.render.visible) {
-        return;
-      }
-      let graphic,
-          primitiveId = 'b-' + body.id,
-          part = body.parts[0],
-          x = part.position.x - body.position.x,
-          y = part.position.y - body.position.y,
-          textOpts = {font: '10px Arial', fill: '#000000', align: 'center'};
-
-      if (body.render.sprite && body.render.sprite.texture) {
-        graphic = this.sprites[primitiveId];
-      } else {
-        graphic = this.primitives[primitiveId];
-      }
-
-      if (graphic) {
-        if (!graphic.idText) {
-          graphic.idText = new PIXI.Text(body.id, textOpts);
-        }
-        graphic.idText.position.set(x, y);
-        graphic.display.addChild(graphic.idText);
-      }
     }
 
     /**
@@ -1003,6 +1034,8 @@
     for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
       let part = body.parts[k],
           partGraphic = new PIXI.Graphics();
+      partGraphic.display = new PIXI.Container();
+      mainGraphic.display.addChild(partGraphic.display);
       //partGraphic.initialAngle = part.angle;
       //partGraphic.rotation = body.angle - mainGraphic.initialAngle;
       if (!options.wireframes) {

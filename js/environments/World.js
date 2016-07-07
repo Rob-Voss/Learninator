@@ -10,18 +10,19 @@
 //import EntityRLDQN from '../entities/EntityRLDQN.js';
 //import Wall from '../entities/Wall.js';
 
-/**
- * The flags for what to display for 'cheats'
- * @typedef {Object} cheatsOpts
- * @property {boolean} id
- * @property {boolean} name
- * @property {boolean} angle
- * @property {boolean} bounds
- * @property {boolean} direction
- * @property {boolean} gridLocation
- * @property {boolean} position
- */
-const cheatOptsDef = {
+  /**
+   * The flags for what to display for 'cheats'
+   * @typedef {Object} cheatsOpts
+   * @property {boolean} id
+   * @property {boolean} name
+   * @property {boolean} angle
+   * @property {boolean} bounds
+   * @property {boolean} direction
+   * @property {boolean} gridLocation
+   * @property {boolean} position
+   * @type {{id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean, position: boolean}}
+   */
+  const cheatOptsDef = {
       id: false,
       name: false,
       angle: false,
@@ -31,7 +32,7 @@ const cheatOptsDef = {
       position: false
     },
     /**
-     *
+     * Default collision engine options
      * @type {{type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}}
      */
     collisionOptsDef = {
@@ -42,24 +43,25 @@ const cheatOptsDef = {
         bounds: cheatOptsDef.bounds
       }
     },
-    /**
-     *
-     * @type {Element}
-     */
+      /**
+       *
+       * @type {Element}
+       */
     element = document.body.querySelector('#game-container'),
-    /**
-     * Options for the World
-     * @typedef {Object} worldOpts
-     * @property {number} simSpeed - The speed of the simulation
-     * @property {collisionOpts} collision - The collision definition
-     * @property {cheatsOpts} cheats - The cheats definition
-     * @property {number} numEntities - The number of Entities to spawn
-     * @property {entityOpts} entityOpts - The Entity options to use for them
-     * @property {number} numEntityAgents - The number of EntityAgents to spawn
-     * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
-     * @property {Grid} grid - The grid to use
-     * @property {Maze} maze - The maze to use
-     */
+      /**
+       * Options for the World
+       * @typedef {Object} worldOpts
+       * @property {number} simSpeed - The speed of the simulation
+       * @property {collisionOpts} collision - The collision definition
+       * @property {cheatsOpts} cheats - The cheats definition
+       * @property {number} numEntities - The number of Entities to spawn
+       * @property {entityOpts} entityOpts - The Entity options to use for them
+       * @property {number} numEntityAgents - The number of EntityAgents to spawn
+       * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
+       * @property {Grid} grid - The grid to use
+       * @property {Maze} maze - The maze to use
+       * @type {{simSpeed: number, collision: {type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}, cheats: {id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean, position: boolean}, numEntities: number, entityOpts: {radius: number, collision: boolean, interactive: boolean, useSprite: boolean, moving: boolean, cheats: {id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean, position: boolean}}, numEntityAgents: number, entityAgentOpts: {radius: number, collision: boolean, interactive: boolean, useSprite: boolean, moving: boolean, cheats: {id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean, position: boolean}}}}
+       */
     worldOptsDef = {
       simSpeed: 1,
       collision: collisionOptsDef,
@@ -83,19 +85,20 @@ const cheatOptsDef = {
         cheats: cheatOptsDef
       }
     },
-    /**
-     * Options for the World renderer
-     * @typedef {Object} renderOpts
-     * @property {boolean} antialiasing - sets antialias (only applicable in chrome at the moment)
-     * @property {HTMLCanvasElement} view - the canvas to use as a view, optional
-     * @property {boolean} transparent - If the render view is transparent, default false
-     * @property {boolean} preserveDrawingBuffer - enables drawing buffer preservation, enable this if you
-     *      need to call toDataUrl on the webgl context
-     * @property {number} resolution - the resolution of the renderer, retina would be 2
-     * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
-     * @property {number} width - The width
-     * @property {number} height - The height
-     */
+      /**
+       * Default options for the World renderer
+       * @typedef {Object} renderOpts
+       * @property {boolean} antialiasing - sets antialias (only applicable in chrome at the moment)
+       * @property {HTMLCanvasElement} view - the canvas to use as a view, optional
+       * @property {boolean} transparent - If the render view is transparent, default false
+       * @property {boolean} preserveDrawingBuffer - enables drawing buffer preservation, enable this if you
+       *      need to call toDataUrl on the webgl context
+       * @property {number} resolution - the resolution of the renderer, retina would be 2
+       * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
+       * @property {number} width - The width
+       * @property {number} height - The height
+       * @type {{antialiasing: boolean, autoResize: boolean, background: number, resolution: *, resizable: boolean, transparent: boolean, noWebGL: boolean, width: number, height: number}}
+       */
     renderOptsDef = {
       antialiasing: false,
       autoResize: false,

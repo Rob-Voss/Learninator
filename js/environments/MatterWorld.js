@@ -29,7 +29,10 @@
       greenColor = '#C7F464',
       blueColor = '#4ECDC4',
 
-      // Engine Options
+      /**
+       *
+       * @type {{enabled: boolean, enableSleeping: boolean, constraintIterations: number, positionIterations: number, velocityIterations: number, metrics: {extended: boolean, narrowDetections: number, narrowphaseTests: number, narrowReuse: number, narrowReuseCount: number, midphaseTests: number, broadphaseTests: number, narrowEff: number, midEff: number, broadEff: number, collisions: number, buckets: number, bodies: number, pairs: number}, timing: {timeScale: number}}}
+       */
       engineOpts = {
         enabled: true,
         enableSleeping: false,
@@ -56,8 +59,14 @@
           timeScale: 1
         }
       },
+      /**
+       *
+       * @type {{element: Element, options: {background: string, pixelRatio: number, enabled: boolean, hasBounds: boolean, showAngleIndicator: boolean, showAxes: boolean, showSleeping: boolean, showBounds: boolean, showBroadphase: boolean, showCollisions: boolean, showConvexHulls: boolean, showDebug: boolean, showIds: boolean, showInternalEdges: boolean, showMousePosition: boolean, showPositions: boolean, showShadows: boolean, showSeparations: boolean, showVelocity: boolean, showVertexNumbers: boolean, wireframes: boolean, wireframeBackground: string}}}
+       */
       renderOpts = {
         element: container,
+        width: 600,
+        height: 600,
         options: {
           background: '#585858',
           pixelRatio: 1,
@@ -84,7 +93,7 @@
         }
       };
 
-// MatterTools aliases
+  // MatterTools aliases
   if (window.MatterTools) {
     var MatterTools = window.MatterTools,
         useTools = true,
@@ -101,15 +110,13 @@
      * @name MatterWorld
      * @constructor
      *
-     * @param {number} width
-     * @param {number} height
      * @return {MatterWorld}
      */
-    constructor(width = 600, height = 600) {
+    constructor() {
       this.clock = 0;
       this.agents = [];
-      this.width = renderOpts.options.width = width;
-      this.height = renderOpts.options.height = height;
+      this.width = renderOpts.width;
+      this.height = renderOpts.height;
       this.engine = renderOpts.engine = Engine.create(engineOpts);
       this.render = new RenderPixi(renderOpts);
       this.runner = Engine.run(this.engine);
@@ -211,10 +218,12 @@
 
         // get vector from mouse relative to centre of viewport
         let deltaCenter = Vector.sub(this.render.mouse.absolute, this.viewportCenter),
-            centerDist = Vector.magnitude(deltaCenter);
+            centerDist = Vector.magnitude(deltaCenter),
+            buttonHeld = this.render.mouse.button > -1;
 
-        // translate the view if mouse has moved over 50px from the center of viewport
-        if (centerDist > 50) {
+        // translate the view if mouse has moved over 50px from the
+        // center of viewport and the button is being held
+        if (centerDist > 50 && buttonHeld) {
           // create a vector to translate the view, allowing the user to control view speed
           let direction = Vector.normalise(deltaCenter),
               speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
@@ -412,10 +421,10 @@
      * @param {Matter.Body} body
      */
     checkBounds(body) {
-      let maxX = this.render.bounds.max.x - body.entity.radius,
-          maxY = this.render.bounds.max.y - body.entity.radius,
-          minX = this.render.bounds.min.x + body.entity.radius,
-          minY = this.render.bounds.min.y + body.entity.radius,
+      let maxX = this.engine.world.bounds.max.x - body.entity.radius,
+          maxY = this.engine.world.bounds.max.y - body.entity.radius,
+          minX = this.engine.world.bounds.min.x + body.entity.radius,
+          minY = this.engine.world.bounds.min.y + body.entity.radius,
           spdAdj = body.entity.speed * 0.00025,
           newPos = Vector.create(body.position.x, body.position.y),
           newForce = Vector.create(body.entity.force.x, body.entity.force.y);
