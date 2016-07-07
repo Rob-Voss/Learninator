@@ -248,8 +248,8 @@
             this.body.position.y + this.radius * Math.cos(this.body.angle + eye.angle)
         );
         eye.v2 = Vector.create(
-            eye.v1.x + this.range * Math.sin(this.body.angle + eye.angle),
-            eye.v1.y + this.range * Math.cos(this.body.angle + eye.angle)
+            this.body.position.x + this.range * Math.sin(this.body.angle + eye.angle),
+            this.body.position.y + this.range * Math.cos(this.body.angle + eye.angle)
         );
         let collisions = Query.ray(bodies, eye.v1, eye.v2, 1);
 

@@ -26,6 +26,22 @@
       styles = ['black', 'green', 'red', 'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'],
       hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
 
+  let _requestAnimationFrame,
+      _cancelAnimationFrame;
+
+  if (typeof window !== 'undefined') {
+    _requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame
+        || window.mozRequestAnimationFrame || window.msRequestAnimationFrame
+        || function(callback) {
+          window.setTimeout(function() {
+            callback(Common.now());
+          }, 1000 / 60);
+        };
+
+    _cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
+        || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
+  }
+
   /**
    * The `Matter.RenderPixi` module is a renderer using pixi.js.
    * See also `Matter.Render` for a canvas based renderer.
@@ -126,109 +142,503 @@
       if (!body.render.visible) {
         return;
       }
-      let primitiveId = 'b-' + body.id;
+
+      // Grab the main graphic element out of cache
+      let mainGraphic,
+          mainId = 'b-' + body.id,
+          parts = body.parts,
+          fillStyle = Common.colorToNumber(body.render.fillStyle),
+          strokeStyle = Common.colorToNumber(body.render.strokeStyle),
+          strokeStyleWireframe = Common.colorToNumber('#bbb');
       if (body.render.sprite && body.render.sprite.texture) {
-        let sprite = this.sprites[primitiveId];
+        mainGraphic = this.sprites[mainId];
 
-        // initialise body sprite if not existing
-        if (!sprite) {
-          sprite = this.sprites[primitiveId] = _createBodySprite(this, body);
+        if (!mainGraphic) {
+          mainGraphic = this.sprites[mainId] = _createBodySprite(this, body);
         }
-        // update body sprite
-        sprite.removeChildren();
-        sprite.position.x = body.position.x;
-        sprite.position.y = body.position.y;
-        sprite.rotation = body.angle;
-        sprite.scale.x = body.render.sprite.xScale || 1;
-        sprite.scale.y = body.render.sprite.yScale || 1;
-
-        sprite.display.removeChildren();
-        sprite.addChild(sprite.display);
-        // Add to scene graph if not already there
-        if (Common.indexOf(this.container.children, sprite) === -1) {
-          this.container.addChild(sprite);
-        }
+        mainGraphic.scale.x = body.render.sprite.xScale || 1;
+        mainGraphic.scale.y = body.render.sprite.yScale || 1;
       } else {
-        let primitive = this.primitives[primitiveId];
+        mainGraphic = this.primitives[mainId];
 
-        // Set up body primitive if not existing
-        if (!primitive) {
-          primitive = this.primitives[primitiveId] = _createBodyPrimitive(this, body);
-          primitive.initialAngle = body.angle;
+        if (!mainGraphic) {
+          mainGraphic = this.primitives[mainId] = _createBodyPrimitive(this, body);
         }
-        // Update the body primitive
-        primitive.removeChildren();
-        primitive.position.x = body.position.x;
-        primitive.position.y = body.position.y;
-        primitive.rotation = body.angle - primitive.initialAngle;
+      }
 
-        if (body.entity.eyes !== undefined) {
-          let part = body.parts[0];
-          for (let i = 0; i < body.entity.eyes.length; i++) {
-            let eye = body.entity.eyes[i],
-                x = part.position.x - body.position.x,
-                y = part.position.y - body.position.y,
-                eyeStartX = x + body.circleRadius * Math.sin(body.angle + eye.angle),
-                eyeStartY = y + body.circleRadius * Math.cos(body.angle + eye.angle),
-                eyeEndX = x + eye.sensed.proximity * Math.sin(body.angle + eye.angle),
-                eyeEndY = y + eye.sensed.proximity * Math.cos(body.angle + eye.angle);
-            eye.v1 = Vector.create(eyeStartX, eyeStartY);
-            eye.v2 = Vector.create(eyeEndX, eyeEndY);
+      if (mainGraphic) {
+        mainGraphic.position.x = body.position.x;
+        mainGraphic.position.y = body.position.y;
+        mainGraphic.rotation = body.angle - mainGraphic.initialAngle;
 
-            // Draw the agent's line of sights
-            eye.graphics.clear();
-            eye.graphics.beginFill(0, 0);
-            eye.graphics.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
-            eye.graphics.moveTo(eye.v1.x, eye.v1.y);
-            eye.graphics.lineTo(eye.v2.x, eye.v2.y);
-            eye.graphics.endFill();
-            primitive.addChild(eye.graphics);
+        // Loop through all the parts
+        for (let k = parts.length > 1 ? 1 : 0; k < parts.length; k++) {
+          let part = parts[k],
+              partId = 'b-' + part.id,
+              partGraphic;
+          if (!part.render.visible) {
+            continue;
+          }
+          if (part.render.sprite && part.render.sprite.texture) {
+            partGraphic = this.sprites[partId];
+
+            // initialise body sprite if not existing
+            if (!partGraphic) {
+              partGraphic = this.sprites[partId] = _createBodySprite(this, part);
+            }
+            partGraphic.scale.x = body.render.sprite.xScale || 1;
+            partGraphic.scale.y = body.render.sprite.yScale || 1;
+          } else {
+            partGraphic = this.primitives[partId];
+
+            // Set up body primitive if not existing
+            if (!partGraphic) {
+              partGraphic = this.primitives[partId] = _createBodyPrimitive(this, part);
+            }
+          }
+
+          partGraphic.clear();
+          if (!this.options.wireframes) {
+            partGraphic.beginFill(fillStyle, 1);
+            partGraphic.lineStyle(body.render.lineWidth, strokeStyle, 1);
+          } else {
+            partGraphic.beginFill(0, 0);
+            partGraphic.lineStyle(1, strokeStyleWireframe, 1);
+          }
+          // part polygon
+          if (part.circleRadius) {
+            partGraphic.drawCircle(part.position.x - body.position.x, part.position.y - body.position.y, part.circleRadius);
+          } else {
+            partGraphic.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
+
+            for (let j = 1; j < part.vertices.length; j++) {
+              if (!part.vertices[j - 1].isInternal || showInternalEdges) {
+                partGraphic.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
+              } else {
+                partGraphic.moveTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
+              }
+
+              if (part.vertices[j].isInternal && !showInternalEdges) {
+                partGraphic.moveTo(part.vertices[(j + 1) % part.vertices.length].x, part.vertices[(j + 1) % part.vertices.length].y);
+              }
+            }
+          }
+          partGraphic.endFill();
+
+          if (part.entity.eyes !== undefined) {
+            for (let i = 0; i < part.entity.eyes.length; i++) {
+              let eye = part.entity.eyes[i],
+                  x = mainGraphic.position.x - body.position.x,
+                  y = mainGraphic.position.y - body.position.y,
+                  eyeStartX = x + part.circleRadius * Math.sin(part.angle + eye.angle),
+                  eyeStartY = y + part.circleRadius * Math.cos(part.angle + eye.angle),
+                  eyeEndX = x + eye.sensed.proximity * Math.sin(part.angle + eye.angle),
+                  eyeEndY = y + eye.sensed.proximity * Math.cos(part.angle + eye.angle);
+              eye.v1 = Vector.create(eyeStartX, eyeStartY);
+              eye.v2 = Vector.create(eyeEndX, eyeEndY);
+
+              // Draw the agent's line of sights
+              eye.graphics.clear();
+              eye.graphics.beginFill(0, 0);
+              eye.graphics.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
+              eye.graphics.moveTo(eye.v1.x, eye.v1.y);
+              eye.graphics.lineTo(eye.v2.x, eye.v2.y);
+              eye.graphics.endFill();
+            }
           }
         }
-        primitive.display.removeChildren();
-        primitive.addChild(primitive.display);
 
-        // add to scene graph if not already there
-        if (Common.indexOf(this.container.children, primitive) === -1) {
-          this.container.addChild(primitive);
+        // Add to scene graph if not already there
+        if (Common.indexOf(this.container.children, mainGraphic) === -1) {
+          this.container.addChild(mainGraphic);
         }
       }
     }
 
     /**
-     * Display the bounds of the object
-     * @param body
+     * Draws body positions
+     * @private
+     * @method bodyPositions
+     * @param {render} render
+     * @param {body[]} bodies
+     * @param {RenderingContext} context
+     */
+    bodyPositions(render, bodies, context) {
+      //var c = context,
+      //    engine = render.engine,
+      //    options = render.options,
+      //    body,
+      //    part,
+      //    i,
+      //    k;
+      //
+      //c.beginPath();
+      //
+      //// render current positions
+      //for (i = 0; i < bodies.length; i++) {
+      //  body = bodies[i];
+      //
+      //  if (!body.render.visible)
+      //    continue;
+      //
+      //  // handle compound parts
+      //  for (k = 0; k < body.parts.length; k++) {
+      //    part = body.parts[k];
+      //    c.arc(part.position.x, part.position.y, 3, 0, 2 * Math.PI, false);
+      //    c.closePath();
+      //  }
+      //}
+      //
+      //if (options.wireframes) {
+      //  c.fillStyle = 'indianred';
+      //} else {
+      //  c.fillStyle = 'rgba(0,0,0,0.5)';
+      //}
+      //c.fill();
+      //
+      //c.beginPath();
+      //
+      //// render previous positions
+      //for (i = 0; i < bodies.length; i++) {
+      //  body = bodies[i];
+      //  if (body.render.visible) {
+      //    c.arc(body.positionPrev.x, body.positionPrev.y, 2, 0, 2 * Math.PI, false);
+      //    c.closePath();
+      //  }
+      //}
+      //
+      //c.fillStyle = 'rgba(255,165,0,0.8)';
+      //c.fill();
+    }
+
+    /**
+     * Draws body velocity
+     * @private
+     * @method bodyVelocity
+     * @param {render} render
+     * @param {body[]} bodies
+     * @param {RenderingContext} context
+     */
+    bodyVelocity(render, bodies, context) {
+      //var c = context;
+      //
+      //c.beginPath();
+      //
+      //for (var i = 0; i < bodies.length; i++) {
+      //  var body = bodies[i];
+      //
+      //  if (!body.render.visible)
+      //    continue;
+      //
+      //  c.moveTo(body.position.x, body.position.y);
+      //  c.lineTo(body.position.x + (body.position.x - body.positionPrev.x) * 2, body.position.y +
+      // (body.position.y - body.positionPrev.y) * 2); }  c.lineWidth = 3; c.strokeStyle = 'cornflowerblue';
+      // c.stroke();
+    }
+
+    /**
+     * Description
+     * @private
+     * @method collisions
+     * @param {render} render
+     * @param {pair[]} pairs
+     * @param {RenderingContext} context
+     */
+    collisions(render, pairs, context) {
+      //var c = context,
+      //    options = render.options,
+      //    pair,
+      //    collision,
+      //    corrected,
+      //    bodyA,
+      //    bodyB,
+      //    i,
+      //    j;
+      //
+      //c.beginPath();
+      //
+      //// render collision positions
+      //for (i = 0; i < pairs.length; i++) {
+      //  pair = pairs[i];
+      //
+      //  if (!pair.isActive)
+      //    continue;
+      //
+      //  collision = pair.collision;
+      //  for (j = 0; j < pair.activeContacts.length; j++) {
+      //    var contact = pair.activeContacts[j],
+      //        vertex = contact.vertex;
+      //    c.rect(vertex.x - 1.5, vertex.y - 1.5, 3.5, 3.5);
+      //  }
+      //}
+      //
+      //if (options.wireframes) {
+      //  c.fillStyle = 'rgba(255,255,255,0.7)';
+      //} else {
+      //  c.fillStyle = 'orange';
+      //}
+      //c.fill();
+      //
+      //c.beginPath();
+      //
+      //// render collision normals
+      //for (i = 0; i < pairs.length; i++) {
+      //  pair = pairs[i];
+      //
+      //  if (!pair.isActive)
+      //    continue;
+      //
+      //  collision = pair.collision;
+      //
+      //  if (pair.activeContacts.length > 0) {
+      //    var normalPosX = pair.activeContacts[0].vertex.x,
+      //        normalPosY = pair.activeContacts[0].vertex.y;
+      //
+      //    if (pair.activeContacts.length === 2) {
+      //      normalPosX = (pair.activeContacts[0].vertex.x + pair.activeContacts[1].vertex.x) / 2;
+      //      normalPosY = (pair.activeContacts[0].vertex.y + pair.activeContacts[1].vertex.y) / 2;
+      //    }
+      //
+      //    if (collision.bodyB === collision.supports[0].body || collision.bodyA.isStatic === true) {
+      //      c.moveTo(normalPosX - collision.normal.x * 8, normalPosY - collision.normal.y * 8);
+      //    } else {
+      //      c.moveTo(normalPosX + collision.normal.x * 8, normalPosY + collision.normal.y * 8);
+      //    }
+      //
+      //    c.lineTo(normalPosX, normalPosY);
+      //  }
+      //}
+      //
+      //if (options.wireframes) {
+      //  c.strokeStyle = 'rgba(255,165,0,0.7)';
+      //} else {
+      //  c.strokeStyle = 'orange';
+      //}
+      //
+      //c.lineWidth = 1;
+      //c.stroke();
+    }
+
+    /**
+     * Description
+     * @private
+     * @method separations
+     * @param {render} render
+     * @param {pair[]} pairs
+     * @param {RenderingContext} context
+     */
+    separations(render, pairs, context) {
+      //var c = context,
+      //    options = render.options,
+      //    pair,
+      //    collision,
+      //    corrected,
+      //    bodyA,
+      //    bodyB,
+      //    i,
+      //    j;
+      //
+      //c.beginPath();
+      //
+      //// render separations
+      //for (i = 0; i < pairs.length; i++) {
+      //  pair = pairs[i];
+      //
+      //  if (!pair.isActive)
+      //    continue;
+      //
+      //  collision = pair.collision;
+      //  bodyA = collision.bodyA;
+      //  bodyB = collision.bodyB;
+      //
+      //  var k = 1;
+      //
+      //  if (!bodyB.isStatic && !bodyA.isStatic) k = 0.5;
+      //  if (bodyB.isStatic) k = 0;
+      //
+      //  c.moveTo(bodyB.position.x, bodyB.position.y);
+      //  c.lineTo(bodyB.position.x - collision.penetration.x * k, bodyB.position.y - collision.penetration.y * k);
+      //
+      //  k = 1;
+      //
+      //  if (!bodyB.isStatic && !bodyA.isStatic) k = 0.5;
+      //  if (bodyA.isStatic) k = 0;
+      //
+      //  c.moveTo(bodyA.position.x, bodyA.position.y);
+      //  c.lineTo(bodyA.position.x + collision.penetration.x * k, bodyA.position.y + collision.penetration.y * k);
+      //}
+      //
+      //if (options.wireframes) {
+      //  c.strokeStyle = 'rgba(255,165,0,0.5)';
+      //} else {
+      //  c.strokeStyle = 'orange';
+      //}
+      //c.stroke();
+    }
+
+    /**
+     * Description
+     * @private
+     * @method grid
+     * @param {render} render
+     * @param {grid} grid
+     * @param {RenderingContext} context
+     */
+    grid(render, grid, context) {
+      //var c = context,
+      //    options = render.options;
+      //
+      //if (options.wireframes) {
+      //  c.strokeStyle = 'rgba(255,180,0,0.1)';
+      //} else {
+      //  c.strokeStyle = 'rgba(255,180,0,0.5)';
+      //}
+      //
+      //c.beginPath();
+      //
+      //var bucketKeys = Common.keys(grid.buckets);
+      //
+      //for (var i = 0; i < bucketKeys.length; i++) {
+      //  var bucketId = bucketKeys[i];
+      //
+      //  if (grid.buckets[bucketId].length < 2)
+      //    continue;
+      //
+      //  var region = bucketId.split(',');
+      //  c.rect(0.5 + parseInt(region[0], 10) * grid.bucketWidth,
+      //      0.5 + parseInt(region[1], 10) * grid.bucketHeight,
+      //      grid.bucketWidth,
+      //      grid.bucketHeight);
+      //}
+      //
+      //c.lineWidth = 1;
+      //c.stroke();
+    }
+
+    /**
+     * Draws body angle indicators and axes
+     * @private
+     * @method bodyAxes
+     * @param {render} render
+     * @param {body[]} bodies
+     * @param {RenderingContext} context
+     */
+    bodyAxes(body) {
+      if (!body.render.visible) {
+        return;
+      }
+      let mainGraphic,
+          bodyId = 'b-' + body.id,
+          parts = body.parts;
+
+      if (body.render.sprite && body.render.sprite.texture) {
+        mainGraphic = this.sprites[bodyId];
+      } else {
+        mainGraphic = this.primitives[bodyId];
+      }
+
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let graphic,
+              part = body.parts[j],
+              primitiveId = 'b-' + body.id,
+              strokeStyleIndicator = Common.colorToNumber('#FF3333'),
+              strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C');
+
+          if (body.render.sprite && body.render.sprite.texture) {
+            graphic = this.sprites[primitiveId];
+          } else {
+            graphic = this.primitives[primitiveId];
+          }
+
+          if (graphic) {
+            if (!graphic.angleIndicator) {
+              graphic.angleIndicator = new PIXI.Graphics();
+              mainGraphic.display.addChild(graphic.angleIndicator);
+            }
+            if (this.options.wireframes) {
+              graphic.angleIndicator.lineStyle(1, strokeStyleWireframeIndicator, 1);
+            } else {
+              graphic.angleIndicator.lineStyle(1, strokeStyleIndicator);
+            }
+            graphic.angleIndicator.clear();
+            graphic.angleIndicator.beginFill(0, 0);
+            if (this.options.showAxes) {
+              // render all axes
+              for (let k = 0; k < part.axes.length; k++) {
+                let axis = part.axes[k];
+                graphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
+                graphic.angleIndicator.lineTo(part.position.x + axis.x * 20, part.position.y + axis.y * 20);
+              }
+            } else {
+              for (let k = 0; k < part.axes.length; k++) {
+                // render a single axis indicator
+                graphic.angleIndicator.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
+                graphic.angleIndicator.lineTo(((part.vertices[0].x + part.vertices[part.vertices.length - 1].x) / 2 - body.position.x),
+                    ((part.vertices[0].y + part.vertices[part.vertices.length - 1].y) / 2 - body.position.y));
+              }
+            }
+            graphic.angleIndicator.endFill();
+          }
+        }
+      }
+    }
+
+    /**
+     * Draws body bounds
+     * @private
+     * @method bodyBounds
+     * @param {render} render
+     * @param {body[]} bodies
+     * @param {RenderingContext} context
      */
     bodyBounds(body) {
       if (!body.render.visible) {
         return;
       }
-      let graphic,
-          primitiveId = 'b-' + body.id;
+      let mainGraphic,
+          primitiveId = 'b-' + body.id,
+          parts = body.parts;
 
       if (body.render.sprite && body.render.sprite.texture) {
-        graphic = this.sprites[primitiveId];
+        mainGraphic = this.sprites[primitiveId];
       } else {
-        graphic = this.primitives[primitiveId];
+        mainGraphic = this.primitives[primitiveId];
       }
 
-      // initialise body sprite if not existing
-      if (graphic) {
-        if (!graphic.boundsBox) {
-          graphic.boundsBox = new PIXI.Graphics();
+      if (mainGraphic) {
+        for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
+          let graphic, strokeStyle,
+              part = parts[j],
+              partId = 'b-' + part.id;
+          if (part.render.sprite && part.render.sprite.texture) {
+            graphic = this.sprites[partId];
+          } else {
+            graphic = this.primitives[partId];
+          }
+          if (graphic) {
+            if (!graphic.boundsBox) {
+              graphic.boundsBox = new PIXI.Graphics();
+              mainGraphic.display.addChild(graphic.boundsBox);
+            }
+
+            if (this.options.wireframes) {
+              strokeStyle = 'rgba(255,255,255,0.08)';
+            } else {
+              strokeStyle = 'rgba(0,0,0,0.1)';
+            }
+            graphic.boundsBox.clear();
+            graphic.boundsBox.beginFill(0, 0);
+            graphic.boundsBox.lineStyle(1, Common.colorToNumber(strokeStyle), 1);
+            graphic.boundsBox.drawRect(
+                body.position.x - body.bounds.max.x,
+                body.position.y - body.bounds.max.y,
+                body.bounds.max.x - body.bounds.min.x,
+                body.bounds.max.y - body.bounds.min.y
+            );
+            graphic.boundsBox.endFill();
+          }
         }
-        graphic.boundsBox.clear();
-        graphic.boundsBox.beginFill(0, 0);
-        graphic.boundsBox.lineStyle(1, 0x0000FF, 1);
-        graphic.boundsBox.drawRect(
-            body.position.x - body.bounds.max.x,
-            body.position.y - body.bounds.max.y,
-            body.bounds.max.x - body.bounds.min.x,
-            body.bounds.max.y - body.bounds.min.y
-        );
-        graphic.boundsBox.endFill();
-        graphic.boundsBox.position.set(body.position);
-        graphic.display.addChild(graphic.boundsBox);
       }
     }
 
@@ -358,7 +768,7 @@
     run() {
       let _this = this;
       (function loop(time) {
-        _this.frameRequestId = requestAnimationFrame(loop);
+        _this.frameRequestId = _requestAnimationFrame(loop);
         _this.world(time);
       })();
     }
@@ -395,6 +805,16 @@
 
         this.currentBackground = background;
       }
+    }
+
+    /**
+     * Ends execution of `Render.run` on the given `render`,
+     * by canceling the animation frame request event loop.
+     * @method stop
+     * @param {render} render
+     */
+    stop(render) {
+      _cancelAnimationFrame(render.frameRequestId);
     }
 
     /**
@@ -569,75 +989,74 @@
   let _createBodyPrimitive = function(render, body) {
     let bodyRender = body.render,
         options = render.options,
-        primitive = new PIXI.Graphics(),
         fillStyle = Common.colorToNumber(bodyRender.fillStyle),
         strokeStyle = Common.colorToNumber(bodyRender.strokeStyle),
-        strokeStyleIndicator = Common.colorToNumber(bodyRender.strokeStyle),
         strokeStyleWireframe = Common.colorToNumber('#bbb'),
-        strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C'),
-        part;
+        mainGraphic = new PIXI.Graphics(),
+        partsContainer = new PIXI.Container();
+    mainGraphic.initialAngle = body.angle;
+    mainGraphic.display = new PIXI.Container();
+    mainGraphic.addChild(mainGraphic.display);
+    mainGraphic.addChild(partsContainer);
 
-    primitive.clear();
     // handle compound parts
     for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
-      part = body.parts[k];
-
+      let part = body.parts[k],
+          partGraphic = new PIXI.Graphics();
+      //partGraphic.initialAngle = part.angle;
+      //partGraphic.rotation = body.angle - mainGraphic.initialAngle;
       if (!options.wireframes) {
-        primitive.beginFill(fillStyle, 1);
-        primitive.lineStyle(bodyRender.lineWidth, strokeStyle, 1);
+        partGraphic.beginFill(fillStyle, 1);
+        partGraphic.lineStyle(bodyRender.lineWidth, strokeStyle, 1);
       } else {
-        primitive.beginFill(0, 0);
-        primitive.lineStyle(1, strokeStyleWireframe, 1);
+        partGraphic.beginFill(0, 0);
+        partGraphic.lineStyle(1, strokeStyleWireframe, 1);
       }
+      // part polygon
+      if (part.circleRadius) {
+        partGraphic.drawCircle(part.position.x - body.position.x, part.position.y - body.position.y, part.circleRadius);
+      } else {
+        partGraphic.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
 
-      primitive.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-      for (let j = 1; j < part.vertices.length; j++) {
-        primitive.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
-      }
-      primitive.lineTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-      primitive.endFill();
+        for (let j = 1; j < part.vertices.length; j++) {
+          if (!part.vertices[j - 1].isInternal || showInternalEdges) {
+            partGraphic.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
+          } else {
+            partGraphic.moveTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
+          }
 
-      // angle indicator
-      if (options.showAngleIndicator || options.showAxes) {
-        primitive.beginFill(0, 0);
-        if (options.wireframes) {
-          primitive.lineStyle(1, strokeStyleWireframeIndicator, 1);
-        } else {
-          primitive.lineStyle(1, strokeStyleIndicator);
+          if (part.vertices[j].isInternal && !showInternalEdges) {
+            partGraphic.moveTo(part.vertices[(j + 1) % part.vertices.length].x, part.vertices[(j + 1) % part.vertices.length].y);
+          }
         }
-        primitive.moveTo(part.position.x - body.position.x, part.position.y - body.position.y);
-        primitive.lineTo(((part.vertices[0].x + part.vertices[part.vertices.length - 1].x) / 2 - body.position.x),
-            ((part.vertices[0].y + part.vertices[part.vertices.length - 1].y) / 2 - body.position.y));
-        primitive.endFill();
+      }
+      partGraphic.endFill();
+
+      if (part.entity.eyes !== undefined) {
+        for (let i = 0; i < body.entity.eyes.length; i++) {
+          let eye = body.entity.eyes[i],
+              x = part.position.x - body.position.x,
+              y = part.position.y - body.position.y,
+              eyeStartX = x + part.circleRadius * Math.sin(part.angle + eye.angle),
+              eyeStartY = y + part.circleRadius * Math.cos(part.angle + eye.angle),
+              eyeEndX = x + eye.sensed.proximity * Math.sin(part.angle + eye.angle),
+              eyeEndY = y + eye.sensed.proximity * Math.cos(part.angle + eye.angle);
+          eye.v1 = Vector.create(eyeStartX, eyeStartY);
+          eye.v2 = Vector.create(eyeEndX, eyeEndY);
+
+          // Draw the agent's line of sights
+          eye.graphics.clear();
+          eye.graphics.beginFill(0, 0);
+          eye.graphics.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
+          eye.graphics.moveTo(eye.v1.x, eye.v1.y);
+          eye.graphics.lineTo(eye.v2.x, eye.v2.y);
+          eye.graphics.endFill();
+          partsContainer.addChild(eye.graphics);
+        }
       }
     }
 
-    if (body.entity.eyes !== undefined) {
-      for (let i = 0; i < body.entity.eyes.length; i++) {
-        let eye = body.entity.eyes[i],
-            x = part.position.x - body.position.x,
-            y = part.position.y - body.position.y,
-            eyeStartX = x + body.circleRadius * Math.sin(body.angle + eye.angle),
-            eyeStartY = y + body.circleRadius * Math.cos(body.angle + eye.angle),
-            eyeEndX = x + eye.sensed.proximity * Math.sin(body.angle + eye.angle),
-            eyeEndY = y + eye.sensed.proximity * Math.cos(body.angle + eye.angle);
-        eye.v1 = Vector.create(eyeStartX, eyeStartY);
-        eye.v2 = Vector.create(eyeEndX, eyeEndY);
-
-        // Draw the agent's line of sights
-        eye.graphics.clear();
-        eye.graphics.beginFill(0, 0);
-        eye.graphics.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
-        eye.graphics.moveTo(eye.v1.x, eye.v1.y);
-        eye.graphics.lineTo(eye.v2.x, eye.v2.y);
-        eye.graphics.endFill();
-        primitive.addChild(eye.graphics);
-      }
-    }
-    primitive.display = new PIXI.Container();
-    primitive.addChild(primitive.display);
-
-    return primitive;
+    return mainGraphic;
   };
 
   /**

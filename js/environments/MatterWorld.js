@@ -113,13 +113,13 @@
       this.engine = renderOpts.engine = Engine.create(engineOpts);
       this.render = new RenderPixi(renderOpts);
       this.runner = Engine.run(this.engine);
+      this.engine.metrics.timing = this.runner;
       this.engine.world.gravity = {x: 0, y: 0};
       this.mouseConstraint = MouseConstraint.create(this.engine, {
         element: this.render.canvas
       });
       this.render.mouse = this.mouseConstraint.mouse;
       this.render.run();
-      this.engine.metrics.timing = this.runner;
 
       this.addWalls();
       this.addAgents();
@@ -154,6 +154,11 @@
       }
     }
 
+    /**
+     * Set the viewport
+     * @param {number} x
+     * @param {number} y
+     */
     setViewport(x, y) {
       this.viewportCenter = {
         x: this.width * 0.5,
@@ -450,9 +455,11 @@
       // need to add mouse constraint back in after gui clear or load is pressed
       Events.on(this.gui, 'clear load', () => {
         // add a mouse controlled constraint
-        this.mouseConstraint = MouseConstraint.create(this.engine);
+        this.mouseConstraint = MouseConstraint.create(this.engine, {
+          element: this.render.canvas
+        });
         // pass mouse to renderer to enable showMousePosition
-        this.engine.render.mouse = this.mouseConstraint.mouse;
+        this.render.mouse = this.mouseConstraint.mouse;
         World.add(this.world, this.mouseConstraint);
       });
 
