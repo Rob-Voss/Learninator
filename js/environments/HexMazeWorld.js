@@ -22,9 +22,9 @@
             position: false
           },
           renderOpts = {
+            backgroundColor: 0xFFFFFF,
             antialiasing: false,
             autoResize: false,
-            backgroundColor: 0xFFFFFF,
             resizable: false,
             transparent: false,
             resolution: window.devicePixelRatio,
@@ -78,58 +78,6 @@
       super([], maze.walls, worldOpts, renderOpts);
 
       this.agents = [
-        new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
-            {
-              brainType: 'RL.TDAgent',
-              cheats: {id: true},
-              env: {
-                allowedActions: (s) => {
-                  return this.allowedActions(s);
-                },
-                getMaxNumActions: () => {
-                  return this.getMaxNumActions();
-                },
-                getNumStates: () => {
-                  return this.getNumStates();
-                },
-                nextStateDistribution: (s, a) => {
-                  return this.nextStateDistribution(s, a);
-                },
-                randomState: () => {
-                  return this.randomState();
-                },
-                reset: () => {
-                  return this.reset();
-                },
-                sampleNextState: (s, a) => {
-                  return this.sampleNextState(s, a);
-                },
-                startState: () => {
-                  return this.startState();
-                },
-                sToX: (s) => {
-                  return this.sToX(s);
-                },
-                sToY: (s) => {
-                  return this.sToY(s);
-                },
-                xyToS: (q, r) => {
-                  return this.xyToS(q, r);
-                }
-              },
-              numActions: this.grid.startCell.directions.length,
-              numEyes: 0,
-              numTypes: 0,
-              numProprioception: 0,
-              range: 0,
-              proximity: 0,
-              radius: 10,
-              collision: false,
-              interactive: false,
-              useSprite: false,
-              worker: false
-            }
-        ),
         new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
             {
               brainType: 'RL.TDAgent',
@@ -440,10 +388,10 @@
       };
 
       Agent.prototype.tick = () => {
+        var timeSinceLast = 0;
         if (this.sid === -1) {
           this.sid = setInterval(() => {
-            var timeSinceLast,
-                now = new Date().getTime() / 1000;
+            var now = new Date().getTime() / 1000;
 
             if (!this.pause) {
               timeSinceLast = now - this.lastTime;

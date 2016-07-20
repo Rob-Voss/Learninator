@@ -12,9 +12,9 @@
      */
     constructor() {
       let renderOpts = {
+            backgroundColor: 0xDDDDDD,
             antialiasing: true,
             autoResize: false,
-            backgroundColor: 0xDDDDDD,
             resizable: true,
             transparent: false,
             resolution: window.devicePixelRatio,
@@ -22,7 +22,6 @@
             height: 800
           },
           /**
-           *
            * @type {cheatsOpts}
            */
           cheats = {
@@ -35,12 +34,10 @@
             position: false
           },
           /**
-           *
            * @type {agentOpts}
            */
           agentOpts = {
             brainType: 'RL.DQNAgent',
-            worker: false,
             range: 90,
             proximity: 90,
             radius: 10,
@@ -51,20 +48,20 @@
             collision: true,
             interactive: false,
             useSprite: false,
+            worker: false,
             cheats: cheats
           },
           /**
-           *
            * @type {gridOpts}
            */
           gridOpts = {
             width: renderOpts.width,
             height: renderOpts.height,
             buffer: 0,
-            size: 2,
-            cellSize: 100,
+            size: 4,
+            cellSize: 80,
             cellSpacing: 0,
-            pointy: false,
+            pointy: true,
             useSprite: true,
             fill: false,
             cheats: cheats
@@ -72,15 +69,16 @@
           orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
           size = new Point(gridOpts.cellSize, gridOpts.cellSize),
           origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
+          //origin = new Point(0, 0),
           layout = new Layout(orientation, size, origin),
-          // cells = HexGrid.shapeRectangle(layout, gridOpts);
-          cells = HexGrid.shapeHexagon(layout, gridOpts);
-      // cells = HexGrid.shapeRing(0, 0, layout, gridOpts);
-      // cells = HexGrid.shapeParallelogram(-1, -2, 1, 1, layout, gridOpts);
-      // cells = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, layout, gridOpts);
-      // cells = HexGrid.shapeTriangle1(2, layout, gridOpts);
-      // cells = HexGrid.shapeTriangle2(2, layout, gridOpts);
-      let grid = new HexGrid(layout, cells, gridOpts),
+          cells = HexGrid.shapeRectangle(layout, gridOpts),
+          //cells = HexGrid.shapeHexagon(layout, gridOpts),
+          //cells = HexGrid.shapeRing(0, 0, layout, gridOpts),
+          //cells = HexGrid.shapeParallelogram(-1, -2, 1, 1, layout, gridOpts),
+          //cells = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, layout, gridOpts),
+          //cells = HexGrid.shapeTriangle1(2, layout, gridOpts),
+          //cells = HexGrid.shapeTriangle2(2, layout, gridOpts),
+          grid = new HexGrid(layout, cells, gridOpts),
           maze = new Maze(grid.init()),
           agents = [
             new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts),
@@ -106,8 +104,6 @@
           };
 
       super(agents, maze.walls, worldOpts, renderOpts);
-      // this.agents[0].load('zoo/wateragent.json');
-      // this.agents[1].load('zoo/wateragent.json');
 
       this.init();
 

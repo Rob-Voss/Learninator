@@ -28,8 +28,8 @@
           agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
       );
       this.v2 = new Vec(
-          this.v1.x + this.range * Math.sin(agent.angle + this.angle),
-          this.v1.y + this.range * Math.cos(agent.angle + this.angle)
+          agent.position.x + this.range * Math.sin(agent.angle + this.angle),
+          agent.position.y + this.range * Math.cos(agent.angle + this.angle)
       );
       this.sensed = {
         type: -1,
@@ -46,15 +46,16 @@
      * Draw the lines for the eyes
      */
     draw(agent) {
-      let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-          eyeEndY = agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle);
-
-      this.v1 = new Vec(eyeStartX, eyeStartY);
-      this.v2 = new Vec(eyeEndX, eyeEndY);
+      this.v1 = new Vec(
+          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
+          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+      );
+      this.v2 = new Vec(
+          agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+          agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
+      );
       this.graphics.clear();
-      this.graphics.moveTo(eyeStartX, eyeStartY);
+      this.graphics.moveTo(this.v1.x, this.v1.y);
       switch (this.sensed.type) {
         case 1:
           // It is noms
@@ -75,7 +76,7 @@
           this.graphics.lineStyle(1, 0x000000, 1);
           break;
       }
-      this.graphics.lineTo(eyeEndX, eyeEndY);
+      this.graphics.lineTo(this.v2.x, this.v2.y);
       this.graphics.endFill();
     }
 
@@ -83,13 +84,6 @@
      * Sense the surroundings
      */
     sense(agent) {
-      let eyeStartX = agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          eyeStartY = agent.position.y + agent.radius * Math.cos(agent.angle + this.angle),
-          eyeEndX = agent.position.x + this.range * Math.sin(agent.angle + this.angle),
-          eyeEndY = agent.position.y + this.range * Math.cos(agent.angle + this.angle);
-      this.v1 = new Vec(eyeStartX, eyeStartY);
-      this.v2 = new Vec(eyeEndX, eyeEndY);
-
       // Reset our eye data
       this.sensed = {
         type: -1,
@@ -125,6 +119,15 @@
           }
         }
       }
+
+      this.v1 = new Vec(
+          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
+          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+      );
+      this.v2 = new Vec(
+          agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+          agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
+      );
 
     }
   }
@@ -199,6 +202,22 @@
         this.actions.push(i);
       }
 
+      // The Agent's environment
+      this.env = Utility.getOpt(opts, 'env', {
+        getNumStates: () => this.numStates,
+        getMaxNumActions: () => this.numActions,
+        startState: () => 0
+      });
+
+      // The Agent's eyes
+      if (this.eyes === undefined) {
+        this.eyes = [];
+        for (let k = 0; k < this.numEyes; k++) {
+          let eye = new Eye(k * 0.21, this);
+          this.eyes.push(eye);
+        }
+      }
+
       // Set the brain options
       this.brainOpts = [];
       this.brainOpts.DQNAgent = Utility.getOpt(opts, 'specDQN', {
@@ -226,22 +245,6 @@
         smoothPolicyUpdate: true,
         beta: 0.1 // learning rate for smooth policy update
       });
-
-      // The Agent's environment
-      this.env = Utility.getOpt(opts, 'env', {
-        getNumStates: () => this.numStates,
-        getMaxNumActions: () => this.numActions,
-        startState: () => 0
-      });
-
-      // The Agent's eyes
-      if (this.eyes === undefined) {
-        this.eyes = [];
-        for (let k = 0; k < this.numEyes; k++) {
-          let eye = new Eye(k * 0.21, this);
-          this.eyes.push(eye);
-        }
-      }
 
       this.reset();
 
@@ -316,20 +319,6 @@
             break;
         }
       }
-    }
-
-    /**
-     * Draws it
-     * @return {Agent}
-     */
-    draw() {
-      super.draw();
-      // Loop through the eyes and check the walls and nearby entities
-      for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
-        this.eyes[ae].draw(this);
-      }
-
-      return this;
     }
 
     /**
@@ -521,7 +510,13 @@
         // actions on the environment
         this.learn();
       }
-      this.draw();
+
+      super.draw();
+
+      // Loop through the eyes and check the walls and nearby entities
+      for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
+        this.eyes[ae].draw(this);
+      }
 
       return this;
     }

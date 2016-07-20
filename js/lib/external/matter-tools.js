@@ -361,22 +361,24 @@
       physics.open();
 
       var render = datGui.addFolder('Render');
-      render.add(gui.render.options, 'wireframes');
-      render.add(gui.render.options, 'showDebug');
-      render.add(gui.render.options, 'showPositions');
+      render.add(gui.render.options, 'enabled');
+      render.add(gui.render.options, 'showAngleIndicator');
+      render.add(gui.render.options, 'showAxes');
       render.add(gui.render.options, 'showBroadphase');
       render.add(gui.render.options, 'showBounds');
-      render.add(gui.render.options, 'showVelocity');
-      render.add(gui.render.options, 'showCollisions');
-      render.add(gui.render.options, 'showSeparations');
-      render.add(gui.render.options, 'showAxes');
-      render.add(gui.render.options, 'showAngleIndicator');
-      render.add(gui.render.options, 'showSleeping');
-      render.add(gui.render.options, 'showIds');
-      render.add(gui.render.options, 'showVertexNumbers');
       render.add(gui.render.options, 'showConvexHulls');
+      render.add(gui.render.options, 'showCollisions');
+      render.add(gui.render.options, 'showDebug');
+      render.add(gui.render.options, 'showIds');
       render.add(gui.render.options, 'showInternalEdges');
-      render.add(gui.render.options, 'enabled');
+      render.add(gui.render.options, 'showMousePosition');
+      render.add(gui.render.options, 'showPositions');
+      render.add(gui.render.options, 'showSeparations');
+      render.add(gui.render.options, 'showShadows');
+      render.add(gui.render.options, 'showSleeping');
+      render.add(gui.render.options, 'showVertexNumbers');
+      render.add(gui.render.options, 'showVelocity');
+      render.add(gui.render.options, 'wireframes');
       render.open();
     };
 

@@ -14,7 +14,6 @@
      *
      * @param {number} x
      * @param {number} y
-     * @param {number} z
      * @param {gridOpts} opts
      * @return {CellShape}
      */
@@ -71,7 +70,7 @@
         .on('mouseover', (event) => {
             this.event = event;
             this.color = 0xFF0000;
-            this.alpha = 1;
+            this.alpha = 0.5;
             this.isOver = true;
             this.draw();
           })
@@ -131,7 +130,7 @@
         }
         this.bounds = this.graphics.getBounds();
 
-        if (this.reward !== null && this.value !== null) {
+        if (this.reward && this.value) {
           let rew = this.reward.toFixed(1),
             val = this.value.toFixed(2);
           if (this.rewardText === undefined) {
@@ -200,10 +199,6 @@
 
     add(a, b) {
       return super.add(a, b);
-    }
-
-    neighbor(cell, dir) {
-      return super.neighbor(cell, dir);
     }
 
     pathToOrigin() {

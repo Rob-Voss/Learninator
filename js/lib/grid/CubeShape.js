@@ -9,7 +9,6 @@
      * @param {number} x
      * @param {number} y
      * @param {number} z
-     * @param {Layout} layout
      * @return {Cube}
      */
     constructor(x, y, z) {
@@ -17,7 +16,7 @@
 
       return this;
     }
-  };
+  }
   global.CubeShape = CubeShape;
 
 })(this);

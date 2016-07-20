@@ -304,8 +304,7 @@
       let cells = [];
       for (let x = 0; x < opts.size; x++) {
         for (let y = 0; y < opts.size; y++) {
-          let cell = new Cell(x, y),
-              cellShape = new CellShape(x, y, opts);
+          let cellShape = new CellShape(x, y, opts);
           cells.push(cellShape);
         }
       }

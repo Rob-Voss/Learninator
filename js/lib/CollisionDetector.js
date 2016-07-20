@@ -31,7 +31,7 @@
      * @param {Entity} tar
      */
     this.check = function(tar) {
-      let self = this, region;
+      let self = this, region, cObj = false;
       tar.collisions = [];
 
       /**
@@ -39,8 +39,7 @@
        * @param {Entity} ent
        */
       function checkIt(ent) {
-        let cObj = {};
-        if (ent === tar) {
+        if (ent[1] === tar) {
           return;
         }
 
@@ -81,15 +80,15 @@
         case 'grid':
           if (tar.gridLocation) {
             if (tar.gridLocation.population !== undefined) {
-              for (let [key, ent] of tar.gridLocation.population.entries()) {
+              for (let [id, ent] of tar.gridLocation.population.entries()) {
                 checkIt(ent);
               }
             }
           }
           break;
         case 'brute':
-          for (let [key, ent] of this.population.entries()) {
-            checkIt(ent);
+          for (let [id, entity] of this.population.entries()) {
+            checkIt(entity);
           }
           break;
       }
@@ -243,16 +242,16 @@
      * @param {Node} aN
      */
     this.drawRegions = function(aN) {
-      let nodes = aN.getNodes();
+      let nodes = aN.getNodes(),
+          rect = new PIXI.Graphics();
       if (nodes) {
         for (let i = 0; i < nodes.length; i++) {
           this.drawRegions(nodes[i]);
         }
       }
 
-      let rect = new PIXI.Graphics();
       rect.clear();
-      rect.lineStyle(0.5, 0xFF0000, 1);
+      rect.lineStyle(0.5, 0xFF0000, 0.3);
       rect.drawRect(aN.corners[0].x, aN.corners[0].y, aN.width, aN.height);
       rect.endFill();
 
@@ -273,7 +272,7 @@
       this.tree.clear();
       this.nodes = [];
 
-      for (let entity of this.population.entries()) {
+      for (let [id, entity] of this.population.entries()) {
         this.nodes.push(entity);
       }
 
@@ -343,7 +342,7 @@
         cell.population = new Map();
       });
 
-      for (let entity of this.population.entries()) {
+      for (let [id, entity] of this.population.entries()) {
         let cell = this.grid.getGridLocation(entity);
         if (cell) {
           entity.gridLocation = cell;

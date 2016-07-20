@@ -2,9 +2,9 @@
   'use strict';
 
   const renderOpts = {
+        backgroundColor: 0xCCCCCC,
         antialiasing: false,
         autoResize: false,
-        backgroundColor: 0xCCCCCC,
         resizable: false,
         transparent: false,
         resolution: 1,//window.devicePixelRatio,
@@ -14,11 +14,11 @@
       },
       worldOpts = {
         collision: {
-          type: 'brute'
+          type: 'quad'
         },
         cheats: {
           brute: false,
-          quad: false,
+          quad: true,
           grid: false,
           walls: false
         },
@@ -58,9 +58,9 @@
         height: renderOpts.height,
         cheats: cheats,
         buffer: 0,
-        cellSize: 200,
+        cellSize: 100,
         cellSpacing: 0,
-        size: 3,
+        size: 6,
         pointy: false,
         fill: true
       };
@@ -86,7 +86,7 @@
       worldOpts.maze = maze;
       super(agents, maze.walls, worldOpts, renderOpts);
       // this.agents[0].load('zoo/wateragent.json');
-      this.agents[1].load('zoo/wateragent.json');
+      //this.agents[1].load('zoo/wateragent.json');
 
       if (document.getElementById('flotreward')) {
         this.rewards = new FlotGraph(this.agents);

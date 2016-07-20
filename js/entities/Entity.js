@@ -126,11 +126,20 @@
             this.position.x + this.radius * Math.sin(this.position.direction),
             this.position.y + this.radius * Math.cos(this.position.direction)
         );
-        this.anglePointer = new PIXI.Graphics();
-        this.anglePointer.lineStyle(2, 0x000000, 2);
-        this.anglePointer.moveTo(this.position.x, this.position.y);
-        this.anglePointer.lineTo(dirV.x, dirV.y);
-        this.cheatsContainer.addChild(this.anglePointer);
+        this.graphics.lineStyle(2, 0x000000, 2);
+        this.graphics.beginFill();
+        this.graphics.moveTo(this.position.x, this.position.y);
+        this.graphics.lineTo(dirV.x, dirV.y);
+        this.graphics.endFill();
+      }
+
+      if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
+        let h = this.bounds.height,
+            w = this.bounds.width;
+        this.graphics.lineStyle(1, 0xFF0000, 1);
+        this.graphics.beginFill();
+        this.graphics.drawRect(this.bounds.x, this.bounds.y, w, h);
+        this.graphics.endFill();
       }
 
       if (this.cheats.id && this.idText === undefined) {
@@ -179,16 +188,6 @@
         this.cheatsContainer.addChild(this.gridText);
       }
 
-      if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
-        let h = this.bounds.height,
-            w = this.bounds.width;
-        this.boundsRect = new PIXI.Graphics();
-        this.boundsRect.lineStyle(1, 0xFF0000, 1);
-        this.boundsRect.drawRect(this.bounds.x, this.bounds.y, w, h);
-        this.boundsRect.endFill();
-        this.cheatsContainer.addChild(this.boundsRect);
-      }
-
       return this;
     }
 
@@ -198,22 +197,26 @@
      */
     updateCheats() {
       this.addCheats();
+
       if (this.cheats.angle) {
         let dirV = new Vec(
             this.position.x + this.radius * Math.sin(this.position.direction),
             this.position.y + this.radius * Math.cos(this.position.direction)
         );
-        this.anglePointer.clear();
-        this.anglePointer.lineStyle(2, 0x000000, 2);
-        this.anglePointer.moveTo(this.position.x, this.position.y);
-        this.anglePointer.lineTo(dirV.x, dirV.y);
-      } else {
-        if (this.anglePointer !== undefined) {
-          this.cheatsContainer.removeChildAt(
-              this.cheatsContainer.getChildIndex(this.anglePointer)
-          );
-          this.anglePointer = undefined;
-        }
+        this.graphics.lineStyle(2, 0x000000, 2);
+        this.graphics.beginFill();
+        this.graphics.moveTo(this.position.x, this.position.y);
+        this.graphics.lineTo(dirV.x, dirV.y);
+        this.graphics.endFill();
+      }
+
+      if (this.cheats.bounds) {
+        let h = this.bounds.height,
+            w = this.bounds.width;
+        this.graphics.lineStyle(1, 0xFF0000, 1);
+        this.graphics.beginFill();
+        this.graphics.drawRect(this.bounds.x, this.bounds.y, w, h);
+        this.graphics.endFill();
       }
 
       if (this.cheats.id) {
@@ -298,21 +301,6 @@
           let idx = this.cheatsContainer.getChildIndex(this.gridText);
           this.cheatsContainer.removeChildAt(idx);
           this.gridText = undefined;
-        }
-      }
-
-      if (this.cheats.bounds) {
-        let h = this.bounds.height,
-            w = this.bounds.width;
-        this.boundsRect.clear();
-        this.boundsRect.lineStyle(1, 0xFF0000, 1);
-        this.boundsRect.drawRect(this.bounds.x, this.bounds.y, w, h);
-        this.boundsRect.endFill();
-      } else {
-        if (this.boundsRect !== undefined) {
-          let idx = this.cheatsContainer.getChildIndex(this.boundsRect);
-          this.cheatsContainer.removeChildAt(idx);
-          this.boundsRect = undefined;
         }
       }
 

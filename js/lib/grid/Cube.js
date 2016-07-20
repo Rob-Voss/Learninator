@@ -13,7 +13,6 @@
      * @param {number} x
      * @param {number} y
      * @param {number} z
-     * @param {Layout} layout
      * @return {Cube}
      */
     constructor(x, y, z) {
@@ -56,7 +55,7 @@
     toArray() {
       return [this.x, this.y, this.z];
     }
-  };
+  }
   global.Cube = Cube;
 
 })(this);

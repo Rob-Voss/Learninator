@@ -9,7 +9,9 @@
       Bounds = Matter.Bounds,
       Common = Matter.Common,
       Composite = Matter.Composite,
+      Constraint = Matter.Constraint,
       Events = Matter.Events,
+      Grid = Matter.Grid,
       MouseConstraint = Matter.MouseConstraint,
       Mouse = Matter.Mouse,
       Vector = Matter.Vector,
@@ -31,14 +33,23 @@
 
       /**
        *
-       * @type {{enabled: boolean, enableSleeping: boolean, constraintIterations: number, positionIterations: number, velocityIterations: number, metrics: {extended: boolean, narrowDetections: number, narrowphaseTests: number, narrowReuse: number, narrowReuseCount: number, midphaseTests: number, broadphaseTests: number, narrowEff: number, midEff: number, broadEff: number, collisions: number, buckets: number, bodies: number, pairs: number}, timing: {timeScale: number}}}
+       * @type {{enabled: boolean, enableSleeping: boolean, constraintIterations: number, positionIterations: number,
+       *     velocityIterations: number, metrics: {extended: boolean, narrowDetections: number, narrowphaseTests:
+       *     number, narrowReuse: number, narrowReuseCount: number, midphaseTests: number, broadphaseTests: number,
+       *     narrowEff: number, midEff: number, broadEff: number, collisions: number, buckets: number, bodies: number,
+       *     pairs: number}, timing: {timeScale: number}}}
        */
       engineOpts = {
-        enabled: true,
-        enableSleeping: false,
+        positionIterations: 6,
+        velocityIterations: 4,
         constraintIterations: 2,
-        positionIterations: 10,
-        velocityIterations: 10,
+        enableSleeping: false,
+        timing: {
+          timeScale: 1
+        },
+        broadphase: {
+          controller: Grid
+        },
         metrics: {
           extended: true,
           narrowDetections: 0,
@@ -54,20 +65,53 @@
           buckets: 0,
           bodies: 0,
           pairs: 0
-        },
-        timing: {
-          timeScale: 1
         }
       },
+      engine = Engine.create(engineOpts),
+      pixiOptions = {
+        antialiasing: false,
+        autoResize: false,
+        background: 0xFFFFFF,
+        resolution: window.devicePixelRatio,
+        resizable: false,
+        transparent: false,
+        noWebGL: true,
+        width: 600,
+        height: 600
+      },
+      renderer = new PIXI.autoDetectRenderer(pixiOptions.width, pixiOptions.height, pixiOptions),
       /**
        *
-       * @type {{element: Element, options: {background: string, pixelRatio: number, enabled: boolean, hasBounds: boolean, showAngleIndicator: boolean, showAxes: boolean, showSleeping: boolean, showBounds: boolean, showBroadphase: boolean, showCollisions: boolean, showConvexHulls: boolean, showDebug: boolean, showIds: boolean, showInternalEdges: boolean, showMousePosition: boolean, showPositions: boolean, showShadows: boolean, showSeparations: boolean, showVelocity: boolean, showVertexNumbers: boolean, wireframes: boolean, wireframeBackground: string}}}
+       * @type {{element: Element, options: {background: string, pixelRatio: number, enabled: boolean, hasBounds:
+       *     boolean, showAngleIndicator: boolean, showAxes: boolean, showSleeping: boolean, showBounds: boolean,
+       *     showBroadphase: boolean, showCollisions: boolean, showConvexHulls: boolean, showDebug: boolean, showIds:
+       *     boolean, showInternalEdges: boolean, showMousePosition: boolean, showPositions: boolean, showShadows:
+       *     boolean, showSeparations: boolean, showVelocity: boolean, showVertexNumbers: boolean, wireframes: boolean,
+       *     wireframeBackground: string}}}
        */
       renderOpts = {
+        bounds: {
+          min: {
+            x: 0,
+            y: 0
+          },
+          max: {
+            x: pixiOptions.width,
+            y: pixiOptions.height
+          }
+        },
+        canvas: renderer.view,
+        context: renderer.context,
+        stage: new PIXI.Container(),
+        primitiveContainer: new PIXI.Container(),
+        spriteContainer: new PIXI.Container(),
+        displayContainer: new PIXI.Container(),
         element: container,
-        width: 600,
-        height: 600,
+        engine: engine,
+        renderer: renderer,
         options: {
+          width: renderer.width,
+          height: renderer.height,
           background: '#585858',
           pixelRatio: 1,
           enabled: true,
@@ -113,22 +157,23 @@
      * @return {MatterWorld}
      */
     constructor() {
+      Common.extend(this, renderOpts);
       this.clock = 0;
       this.agents = [];
-      this.width = renderOpts.width;
-      this.height = renderOpts.height;
-      this.engine = renderOpts.engine = Engine.create(engineOpts);
-      this.render = new RenderPixi(renderOpts);
+      this.width = this.options.width;
+      this.height = this.options.height;
       this.runner = Engine.run(this.engine);
-      this.engine.metrics.timing = this.runner;
+      this.render = new MatterPixi(this);
       this.engine.world.gravity = {x: 0, y: 0};
+      this.engine.metrics.timing = this.runner;
       this.mouseConstraint = MouseConstraint.create(this.engine, {
-        element: this.render.canvas
+        element: this.canvas
       });
       this.render.mouse = this.mouseConstraint.mouse;
-      this.render.run();
 
       this.addWalls();
+
+      this.createPerson(200, 200);
       this.addAgents();
       this.addEntities(30);
       this.setEngineEvents();
@@ -159,6 +204,153 @@
         this.initControls();
         Gui.update(this.gui, this.gui.datGui);
       }
+
+      this.render.run();
+
+      return this;
+    }
+
+    createPerson(x, y) {
+      var currGroup = -1;
+      var headOptions = {label: 'head', friction: 1, frictionAir: .05},
+          chestOptions = {label: 'chest', friction: 1, frictionAir: .05, collisionFilter: {group: currGroup - 1}},
+          armOptions = {label: 'arm', friction: 1, frictionAir: .03, collisionFilter: {group: currGroup}},
+          legOptions = {label: 'leg', friction: 1, frictionAir: .03, collisionFilter: {group: currGroup - 1}},
+
+          head = Bodies.circle(x, y - 70, 30, headOptions),
+          chest = Bodies.rectangle(x, y, 60, 80, chestOptions),
+          rightUpperArm = Bodies.rectangle(x + 40, y - 20, 20, 40, armOptions),
+          rightLowerArm = Bodies.rectangle(x + 40, y + 20, 20, 60, armOptions),
+          leftUpperArm = Bodies.rectangle(x - 40, y - 20, 20, 40, armOptions),
+          leftLowerArm = Bodies.rectangle(x - 40, y + 20, 20, 60, armOptions),
+          leftUpperLeg = Bodies.rectangle(x - 20, y + 60, 20, 40, legOptions),
+          leftLowerLeg = Bodies.rectangle(x - 20, y + 100, 20, 60, legOptions),
+          rightUpperLeg = Bodies.rectangle(x + 20, y + 60, 20, 40, legOptions),
+          rightLowerLeg = Bodies.rectangle(x + 20, y + 100, 20, 60, legOptions),
+          //
+          //personBody = Body.create({
+          //  parts: [head, chest, leftUpperArm, rightUpperArm, leftUpperLeg, rightUpperLeg, leftLowerArm, rightLowerArm, leftLowerLeg, rightLowerLeg],
+          //  collisionFilter: {group: currGroup - 1},
+          //}),
+
+          headConstraint = Constraint.create({
+            label: 'headConstraint',
+            bodyA: head,
+            bodyB: chest,
+            pointA: {x: 0, y: 30},
+            pointB: {x: 0, y: -40},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          chestToRightUpperArm = Constraint.create({
+            label: 'chestToRightUpperArm',
+            bodyA: chest,
+            bodyB: rightUpperArm,
+            pointA: {x: 25, y: -35},
+            pointB: {x: 0, y: -15},
+            angularStiffness: 0.7,
+            stiffness: 0.7,
+          }),
+
+          chestToLeftUpperArm = Constraint.create({
+            label: 'chestToLeftUpperArm',
+            bodyA: chest,
+            bodyB: leftUpperArm,
+            pointA: {x: -25, y: -35},
+            pointB: {x: 0, y: -15},
+            angularStiffness: 0.7,
+            stiffness: 0.7,
+          }),
+
+          upperToLowerRightArm = Constraint.create({
+            label: 'upperToLowerRightArm',
+            bodyA: rightUpperArm,
+            bodyB: rightLowerArm,
+            pointA: {x: 0, y: 15},
+            pointB: {x: 0, y: -25},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          upperToLowerLeftArm = Constraint.create({
+            label: 'upperToLowerLeftArm',
+            bodyA: leftUpperArm,
+            bodyB: leftLowerArm,
+            pointA: {x: 0, y: 15},
+            pointB: {x: 0, y: -25},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          chestToUpperLeftLeg = Constraint.create({
+            label: 'chestToUpperLeftLeg',
+            bodyA: chest,
+            bodyB: leftUpperLeg,
+            pointA: {x: -20, y: 35},
+            pointB: {x: 0, y: -15},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          chestToUpperRightLeg = Constraint.create({
+            label: 'chestToUpperRightLeg',
+            bodyA: chest,
+            bodyB: rightUpperLeg,
+            pointA: {x: 20, y: 35},
+            pointB: {x: 0, y: -15},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          upperToLowerLeftLeg = Constraint.create({
+            label: 'upperToLowerLeftLeg',
+            bodyA: leftUpperLeg,
+            bodyB: leftLowerLeg,
+            pointA: {x: 0, y: 15},
+            pointB: {x: 0, y: -25},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          }),
+
+          upperToLowerRightLeg = Constraint.create({
+            label: 'upperToLowerRightLeg',
+            bodyA: rightUpperLeg,
+            bodyB: rightLowerLeg,
+            pointA: {x: 0, y: 15},
+            pointB: {x: 0, y: -25},
+            angularStiffness: 0.7,
+            stiffness: 0.7
+          });
+
+      var person = Composite.create({
+        bodies: [
+          head,
+          chest,
+          rightUpperArm,
+          rightLowerArm,
+          leftUpperArm,
+          leftLowerArm,
+          leftUpperLeg,
+          leftLowerLeg,
+          rightUpperLeg,
+          rightLowerLeg
+        ],
+        constraints: [
+          headConstraint,
+          chestToLeftUpperArm,
+          chestToRightUpperArm,
+          chestToUpperRightLeg,
+          chestToUpperLeftLeg,
+          upperToLowerLeftArm,
+          upperToLowerRightArm,
+          upperToLowerLeftLeg,
+          upperToLowerRightLeg
+        ]
+      });
+      currGroup -= 2;
+      //this.addMatter([person]);
+      return World.add(this.engine.world, [person]);
     }
 
     /**
@@ -200,13 +392,13 @@
           this.boundsScale.y += scaleFactor;
 
           // scale the render bounds
-          this.render.bounds.max.x = this.render.bounds.min.x + this.render.options.width * this.boundsScale.x;
-          this.render.bounds.max.y = this.render.bounds.min.y + this.render.options.height * this.boundsScale.y;
+          this.render.bounds.max.x = this.render.bounds.min.x + this.width * this.boundsScale.x;
+          this.render.bounds.max.y = this.render.bounds.min.y + this.height * this.boundsScale.y;
 
           // translate so zoom is from centre of view
           this.translate = {
-            x: this.render.options.width * scaleFactor * -0.5,
-            y: this.render.options.height * scaleFactor * -0.5
+            x: this.width * scaleFactor * -0.5,
+            y: this.height * scaleFactor * -0.5
           };
 
           Bounds.translate(this.render.bounds, this.translate);
@@ -469,7 +661,7 @@
         });
         // pass mouse to renderer to enable showMousePosition
         this.render.mouse = this.mouseConstraint.mouse;
-        World.add(this.world, this.mouseConstraint);
+        World.add(this.engine.world, this.mouseConstraint);
       });
 
       // need to rebind mouse on render change
@@ -483,12 +675,12 @@
 
         Events.on(this.inspector, 'import', () => {
           this.mouseConstraint = MouseConstraint.create(this.engine);
-          World.add(this.world, this.mouseConstraint);
+          World.add(this.engine.world, this.mouseConstraint);
         });
 
         Events.on(this.inspector, 'play', () => {
           this.mouseConstraint = MouseConstraint.create(this.engine);
-          World.add(this.world, this.mouseConstraint);
+          World.add(this.engine.world, this.mouseConstraint);
         });
 
         Events.on(this.inspector, 'selectStart', () => {
@@ -558,7 +750,7 @@
         let bodies = Composite.allBodies(this.engine.world);
         for (let i = 0; i < bodies.length; i++) {
           let body = bodies[i];
-          if (body.entity.cleanUp) {
+          if (body.entity !== undefined && body.entity.cleanUp) {
             World.remove(this.engine.world, body);
             this.render.removeBody(body);
           }
@@ -580,25 +772,20 @@
       Events.on(this.runner, 'tick', (event) => {
         let bodies = Composite.allBodies(this.engine.world);
         for (let i = 0; i < bodies.length; i++) {
-          if (!bodies[i].isStatic) {
+          if (!bodies[i].isStatic && bodies[i].entity !== undefined) {
             bodies[i].entity.tick(bodies);
           }
         }
       });
 
       Events.on(this.runner, 'beforeUpdate', (event) => {
-        //let bodies = Composite.allBodies(this.engine.world);
-        //for (let i = 0; i < bodies.length; i++) {
-        //  if (!bodies[i].isStatic) {
-        //    this.checkBounds(bodies[i]);
-        //  }
-        //}
+
       });
 
       Events.on(this.runner, 'afterUpdate', (event) => {
         let bodies = Composite.allBodies(this.engine.world);
         for (let i = 0; i < bodies.length; i++) {
-          if (!bodies[i].isStatic) {
+          if (!bodies[i].isStatic && bodies[i].entity !== undefined) {
             this.checkBounds(bodies[i]);
           }
         }

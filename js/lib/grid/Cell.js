@@ -94,6 +94,16 @@
       return this;
     }
 
+    /**
+     * Get the neighbor
+     * @param {Cell|object} cell
+     * @param {number} dir
+     * @return {Cell}
+     */
+    neighbor(cell, dir) {
+      return Cell.add(cell, Cell.cellDirections[dir]);
+    }
+
     /* Static Functions */
 
     /**

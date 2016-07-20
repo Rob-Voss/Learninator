@@ -277,7 +277,9 @@
        * @return {Node}
        */
       retrieve: function(selector, callback, instance) {
-        return this.root.retrieve(selector, callback, instance);
+        let node = this.root.retrieve(selector, callback, instance);
+
+        return node;
       },
       /**
        * Clear the QuadTree

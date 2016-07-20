@@ -173,7 +173,7 @@
           if (this.rewardText === undefined) {
             this.rewardText = new PIXI.Text(rew !== 0.0 ? 'R' + rew : '', {
               font: '8px Arial',
-              fill: rew < 0.0 ? '#000000' : '#00FF00',
+              fill: rew < 0.0 ? '#000000' : '#000000',
               align: 'center'
             });
             this.rewardText.anchor = new PIXI.Point(0.5, 0.5);
@@ -187,7 +187,7 @@
           if (this.valueText === undefined) {
             this.valueText = new PIXI.Text(val !== 0.00 ? val : '', {
               font: '8px Arial',
-              fill: val === 0.0 ? '#000000' : '#00FF00',
+              fill: val === 0.0 ? '#000000' : '#000000',
               align: 'center'
             });
             this.valueText.anchor = new PIXI.Point(0.5, 0.5);

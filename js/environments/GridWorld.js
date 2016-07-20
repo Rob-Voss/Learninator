@@ -25,7 +25,7 @@
                     autoResize: false,
                     resizable: false,
                     transparent: false,
-                    resolution: 1,//window.devicePixelRatio,
+                    resolution: window.devicePixelRatio,
                     noWebGL: false,
                     width: 600,
                     height: 600

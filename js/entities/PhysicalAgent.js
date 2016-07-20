@@ -24,7 +24,6 @@
       this.agentRadius = agent.radius;
       this.range = agent.range;
       this.position = agent.body.position;
-      this.graphics = new PIXI.Graphics();
       this.v1 = Vector.create(
           this.position.x + this.agentRadius * Math.sin(this.agentAngle + this.angle),
           this.position.y + this.agentRadius * Math.cos(this.agentAngle + this.angle)
@@ -266,7 +265,7 @@
         for (let ic = 0; ic < collisions.length; ic++) {
           let collision = collisions[ic], vecI;
           if (collision.bodyA.id !== this.body.id) {
-            if (collision.body.entity.type === 0) {
+            if (collision.body.entity !== undefined && collision.body.entity.type === 0) {
               let entity = collision.body.entity,
                   p1 = eye.v1, p2 = eye.v2,
                   l1 = Vector.create(entity.x, entity.y),
@@ -280,9 +279,11 @@
                   eye.sensed.position = vecI;
                 }
               }
+              eye.sensed.type = collision.body.entity.type;
             } else {
               let vecI = Vector.create(collision.body.position.x, collision.body.position.y);
               eye.sensed.position = vecI;
+              eye.sensed.type = (collision.body.entity !== undefined) ? collision.body.entity.type : -1;
             }
 
             let dx = this.body.position.x - eye.sensed.position.x,
@@ -291,7 +292,6 @@
             if (dist > this.range) {
               //console.log(dist);
             }
-            eye.sensed.type = collision.body.entity.type;
             eye.sensed.proximity = dist;
             eye.sensed.velocity.x = collision.body.velocity.x;
             eye.sensed.velocity.y = collision.body.velocity.y;

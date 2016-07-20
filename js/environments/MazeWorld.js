@@ -22,12 +22,12 @@
             position: false
           },
           renderOpts = {
+            backgroundColor: 0xFFFFFF,
             antialiasing: false,
             autoResize: false,
-            backgroundColor: 0xFFFFFF,
             resizable: false,
             transparent: false,
-            resolution: 1,//window.devicePixelRatio,
+            resolution: window.devicePixelRatio,
             noWebGL: false,
             width: 600,
             height: 600
@@ -37,11 +37,11 @@
             height: renderOpts.height,
             buffer: 0,
             size: 10,
-            cellSize: 40,
+            cellSize: 60,
             cellSpacing: 0,
             fill: true,
             closed: false,
-            useSprite: true,
+            useSprite: false,
             cheats: cheats
           },
           grid = new Grid(null, null, gridOpts),
@@ -114,7 +114,7 @@
               radius: 10,
               collision: false,
               interactive: false,
-              useSprite: true,
+              useSprite: false,
               worker: false
             }
         )
@@ -161,7 +161,9 @@
                 agent.nStepsHistory.push(agent.nStepsCounter);
                 agent.nStepsCounter = 0;
               } else {
-                agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+                let x = this.sToX(this.state),
+                    y = this.sToY(this.state);
+                agent.gridLocation = this.grid.getCellAt(x, y);
                 agent.graphics.position.x = agent.position.x = agent.gridLocation.center.x;
                 agent.graphics.position.y = agent.position.y = agent.gridLocation.center.y;
               }
