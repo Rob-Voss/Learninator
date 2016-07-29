@@ -85,10 +85,11 @@
       let typeName = this.typeName.replace(' ', ''),
           sprite = (this.type === 4) ? 'explorer' : typeName;
       if (this.useSprite) {
-        this.graphics = new PIXI.Sprite.fromFrame(sprite + '.png');
+        this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame(sprite + '.png'));
+        this.graphics.anchor.set(0.5, 0.5);
+        this.graphics.scale.set(1, 1);
         this.graphics.position.x = this.position.x;
         this.graphics.position.y = this.position.y;
-        this.graphics.anchor.set(0.5, 0.5);
       } else {
         this.graphics = new PIXI.Graphics();
       }
@@ -487,6 +488,7 @@
       if (this.dragging) {
         let newPosition = this.data.getLocalPosition(event.target.parent);
         this.position.set(newPosition.x, newPosition.y);
+        this.draw();
       }
 
       return this;
@@ -502,7 +504,7 @@
       this.alpha = 1;
       this.dragging = false;
       let newPosition = this.data.getLocalPosition(event.target.parent);
-      this.graphics.position.set(newPosition.x, newPosition.y);
+      this.position.set(newPosition.x, newPosition.y);
 
       // set the interaction data to null
       this.data = null;

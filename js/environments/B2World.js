@@ -172,6 +172,9 @@
       this.pause = false;
       this.fixedTimeStep = 1 / 60;
       this.maxSubSteps = 10;
+      this.bodies = [];
+      this.actors = [];
+      this.entityLayer = [];
 
       this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
       this.renderer.backgroundColor = 0xCCCCCC;
@@ -204,7 +207,8 @@
       this.world = new b2World(new b2Vec2(0, 10), true);
       this.world.SetDebugDraw(new b2Pixi(this.graphics, new b2Vec2(0, 0)));
 
-      this.test();
+      //this.test();
+      this.addBox({x: 10, y: 10}, {w: 20, h: 20});
 
       // Animation loop
       var animate = (timeMilliseconds) => {
@@ -233,7 +237,6 @@
      * @return {B2World}
      */
     addBodies(bodies) {
-      this.entityLayer = [];
       for (let i = 0; i < bodies.length; i++) {
         let entity = bodies[i];
         entity.body.addShape(entity.shape);
@@ -266,6 +269,26 @@
       }
 
       return this;
+    }
+
+    addBox(pos, size) {
+      var width = size.w / 100 / 2,
+          height = size.h / 100 / 2,
+          bodyDef = new b2BodyDef();
+      bodyDef.type = b2Body.b2_dynamicBody;
+      bodyDef.position.Set(pos.x, pos.y);
+      var fd = new box2d.b2FixtureDef();
+      fd.shape = new box2d.b2CircleShape(10);
+      fd.density = 1.0;
+      var body = this.world.CreateBody(bodyDef);
+      body.CreateFixture(fd);
+
+      var box = new PIXI.Graphics();
+      this.stage.addChild(box);
+      box.drawCircle(pos.x, pos.y, 10);
+      this.entityLayer.push({graphics: box, body: body});
+      //this.bodies.push(body);
+      //this.actors.push(box);
     }
 
     /**
@@ -359,6 +382,7 @@
         body.CreateFixture(fd);
 
         ajd.AddBody(body);
+        this.entityLayer.push(body);
       }
 
       ajd.frquencyHz = 10.0;

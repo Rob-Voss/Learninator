@@ -91,14 +91,8 @@
        */
       renderOpts = {
         bounds: {
-          min: {
-            x: 0,
-            y: 0
-          },
-          max: {
-            x: pixiOptions.width,
-            y: pixiOptions.height
-          }
+          min: {x: 0, y: 0},
+          max: {x: pixiOptions.width, y: pixiOptions.height}
         },
         canvas: renderer.view,
         context: renderer.context,
@@ -135,7 +129,28 @@
           wireframes: false,
           wireframeBackground: '#222'
         }
-      };
+      },
+      /**
+       * @type {gridOpts}
+       */
+      gridOpts = {
+        width: renderOpts.options.width,
+        height: renderOpts.options.height,
+        buffer: 0,
+        size: 4,
+        cellSize: 80,
+        cellSpacing: 0,
+        pointy: true,
+        useSprite: false,
+        fill: false
+      },
+      orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+      size = new Point(gridOpts.cellSize, gridOpts.cellSize),
+      origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
+      layout = new Layout(orientation, size, origin),
+      cells = HexGrid.shapeRectangle(layout, gridOpts),
+      grid = new HexGrid(layout, cells, gridOpts),
+      maze = new Maze(grid.init());
 
   // MatterTools aliases
   if (window.MatterTools) {
@@ -171,11 +186,11 @@
       });
       this.render.mouse = this.mouseConstraint.mouse;
 
+      //this.addPerson(200, 200);
       this.addWalls();
-
-      this.createPerson(200, 200);
       this.addAgents();
-      this.addEntities(30);
+      //this.addPlatforms(10, 30, 150);
+      this.addEntities(100);
       this.setEngineEvents();
       this.setRunnerEvents();
       this.setWorldEvents();
@@ -205,18 +220,221 @@
         Gui.update(this.gui, this.gui.datGui);
       }
 
+      for (let id in maze.walls) {
+        let wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall', shape: 'convex'},
+            wall = maze.walls[id],
+            wallShape = Bodies.polygon(wall.v1.x, wall.v1.y, 6, 10, wallOpts);
+
+        Body.set(wallShape, 'entity', {
+          type: 0,
+          x: wall.v1.x,
+          y: wall.v1.y,
+          width: wall.width,
+          height: wall.height
+        });
+        this.addMatter([wallShape]);
+
+      }
       this.render.run();
 
       return this;
     }
 
-    createPerson(x, y) {
-      var currGroup = -1;
-      var headOptions = {label: 'head', friction: 1, frictionAir: .05},
-          chestOptions = {label: 'chest', friction: 1, frictionAir: .05, collisionFilter: {group: currGroup - 1}},
-          armOptions = {label: 'arm', friction: 1, frictionAir: .03, collisionFilter: {group: currGroup}},
-          legOptions = {label: 'leg', friction: 1, frictionAir: .03, collisionFilter: {group: currGroup - 1}},
+    /**
+     * Add new agents
+     * @parameter {number} number
+     * @return {MatterWorld}
+     */
+    addAgents(number = 1) {
+      // Populating the world
+      for (let k = 0; k < number; k++) {
+        let agentOpts = {
+              worker: false,
+              numEyes: 30,
+              numTypes: 5,
+              numActions: 4,
+              numProprioception: 2,
+              range: 120,
+              proximity: 120
+            },
+            entityOpt = {
+              shape: 'circle',
+              position: {
+                x: 400,
+                y: 400
+              },
+              render: {
+                strokeStyle: Common.shadeColor(blueColor, -20),
+                fillStyle: blueColor
+              },
+              friction: 0,
+              frictionAir: Utility.Maths.randf(0.0, 0.9),
+              frictionStatic: 0,
+              restitution: 0,
+              density: Utility.Maths.randf(0.001, 0.01)
+            },
+            body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
+            entity = new PhysicalAgent(body, agentOpts);
 
+        Body.set(body, 'entity', entity);
+        this.addMatter([body]);
+
+        this.agents.push(entity);
+      }
+
+      return this;
+    }
+
+    /**
+     * Add new entities
+     * @parameter {number} number
+     * @return {MatterWorld}
+     */
+    addEntities(number = 1) {
+      let bodies = [];
+      // Populating the world
+      for (let k = 0; k < number; k++) {
+        let body, entity,
+            entityOpt = {
+              position: {
+                x: Utility.Maths.randi(10, this.width - 10),
+                y: Utility.Maths.randi(10, this.height - 10)
+              },
+              shape: 'circle',
+              friction: 0.1,
+              frictionAir: Utility.Maths.randf(0.0, 0.9),
+              frictionStatic: 0.5,
+              restitution: 1,
+              density: Utility.Maths.randf(0.005, 0.01)
+            },
+            type = Utility.Maths.randi(1, 3);
+        if (type === 1) {
+          entityOpt.render = {
+            strokeStyle: Common.shadeColor(greenColor, -20),
+            fillStyle: Common.shadeColor(greenColor, -20)
+          };
+          body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
+        } else {
+          entityOpt.shape = 'convex';
+          entityOpt.chamfer = {
+            radius: 30
+          };
+          entityOpt.render = {
+            strokeStyle: Common.shadeColor(redColor, -20),
+            fillStyle: Common.shadeColor(redColor, -20)
+          };
+          body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
+        }
+        entity = new PhysicalEntity(type, body);
+
+        Body.set(body, 'entity', entity);
+        bodies.push(body);
+      }
+      this.addMatter(bodies);
+
+      return this;
+    }
+
+    /**
+     * Add Bodies and Graphics to the scene
+     * @param {Array} items
+     * @return {MatterWorld}
+     */
+    addMatter(items) {
+      World.add(this.engine.world, items);
+
+      return this;
+    }
+
+    /**
+     * Add walls to the world
+     * @return {MatterWorld}
+     */
+    addWalls() {
+      // Ground
+      let buffer = 5,
+          wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall', shape: 'convex'},
+          left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height - (buffer * 4), wallOpts),
+          right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height - (buffer * 4), wallOpts),
+          top = Bodies.rectangle(this.width / 2, buffer, this.width - (buffer * 4), buffer, wallOpts),
+          bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width - (buffer * 4), buffer, wallOpts);
+
+      Body.set(left, 'entity', {
+        type: 0,
+        x: left.position.x,
+        y: buffer,
+        width: buffer,
+        height: this.height - (buffer * 2)
+      });
+      Body.set(top, 'entity', {
+        type: 0,
+        x: buffer,
+        y: top.position.y,
+        width: this.width - (buffer * 2),
+        height: buffer
+      });
+      Body.set(right, 'entity', {
+        type: 0,
+        x: right.position.x,
+        y: buffer,
+        width: buffer,
+        height: this.height - (buffer * 2)
+      });
+      Body.set(bottom, 'entity', {
+        type: 0,
+        x: buffer,
+        y: bottom.position.y,
+        width: this.width - (buffer * 2),
+        height: buffer
+      });
+
+      this.addMatter([left, top, right, bottom]);
+
+      return this;
+    }
+
+    /**
+     *
+     * @param x
+     * @param y
+     * @returns {MatterWorld}
+     */
+    addPerson(x, y) {
+      var currGroup = -1;
+      var headOptions = {
+            label: 'head',
+            friction: 1,
+            frictionAir: .05,
+            collisionFilter: {
+              group: currGroup
+            }
+          },
+          chestOptions = {
+            label: 'chest',
+            friction: 1,
+            frictionAir: .05,
+            collisionFilter: {
+              group: currGroup - 1
+            }
+          },
+          armOptions = {
+            type: 'capsule',
+            label: 'arm',
+            friction: 1,
+            frictionAir: .03,
+            collisionFilter: {
+              group: currGroup
+            }
+          },
+          legOptions = {
+            type: 'capsule',
+            label: 'leg',
+            friction: 1,
+            frictionAir: .03,
+            collisionFilter: {
+              group: currGroup - 1
+            }
+          },
           head = Bodies.circle(x, y - 70, 30, headOptions),
           chest = Bodies.rectangle(x, y, 60, 80, chestOptions),
           rightUpperArm = Bodies.rectangle(x + 40, y - 20, 20, 40, armOptions),
@@ -227,11 +445,10 @@
           leftLowerLeg = Bodies.rectangle(x - 20, y + 100, 20, 60, legOptions),
           rightUpperLeg = Bodies.rectangle(x + 20, y + 60, 20, 40, legOptions),
           rightLowerLeg = Bodies.rectangle(x + 20, y + 100, 20, 60, legOptions),
-          //
+
           //personBody = Body.create({
-          //  parts: [head, chest, leftUpperArm, rightUpperArm, leftUpperLeg, rightUpperLeg, leftLowerArm, rightLowerArm, leftLowerLeg, rightLowerLeg],
-          //  collisionFilter: {group: currGroup - 1},
-          //}),
+          //  parts: [head, chest, leftUpperArm, rightUpperArm, leftUpperLeg, rightUpperLeg, leftLowerArm,
+          // rightLowerArm, leftLowerLeg, rightLowerLeg], collisionFilter: {group: currGroup - 1}, }),
 
           headConstraint = Constraint.create({
             label: 'headConstraint',
@@ -242,7 +459,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           chestToRightUpperArm = Constraint.create({
             label: 'chestToRightUpperArm',
             bodyA: chest,
@@ -252,7 +468,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7,
           }),
-
           chestToLeftUpperArm = Constraint.create({
             label: 'chestToLeftUpperArm',
             bodyA: chest,
@@ -262,7 +477,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7,
           }),
-
           upperToLowerRightArm = Constraint.create({
             label: 'upperToLowerRightArm',
             bodyA: rightUpperArm,
@@ -272,7 +486,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           upperToLowerLeftArm = Constraint.create({
             label: 'upperToLowerLeftArm',
             bodyA: leftUpperArm,
@@ -282,7 +495,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           chestToUpperLeftLeg = Constraint.create({
             label: 'chestToUpperLeftLeg',
             bodyA: chest,
@@ -292,7 +504,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           chestToUpperRightLeg = Constraint.create({
             label: 'chestToUpperRightLeg',
             bodyA: chest,
@@ -302,7 +513,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           upperToLowerLeftLeg = Constraint.create({
             label: 'upperToLowerLeftLeg',
             bodyA: leftUpperLeg,
@@ -312,7 +522,6 @@
             angularStiffness: 0.7,
             stiffness: 0.7
           }),
-
           upperToLowerRightLeg = Constraint.create({
             label: 'upperToLowerRightLeg',
             bodyA: rightUpperLeg,
@@ -348,9 +557,38 @@
           upperToLowerRightLeg
         ]
       });
-      currGroup -= 2;
-      //this.addMatter([person]);
-      return World.add(this.engine.world, [person]);
+
+      return this.addMatter([person]);
+      //return World.add(this.engine.world, [person]);
+    }
+
+    /**
+     *
+     * @param {Number} number
+     * @param {Number} minWidth
+     * @param {Number} maxWidth
+     * @param {Number} spacing
+     * @returns {MatterWorld}
+     */
+    addPlatforms(number, minWidth, maxWidth, spacing) {
+      // Ground
+      var n = Math.floor((this.height - 20) / number),
+          rows = Array(n),
+          platOpts = {isStatic: true, render: {visible: true}, label: 'Platform', shape: 'convex'},
+          plats = [];
+      for (let i = 0; i < number; i++) {
+        let w = Utility.Maths.randi(minWidth, maxWidth),
+            h = 5,
+            x = Utility.Maths.randi(10, this.width - w),
+            y = Utility.Maths.randi(10, this.height - h),
+            plat = Bodies.rectangle(x, y, w, h, platOpts);
+        plats.push(plat);
+        Body.set(plat, 'entity', {type: 0, x: x - w, y: y - h, width: w, height: h});
+      }
+
+      this.addMatter(plats);
+
+      return this;
     }
 
     /**
@@ -446,166 +684,6 @@
           Mouse.setOffset(this.render.mouse, this.render.bounds.min);
         }
       });
-    }
-
-    /**
-     * Add new agents
-     * @parameter {number} number
-     * @return {MatterWorld}
-     */
-    addAgents(number = 1) {
-      // Populating the world
-      for (let k = 0; k < number; k++) {
-        let agentOpts = {
-              worker: false,
-              numEyes: 30,
-              numTypes: 5,
-              numActions: 4,
-              numProprioception: 2,
-              range: 120,
-              proximity: 120
-            },
-            entityOpt = {
-              position: {
-                x: 400,
-                y: 400
-              },
-              render: {
-                strokeStyle: Common.shadeColor(blueColor, -20),
-                fillStyle: blueColor
-              },
-              //friction: 0.1,
-              //frictionAir: 0.01,
-              //frictionStatic: 0.5,
-              //restitution: 0,
-              //density: 0.001
-              friction: 0,
-              frictionAir: Utility.Maths.randf(0.0, 0.9),
-              frictionStatic: 0,
-              restitution: 0,
-              density: Utility.Maths.randf(0.001, 0.01)
-            },
-            body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
-            entity = new PhysicalAgent(body, agentOpts);
-
-        Body.set(body, 'entity', entity);
-        this.addMatter([body]);
-
-        this.agents.push(entity);
-      }
-
-      return this;
-    }
-
-    /**
-     * Add new entities
-     * @parameter {number} number
-     * @return {MatterWorld}
-     */
-    addEntities(number = 1) {
-      let bodies = [];
-      // Populating the world
-      for (let k = 0; k < number; k++) {
-        let body, entity,
-            entityOpt = {
-              position: {
-                x: Utility.Maths.randi(10, this.width - 10),
-                y: Utility.Maths.randi(10, this.height - 10)
-              },
-              //friction: 0.1,
-              //frictionAir: 0.01,
-              //frictionStatic: 0.5,
-              //restitution: 0,
-              //density: 0.001
-              friction: 0.1,
-              frictionAir: Utility.Maths.randf(0.0, 0.9),
-              frictionStatic: 0.5,
-              restitution: 1,
-              density: Utility.Maths.randf(0.005, 0.01)
-            },
-            type = Utility.Maths.randi(1, 3);
-        if (type === 1) {
-          entityOpt.render = {
-            strokeStyle: Common.shadeColor(greenColor, -20),
-            fillStyle: Common.shadeColor(greenColor, -20)
-          };
-          body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
-        } else {
-          entityOpt.chamfer = {
-            radius: 30
-          };
-          entityOpt.render = {
-            strokeStyle: Common.shadeColor(redColor, -20),
-            fillStyle: Common.shadeColor(redColor, -20)
-          };
-          body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
-        }
-        entity = new PhysicalEntity(type, body);
-
-        Body.set(body, 'entity', entity);
-        bodies.push(body);
-      }
-      this.addMatter(bodies);
-
-      return this;
-    }
-
-    /**
-     * Add Bodies and Graphics to the scene
-     * @param {Array} items
-     * @return {MatterWorld}
-     */
-    addMatter(items) {
-      World.add(this.engine.world, items);
-
-      return this;
-    }
-
-    /**
-     * Add walls to the world
-     * @return {MatterWorld}
-     */
-    addWalls() {
-      // Ground
-      let buffer = 5,
-          wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall'},
-          left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height - (buffer * 2), wallOpts),
-          top = Bodies.rectangle(this.width / 2, buffer, this.width - (buffer * 2), buffer, wallOpts),
-          right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height - (buffer * 2), wallOpts),
-          bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width - (buffer * 2), buffer, wallOpts);
-
-      Body.set(left, 'entity', {
-        type: 0,
-        x: left.position.x,
-        y: buffer,
-        width: buffer,
-        height: this.height - (buffer * 2)
-      });
-      Body.set(top, 'entity', {
-        type: 0,
-        x: buffer,
-        y: top.position.y,
-        width: this.width - (buffer * 2),
-        height: buffer
-      });
-      Body.set(right, 'entity', {
-        type: 0,
-        x: right.position.x,
-        y: buffer,
-        width: buffer,
-        height: this.height - (buffer * 2)
-      });
-      Body.set(bottom, 'entity', {
-        type: 0,
-        x: buffer,
-        y: bottom.position.y,
-        width: this.width - (buffer * 2),
-        height: buffer
-      });
-
-      this.addMatter([left, top, right, bottom]);
-
-      return this;
     }
 
     /**

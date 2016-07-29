@@ -118,6 +118,7 @@
             useSprite: false,
             sprite: 'stone_wall.png'
           });
+          cell.wallContainer.addChild(cell.walls[dir].graphics);
         }
         this.cellsContainer.addChild(cell.graphics);
       });

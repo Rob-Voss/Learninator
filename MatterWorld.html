@@ -27,6 +27,13 @@
 <script src="js/lib/graphing/FlotGraph.js"></script>
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
+<script src="js/entities/Wall.js"></script>
+<script src="js/lib/grid/Cell.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/grid/Hex.js"></script>
+<script src="js/lib/grid/HexShape.js"></script>
+<script src="js/lib/grid/HexGrid.js"></script>
+<script src="js/lib/Maze.js"></script>
 <script src="js/lib/MatterPixi.js"></script>
 
 <script src="js/entities/PhysicalEntity.js"></script>
@@ -37,7 +44,9 @@
     var world = world || {};
 
     function start() {
-        world = new MatterWorld();
+        PIXI.loader.add("img/hexagon.json").load(() => {
+            world = new MatterWorld();
+        });
 //        world.setViewport(100, 100);
     }
 </script>

@@ -43,20 +43,20 @@
 
       // Add a container to hold our display cheats
       this.cheatsContainer = new PIXI.Container();
+      this.wallContainer = new PIXI.Container();
       this.color = HexShape.colorForHex(this.q, this.r, this.s);
       this.alpha = 1;
       if (this.useSprite) {
-        this.graphics = new PIXI.Sprite.fromFrame('dirt_0' + Utility.Maths.randi(1, 9) + '.png');
+        this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame('dirt_0' + Utility.Maths.randi(1, 9) + '.png'));
+        this.graphics.anchor.set(0.5, 0.5);
+        this.graphics.scale.set(1, 1);
         this.graphics.position.x = this.center.x;
         this.graphics.position.y = this.center.y;
-        this.graphics.width = this.width;
-        this.graphics.height = this.height;
         this.graphics.alpha = this.alpha;
         if (!this.pointy) {
           this.graphics.rotation = 0.523599;
         }
         this.bounds = this.graphics.getBounds();
-        this.graphics.anchor.set(0.5, 0.5);
       } else {
         this.graphics = new PIXI.Graphics();
       }

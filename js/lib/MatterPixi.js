@@ -117,64 +117,54 @@
 
       // Loop through all the parts
       for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
-        let part = body.parts[k],
+        let pGfx,
+            part = body.parts[k],
             partId = 'b-' + part.id,
-            partGraphic,
             lineWidth = part.render.lineWidth,
             fillStyle = Common.colorToNumber(part.render.fillStyle),
             strokeStyle = Common.colorToNumber(part.render.strokeStyle),
-            strokeStyleWireframe = Common.colorToNumber('#bbb');
+            strokeStyleWireframe = Common.colorToNumber('#bbb'),
+            styleSettings = {
+              alpha: 1,
+              lineWidth: lineWidth,
+              fillColor: (this.options.wireframes) ? 0 : fillStyle,
+              lineColor: (this.options.wireframes) ? strokeStyleWireframe : strokeStyle
+            },
+            x = part.position.x - body.position.x,
+            y = part.position.y - body.position.y;
         if (!part.render.visible) {
           continue;
         }
+
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
           // Create it if it doesn't exist in cache
-          if (!partGraphic) {
+          if (!pGfx) {
             _createBodySprite(this, part);
-            partGraphic = this.sprites[partId];
+            pGfx = this.sprites[partId];
           }
-          partGraphic.scale.x = body.render.sprite.xScale || 1;
-          partGraphic.scale.y = body.render.sprite.yScale || 1;
+          pGfx.scale.x = body.render.sprite.xScale || 1;
+          pGfx.scale.y = body.render.sprite.yScale || 1;
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
           // Create it if it doesn't exist in cache
-          if (!partGraphic) {
+          if (!pGfx) {
             _createBodyPrimitive(this, part);
-            partGraphic = this.primitives[partId];
+            pGfx = this.primitives[partId];
           }
-
-          partGraphic.clear();
-          if (!this.options.wireframes) {
-            partGraphic.beginFill(fillStyle, 1);
-            partGraphic.lineStyle(lineWidth, strokeStyle, 1);
-          } else {
-            partGraphic.beginFill(0, 0);
-            partGraphic.lineStyle(lineWidth, strokeStyleWireframe, 1);
-          }
-
-          if (part.circleRadius) {
+          if (part.shape === 'circle') {
             // If it's a circle
-            partGraphic.drawCircle(part.position.x - body.position.x, part.position.y - body.position.y, part.circleRadius);
-          } else {
-            // Or if it's a polygon
-            partGraphic.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-            for (let j = 1; j < part.vertices.length; j++) {
-              if (!part.vertices[j - 1].isInternal || showInternalEdges) {
-                partGraphic.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
-              } else {
-                partGraphic.moveTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
-              }
-
-              if (part.vertices[j].isInternal && !showInternalEdges) {
-                partGraphic.moveTo(part.vertices[(j + 1) % part.vertices.length].x, part.vertices[(j + 1) % part.vertices.length].y);
-              }
-            }
+            _drawCircle(pGfx, x, y, part.circleRadius, styleSettings);
+          } else if (part.shape === 'capsule') {
+            // If it's a capsule
+            _drawCapsule(pGfx, x, y, 1.6, 40, 10, styleSettings);
+          } else if (part.shape === 'convex') {
+            // If it's a convex shape
+            _drawConvex(pGfx, part, part.vertices, styleSettings);
           }
-          partGraphic.endFill();
         }
-        partGraphic.position.x = part.position.x;
-        partGraphic.position.y = part.position.y;
+        pGfx.position.x = part.position.x;
+        pGfx.position.y = part.position.y;
 
         if (part.entity !== undefined && part.entity.eyes !== undefined) {
           for (let i = 0; i < part.entity.eyes.length; i++) {
@@ -189,11 +179,11 @@
             eye.v2 = Vector.create(eyeEndX, eyeEndY);
 
             // Draw the agent's line of sights
-            partGraphic.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
-            partGraphic.beginFill();
-            partGraphic.moveTo(eye.v1.x, eye.v1.y);
-            partGraphic.lineTo(eye.v2.x, eye.v2.y);
-            partGraphic.endFill();
+            pGfx.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
+            pGfx.beginFill();
+            pGfx.moveTo(eye.v1.x, eye.v1.y);
+            pGfx.lineTo(eye.v2.x, eye.v2.y);
+            pGfx.endFill();
           }
         }
       }
@@ -212,25 +202,25 @@
       }
 
       for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-        let partGraphic,
+        let pGfx,
             part = parts[j],
             partId = 'b-' + part.id,
             strokeStyleIndicator = Common.colorToNumber('#FF3333'),
             strokeStyleWireframeIndicator = Common.colorToNumber('#CD5C5C');
 
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
         }
-        if (partGraphic) {
+        if (pGfx) {
           if (this.options.showAxes) {
             if (this.options.wireframes) {
-              partGraphic.lineStyle(1, strokeStyleWireframeIndicator, 0.7);
+              pGfx.lineStyle(1, strokeStyleWireframeIndicator, 0.7);
             } else {
-              partGraphic.lineStyle(1, strokeStyleIndicator, 1);
+              pGfx.lineStyle(1, strokeStyleIndicator, 1);
             }
-            partGraphic.beginFill();
+            pGfx.beginFill();
             // Render all axes
             for (let k = 0; k < part.axes.length; k++) {
               let axis = part.axes[k],
@@ -238,27 +228,27 @@
                   y = part.position.y - body.position.y,
                   tX = x + axis.x * 20,
                   tY = y + axis.y * 20;
-              partGraphic.moveTo(x, y);
-              partGraphic.lineTo(tX, tY);
+              pGfx.moveTo(x, y);
+              pGfx.lineTo(tX, tY);
             }
-            partGraphic.endFill();
+            pGfx.endFill();
           } else {
             if (this.options.wireframes) {
-              partGraphic.lineStyle(1, strokeStyleWireframeIndicator, 1);
+              pGfx.lineStyle(1, strokeStyleWireframeIndicator, 1);
             } else {
-              partGraphic.lineStyle(1, strokeStyleIndicator);
+              pGfx.lineStyle(1, strokeStyleIndicator);
             }
-            partGraphic.beginFill();
+            pGfx.beginFill();
             for (let k = 0; k < part.axes.length; k++) {
               // render a single axis indicator
               let x = part.position.x - body.position.x,
                   y = part.position.y - body.position.y,
                   tX = ((x + part.vertices[part.vertices.length - 1].x - body.position.x) / 2),
                   tY = ((y + part.vertices[part.vertices.length - 1].y - body.position.y) / 2);
-              partGraphic.moveTo(x, y);
-              partGraphic.lineTo(tX, tY);
+              pGfx.moveTo(x, y);
+              pGfx.lineTo(tX, tY);
             }
-            partGraphic.endFill();
+            pGfx.endFill();
           }
         }
       }
@@ -277,28 +267,28 @@
       }
 
       for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-        let partGraphic,
+        let pGfx,
             part = parts[j],
             partId = 'b-' + part.id;
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
         }
-        if (partGraphic) {
+        if (pGfx) {
           if (this.options.wireframes) {
-            partGraphic.lineStyle(1, Common.colorToNumber('rgba(255,255,255)'), 0.8);
+            pGfx.lineStyle(1, Common.colorToNumber('rgba(255,255,255)'), 0.8);
           } else {
-            partGraphic.lineStyle(1, Common.colorToNumber('rgba(0,0,0)'), 0.8);
+            pGfx.lineStyle(1, Common.colorToNumber('rgba(0,0,0)'), 0.8);
           }
-          partGraphic.beginFill(0, 0);
-          partGraphic.drawRect(
+          pGfx.beginFill(0, 0);
+          pGfx.drawRect(
               body.position.x - body.bounds.max.x,
               body.position.y - body.bounds.max.y,
               body.bounds.max.x - body.bounds.min.x,
               body.bounds.max.y - body.bounds.min.y
           );
-          partGraphic.endFill();
+          pGfx.endFill();
         }
       }
     }
@@ -314,18 +304,18 @@
       }
 
       for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-        let partGraphic,
+        let pGfx,
             part = parts[j],
             partId = 'b-' + part.id,
             textOpts = {font: '10px Arial', fill: '#FFFFFF', align: 'center'};
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
         }
-        if (partGraphic) {
-          partGraphic.removeChildren();
-          partGraphic.addChild(new PIXI.Text(body.id, textOpts));
+        if (pGfx) {
+          pGfx.removeChildren();
+          pGfx.addChild(new PIXI.Text(body.id, textOpts));
         }
       }
     }
@@ -343,7 +333,7 @@
       }
 
       for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-        let partGraphic,
+        let pGfx,
             part = parts[j],
             partId = 'b-' + part.id,
             x = part.position.x - body.position.x,
@@ -351,24 +341,24 @@
             pX = part.positionPrev.x - body.position.x,
             pY = part.positionPrev.y - body.position.y;
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
         }
-        if (partGraphic) {
-          partGraphic.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.8);
-          partGraphic.drawCircle(pX, pY, 2);
+        if (pGfx) {
+          pGfx.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.8);
+          pGfx.drawCircle(pX, pY, 2);
           //partGraphic.arc(pX, pY, 2, 0, 2 * Math.PI, false);
-          partGraphic.endFill();
+          pGfx.endFill();
 
           if (this.options.wireframes) {
-            partGraphic.beginFill(0xB0171F, 0.1);
+            pGfx.beginFill(0xB0171F, 0.1);
           } else {
-            partGraphic.beginFill(0x000000, 0.5);
+            pGfx.beginFill(0x000000, 0.5);
           }
-          partGraphic.drawCircle(x, y, 3);
+          pGfx.drawCircle(x, y, 3);
           //partGraphic.arc(x, y, 3, 0, 2 * Math.PI, false);
-          partGraphic.endFill();
+          pGfx.endFill();
         }
       }
     }
@@ -386,24 +376,24 @@
       }
 
       for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-        let partGraphic,
+        let pGfx,
             part = parts[j],
             partId = 'b-' + part.id;
         if (part.render.sprite && part.render.sprite.texture) {
-          partGraphic = this.sprites[partId];
+          pGfx = this.sprites[partId];
         } else {
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
         }
-        if (partGraphic) {
+        if (pGfx) {
           let x = part.position.x - body.position.x,
               y = part.position.y - body.position.y,
               px = x + (part.positionPrev.x - body.position.x),
               py = y + (part.positionPrev.y - body.position.y);
-          partGraphic.lineStyle(1, 0x6495ED, 1);
-          partGraphic.beginFill();
-          partGraphic.moveTo(x, y);
-          partGraphic.lineTo(px * 2, py * 2);
-          partGraphic.endFill();
+          pGfx.lineStyle(1, 0x6495ED, 1);
+          pGfx.beginFill();
+          pGfx.moveTo(x, y);
+          pGfx.lineTo(px * 2, py * 2);
+          pGfx.endFill();
         }
       }
     }
@@ -462,17 +452,17 @@
         for (let j = 0; j < pair.activeContacts.length; j++) {
           let contact = pair.activeContacts[j],
               vertex = contact.vertex,
-              c = new PIXI.Graphics();
+              cGfx = new PIXI.Graphics();
 
-          c.clear();
+          cGfx.clear();
           if (this.options.wireframes) {
-            c.beginFill(0xFFFFFF, 0.7);
+            cGfx.beginFill(0xFFFFFF, 0.7);
           } else {
-            c.beginFill(0xFFA500, 1);
+            cGfx.beginFill(0xFFA500, 1);
           }
-          c.drawRect(vertex.x - 1.5, vertex.y - 1.5, 3.5, 3.5);
-          c.endFill();
-          this.displayContainer.addChild(c);
+          cGfx.drawRect(vertex.x - 1.5, vertex.y - 1.5, 3.5, 3.5);
+          cGfx.endFill();
+          this.displayContainer.addChild(cGfx);
         }
       }
 
@@ -480,18 +470,18 @@
       for (let i = 0; i < pairs.length; i++) {
         let pair = pairs[i],
             collision = pair.collision,
-            c = new PIXI.Graphics();
+            cGfx = new PIXI.Graphics();
 
         if (!pair.isActive) {
           continue;
         }
 
-        c.clear();
-        c.beginFill();
+        cGfx.clear();
+        cGfx.beginFill();
         if (this.options.wireframes) {
-          c.lineStyle(1, Common.colorToNumber('rgba(255,165,0)'), 0.7);
+          cGfx.lineStyle(1, Common.colorToNumber('rgba(255,165,0)'), 0.7);
         } else {
-          c.lineStyle(1, 0xFFA500, 1);
+          cGfx.lineStyle(1, 0xFFA500, 1);
         }
 
         if (pair.activeContacts.length > 0) {
@@ -504,15 +494,15 @@
           }
 
           if (collision.bodyB === collision.supports[0].body || collision.bodyA.isStatic === true) {
-            c.moveTo(normalPosX - collision.normal.x * 8, normalPosY - collision.normal.y * 8);
+            cGfx.moveTo(normalPosX - collision.normal.x * 8, normalPosY - collision.normal.y * 8);
           } else {
-            c.moveTo(normalPosX + collision.normal.x * 8, normalPosY + collision.normal.y * 8);
+            cGfx.moveTo(normalPosX + collision.normal.x * 8, normalPosY + collision.normal.y * 8);
           }
 
-          c.lineTo(normalPosX, normalPosY);
+          cGfx.lineTo(normalPosX, normalPosY);
         }
-        c.endFill();
-        this.displayContainer.addChild(c);
+        cGfx.endFill();
+        this.displayContainer.addChild(cGfx);
       }
     }
 
@@ -528,35 +518,35 @@
           pointB = constraint.pointB,
           constraintRender = constraint.render,
           partId = 'c-' + constraint.id,
-          partGraphic = this.primitives[partId];
+          pGfx = this.primitives[partId];
 
       // initialise constraint primitive if not existing
-      if (!partGraphic) {
-        partGraphic = this.primitives[partId] = new PIXI.Graphics();
+      if (!pGfx) {
+        pGfx = this.primitives[partId] = new PIXI.Graphics();
       }
       // don't render if constraint does not have two end points
       if (!constraintRender.visible || !constraint.pointA || !constraint.pointB) {
-        partGraphic.clear();
+        pGfx.clear();
         return;
       }
 
       // render the constraint on every update, since they can change dynamically
-      partGraphic.clear();
-      partGraphic.beginFill(0, 0);
-      partGraphic.lineStyle(constraintRender.lineWidth, Common.colorToNumber(constraintRender.strokeStyle), 1);
+      pGfx.clear();
+      pGfx.beginFill(0, 0);
+      pGfx.lineStyle(constraintRender.lineWidth, Common.colorToNumber(constraintRender.strokeStyle), 1);
       if (bodyA) {
-        partGraphic.moveTo(bodyA.position.x + pointA.x, bodyA.position.y + pointA.y);
+        pGfx.moveTo(bodyA.position.x + pointA.x, bodyA.position.y + pointA.y);
       } else {
-        partGraphic.moveTo(pointA.x, pointA.y);
+        pGfx.moveTo(pointA.x, pointA.y);
       }
       if (bodyB) {
-        partGraphic.lineTo(bodyB.position.x + pointB.x, bodyB.position.y + pointB.y);
+        pGfx.lineTo(bodyB.position.x + pointB.x, bodyB.position.y + pointB.y);
       } else {
-        partGraphic.lineTo(pointB.x, pointB.y);
+        pGfx.lineTo(pointB.x, pointB.y);
       }
-      partGraphic.endFill();
+      pGfx.endFill();
 
-      this.displayContainer.addChild(partGraphic);
+      this.displayContainer.addChild(pGfx);
     }
 
     /**
@@ -565,15 +555,15 @@
      * @method debug
      */
     debug() {
-      let c = this.primitives['debug'],
+      let dbgTxt = this.primitives['debug'],
           engine = this.engine,
           world = this.engine.world,
           metrics = this.engine.metrics,
           bodies = Composite.allBodies(world),
           space = "    \n",
           textOpts = {font: '10px Arial', fill: '#FFFFFF', align: 'left'};
-      if (!c) {
-        c = this.primitives['debug'] = new PIXI.Text('', textOpts);
+      if (!dbgTxt) {
+        dbgTxt = this.primitives['debug'] = new PIXI.Text('', textOpts);
       }
 
       var text = "";
@@ -596,12 +586,12 @@
         text += "mid: " + metrics.midEff + space;
         text += "narrow: " + metrics.narrowEff + space;
       }
-      c.text = text;
-      c.debugString = text;
-      c.debugTimestamp = engine.timing.timestamp;
-      c.position.set(10, 10);
+      dbgTxt.text = text;
+      dbgTxt.debugString = text;
+      dbgTxt.debugTimestamp = engine.timing.timestamp;
+      dbgTxt.position.set(10, 10);
 
-      this.displayContainer.addChild(c);
+      this.displayContainer.addChild(dbgTxt);
     };
 
     /**
@@ -614,25 +604,25 @@
           bucketKeys = Common.keys(grid.buckets);
       for (let i = 0; i < bucketKeys.length; i++) {
         let bucketId = bucketKeys[i],
-            c = new PIXI.Graphics(),
+            gridGfx = new PIXI.Graphics(),
             region = bucketId.split(',');
 
         if (grid.buckets[bucketId].length < 2) {
           continue;
         }
         if (this.options.wireframes) {
-          c.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.1);
+          gridGfx.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.1);
         } else {
-          c.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.5);
+          gridGfx.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.5);
         }
-        c.drawRect(
+        gridGfx.drawRect(
             0.5 + parseInt(region[0], 10) * grid.bucketWidth,
             0.5 + parseInt(region[1], 10) * grid.bucketHeight,
             grid.bucketWidth,
             grid.bucketHeight);
-        c.endFill();
+        gridGfx.endFill();
 
-        this.displayContainer.addChild(c);
+        this.displayContainer.addChild(gridGfx);
       }
     }
 
@@ -692,13 +682,13 @@
       // render separations
       for (let i = 0; i < pairs.length; i++) {
         let pair = pairs[i],
-            c = new PIXI.Graphics();
+            sepGfx = new PIXI.Graphics();
 
-        c.clear();
+        sepGfx.clear();
         if (this.options.wireframes) {
-          c.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.5);
+          sepGfx.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.5);
         } else {
-          c.beginFill(0xFFA500, 1);
+          sepGfx.beginFill(0xFFA500, 1);
         }
         if (!pair.isActive) {
           continue;
@@ -708,30 +698,25 @@
             bodyA = collision.bodyA,
             bodyB = collision.bodyB,
             k = 1;
-
         if (!bodyB.isStatic && !bodyA.isStatic) {
           k = 0.5;
         }
         if (bodyB.isStatic) {
           k = 0;
         }
-
-        c.moveTo(bodyB.position.x, bodyB.position.y);
-        c.lineTo(bodyB.position.x - collision.penetration.x * k, bodyB.position.y - collision.penetration.y * k);
-
+        sepGfx.moveTo(bodyB.position.x, bodyB.position.y);
+        sepGfx.lineTo(bodyB.position.x - collision.penetration.x * k, bodyB.position.y - collision.penetration.y * k);
         k = 1;
-
         if (!bodyB.isStatic && !bodyA.isStatic) {
           k = 0.5;
         }
         if (bodyA.isStatic) {
           k = 0;
         }
-
-        c.moveTo(bodyA.position.x, bodyA.position.y);
-        c.lineTo(bodyA.position.x + collision.penetration.x * k, bodyA.position.y + collision.penetration.y * k);
-        c.endFill();
-        this.displayContainer.addChild(c);
+        sepGfx.moveTo(bodyA.position.x, bodyA.position.y);
+        sepGfx.lineTo(bodyA.position.x + collision.penetration.x * k, bodyA.position.y + collision.penetration.y * k);
+        sepGfx.endFill();
+        this.displayContainer.addChild(sepGfx);
       }
     }
 
@@ -744,11 +729,9 @@
       if (this.currentBackground !== background) {
         let isColor = background.indexOf && background.indexOf('#') !== -1,
             bgSprite = this.sprites['bg-0'];
-
         if (isColor) {
           // if solid background color
           this.renderer.backgroundColor = Common.colorToNumber(background);
-
           // remove background sprite if existing
           if (bgSprite) {
             this.stage.removeChild(bgSprite);
@@ -757,14 +740,12 @@
           // initialise background sprite if needed
           if (!bgSprite) {
             let texture = _getTexture(this, background);
-
             bgSprite = this.sprites['bg-0'] = new PIXI.Sprite(texture);
             bgSprite.position.x = 0;
             bgSprite.position.y = 0;
             this.stage.addChildAt(bgSprite, 0);
           }
         }
-
         this.currentBackground = background;
       }
     }
@@ -920,16 +901,16 @@
               partRender = part.render,
               texturePath = partRender.sprite.texture,
               texture = _getTexture(render, texturePath),
-              partGraphic = new PIXI.Sprite(texture);
-          partGraphic.anchor.x = body.render.sprite.xOffset;
-          partGraphic.anchor.y = body.render.sprite.yOffset;
-          partGraphic.scale.x = body.render.sprite.xScale || 1;
-          partGraphic.scale.y = body.render.sprite.yScale || 1;
-          render.sprites['b-' + part.id] = partGraphic;
+              pGfx = new PIXI.Sprite(texture);
+          pGfx.anchor.x = body.render.sprite.xOffset;
+          pGfx.anchor.y = body.render.sprite.yOffset;
+          pGfx.scale.x = body.render.sprite.xScale || 1;
+          pGfx.scale.y = body.render.sprite.yScale || 1;
+          render.sprites['b-' + part.id] = pGfx;
 
           // Add to scene graph if not already there
-          if (Common.indexOf(render.spriteContainer.children, partGraphic) === -1) {
-            render.spriteContainer.addChild(partGraphic);
+          if (Common.indexOf(render.spriteContainer.children, pGfx) === -1) {
+            render.spriteContainer.addChild(pGfx);
           }
         }
       },
@@ -945,64 +926,13 @@
       _createBodyPrimitive = function(render, body) {
         for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
           let part = body.parts[k],
-              partGraphic = new PIXI.Graphics(),
-              lineWidth = part.render.lineWidth,
-              fillStyle = Common.colorToNumber(part.render.fillStyle),
-              strokeStyle = Common.colorToNumber(part.render.strokeStyle),
-              strokeStyleWireframe = Common.colorToNumber('#bbb');
-          partGraphic.initialAngle = part.angle;
-
-          partGraphic.clear();
-          if (!render.options.wireframes) {
-            partGraphic.beginFill(fillStyle, 1);
-            partGraphic.lineStyle(lineWidth, strokeStyle, 1);
-          } else {
-            partGraphic.beginFill(0, 0);
-            partGraphic.lineStyle(lineWidth, strokeStyleWireframe, 1);
-          }
-          // part polygon
-          if (part.circleRadius) {
-            partGraphic.drawCircle(part.position.x - body.position.x, part.position.y - body.position.y, part.circleRadius);
-          } else {
-            partGraphic.moveTo(part.vertices[0].x - body.position.x, part.vertices[0].y - body.position.y);
-            for (let j = 1; j < part.vertices.length; j++) {
-              if (!part.vertices[j - 1].isInternal || showInternalEdges) {
-                partGraphic.lineTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
-              } else {
-                partGraphic.moveTo(part.vertices[j].x - body.position.x, part.vertices[j].y - body.position.y);
-              }
-              if (part.vertices[j].isInternal && !showInternalEdges) {
-                partGraphic.moveTo(part.vertices[(j + 1) % part.vertices.length].x, part.vertices[(j + 1) % part.vertices.length].y);
-              }
-            }
-          }
-          partGraphic.endFill();
-
-          if (part.entity !== undefined && part.entity.eyes !== undefined) {
-            for (let i = 0; i < part.entity.eyes.length; i++) {
-              let eye = part.entity.eyes[i],
-                  x = part.position.x - body.position.x,
-                  y = part.position.y - body.position.y,
-                  eyeStartX = x + body.circleRadius * Math.sin(body.angle + eye.angle),
-                  eyeStartY = y + body.circleRadius * Math.cos(body.angle + eye.angle),
-                  eyeEndX = x + eye.sensed.proximity * Math.sin(body.angle + eye.angle),
-                  eyeEndY = y + eye.sensed.proximity * Math.cos(body.angle + eye.angle);
-              eye.v1 = Vector.create(eyeStartX, eyeStartY);
-              eye.v2 = Vector.create(eyeEndX, eyeEndY);
-
-              // Draw the agent's line of sights
-              partGraphic.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
-              partGraphic.beginFill();
-              partGraphic.moveTo(eye.v1.x, eye.v1.y);
-              partGraphic.lineTo(eye.v2.x, eye.v2.y);
-              partGraphic.endFill();
-            }
-          }
-          render.primitives['b-' + part.id] = partGraphic;
+              pGfx = new PIXI.Graphics();
+          pGfx.initialAngle = part.angle;
+          render.primitives['b-' + part.id] = pGfx;
 
           // Add to scene graph if not already there
-          if (Common.indexOf(render.primitiveContainer.children, partGraphic) === -1) {
-            render.primitiveContainer.addChild(partGraphic);
+          if (Common.indexOf(render.primitiveContainer.children, pGfx) === -1) {
+            render.primitiveContainer.addChild(pGfx);
           }
         }
       },
@@ -1017,7 +947,6 @@
        */
       _getTexture = function(render, imagePath) {
         let texture = render.textures[imagePath];
-
         if (!texture) {
           texture = render.textures[imagePath] = PIXI.Texture.fromImage(imagePath);
         }
@@ -1043,79 +972,78 @@
 
       /**
        * Draws a circle onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Number} x
        * @param  {Number} y
        * @param  {Number} radius
        * @param  {object} style
        */
-      _drawCircle = function(graphics, x, y, radius, style) {
+      _drawCircle = function(pGfx, x, y, radius, style) {
         style = style || {};
         var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 0,
             lineColor = style.lineColor || 0x000000,
             fillColor = style.fillColor;
-
-        graphics.lineStyle(lineWidth, lineColor, 1);
+        pGfx.lineStyle(lineWidth, lineColor, 1);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, 1);
         }
-
-        graphics.drawCircle(x, y, radius);
+        pGfx.drawCircle(x, y, radius);
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
       },
 
       /**
        * Draws a finite plane onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Number} x0
        * @param  {Number} x1
        * @param  {Number} color
        * @param  {object} style
        */
-      _drawPlane = function(graphics, x0, x1, color, style) {
+      _drawPlane = function(pGfx, x0, x1, color, style) {
         style = style || {};
         var max = 1e6,
             lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 0, lineColor = style.lineColor || 0x000000, fillColor = style.fillColor;
-
-        graphics.lineStyle(lineWidth, lineColor, 1);
+        pGfx.lineStyle(lineWidth, lineColor, 1);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, 1);
         }
-
-        graphics.moveTo(-max, 0);
-        graphics.lineTo(max, 0);
-        graphics.lineTo(max, max);
-        graphics.lineTo(-max, max);
+        pGfx.moveTo(-max, 0);
+        pGfx.lineTo(max, 0);
+        pGfx.lineTo(max, max);
+        pGfx.lineTo(-max, max);
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
-
         // Draw the actual plane
-        graphics.lineStyle(lineWidth, lineColor);
-        graphics.moveTo(-max, 0);
-        graphics.lineTo(max, 0);
+        pGfx.lineStyle(lineWidth, lineColor);
+        pGfx.moveTo(-max, 0);
+        pGfx.lineTo(max, 0);
       },
 
       /**
        * Draws a line onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Number} len
        * @param  {object} style
        */
-      _drawLine = function(graphics, len, style) {
+      _drawLine = function(pGfx, len, style) {
         style = style || {};
         var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 1, lineColor = style.lineColor || 0x000000;
 
-        graphics.lineStyle(lineWidth, lineColor, 1);
-        graphics.moveTo(-len / 2, 0);
-        graphics.lineTo(len / 2, 0);
+        pGfx.lineStyle(lineWidth, lineColor, 1);
+        pGfx.moveTo(-len / 2, 0);
+        pGfx.lineTo(len / 2, 0);
       },
 
       /**
        * Draws a capsule onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Number} x
        * @param  {Number} y
        * @param  {Number} angle
@@ -1123,161 +1051,162 @@
        * @param  {Number} radius
        * @param  {object} style
        */
-      _drawCapsule = function(graphics, x, y, angle, len, radius, style) {
+      _drawCapsule = function(pGfx, x, y, angle, len, radius, style) {
         style = style || {};
         var c = Math.cos(angle),
             s = Math.sin(angle),
+            alpha = style.alpha || 1,
             lineWidth = style.lineWidth || 1,
             lineColor = style.lineColor || 0x000000,
             fillColor = style.fillColor || 0x111111;
 
         // Draw circles at ends
-        graphics.lineStyle(lineWidth, 0x000000, 1);
+        pGfx.lineStyle(lineWidth, lineColor, alpha);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, alpha);
         }
-
-        graphics.drawCircle(-len / 2 * c + x, -len / 2 * s + y, radius);
-        graphics.drawCircle(len / 2 * c + x, len / 2 * s + y, radius);
+        pGfx.drawCircle(-len / 2 * c + x, -len / 2 * s + y, radius);
+        pGfx.drawCircle(len / 2 * c + x, len / 2 * s + y, radius);
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
 
         // Draw box
-        graphics.lineStyle(lineWidth, lineColor, 0);
+        pGfx.lineStyle(lineWidth, lineColor, 0);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, alpha);
         }
-
-        graphics.moveTo(-len / 2 * c + radius * s + x, -len / 2 * s + radius * c + y);
-        graphics.lineTo(len / 2 * c + radius * s + x, len / 2 * s + radius * c + y);
-        graphics.lineTo(len / 2 * c - radius * s + x, len / 2 * s - radius * c + y);
-        graphics.lineTo(-len / 2 * c - radius * s + x, -len / 2 * s - radius * c + y);
+        pGfx.moveTo(-len / 2 * c + radius * s + x, -len / 2 * s + radius * c + y);
+        pGfx.lineTo(len / 2 * c + radius * s + x, len / 2 * s + radius * c + y);
+        pGfx.lineTo(len / 2 * c - radius * s + x, len / 2 * s - radius * c + y);
+        pGfx.lineTo(-len / 2 * c - radius * s + x, -len / 2 * s - radius * c + y);
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
 
         // Draw lines in between
-        graphics.lineStyle(lineWidth, lineColor, 1);
-        graphics.moveTo(-len / 2 * c + radius * s + x, -len / 2 * s + radius * c + y);
-        graphics.lineTo(len / 2 * c + radius * s + x, len / 2 * s + radius * c + y);
-        graphics.moveTo(-len / 2 * c - radius * s + x, -len / 2 * s - radius * c + y);
-        graphics.lineTo(len / 2 * c - radius * s + x, len / 2 * s - radius * c + y);
+        pGfx.lineStyle(lineWidth, lineColor, alpha);
+        pGfx.moveTo(-len / 2 * c + radius * s + x, -len / 2 * s + radius * c + y);
+        pGfx.lineTo(len / 2 * c + radius * s + x, len / 2 * s + radius * c + y);
+        pGfx.moveTo(-len / 2 * c - radius * s + x, -len / 2 * s - radius * c + y);
+        pGfx.lineTo(len / 2 * c - radius * s + x, len / 2 * s - radius * c + y);
       },
 
       /**
        * Draws a box onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Number} x
        * @param  {Number} y
        * @param  {Number} w
        * @param  {Number} h
        * @param  {object} style
        */
-      _drawRectangle = function(graphics, x, y, w, h, style) {
+      _drawRectangle = function(pGfx, x, y, w, h, style) {
         style = style || {};
-        var lineWidth = style.lineWidth || 0,
+        var alpha = style.alpha || 1,
+            lineWidth = style.lineWidth || 0,
             lineColor = style.lineColor || 0x000000,
             fillColor = style.fillColor || 0x000000;
-
-        graphics.lineStyle(lineWidth, lineColor, 1);
+        pGfx.lineStyle(lineWidth, lineColor, alpha);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, alpha);
         }
-
-        graphics.drawRect(x - w / 2, y - h / 2, w, h);
+        pGfx.drawRect(x - w / 2, y - h / 2, w, h);
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
       },
 
       /**
        * Draws a convex polygon onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Array} vertices
        * @param  {object} style
        */
-      _drawConvex = function(graphics, vertices, style) {
+      _drawConvex = function(pGfx, body, vertices, style) {
         style = style || {};
-        var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 0, lineColor = style.lineColor || 0x000000, fillColor = style.fillColor;
+        var alpha = style.alpha || 1,
+            lineWidth = style.lineWidth || 0,
+            lineColor = style.lineColor || 0x000000,
+            fillColor = style.fillColor || 0x000000;
 
-        graphics.lineStyle(lineWidth, lineColor, 1);
+        pGfx.lineStyle(lineWidth, lineColor, alpha);
         if (fillColor) {
-          graphics.beginFill(fillColor, 1);
+          pGfx.beginFill(fillColor, alpha);
         }
-
-        for (var i = 0; i !== vertices.length; i++) {
-          var v = vertices[i],
-              x = v[0],
-              y = v[1];
-          if (i == 0) {
-            graphics.moveTo(x, y);
+        pGfx.moveTo(vertices[0].x - body.position.x, vertices[0].y - body.position.y);
+        for (let j = 1; j < vertices.length; j++) {
+          if (!vertices[j - 1].isInternal || showInternalEdges) {
+            pGfx.lineTo(vertices[j].x - body.position.x, vertices[j].y - body.position.y);
           } else {
-            graphics.lineTo(x, y);
+            pGfx.moveTo(vertices[j].x - body.position.x, vertices[j].y - body.position.y);
+          }
+          if (vertices[j].isInternal && !showInternalEdges) {
+            pGfx.moveTo(vertices[(j + 1) % vertices.length].x, vertices[(j + 1) % vertices.length].y);
           }
         }
-
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
-
         if (vertices.length > 2 && lineWidth !== 0) {
-          graphics.moveTo(vertices[vertices.length - 1][0], vertices[vertices.length - 1][1]);
-          graphics.lineTo(vertices[0][0], vertices[0][1]);
+          pGfx.moveTo(vertices[vertices.length - 1][0], vertices[vertices.length - 1][1]);
+          pGfx.lineTo(vertices[0][0], vertices[0][1]);
         }
       },
 
       /**
        * Draws a path onto a PIXI.Graphics object
-       * @param  {PIXI.Graphics} graphics
+       * -Borrowed from https://github.com/TomWHall/p2Pixi
+       * @param  {PIXI.Graphics} pGfx
        * @param  {Array} path
        * @param  {object} style
        */
-      _drawPath = function(graphics, path, style) {
-        var style = style || {}, lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 0, lineColor = style.lineColor || 0x000000, fillColor = style.fillColor;
-
-        graphics.lineStyle(lineWidth, lineColor, 1);
-        if (fillColor) {
-          graphics.beginFill(fillColor, 1);
-        }
-
-        var lastx = null,
+      _drawPath = function(pGfx, path, style) {
+        style || {};
+        let alpha = style.alpha || 1,
+            lineWidth = style.lineWidth || 0,
+            lineColor = style.lineColor || 0x000000,
+            fillColor = style.fillColor || 0x000000,
+            lastx = null,
             lasty = null;
-        for (var i = 0; i < path.length; i++) {
-          var v = path[i],
+
+        pGfx.lineStyle(lineWidth, lineColor, alpha);
+        if (fillColor) {
+          pGfx.beginFill(fillColor, alpha);
+        }
+        for (let i = 0; i < path.length; i++) {
+          let v = path[i],
               x = v[0],
               y = v[1];
-
           if (x !== lastx || y !== lasty) {
             if (i === 0) {
-              graphics.moveTo(x, y);
+              pGfx.moveTo(x, y);
             } else {
               // Check if the lines are parallel
-              var p1x = lastx,
+              let p1x = lastx,
                   p1y = lasty,
                   p2x = x,
                   p2y = y,
                   p3x = path[(i + 1) % path.length][0],
                   p3y = path[(i + 1) % path.length][1];
-              var area = ((p2x - p1x) * (p3y - p1y)) - ((p3x - p1x) * (p2y - p1y));
+              let area = ((p2x - p1x) * (p3y - p1y)) - ((p3x - p1x) * (p2y - p1y));
               if (area !== 0) {
-                graphics.lineTo(x, y);
+                pGfx.lineTo(x, y);
               }
             }
-
             lastx = x;
             lasty = y;
           }
         }
-
         if (fillColor) {
-          graphics.endFill();
+          pGfx.endFill();
         }
-
         // Close the path
         if (path.length > 2 && style.fillColor) {
-          graphics.moveTo(path[path.length - 1][0], path[path.length - 1][1]);
-          graphics.lineTo(path[0][0], path[0][1]);
+          pGfx.moveTo(path[path.length - 1][0], path[path.length - 1][1]);
+          pGfx.lineTo(path[0][0], path[0][1]);
         }
       };
   global.MatterPixi = MatterPixi;

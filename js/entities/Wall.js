@@ -35,11 +35,7 @@
       this.position = this.v1.getPointBetween(this.v2, 50);
       this.width = (this.angle !== 0) ? 5 : this.len;
       this.height = (this.angle !== 0) ? this.len : 5;
-      this.fontOpts = {
-        font: '12px Arial',
-        fill: '#000000',
-        align: 'center'
-      };
+      this.fontOpts = {font: '12px Arial', fill: '#000000', align: 'center'};
 
       // Add a container to hold our display cheats
       this.cheatsContainer = new PIXI.Container();
@@ -103,7 +99,7 @@
         this.graphics.rotation = this.rotation;
       } else {
         this.graphics.clear();
-        this.graphics.lineStyle(2, 0x0000FF);
+        this.graphics.lineStyle(2, 0x000000);
         this.graphics.beginFill(0x000000);
         this.graphics.moveTo(this.v1.x, this.v1.y);
         this.graphics.lineTo(this.v2.x, this.v2.y);

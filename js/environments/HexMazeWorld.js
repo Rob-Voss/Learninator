@@ -36,9 +36,10 @@
             width: renderOpts.width,
             height: renderOpts.height,
             buffer: 0,
-            size: 10,
-            cellSize: 20,
-            cellSpacing: 0,
+            size: 15,
+            cellSize: 30,
+            cellSpacing: 10,
+            useSprite: true,
             pointy: false,
             fill: false,
             cheats: cheats

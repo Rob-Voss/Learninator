@@ -82,7 +82,9 @@
      * Create existence!
      */
     function start() {
-        world = new HexMazeWorld();
+        PIXI.loader.add("img/hexagon.json").load(() => {
+            world = new HexMazeWorld();
+        });
 //        let disp = new Display(new Vec(300, 300), {title:'Options', width:200, height:200, rows: 4, cols: 4});
 //        world.stage.addChild(disp);
 //        datGUI(world);

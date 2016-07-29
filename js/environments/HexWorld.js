@@ -12,7 +12,7 @@
      */
     constructor() {
       let renderOpts = {
-            backgroundColor: 0xDDDDDD,
+            backgroundColor: 0xFFFFFF,
             antialiasing: true,
             autoResize: false,
             resizable: true,
