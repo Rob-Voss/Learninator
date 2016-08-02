@@ -58,10 +58,10 @@
             width: renderOpts.width,
             height: renderOpts.height,
             buffer: 0,
-            size: 4,
-            cellSize: 80,
+            size: 5,
+            cellSize: 40,
             cellSpacing: 0,
-            pointy: true,
+            pointy: false,
             useSprite: true,
             fill: false,
             cheats: cheats

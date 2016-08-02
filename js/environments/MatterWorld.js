@@ -137,10 +137,10 @@
         width: renderOpts.options.width,
         height: renderOpts.options.height,
         buffer: 0,
-        size: 4,
-        cellSize: 80,
-        cellSpacing: 0,
-        pointy: true,
+        size: 3,
+        cellSize: 20,
+        cellSpacing: 5,
+        pointy: false,
         useSprite: false,
         fill: false
       },
@@ -149,8 +149,7 @@
       origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
       layout = new Layout(orientation, size, origin),
       cells = HexGrid.shapeRectangle(layout, gridOpts),
-      grid = new HexGrid(layout, cells, gridOpts),
-      maze = new Maze(grid.init());
+      grid = new HexGrid(layout, cells, gridOpts);
 
   // MatterTools aliases
   if (window.MatterTools) {
@@ -186,15 +185,6 @@
       });
       this.render.mouse = this.mouseConstraint.mouse;
 
-      //this.addPerson(200, 200);
-      this.addWalls();
-      this.addAgents();
-      //this.addPlatforms(10, 30, 150);
-      this.addEntities(100);
-      this.setEngineEvents();
-      this.setRunnerEvents();
-      this.setWorldEvents();
-
       this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
       if (useTools) {
         this.useInspector = useInspector;
@@ -220,21 +210,39 @@
         Gui.update(this.gui, this.gui.datGui);
       }
 
-      for (let id in maze.walls) {
-        let wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall', shape: 'convex'},
-            wall = maze.walls[id],
-            wallShape = Bodies.polygon(wall.v1.x, wall.v1.y, 6, 10, wallOpts);
+      // This is temporary
+      for (let id in cells) {
+        let cellOpts = {
+              isStatic: true,
+              isSensor: false,
+              render: {
+                visible: true
+              },
+              label: 'Hex',
+              shape: 'convex'
+            },
+            cell = cells[id];
+        let cellShape = Bodies.polygon(cell.center.x, cell.center.y, 6, cell.cellSize, cellOpts);
 
-        Body.set(wallShape, 'entity', {
+        Body.set(cellShape, 'entity', {
           type: 0,
-          x: wall.v1.x,
-          y: wall.v1.y,
-          width: wall.width,
-          height: wall.height
+          x: cell.center.x,
+          y: cell.center.y,
+          width: cell.cellSize,
+          height: cell.cellSize
         });
-        this.addMatter([wallShape]);
-
+        this.addMatter([cellShape]);
       }
+
+      //this.addPerson(200, 200);
+      this.addWalls();
+      this.addAgents();
+      //this.addPlatforms(10, 30, 150);
+      this.addEntities(100);
+      this.setEngineEvents();
+      this.setRunnerEvents();
+      this.setWorldEvents();
+
       this.render.run();
 
       return this;

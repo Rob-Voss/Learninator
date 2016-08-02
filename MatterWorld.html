@@ -46,8 +46,8 @@
     function start() {
         PIXI.loader.add("img/hexagon.json").load(() => {
             world = new MatterWorld();
+            world.setViewport(100, 100);
         });
-//        world.setViewport(100, 100);
     }
 </script>
 </body>

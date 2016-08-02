@@ -7,9 +7,9 @@
      * A Hex
      * @constructor
      *
-     * @param {number} q
-     * @param {number} r
-     * @param {number} s
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
      * @return {Hex}
      */
     constructor(q, r, s) {
@@ -35,7 +35,7 @@
     /**
      * Get the neighbor
      * @param {Hex} hex
-     * @param {number} dir
+     * @param {Number} dir
      * @return {Hex}
      */
     diagonalNeighbor(hex, dir) {
@@ -46,7 +46,7 @@
      * Distance from another Hex
      * @param {Hex} a
      * @param {Hex} b
-     * @return {number}
+     * @return {Number}
      */
     distance(a, b) {
       return this.len(this.subtract(a, b));
@@ -56,7 +56,7 @@
      * Return the coords to draw a line from one Hex to another
      * @param {Hex} a
      * @param {Hex} b
-     * @return {Array}
+     * @returns {Array}
      */
     lineDraw(a, b) {
       let n = this.distance(a, b),
@@ -72,7 +72,7 @@
     /**
      * Get the neighbor
      * @param {Hex} hex
-     * @param {number} dir
+     * @param {Number} dir
      * @return {Hex}
      */
     neighbor(hex, dir) {
@@ -98,7 +98,7 @@
 
     /**
      * Score
-     * @return {number}
+     * @return {Number}
      */
     score() {
       let total = 0,
@@ -122,7 +122,7 @@
 
     /**
      * Convert coords to string
-     * @return {string}
+     * @return {String}
      */
     toString() {
       return this.toArray().join(',');
@@ -161,7 +161,7 @@
 
     /**
      * Get the direction
-     * @param {number} dir
+     * @param {Number} dir
      * @return {*}
      */
     static direction(dir) {
@@ -171,7 +171,7 @@
     /**
      * Get the length of the Hex
      * @param {Hex} hex
-     * @return {number}
+     * @return {Number}
      */
     static len(hex) {
       return Math.trunc((Math.abs(hex.q) + Math.abs(hex.r) + Math.abs(hex.s)) / 2);
@@ -181,7 +181,7 @@
      * Perform a linear interpolation on the Hex
      * @param {Hex} a
      * @param {Hex} b
-     * @param {number} t
+     * @param {Number} t
      * @return {Hex}
      */
     static lerp(a, b, t) {
@@ -217,7 +217,7 @@
     /**
      * Scale the Hex according to the scalar
      * @param {Hex} hex
-     * @param {number} k
+     * @param {Number} k
      * @return {Hex}
      */
     static scale(hex, k) {

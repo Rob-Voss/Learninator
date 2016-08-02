@@ -5,19 +5,19 @@
   "use strict";
 
   /**
-   *
+   * @extends Hex
    */
   class HexShape extends Hex {
 
     /**
      *
-     * @param {Hex|object} hex
+     * @param {Hex|{q: *, r: *, s: *}} hex
      * @param {Layout} layout
      * @param {gridOpts} opts
      * @return {HexShape}
      * @constructor
      */
-    constructor(hex, layout, opts = false) {
+    constructor(hex, layout, opts) {
       super(hex.q, hex.r, hex.s);
       this.layout = layout;
       this.size = Utility.getOpt(opts, 'size', 10);
@@ -56,7 +56,6 @@
         if (!this.pointy) {
           this.graphics.rotation = 0.523599;
         }
-        this.bounds = this.graphics.getBounds();
       } else {
         this.graphics = new PIXI.Graphics();
       }
@@ -99,6 +98,10 @@
       return this;
     }
 
+    /**
+     * Add cheats to the cheat container
+     * @returns {HexShape}
+     */
     addCheats() {
       this.txtOpts = {font: "10px Arial", fill: "#CC0000", align: "center"};
       if (this.cheats.id) {
@@ -146,7 +149,7 @@
     }
 
     /**
-     *
+     * Draw the shape
      * @return {HexShape}
      */
     draw() {
@@ -258,10 +261,22 @@
       return this;
     }
 
+    /**
+     *
+     * @param {Hex} hex
+     * @param {Number} dir
+     * @returns {Hex}
+     */
     diagonalNeighbor(hex, dir) {
       return super.diagonalNeighbor(hex, dir);
     }
 
+    /**
+     *
+     * @param {Hex} a
+     * @param {Hex} b
+     * @returns {number}
+     */
     distance(a, b) {
       return super.distance(a, b);
     }

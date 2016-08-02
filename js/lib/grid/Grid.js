@@ -1,7 +1,3 @@
-/**
- * Original code borrowed from
- * https://github.com/felipecsl/random-maze-generator
- */
 (function(global) {
   'use strict';
 
@@ -21,8 +17,7 @@
    */
 
   /**
-   * Grid class
-   *
+   * Grid
    * @typedef {Grid} Grid
    * @property {number} width
    * @property {number} height
@@ -85,6 +80,10 @@
       return this;
     }
 
+    /**
+     *
+     * @returns {Grid}
+     */
     init() {
       this.cells.forEach((cell) => {
         for (let dir = 0; dir < 4; dir++) {
@@ -179,9 +178,9 @@
 
     /**
      * Get a Cell at a specific point
-     * @param {number} x
-     * @param {number} y
-     * @return {Cell|boolean}
+     * @param {Number} x
+     * @param {Number} y
+     * @return {Cell|Hex|boolean}
      */
     getCellAt(x, y) {
       let column = this.map.get(x),
@@ -192,8 +191,8 @@
 
     /**
      * Get the distance between two Cells
-     * @param {Cell} c1
-     * @param {Cell} c2
+     * @param {Cell|Hex} c1
+     * @param {Cell|Hex} c2
      * @return {number}
      */
     getCellDistance(c1, c2) {
@@ -206,7 +205,7 @@
     /**
      * Return the location of the entity within a grid
      * @param {Entity} entity
-     * @return {Cell|boolean}
+     * @return {Cell|Hex|boolean}
      */
     getGridLocation(entity) {
       let x = entity.bounds.x + (entity.bounds.width / 2),
@@ -246,8 +245,8 @@
 
     /**
      * Returns all neighbors of this cell, regardless if they are connected or not.
-     * @param {Cell} cell
-     * @param {boolean} all
+     * @param {Cell|Hex} cell
+     * @param {Boolean} all
      * @return {Array}
      */
     neighbors(cell, all = false) {
@@ -266,8 +265,10 @@
     }
 
     /**
-     * @param {number} x
-     * @param {number} y
+     *
+     * @param {Number} x
+     * @param {Number} y
+     * @returns {Hex|boolean}
      */
     pixelToCell(x, y) {
       let foundCell = false;
@@ -288,6 +289,7 @@
      * Remove the edge from between two Cells
      * @param {Cell} c1
      * @param {Cell} c2
+     * @returns {Grid}
      */
     removeEdgeBetween(c1, c2) {
       this.removedEdges.push([c1, c2]);
@@ -314,7 +316,7 @@
 
     /**
      * Returns all neighbors of this Cell that aren't separated by an edge
-     * @param {Cell} c
+     * @param {Cell|Hex} c
      * @return {Array}
      */
     unvisitedNeighbors(c) {

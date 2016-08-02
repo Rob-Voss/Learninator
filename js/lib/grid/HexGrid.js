@@ -1,6 +1,10 @@
 (function(global) {
   'use strict';
 
+  /**
+   * HexGrid
+   * @extends Grid
+   */
   class HexGrid extends Grid {
 
     /**
@@ -26,6 +30,11 @@
       return this;
     }
 
+    /**
+     * Return an array of neigh
+     * @param {Hex|HexShape} cell
+     * @returns {Array}
+     */
     disconnectedNeighbors(cell) {
       return super.disconnectedNeighbors(cell);
     }
@@ -56,7 +65,7 @@
     /**
      * Return the location of the entity within a grid
      * @param {Entity} entity
-     * @return {Cell|boolean}
+     * @return {Cell|Hex|boolean}
      */
     getGridLocation(entity) {
       let center = new Point(
@@ -113,11 +122,7 @@
           }
 
           cell.neighbors[dir] = this.getCellAt(neighb.q, neighb.r);
-          cell.walls[dir] = new Wall(v1, v2, dir, {
-            cheats: this.cheats,
-            useSprite: false,
-            sprite: 'stone_wall.png'
-          });
+          cell.walls[dir] = new Wall(new Vec(v1.x, v1.y), new Vec(v2.x, v2.y), dir, {cheats: this.cheats, useSprite: false});
           cell.wallContainer.addChild(cell.walls[dir].graphics);
         }
         this.cellsContainer.addChild(cell.graphics);
@@ -178,8 +183,8 @@
 
     /**
      *
-     * @param x
-     * @param y
+     * @param {Number} x
+     * @param {Number} y
      * @return {*|{q, r, s}|Hex}
      */
     pixelToAxial(x, y) {
@@ -193,9 +198,9 @@
 
     /**
      *
-     * @param x
-     * @param y
-     * @param scale
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} scale
      * @return {{q: *, r: *, s: number}}
      */
     pixelToDecimalQR(x, y, scale) {
@@ -254,7 +259,7 @@
     /**
      * Convert from Cube coords to axial
      * @param {Cube} cube
-     * @return {object}
+     * @returns {{q: *, r: *, s: number}}
      */
     static cubeToAxial(cube) {
       return {
@@ -266,7 +271,7 @@
 
     /**
      * Get something
-     * @param {object} coords
+     * @param {{x: *, y: *, z: number}} coords
      * @return {object}
      */
     static roundCube(coords) {
@@ -292,26 +297,68 @@
       };
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteQRS(q, r, s) {
       return new Hex(q, r, s);
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteSRQ(q, r, s) {
       return new Hex(s, r, q);
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteSQR(q, r, s) {
       return new Hex(s, q, r);
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteRQS(q, r, s) {
       return new Hex(r, q, s);
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteRSQ(q, r, s) {
       return new Hex(r, s, q);
     }
 
+    /**
+     *
+     * @param {Number} q
+     * @param {Number} r
+     * @param {Number} s
+     * @returns {Hex}
+     */
     static permuteQSR(q, r, s) {
       return new Hex(q, s, r);
     }
@@ -338,10 +385,10 @@
 
     /**
      * Create a parallelogram of Hexes
-     * @param {number} q1
-     * @param {number} r1
-     * @param {number} q2
-     * @param {number} r2
+     * @param {Number} q1
+     * @param {Number} r1
+     * @param {Number} q2
+     * @param {Number} r2
      * @param {Layout} layout
      * @param {gridOpts} opts
      * @return {Array}
@@ -395,8 +442,8 @@
 
     /**
      * Create a ring of Hexes
-     * @param {number} q
-     * @param {number} r
+     * @param {Number} q
+     * @param {Number} r
      * @param {Layout} layout
      * @param {gridOpts} opts
      * @return {Array}
@@ -422,11 +469,11 @@
 
     /**
      *
-     * @param minQ
-     * @param maxQ
-     * @param minR
-     * @param maxR
-     * @param toCube
+     * @param {Number} minQ
+     * @param {Number} maxQ
+     * @param {Number} minR
+     * @param {Number} maxR
+     * @param {Boolean} toCube
      * @param {Layout} layout
      * @param {gridOpts} opts
      * @return {Array}
@@ -489,8 +536,8 @@
 
   /**
    *
-   * @param col
-   * @param row
+   * @param {Number} col
+   * @param {Number} row
    * @return {OffsetCoord}
    * @constructor
    */
@@ -504,8 +551,8 @@
   OffsetCoord.prototype = {
     /**
      *
-     * @param offset
-     * @param hex
+     * @param {Number} offset
+     * @param {Hex} hex
      * @return {OffsetCoord}
      */
     qOffsetFromCube: function(offset, hex) {
@@ -516,8 +563,9 @@
     },
     /**
      *
-     * @param offset
-     * @param hex
+     * @param {Number} offset
+     * @param {Hex} hex
+     * @return {Hex}
      */
     qOffsetToCube: function(offset, hex) {
       let q = hex.col,
@@ -527,8 +575,8 @@
     },
     /**
      *
-     * @param offset
-     * @param hex
+     * @param {Number} offset
+     * @param {Hex} hex
      * @return {OffsetCoord}
      */
     rOffsetFromCube: function(offset, hex) {
@@ -539,8 +587,9 @@
     },
     /**
      *
-     * @param offset
-     * @param hex
+     * @param {Number} offset
+     * @param {Hex} hex
+     * @return {Hex}
      */
     rOffsetToCube: function(offset, hex) {
       let q = hex.col - Math.trunc((hex.row + offset * (Math.abs(hex.row) % 2)) / 2),
@@ -552,15 +601,15 @@
 
   /**
    *
-   * @param f0
-   * @param f1
-   * @param f2
-   * @param f3
-   * @param b0
-   * @param b1
-   * @param b2
-   * @param b3
-   * @param angle
+   * @param {Number} f0
+   * @param {Number} f1
+   * @param {Number} f2
+   * @param {Number} f3
+   * @param {Number} b0
+   * @param {Number} b1
+   * @param {Number} b2
+   * @param {Number} b3
+   * @param {Number} angle
    * @return {Orientation}
    * @constructor
    */
@@ -599,7 +648,7 @@
     /**
      *
      * @param {Hex} hex
-     * @return {Vec}
+     * @return {Point}
      */
     hexToPixel: function(hex) {
       let m = this.orientation,
@@ -608,7 +657,7 @@
           x = (m.f0 * hex.q + m.f1 * hex.r) * size.x,
           y = (m.f2 * hex.q + m.f3 * hex.r) * size.y;
 
-      return new Vec(x + offset.x, y + offset.y);
+      return new Point(x + offset.x, y + offset.y);
     },
     /**
      *
@@ -647,9 +696,10 @@
      */
     polygonCorners: function(hex) {
       let corners = [];
+      hex.center = this.hexToPixel(hex);
       for (let i = 0; i < 6; i++) {
         let offset = this.hexCornerOffset(i);
-        corners.push(new Vec(hex.center.x + offset.x, hex.center.y + offset.y));
+        corners.push(new Point(hex.center.x + offset.x, hex.center.y + offset.y));
       }
 
       return corners;

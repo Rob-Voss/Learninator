@@ -1144,15 +1144,15 @@
             pGfx.moveTo(vertices[j].x - body.position.x, vertices[j].y - body.position.y);
           }
           if (vertices[j].isInternal && !showInternalEdges) {
-            pGfx.moveTo(vertices[(j + 1) % vertices.length].x, vertices[(j + 1) % vertices.length].y);
+            let vId = (j + 1) % vertices.length;
+            pGfx.moveTo(vertices[vId].x, vertices[vId].y);
           }
+        }
+        if (vertices.length > 2 && lineWidth !== 0) {
+          pGfx.lineTo(vertices[0].x - body.position.x, vertices[0].y - body.position.y);
         }
         if (fillColor) {
           pGfx.endFill();
-        }
-        if (vertices.length > 2 && lineWidth !== 0) {
-          pGfx.moveTo(vertices[vertices.length - 1][0], vertices[vertices.length - 1][1]);
-          pGfx.lineTo(vertices[0][0], vertices[0][1]);
         }
       },
 
