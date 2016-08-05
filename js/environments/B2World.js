@@ -207,8 +207,7 @@
       this.world = new b2World(new b2Vec2(0, 10), true);
       this.world.SetDebugDraw(new b2Pixi(this.graphics, new b2Vec2(0, 0)));
 
-      //this.test();
-      this.addBox({x: 10, y: 10}, {w: 20, h: 20});
+      this.merps();
 
       // Animation loop
       var animate = (timeMilliseconds) => {
@@ -230,6 +229,86 @@
       requestAnimationFrame(animate);
 
       return this;
+    }
+
+    merps() {
+      var SCALE = 30,
+          NULL_CENTER = {x: null, y: null};
+
+      function Entity(id, x, y, angle, center, color) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.angle = angle || 0;
+        this.center = center;
+        this.color = color || "red";
+      }
+
+      Entity.prototype.update = function(state) {
+        this.x = state.x;
+        this.y = state.y;
+        this.center = state.c;
+        this.angle = state.a;
+      };
+
+      Entity.build = function(def) {
+        if (def.radius) {
+          return new CircleEntity(def.id, def.x, def.y, def.angle, NULL_CENTER, def.color, def.radius);
+        } else if (def.polys) {
+          return new PolygonEntity(def.id, def.x, def.y, def.angle, NULL_CENTER, def.color, def.polys);
+        } else {
+          return new RectangleEntity(def.id, def.x, def.y, def.angle, NULL_CENTER, def.color, def.halfWidth, def.halfHeight);
+        }
+      };
+
+      function CircleEntity(id, x, y, angle, center, color, radius) {
+        color = color || 'aqua';
+        Entity.call(this, id, x, y, angle, center, color);
+        this.radius = radius;
+      }
+
+      CircleEntity.prototype = new Entity();
+      CircleEntity.prototype.constructor = CircleEntity;
+
+      function RectangleEntity(id, x, y, angle, center, color, halfWidth, halfHeight) {
+        Entity.call(this, id, x, y, angle, center, color);
+        this.halfWidth = halfWidth;
+        this.halfHeight = halfHeight;
+      }
+
+      RectangleEntity.prototype = new Entity();
+      RectangleEntity.prototype.constructor = RectangleEntity;
+
+      function PolygonEntity(id, x, y, angle, center, color, polys) {
+        Entity.call(this, id, x, y, angle, center, color);
+        this.polys = polys;
+      }
+
+      PolygonEntity.prototype = new Entity();
+      PolygonEntity.prototype.constructor = PolygonEntity;
+
+      var bodies = [],
+          initialState = [
+            {
+              id: "ground",
+              x: this.width / 2 / SCALE,
+              y: this.height * 0.66 / SCALE,
+              angle: (15 * Math.PI) / 180,
+              halfHeight: 0.5,
+              halfWidth: this.width / SCALE,
+              color: 'yellow'
+            },
+            {id: "wheel1", x: 1, y: 4, radius: 1.5},
+            {id: "wheel2", x: 6, y: 4, radius: 0.5},
+            {id: "chassis", x: 3.5, y: 4, halfHeight: 0.15, halfWidth: 2.5}
+          ];
+
+      for (var i = 0; i < initialState.length; i++) {
+        bodies[initialState[i].id] = Entity.build(initialState[i]);
+      }
+
+      this.addBodies(bodies);
+
     }
 
     /**
@@ -269,26 +348,6 @@
       }
 
       return this;
-    }
-
-    addBox(pos, size) {
-      var width = size.w / 100 / 2,
-          height = size.h / 100 / 2,
-          bodyDef = new b2BodyDef();
-      bodyDef.type = b2Body.b2_dynamicBody;
-      bodyDef.position.Set(pos.x, pos.y);
-      var fd = new box2d.b2FixtureDef();
-      fd.shape = new box2d.b2CircleShape(10);
-      fd.density = 1.0;
-      var body = this.world.CreateBody(bodyDef);
-      body.CreateFixture(fd);
-
-      var box = new PIXI.Graphics();
-      this.stage.addChild(box);
-      box.drawCircle(pos.x, pos.y, 10);
-      this.entityLayer.push({graphics: box, body: body});
-      //this.bodies.push(body);
-      //this.actors.push(box);
     }
 
     /**
@@ -355,41 +414,6 @@
       return body;
     }
 
-    test() {
-      var ajd = new box2d.b2AreaJointDef();
-      ajd.world = this.world;
-
-      var cx = 0.0,
-          cy = 10.0,
-          rx = 5.0,
-          ry = 5.0,
-          nBodies = 20,
-          bodyRadius = 0.5;
-      for (var i = 0; i < nBodies; ++i) {
-        var angle = (i * 2.0 * Math.PI) / nBodies,
-            bd = new box2d.b2BodyDef();
-        //bd.isBullet = true;
-        bd.fixedRotation = true;
-
-        var x = cx + rx * Math.cos(angle),
-            y = cy + ry * Math.sin(angle);
-        bd.position.Set(x, y);
-        bd.type = box2d.b2BodyType.b2_dynamicBody;
-        var body = this.world.CreateBody(bd),
-            fd = new box2d.b2FixtureDef();
-        fd.shape = new box2d.b2CircleShape(bodyRadius);
-        fd.density = 1.0;
-        body.CreateFixture(fd);
-
-        ajd.AddBody(body);
-        this.entityLayer.push(body);
-      }
-
-      ajd.frquencyHz = 10.0;
-      ajd.dampingRatio = 1.0;
-      this.world.CreateJoint(ajd);
-    }
-
     /**
      * Tick the environment
      * @return {B2World}
@@ -397,9 +421,7 @@
     tick() {
       for (let i = 0; i < this.entityLayer.length; i++) {
         let entity = this.entityLayer[i];
-        //if (entity.remove) {
-        //  this.world.removeBody(entity.body);
-        //}
+
         // Transfer positions of the physics objects to Pixi.js
         entity.graphics.position.x = entity.body.position[0];
         entity.graphics.position.y = entity.body.position[1];

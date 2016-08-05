@@ -20,7 +20,7 @@ Walker.prototype.setup = function (world) {
         }
         tmp.walkerJoints = getNamedJoints(world, "walkerjoint");
 
-        bodies = getNamedBodies(world, "walkerchassis");
+        var bodies = getNamedBodies(world, "walkerchassis");
         if (bodies.length > 0) {
             tmp.chassisBody = bodies[0];
         }

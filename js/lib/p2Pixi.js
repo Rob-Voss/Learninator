@@ -1,12 +1,3 @@
-const vec2 = p2.vec2,
-    Circle = p2.Circle,
-    Capsule = p2.Capsule,
-    Convex = p2.Convex,
-    Plane = p2.Plane,
-    Box = p2.Box,
-    Particle = p2.Particle,
-    Line = p2.Line,
-    Heightfield = p2.Heightfield;
 
 class p2Pixi {
 
@@ -44,45 +35,103 @@ class p2Pixi {
   }
 
   /**
-   * Sets up the Pixi renderer
+   * Adds the supplied shape to the supplied Container,
+   * using vectors and / or a texture
+   * @param  {Container} container
+   * @param  {Shape} shape
+   * @param  {Object} shapeOptions
    */
-  setupRenderer() {
-    var options = this.options;
-    this.renderer = PIXI.autoDetectRenderer(options.width, options.height, options);
-  }
+  addShape(container, shape, shapeOptions) {
+    shapeOptions = shapeOptions || {};
+    var offset = shapeOptions.offset || [0, 0],
+        angle = shapeOptions.angle || 0,
+        textureOptions = shapeOptions.textureOptions,
+        styleOptions = shapeOptions.styleOptions,
+        alpha = shapeOptions.alpha || 1,
+        zero = [0, 0],
+        ppu = this.pixelsPerLengthUnit;
 
-  /**
-   * Sets up the Pixi view
-   */
-  setupView() {
-    var self = this,
-     renderer = this.renderer,
-     view = this.renderer.view,
-     container = this.container;
+    // If a Pixi texture has been specified...
+    if (textureOptions) {
+      var texture = textureOptions.texture,
 
-    renderer.backgroundColor = 0xFFFFFF;
-    view.style.pos = "absolute";
-    view.style.top = "0px";
-    view.style.left = "0px";
-    document.body.querySelector('#game-container').appendChild(view);
+          // Calculate the bounding box of the shape when at zero offset and 0 angle
+          aabb = new p2.AABB();
+      shape.computeAABB(aabb, zero, 0);
 
-    this.viewCssWidth = 0;
-    this.viewCssHeight = 0;
-    this.windowWidth = window.innerWidth;
-    this.windowHeight = window.innerHeight;
+      // Get world coordinates of shape boundaries
+      var left = aabb.lowerBound[0],
+          bottom = aabb.lowerBound[1],
+          right = aabb.upperBound[0],
+          top = aabb.upperBound[1];
 
-    container.position.x = renderer.width / 2;
-    container.position.y = renderer.height / 2;
-
-    if (this.options.resizable && this.options.autoResize) {
-      this.resize(this.windowWidth, this.windowHeight);
-
-      window.addEventListener('resize', resizeRenderer);
-      window.addEventListener('orientationchange', resizeRenderer);
-
-      function resizeRenderer() {
-        self.resize(window.innerWidth, window.innerHeight);
+      // Cater for Heightfield shapes
+      if (shape instanceof Heightfield) {
+        bottom = -(this.options.height / ppu);
       }
+
+      var width = right - left,
+          height = top - bottom,
+          // Create a Sprite or TilingSprite to cover the entire shape
+          sprite;
+      if (textureOptions.tile === false) {
+        sprite = new PIXI.Sprite(texture);
+      } else {
+        sprite = new PIXI.extras.TilingSprite(texture, width * ppu, height * ppu);
+      }
+      sprite.alpha = alpha;
+      // If the shape is anything other than a box, we need a mask for the texture.
+      // We use the shape itself to create a new Graphics object.
+      if (!(shape instanceof Box)) {
+        var maskGraphics = new PIXI.Graphics();
+        maskGraphics.renderable = false;
+        maskGraphics.position.x = (offset[0] * ppu);
+        maskGraphics.position.y = -(offset[1] * ppu);
+        maskGraphics.rotation = -angle;
+        this.renderShapeToGraphics(maskGraphics, shape, zero, 0,
+            {
+              lineWidth: 0,
+              fillColor: 0xffffff
+            });
+
+        container.addChild(maskGraphics);
+        sprite.mask = maskGraphics;
+      }
+
+      // Sprite positions are the top-left corner of the Sprite, whereas Graphics objects
+      // are positioned at their origin
+      if (angle === 0) {
+        sprite.position.x = (left * ppu) + (offset[0] * ppu);
+        sprite.position.y = -(top * ppu) - (offset[1] * ppu);
+        sprite.rotation = -angle;
+
+        container.addChild(sprite);
+      } else {
+        var doc = new PIXI.Container();
+        sprite.position.x = (left * ppu);
+        sprite.position.y = -(top * ppu);
+
+        doc.addChild(sprite);
+        doc.position.x = (offset[0] * ppu);
+        doc.position.y = -(offset[1] * ppu);
+        doc.rotation = -angle;
+
+        doc.addChild(sprite);
+        container.addChild(doc);
+      }
+    }
+
+    // If any Pixi vector styles have been specified...
+    if (styleOptions) {
+      var graphics = new PIXI.Graphics();
+      graphics.alpha = alpha;
+      graphics.position.x = (offset[0] * ppu);
+      graphics.position.y = -(offset[1] * ppu);
+      graphics.rotation = -angle;
+
+      this.renderShapeToGraphics(graphics, shape, zero, 0, styleOptions);
+
+      container.addChild(graphics);
     }
   }
 
@@ -121,7 +170,7 @@ class p2Pixi {
     style = style || {};
     var max = 1e6,
         lineWidth = style.lineWidthUnits ? style.lineWidthUnits * this.pixelsPerLengthUnit : style.lineWidth || 0,
-        lineColor = style.lineColor || 0x000000,
+        lineColor = style.lineColor || 0xFF0000,
         fillColor = style.fillColor;
 
     graphics.lineStyle(lineWidth, lineColor, 1);
@@ -329,13 +378,13 @@ class p2Pixi {
    * Renders the supplied p2 Shape onto the supplied
    * Pixi Graphics object using the supplied Pixi style properties
    * @param  {PIXI.Graphics} graphics
-   * @param  {Shape} shape
+   * @param  {p2.Shape} shape
    * @param  {p2.Vector} offset
    * @param  {Number} angle
    * @param  {Object} style
    */
   renderShapeToGraphics(graphics, shape, offset, angle, style) {
-    var zero = [0, 0],
+    let zero = [0, 0],
         ppu = this.pixelsPerLengthUnit;
 
     offset = offset || zero;
@@ -343,7 +392,7 @@ class p2Pixi {
     if (shape instanceof Circle) {
       this.drawCircle(graphics, offset[0] * ppu, -offset[1] * ppu, shape.radius * ppu, style);
     } else if (shape instanceof Particle) {
-      var radius = Math.max(1, Math.round(ppu / 100));
+      let radius = Math.max(1, Math.round(ppu / 100));
       this.drawCircle(graphics, offset[0] * ppu, -offset[1] * ppu, radius, style);
     } else if (shape instanceof Plane) {
       // TODO: use shape angle
@@ -356,123 +405,23 @@ class p2Pixi {
       this.drawCapsule(graphics, offset[0] * ppu, -offset[1] * ppu, angle, shape.length * ppu, shape.radius * ppu, style);
     } else if (shape instanceof Convex) {
       // Scale verts
-      var verts = [],
+      let verts = [],
           vrot = vec2.create();
-      for (var i = 0; i < shape.vertices.length; i++) {
-        var v = shape.vertices[i];
+      for (let i = 0; i < shape.vertices.length; i++) {
+        let v = shape.vertices[i];
         vec2.rotate(vrot, v, angle);
         verts.push([(vrot[0] + offset[0]) * ppu, -(vrot[1] + offset[1]) * ppu]);
       }
       this.drawConvex(graphics, verts, style);
     } else if (shape instanceof Heightfield) {
-      var path = [[0, 100 * ppu]],
+      let path = [[0, 100 * ppu]],
           heights = shape.heights;
-      for (var i = 0; i < heights.length; i++) {
-        var h = heights[i];
+      for (let i = 0; i < heights.length; i++) {
+        let h = heights[i];
         path.push([i * shape.elementWidth * ppu, -h * ppu]);
       }
       path.push([heights.length * shape.elementWidth * ppu, 100 * ppu]);
       this.drawPath(graphics, path, style);
-    }
-  }
-
-  /**
-   * Adds the supplied shape to the supplied Container, using vectors and / or a texture
-   * @param  {Container} container
-   * @param  {Shape} shape
-   * @param  {Object} shapeOptions
-   */
-  addShape(container, shape, shapeOptions) {
-    shapeOptions = shapeOptions || {};
-    var offset = shapeOptions.offset || [0, 0],
-        angle = shapeOptions.angle || 0,
-        textureOptions = shapeOptions.textureOptions,
-        styleOptions = shapeOptions.styleOptions,
-        alpha = shapeOptions.alpha || 1,
-        zero = [0, 0],
-        ppu = this.pixelsPerLengthUnit;
-
-    // If a Pixi texture has been specified...
-    if (textureOptions) {
-      var texture = textureOptions.texture,
-
-          // Calculate the bounding box of the shape when at zero offset and 0 angle
-          aabb = new p2.AABB();
-      shape.computeAABB(aabb, zero, 0);
-
-      // Get world coordinates of shape boundaries
-      var left = aabb.lowerBound[0],
-          bottom = aabb.lowerBound[1],
-          right = aabb.upperBound[0],
-          top = aabb.upperBound[1];
-
-      // Cater for Heightfield shapes
-      if (shape instanceof Heightfield) {
-        bottom = -(this.options.height / ppu);
-      }
-
-      var width = right - left,
-          height = top - bottom,
-          // Create a Sprite or TilingSprite to cover the entire shape
-          sprite;
-      if (textureOptions.tile === false) {
-        sprite = new PIXI.Sprite(texture);
-      } else {
-        sprite = new PIXI.extras.TilingSprite(texture, width * ppu, height * ppu);
-      }
-      sprite.alpha = alpha;
-      // If the shape is anything other than a box, we need a mask for the texture.
-      // We use the shape itself to create a new Graphics object.
-      if (!(shape instanceof Box)) {
-        var maskGraphics = new PIXI.Graphics();
-        maskGraphics.renderable = false;
-        maskGraphics.position.x = (offset[0] * ppu);
-        maskGraphics.position.y = -(offset[1] * ppu);
-        maskGraphics.rotation = -angle;
-        this.renderShapeToGraphics(maskGraphics, shape, zero, 0,
-            {
-              lineWidth: 0,
-              fillColor: 0xffffff
-            });
-
-        container.addChild(maskGraphics);
-        sprite.mask = maskGraphics;
-      }
-
-      // Sprite positions are the top-left corner of the Sprite, whereas Graphics objects
-      // are positioned at their origin
-      if (angle === 0) {
-        sprite.position.x = (left * ppu) + (offset[0] * ppu);
-        sprite.position.y = -(top * ppu) - (offset[1] * ppu);
-        sprite.rotation = -angle;
-
-        container.addChild(sprite);
-      } else {
-        var doc = new PIXI.Container();
-        sprite.position.x = (left * ppu);
-        sprite.position.y = -(top * ppu);
-
-        doc.addChild(sprite);
-        doc.position.x = (offset[0] * ppu);
-        doc.position.y = -(offset[1] * ppu);
-        doc.rotation = -angle;
-
-        doc.addChild(sprite);
-        container.addChild(doc);
-      }
-    }
-
-    // If any Pixi vector styles have been specified...
-    if (styleOptions) {
-      var graphics = new PIXI.Graphics();
-      graphics.alpha = alpha;
-      graphics.position.x = (offset[0] * ppu);
-      graphics.position.y = -(offset[1] * ppu);
-      graphics.rotation = -angle;
-
-      this.renderShapeToGraphics(graphics, shape, zero, 0, styleOptions);
-
-      container.addChild(graphics);
     }
   }
 
@@ -482,7 +431,7 @@ class p2Pixi {
    * @param  {Number} height
    */
   resize(width, height) {
-    var renderer = this.renderer,
+    let renderer = this.renderer,
         view = renderer.view,
         ratio = width / height,
         pixiRatio = renderer.width / renderer.height;
@@ -505,4 +454,47 @@ class p2Pixi {
       view.style.top = Math.round((height - this.viewCssHeight) / 2) + 'px';
     }
   }
+
+  /**
+   * Sets up the Pixi renderer
+   */
+  setupRenderer() {
+    var options = this.options;
+    this.renderer = PIXI.autoDetectRenderer(options.width, options.height, options);
+  }
+
+  /**
+   * Sets up the Pixi view
+   */
+  setupView() {
+    var self = this,
+        renderer = this.renderer,
+        view = this.renderer.view,
+        container = this.container;
+
+    view.style.pos = "absolute";
+    view.style.top = "0px";
+    view.style.left = "0px";
+    document.body.querySelector('#game-container').appendChild(view);
+
+    this.viewCssWidth = 0;
+    this.viewCssHeight = 0;
+    this.windowWidth = window.innerWidth;
+    this.windowHeight = window.innerHeight;
+
+    container.position.x = renderer.width / 2;
+    container.position.y = renderer.height / 2;
+
+    if (this.options.resizable && this.options.autoResize) {
+      this.resize(this.windowWidth, this.windowHeight);
+
+      window.addEventListener('resize', resizeRenderer);
+      window.addEventListener('orientationchange', resizeRenderer);
+
+      function resizeRenderer() {
+        self.resize(window.innerWidth, window.innerHeight);
+      }
+    }
+  }
+
 }

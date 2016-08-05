@@ -281,45 +281,6 @@
         this.scene.clear();
         this.scene.lineStyle(0.005, 0x00000, 1);
 
-        var drawShape = (body) => {
-          this.scene.lineStyle(0.005, 0x00000, 1);
-          var x = body.interpolatedPosition[0],
-              y = body.interpolatedPosition[1],
-              s = body.shapes[0];
-          switch (s.type) {
-            case Shape.CIRCLE:
-              this.scene.beginFill(0x00ff00, 0.5);
-              this.scene.drawCircle(x, y, s.radius);
-              break;
-            case Shape.BOX:
-            case Shape.CONVEX:
-              this.scene.beginFill(0xff0000, 0.5);
-              this.scene.drawRect(x, y, s.width, s.height);
-              break;
-            case Shape.PLANE:
-              this.scene.beginFill(0x000000);
-              var y1 = body.interpolatedPosition[1],
-                  y0 = -this.height / zoom / 2,
-                  x0 = -this.width / zoom / 2,
-                  x1 = this.width / zoom / 2,
-                  w = x1 - x0,
-                  h = y1 - y0;
-              this.scene.drawRect(x0, y0, w, h);
-              break;
-          }
-          this.scene.endFill();
-        };
-
-        drawShape(planeBody);
-        for (let i = 0; i < platforms.length; i++) {
-          drawShape(platforms[i]);
-        }
-
-        drawShape(characterBody);
-        for (let i = 0; i < boxes.length; i++) {
-          drawShape(boxes[i]);
-        }
-
         this.renderer.render(this.stage);
       };
       requestAnimationFrame(animate);

@@ -4,88 +4,31 @@
    * @constructor
    * @param  {Object} game
    */
-  constructor(game) {
-    var self = this;
-    this.game = game;
+  constructor(game, body, shape, options) {
     this.bodies = [];
     this.constraints = [];
     this.containers = [];
     this.children = [];
+
+    this.addBody(game, body).addShape(game, shape, options);
   }
 
   /**
    * Adds the supplied p2 body to the game's world and to
    * this GameObject's bodies collection
    * Also creates a corresponding PIXI Container object for rendering.
-   * @param  {p2.Body} body
+   * @param  {Body} body
    * @return {GameObject} gameObject
    */
-  addBody(body) {
+  addBody(game, body) {
+    this.body = body;
     this.bodies.push(body);
-    this.game.world.addBody(body);
-
-    var container = new PIXI.Container();
-    this.containers.push(container);
-    this.game.pixiAdapter.container.addChild(container);
-
-    return this;
-  }
-
-  /**
-   * Removes the supplied p2 body from the game's world and
-   * from this GameObject's bodies collection
-   * @param  {p2.Body} body
-   */
-  removeBody(body) {
-    var index = this.bodies.indexOf(body);
-
-    this.bodies.splice(index, 1);
-    this.game.world.removeBody(body);
-
-    this.containers.splice(index, 1);
-    this.game.pixiAdapter.container.removeChildAt(index);
-  }
-
-  /**
-   * Adds the supplied p2 shape to the supplied p2 body
-   * @param  {p2.Body} body
-   * @param  {p2.Shape} shape
-   * @param  {Object} options
-   * @return {GameObject} gameObject
-   */
-  addShape(body, shape, options) {
-    var offset = options.offset || [0, 0],
-        angle = options.angle || 0;
-    shape.collisionGroup = (options.collisionOptions && options.collisionOptions.collisionGroup) || 1;
-    shape.collisionMask = (options.collisionOptions && options.collisionOptions.collisionMask) || 1;
-
-    body.addShape(shape, offset, angle);
-    let container = this.containers[this.bodies.indexOf(body)];
-    this.game.pixiAdapter.addShape(container, shape, options);
+    this.container = new PIXI.Container();
+    this.containers.push(this.container);
+    game.world.addBody(this.body);
+    game.pixiAdapter.container.addChild(this.container);
 
     return this;
-  }
-
-  /**
-   * Adds the supplied p2 constraint to the game's world and to
-   * this GameObject's constraints collection
-   * @param  {p2.Constraint} constraint
-   * @return {GameObject} gameObject
-   */
-  addConstraint(constraint) {
-    this.constraints.push(constraint);
-    this.game.world.addConstraint(constraint);
-
-    return this;
-  }
-
-  /**
-   * Removes the supplied p2 constraint from the game's world
-   * and from this GameObject's constraints collection
-   * @param  {p2.Constraint} constraint
-   */
-  removeConstraint(constraint) {
-    this.game.world.removeConstraint(constraint);
   }
 
   /**
@@ -98,34 +41,43 @@
   }
 
   /**
-   * Updates the PIXI container transforms for this GameObject
-   * and all children
+   * Adds the supplied p2 constraint to the game's world and to
+   * this GameObject's constraints collection
+   * @param  {Constraint} constraint
+   * @return {GameObject} gameObject
    */
-  updateTransforms() {
-    var ppu = this.game.pixiAdapter.pixelsPerLengthUnit,
-        bodies = this.bodies,
-        containers = this.containers;
-    for (let i = 0; i < bodies.length; i++) {
-      let body = bodies[i],
-          container = containers[i];
-      container.position.x = body.position[0] * ppu;
-      container.position.y = -body.position[1] * ppu;
-      container.rotation = -body.angle;
-    }
+  addConstraint(game, constraint) {
+    this.constraints.push(constraint);
+    game.world.addConstraint(constraint);
 
-    // Update children
-    let children = this.children;
-    for (let i = 0; i < children.length; i++) {
-      children[i].updateTransforms();
-    }
+    return this;
+  }
+
+  /**
+   * Adds the supplied p2 shape to the supplied p2 body
+   * @param  {Body} body
+   * @param  {Shape|Heightfield} shape
+   * @param  {Object} options
+   * @return {GameObject} gameObject
+   */
+  addShape(game, shape, options) {
+    this.shape = shape;
+    let offset = options.offset || [0, 0],
+        angle = options.angle || 0;
+    this.shape.collisionGroup = (options.collisionOptions && options.collisionOptions.collisionGroup) || 1;
+    this.shape.collisionMask = (options.collisionOptions && options.collisionOptions.collisionMask) || 1;
+
+    this.body.addShape(this.shape, offset, angle);
+    let container = this.containers[this.bodies.indexOf(this.body)];
+    game.pixiAdapter.addShape(container, shape, options);
+    return this;
   }
 
   /**
    * Removes this GameObject and all of its children from the game
    */
-  remove() {
-    var game = this.game,
-        world = game.world,
+  remove(game) {
+    var world = game.world,
         container = game.pixiAdapter.container;
 
     for (let i = 0; i < this.children.length; i++) {
@@ -142,12 +94,57 @@
     }
 
     if (this.parent) {
-      let index = this.parent.children.indexOf(this);
-      this.parent.children.splice(index, 1);
+      this.parent.children.splice(this.parent.children.indexOf(this), 1);
       this.parent = undefined;
     } else {
-      let index = game.gameObjects.indexOf(this);
-      game.gameObjects.splice(index, 1);
+      game.gameObjects.splice(game.gameObjects.indexOf(this), 1);
     }
   }
+
+  /**
+   * Removes the supplied p2 body from the game's world and
+   * from this GameObject's bodies collection
+   * @param  {Body} body
+   */
+  removeBody(game, body) {
+    var index = this.bodies.indexOf(body);
+    this.bodies.splice(index, 1);
+    this.containers.splice(index, 1);
+
+    game.world.removeBody(body);
+    game.pixiAdapter.container.removeChildAt(index);
+  }
+
+  /**
+   * Removes the supplied p2 constraint from the game's world
+   * and from this GameObject's constraints collection
+   * @param  {Constraint} constraint
+   */
+  removeConstraint(game, constraint) {
+    game.world.removeConstraint(constraint);
+  }
+
+  /**
+   * Updates the PIXI container transforms for this GameObject
+   * and all children
+   */
+  updateTransforms(game) {
+    let ppu = game.pixiAdapter.pixelsPerLengthUnit,
+        bodies = this.bodies,
+        containers = this.containers;
+    for (let i = 0; i < bodies.length; i++) {
+      let body = bodies[i],
+          container = containers[i];
+      container.position.x = body.position[0] * ppu;
+      container.position.y = -body.position[1] * ppu;
+      container.rotation = -body.angle;
+    }
+
+    // Update children
+    let children = this.children;
+    for (let i = 0; i < children.length; i++) {
+      children[i].updateTransforms(game);
+    }
+  }
+
 }
