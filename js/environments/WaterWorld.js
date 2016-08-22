@@ -2,23 +2,23 @@
   'use strict';
 
   const renderOpts = {
-        backgroundColor: 0xCCCCCC,
-        antialiasing: false,
-        autoResize: false,
-        resizable: false,
-        transparent: false,
-        resolution: 1,//window.devicePixelRatio,
+        backgroundColor: 0xFFFFFF,
+        antialiasing: true,
+        autoResize: true,
+        resizable: true,
+        transparent: true,
+        resolution: window.devicePixelRatio,
         noWebGL: false,
-        width: 600,
-        height: 600
+        width: 800,
+        height: 800
       },
       worldOpts = {
         collision: {
-          type: 'quad'
+          type: 'brute'
         },
         cheats: {
           brute: false,
-          quad: true,
+          quad: false,
           grid: false,
           walls: false
         },
@@ -60,9 +60,9 @@
         buffer: 0,
         cellSize: 100,
         cellSpacing: 0,
-        size: 6,
+        size: 8,
         pointy: false,
-        fill: true
+        fill: false
       };
 
   class WaterWorld extends World {

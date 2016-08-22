@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script src="js/lib/external/d3.v4.js"></script>
+<script src="js/lib/external/priority-queue.js"></script>
+<script src="js/lib/external/language.js"></script>
+<script src="js/lib/Terrain.js"></script>
+<style>
+    /* <![CDATA[ */
+    path, line {
+        fill: none;
+        stroke: black;
+        stroke-linecap: round;
+    }
+
+    .field {
+        stroke: none;
+        fill-opacity: 1.0;
+    }
+
+    .slope {
+        stroke-width: 1;
+    }
+
+    .river {
+        stroke-width: 2;
+    }
+
+    .coast {
+        stroke-width: 4;
+    }
+
+    .border {
+        stroke-width: 5;
+        stroke-dasharray: 4,4;
+        stroke-linecap: butt;
+    }
+
+    text {
+        font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+        color: black;
+        stroke: white;
+        stroke-width: 5;
+        stroke-linejoin: round;
+        paint-order: stroke;
+    }
+
+    text.region {
+        stroke-width:10;
+        font-variant: small-caps;
+    }
+
+    svg {
+        float: right;
+        background-color: white;
+    }
+    /* ]]> */
+</style>
+<div class="example" id="final"></div>
+<script>
+    function addSVG(div) {
+        return div.insert("svg", ":first-child")
+                .attr("height", 400)
+                .attr("width", 400)
+                .attr("viewBox", "-500 -500 1000 1000");
+    }
+
+    var finalDiv = d3.select("div#final"),
+        finalSVG = addSVG(finalDiv);
+    finalDiv.append("button")
+            .text("Generate high resolution map")
+            .on("click", function () {
+                doMap(finalSVG, defaultParams);
+            });
+</script>
+</body>
+</html>

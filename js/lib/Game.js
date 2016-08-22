@@ -1,46 +1,38 @@
-﻿const Body = p2.Body,
-    Box = p2.Box,
-    Circle = p2.Circle,
-    Capsule = p2.Capsule,
-    Convex = p2.Convex,
-    ContactMaterial = p2.ContactMaterial,
-    Heightfield = p2.Heightfield,
-    Line = p2.Line,
-    Material = p2.Material,
-    Plane = p2.Plane,
-    Particle = p2.Particle,
-    vec2 = p2.vec2,
-    World = p2.World;
-
+﻿
 class Game {
 
   /**
+   * Game
    * @constructor
-   * @param  {Object} options
+   * @param {object} options
    */
-  constructor(options) {
-    options = options || {};
-    options.pixiAdapterOptions = options.pixiAdapterOptions || {
+  constructor(options = {}) {
+    this.options = options;
+    this.pixiAdapterOptions = options.pixiAdapterOptions || {
           background: 0x000000,
-          antialiasing: false,
+          antialiasing: true,
           autoResize: false,
-          resizable: false,
+          resizable: true,
           transparent: false,
           noWebGL: false,
           useDeviceAspect: false,
           resolution: window.devicePixelRatio,
           width: 800,
-          height: 400,
-          pixelsPerLengthUnit: 80
+          height: 800,
+          pixelsPerLengthUnit: 40
         };
-    options.pixiAdapter = options.pixiAdapter || new p2Pixi(options.pixiAdapterOptions);
-    options.worldOptions = options.worldOptions || {};
-    options.worldOptions.gravity = options.worldOptions.gravity || [0, -9.8];
-    options.trackedBodyOffset = options.trackedBodyOffset || [0, 0.8];
+    /**
+     * @type {p2Pixi}
+     */
+    this.pixiAdapter = new p2Pixi(this.pixiAdapterOptions);
+    this.options.worldOptions = {};
+    this.options.worldOptions.gravity = [0, -9.8];
+    this.options.trackedBodyOffset = [0, 0.8];
 
-    this.options = options;
-    this.pixiAdapter = options.pixiAdapter;
-    this.world = new World(options.worldOptions);
+    /**
+     * @type {p2.World}
+     */
+    this.world = new World(this.options.worldOptions);
 
     this.gameObjects = [];
     this.trackedBody = null;
@@ -57,8 +49,8 @@ class Game {
 
     this.Ball();
 
-    if (options.assetUrls) {
-      this.loadAssets(options.assetUrls);
+    if (this.options.assetUrls) {
+      this.loadAssets(this.options.assetUrls);
     } else {
       this.runIfReady();
     }
@@ -104,12 +96,11 @@ class Game {
    * Called before the game loop is started
    */
   beforeRun() {
-    var self = this;
-    window.addEventListener('blur', function(e) {
-      self.windowBlur(e);
+    window.addEventListener('blur', (event) => {
+      this.windowBlur(event);
     });
-    window.addEventListener('focus', function(e) {
-      self.windowFocus(e);
+    window.addEventListener('focus', (event) => {
+      this.windowFocus(event);
     });
   };
 
@@ -118,7 +109,7 @@ class Game {
    */
   clear() {
     while (this.gameObjects.length > 0) {
-      Game.removeGameObject(this.gameObjects[0]);
+      this.gameObjects[0].delete(this);
     }
   }
 
@@ -126,14 +117,14 @@ class Game {
     var self = this;
 
     this.actorMaterial = new Material();
-    this.actor = new GameObject(self, new Body({mass: 0.1, position: position || [0, 0]}), new Circle({radius: 0.25, material: this.actorMaterial}), {styleOptions: {lineWidthUnits: 0.01, lineColor: 0xFFFFFF, fillColor: 0x0000FF}});
+    this.actor = new GameObject(this, new Body({mass: 0.1, position: position || [0, 0]}), new Circle({radius: 0.25, material: this.actorMaterial}), {styleOptions: {lineWidthUnits: 0.01, lineColor: 0xFFFFFF, fillColor: 0x0000FF}});
     this.actor.lastCallTime = Game.time();
     this.actor.velocity = [];
-    this.actor.speed = 2;
-    this.actor.jumpSpeed = 6;
-    this.actor.maximumSpeed = 25;
-    this.actor.accelerationRate = 10;
-    this.actor.decelerationRate = 10;
+    this.actor.speed = 1;
+    this.actor.jumpSpeed = 1;
+    this.actor.maximumSpeed = 15;
+    this.actor.accelerationRate = 5;
+    this.actor.decelerationRate = 5;
     this.actor.reverseDirectionRate = 3;
     this.actor.direction = 0;
     this.actor.touchEnabled = false;
@@ -141,13 +132,14 @@ class Game {
 
     this.groundMaterial = new Material();
     var heights = [];
-    for (var i = 0; i < 500; i++) {
-      heights.push(0.2 * Math.cos(0.2 * i) * Math.sin(0.5 * i) + 0.2 * Math.sin(0.1 * i) * Math.sin(0.05 * i));
+    for (var i = 0; i < 1500; i++) {
+      let height = 0.2 * Math.cos(0.2 * i) * Math.sin(0.5 * i) + 0.2 * Math.sin(0.1 * i) * Math.sin(0.05 * i);
+      heights.push(height);
     }
-    this.ground = new GameObject(self, new Body({position: [-100, 0]}), new Heightfield({heights: heights, elementWidth: 0.3, material: this.groundMaterial}), {styleOptions: {lineWidthUnits: 0.01, lineColor: 0xFFFFFF, fillColor: 0x00FF00}});
+    this.ground = new GameObject(this, new Body({position: [-100, 0]}), new Heightfield({heights: heights, elementWidth: 0.3, material: this.groundMaterial}), {styleOptions: {lineWidthUnits: 0.01, lineColor: 0xFFFFFF, fillColor: 0x00FF00}});
     this.addGameObject(this.ground);
 
-    this.subGround = new GameObject(self, new Body({position: [0, -0.4]}), new Plane({material: this.groundMaterial}), {});
+    this.subGround = new GameObject(this, new Body({position: [0, -0.4]}), new Plane({material: this.groundMaterial}), {});
     this.addGameObject(this.subGround);
 
     // Init contact materials
@@ -166,6 +158,9 @@ class Game {
     GameObject.prototype.accelerateRight = function() {
       this.direction = 1;
     };
+    GameObject.prototype.accelerateUp = function() {
+      this.direction = 2;
+    };
     GameObject.prototype.endAcceleration = function() {
       this.direction = 0;
     };
@@ -173,14 +168,14 @@ class Game {
     document.addEventListener('keydown', function(e) {
       var keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
       switch (keyID) {
-        case 37:
+        case 37: // Left
           self.actor.accelerateLeft();
           break;
-        case 38: // up
-        case 32: // space
-          //self.actor.body.velocity[1] = -self.jumpSpeed;
+        case 38: // Up
+        case 32: // Space
+          self.actor.accelerateUp();
           break;
-        case 39:
+        case 39: // Right
           self.actor.accelerateRight();
           break;
       }
@@ -189,66 +184,76 @@ class Game {
     document.addEventListener('keyup', function(e) {
       var keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
       switch (keyID) {
-        case 38: // up
-        case 32:
-          //self.actor.body.velocity[1] = 0;
-          break;
-        case 37:
-        case 39:
+        case 38: // Up
+        case 32: // Space
+        case 37: // Left
+        case 39: // Right
           self.actor.endAcceleration();
           break;
       }
     });
 
-    /*
-     if (this.touchEnabled) {
-     function onViewportTouchHold(e) {
-     var touch = e.changedTouches ? e.changedTouches[0] : e;
-     if (touch.clientX <= self.pixiAdapter.windowWidth / 2) {
-     self.actor.accelerateLeft();
-     } else {
-     self.actor.accelerateRight();
-     }
-     }
-
-     function onViewportRelease(e) {
-     self.actor.endAcceleration();
-     }
-
-     self.pixiAdapter.renderer.view.addEventListener('touchstart', onViewportTouchHold, false);
-     self.pixiAdapter.renderer.view.addEventListener('touchend', onViewportRelease, false);
-
-     self.pixiAdapter.renderer.view.addEventListener('mousedown', onViewportTouchHold, false);
-     self.pixiAdapter.renderer.view.addEventListener('mouseup', onViewportRelease, false);
-     }
-     */
-
-    this.world.on('postStep', function(e) {
+    this.world.on('postStep', (event) => {
+      // console.log("postStep");
       var time = Game.time(),
-          bObj = self.actor,
+          bObj = this.actor,
           tDelta = time - bObj.lastCallTime;
       bObj.lastCallTime = time;
 
-      if (bObj.direction < 0) {
+      if (bObj.direction == -1) {
         bObj.speed -= (tDelta * (bObj.accelerationRate * (bObj.speed > 0 ? bObj.reverseDirectionRate : 1)));
         if (bObj.speed < -bObj.maximumSpeed) {
           bObj.speed = -bObj.maximumSpeed;
         }
-      } else if (bObj.direction > 0) {
+      } else if (bObj.direction  == 1) {
         bObj.speed += (tDelta * (bObj.accelerationRate * (bObj.speed < 0 ? bObj.reverseDirectionRate : 1)));
         if (bObj.speed > bObj.maximumSpeed) {
           bObj.speed = bObj.maximumSpeed;
         }
-      } else {
+      } else if (bObj.direction  == 2)  {
         if (bObj.speed < 0) {
           bObj.speed += (tDelta * bObj.decelerationRate);
         } else if (bObj.speed > 0) {
           bObj.speed -= (tDelta * bObj.decelerationRate);
         }
+        bObj.body.velocity[1] = bObj.speed;
       }
 
       bObj.body.velocity[0] = bObj.speed;
     });
+
+    this.world.on("beginContact", (event) => {
+      // console.log("beginContact");
+    });
+
+    this.world.on("preSolve", (event) => {
+      // console.log("preSolve");
+    });
+
+    this.world.on("endContact", (event) => {
+      // console.log("endContact");
+    });
+
+    this.world.on("impact", (event) => {
+      // console.log("impact");
+    });
+
+    this.world.on("postBroadphase", (event) => {
+      // console.log("postBroadphase");
+    });
+
+    this.world.on("addSpring", (event) => {
+      console.log("addSpring");
+    });
+
+    this.world.on("addBody", (event) => {
+      console.log("addBody");
+    });
+
+    this.world.on("removeBody", (event) => {
+      console.log("removeBody");
+    });
+
     this.trackedBody = this.actor.body;
     this.assetsLoaded = true;
   }
@@ -257,7 +262,7 @@ class Game {
    * Returns true if all async setup functions are complete
    * and the Game is ready to start.
    * Override this to implement multiple setup functions
-   * @return {Boolean}
+   * @return {boolean}
    */
   isReadyToRun() {
     return this.assetsLoaded;
@@ -265,18 +270,17 @@ class Game {
 
   /**
    * Loads the supplied assets asyncronously using PIXI.loader
-   * @param  {String[]} assetUrls
+   * @param {string[]} assetUrls
    */
   loadAssets(assetUrls) {
-    var loader = PIXI.loader,
-        self = this;
+    var loader = PIXI.loader;
     for (let i = 0; i < assetUrls.length; i++) {
       loader.add(assetUrls[i], assetUrls[i]);
     }
 
-    loader.once('complete', function() {
-      self.assetsLoaded = true;
-      self.runIfReady();
+    loader.once('complete', () => {
+      this.assetsLoaded = true;
+      this.runIfReady();
     });
 
     loader.load();
@@ -293,44 +297,34 @@ class Game {
   }
 
   /**
-   * Removes the supplied GameObject
-   * @param  {GameObject} gameObject
-   */
-  static removeGameObject(gameObject) {
-    gameObject.remove();
-  }
-
-  /**
    * Updates the Pixi representation of the world
    */
   render() {
-    let gameObjects = this.gameObjects,
-        pixiAdapter = this.pixiAdapter;
-    for (let i = 0; i < gameObjects.length; i++) {
-      gameObjects[i].updateTransforms(this);
+    for (let i = 0; i < this.gameObjects.length; i++) {
+      this.gameObjects[i].updateTransforms(this);
     }
-    pixiAdapter.renderer.render(pixiAdapter.stage);
+    this.pixiAdapter.renderer.render(this.pixiAdapter.stage);
   }
 
   /**
    * Begins the world step / render loop
    */
   run() {
+    this.fixedTimeStep = 1 / 60;
+    this.maxSubSteps = 10;
     this.lastWorldStepTime = Game.time();
 
-    var self = this;
-
-    function update() {
-      if (self.windowFocused && !self.paused) {
-        let timeSinceLastCall = Game.time() - self.lastWorldStepTime;
-        self.lastWorldStepTime = Game.time();
-        self.world.step(1 / 60, timeSinceLastCall, 10);
+    var update = () => {
+      if (this.windowFocused && !this.paused) {
+        let timeSinceLastCall = Game.time() - this.lastWorldStepTime;
+        this.lastWorldStepTime = Game.time();
+        this.world.step(this.fixedTimeStep, timeSinceLastCall, this.maxSubSteps);
       }
-      self.beforeRender();
-      self.render();
-      self.afterRender();
+      this.beforeRender();
+      this.render();
+      this.afterRender();
       requestAnimationFrame(update);
-    }
+    };
 
     requestAnimationFrame(update);
   }
@@ -347,7 +341,7 @@ class Game {
 
   /**
    * Returns the current time in seconds
-   * @return {Number}
+   * @return {number}
    */
   static time() {
     return new Date().getTime() / 1000;
@@ -355,20 +349,18 @@ class Game {
 
   /**
    * Called when the window loses focus
-   * @param  {Event} e
+   * @param {event} event
    */
-  windowBlur(e) {
+  windowBlur(event) {
     this.windowFocused = false;
   }
 
   /**
    * Called when the window gets focus
-   * @param  {Event} e
+   * @param {event} event
    */
-  windowFocus(e) {
+  windowFocus(event) {
     this.windowFocused = true;
-    if (!this.paused) {
-      this.lastWorldStepTime = Game.time();
-    }
+    this.pauseToggle();
   }
 }

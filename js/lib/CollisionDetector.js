@@ -12,6 +12,7 @@
   /**
    * Collision Detector wrapper
    * @constructor
+   * @extends {World}
    *
    * @param {collisionOpts} opts
    */
@@ -243,7 +244,11 @@
      */
     this.drawRegions = function(aN) {
       let nodes = aN.getNodes(),
-          rect = new PIXI.Graphics();
+          rect = new PIXI.Graphics(),
+          popText = new PIXI.Text(
+              (aN.items !== undefined) ? aN.items.length : '0',
+              {font: '12px Arial', fill: '#000000', align: 'center'}
+          );
       if (nodes) {
         for (let i = 0; i < nodes.length; i++) {
           this.drawRegions(nodes[i]);
@@ -251,18 +256,13 @@
       }
 
       rect.clear();
-      rect.lineStyle(0.5, 0xFF0000, 0.3);
+      rect.lineStyle(0.5, 0xFF0000, 1);
       rect.drawRect(aN.corners[0].x, aN.corners[0].y, aN.width, aN.height);
       rect.endFill();
-
-      if (aN.items !== undefined) {
-        let txtOpts = {font: '14px Arial', fill: '#00FF00', align: 'center'},
-            popText = new PIXI.Text(aN.items.length, txtOpts);
-        popText.position.set(aN.x + aN.width / 2, aN.y + aN.height / 2);
-        rect.addChild(popText);
-      }
+      popText.position.set(aN.x + aN.width / 2, aN.y + aN.height / 2);
 
       this.collisionOverlay.addChild(rect);
+      this.collisionOverlay.addChild(popText);
     };
 
     /**
@@ -280,18 +280,13 @@
 
       if (this.cheats.quad) {
         if (this.collisionOverlay !== undefined) {
-          this.stage.removeChild(this.collisionOverlay);
+          this.collisionOverlay.removeChildren();
+        } else {
+          this.collisionOverlay = new PIXI.Container();
+          this.collisionOverlay.id = 'collisionOverlay';
+          this.uiLayer.addChild(this.collisionOverlay);
         }
-        this.collisionOverlay = new PIXI.Container();
-
         this.drawRegions(this.tree.root);
-        this.stage.addChild(this.collisionOverlay);
-      } else {
-        if (this.collisionOverlay !== undefined) {
-          this.stage.removeChild(this.collisionOverlay);
-        }
-        this.collisionOverlay = new PIXI.Container();
-        this.stage.addChild(this.collisionOverlay);
       }
     };
   };

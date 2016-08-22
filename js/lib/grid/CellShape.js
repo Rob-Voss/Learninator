@@ -26,8 +26,8 @@
       this.cheats = Utility.getOpt(opts, 'cheats', false);
       this.isOver = false;
       this.isDown = false;
-      this.color = 0xFFFFFF;
-      this.alpha = 1;
+      this.color = 0x000000;
+      this.alpha = 0;
       this.walls = [];
       this.center = new Vec(
         this.x * this.size + (this.size / 2),
@@ -56,14 +56,14 @@
             this.event = event;
             this.data = event.data;
             this.color = 0x00FF00;
-            this.alpha = 1;
+            this.alpha = 0.5;
             this.isDown = true;
             this.draw();
           })
         .on('mouseup', (event) => {
             this.event = event;
-            this.color = 0xFFFFFF;
-            this.alpha = 1;
+            this.color = 0x000000;
+            this.alpha = 0;
             this.isDown = false;
             this.draw();
           })
@@ -76,8 +76,8 @@
           })
         .on('mouseout', (event) => {
             this.event = event;
-            this.color = 0xFFFFFF;
-            this.alpha = 1;
+            this.color = 0x000000;
+            this.alpha = 0;
             this.isOver = false;
             this.draw();
           });
@@ -119,7 +119,6 @@
         this.graphics.position.y = this.center.y;
       } else {
         this.graphics.clear();
-        this.graphics.color = this.color;
         this.graphics.lineStyle(0, 0x000000, this.alpha);
         if (this.fill) {
           this.graphics.beginFill(this.color, this.alpha);
