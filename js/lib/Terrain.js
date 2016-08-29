@@ -9,7 +9,7 @@ function generateCoastLine(params) {
   var landscape = add(
     Mesh.slope(mesh, randomVector(4)),
     Mesh.cone(mesh, runIf(-1, -1)),
-    Mesh.mountains(mesh, 50, 0.8)
+    Mesh.mountains(mesh, 50)
   );
 
   for (let i = 0; i < 10; i++) {
@@ -19,7 +19,7 @@ function generateCoastLine(params) {
   landscape = Mesh.peaky(landscape);
   landscape = Mesh.doErosion(landscape, runIf(0, 0.1), 5);
   landscape = Mesh.setSeaLevel(landscape, runIf(0.2, 0.6));
-  landscape = Mesh.fillSinks(landscape, 1e-5);
+  landscape = Mesh.fillSinks(landscape);
   landscape = Mesh.cleanCoast(landscape, 3);
 
   return landscape;
@@ -33,10 +33,9 @@ function generateIslands(params) {
   var mesh = Mesh.generateGoodMesh(params.numPts, params.extent);
 
   var landscape = add(
-    Mesh.slope(mesh, randomVector(1)),
-    Mesh.mountains(mesh, 150),
     Mesh.slope(mesh, randomVector(4)),
-    Mesh.cone(mesh, runIf(-0.5, 0.5))
+    Mesh.cone(mesh, runIf(-0.5, 0.5)),
+    Mesh.mountains(mesh, 10)
   );
 
   for (let i = 0; i < 20; i++) {
@@ -52,43 +51,57 @@ function generateIslands(params) {
   return landscape;
 }
 
+function generateUneroded() {
+  var mesh = Mesh.generateGoodMesh(4096),
+    landscape = add(
+      Mesh.slope(mesh, randomVector(4)),
+      Mesh.cone(mesh, runIf(-1, 1)),
+      Mesh.mountains(mesh, 50)
+    );
+  landscape = Mesh.peaky(landscape);
+  landscape = Mesh.fillSinks(landscape);
+  landscape = Mesh.setSeaLevel(landscape, 0.5);
+
+  return landscape;
+}
+
 function generateBlob(params) {
 
 }
 
 var rNorm = (function () {
-    var z2 = null;
+  var z2 = null;
 
-    function rnorm() {
-      if (z2 != null) {
-        var tmp = z2;
-        z2 = null;
-        return tmp;
-      }
-      var x1 = 0,
-        x2 = 0,
-        w = 2.0;
-      while (w >= 1) {
-        x1 = runIf(-1, 1);
-        x2 = runIf(-1, 1);
-        w = x1 * x1 + x2 * x2;
-      }
-      w = Math.sqrt(-2 * Math.log(w) / w);
-      z2 = x2 * w;
-
-      return x1 * w;
+  function rnorm() {
+    if (z2 != null) {
+      var tmp = z2;
+      z2 = null;
+      return tmp;
     }
+    var x1 = 0,
+      x2 = 0,
+      w = 2.0;
+    while (w >= 1) {
+      x1 = runIf(-1, 1);
+      x2 = runIf(-1, 1);
+      w = x1 * x1 + x2 * x2;
+    }
+    w = Math.sqrt(-2 * Math.log(w) / w);
+    z2 = x2 * w;
 
-    return rnorm;
-  })();
+    return x1 * w;
+  }
 
-  /**
-   * Default font sizes for the map
-   * @typedef {Object} fontSizeObject
-   * @property {number} region
-   * @property {number} city
-   * @property {number} town
-   */
+  return rnorm;
+})();
+
+/**
+ * Default font sizes for the map
+ * @typedef {Object} fontSizeObject
+ * @property {number} region
+ * @property {number} city
+ * @property {number} town
+ */
 const defaultFontSizes = {
     region: 40,
     city: 25,
@@ -773,25 +786,25 @@ class Mesh {
   /**
    *
    * @param {meshObject} mesh
-   * @param {number} n
-   * @param {number} r
+   * @param {number} number
+   * @param {number} radius
    * @returns {meshObject} newVals
    */
-  static mountains(mesh, n, r) {
-    r = r || 0.05;
+  static mountains(mesh, number, radius) {
+    radius = radius || 0.05;
     let mounts = [],
-        newVals = Mesh.zero(mesh);
-    for (let i = 0; i < n; i++) {
+      newVals = Mesh.zero(mesh);
+    for (let i = 0; i < number; i++) {
       let x = mesh.extent.width * (Math.random() - 0.5),
-          y = mesh.extent.height * (Math.random() - 0.5);
+        y = mesh.extent.height * (Math.random() - 0.5);
       mounts.push([x, y]);
     }
 
     for (let i = 0; i < mesh.vxs.length; i++) {
       let p = mesh.vxs[i];
-      for (let j = 0; j < n; j++) {
+      for (let j = 0; j < number; j++) {
         let m = mounts[j],
-          val = Math.pow(Math.exp(-((p[0] - m[0]) * (p[0] - m[0]) + (p[1] - m[1]) * (p[1] - m[1])) / (2 * r * r)), 2);
+          val = Math.pow(Math.exp(-((p[0] - m[0]) * (p[0] - m[0]) + (p[1] - m[1]) * (p[1] - m[1])) / (2 * radius * radius)), 2);
         newVals[i] += val;
       }
     }
@@ -1016,60 +1029,116 @@ class Map {
     this.viewPoints = false;
 
     this.functions = {
-      addCity: () => {
-        this.addCity();
+      clearMap: () => {
+        this.svg.selectAll().remove();
+        this.borders = [];
+        this.cities = [];
+        this.coasts = [];
+        this.rivers = [];
+        this.territories = [];
+        this.cityLabels = [];
+        this.regionLabels = [];
+        this.landscape = Mesh.zero(Mesh.generateGoodMesh(this.settings.numPts, this.settings.extent));
         this.drawMap();
       },
-      addCone: () => {
-        this.landscape = add(this.landscape, Mesh.cone(this.landscape.mesh, -0.5));
-        this.drawMap();
-      },
-      addInvertedCone: () => {
-        this.landscape = add(this.landscape, Mesh.cone(this.landscape.mesh, 0.5));
-        this.drawMap();
-      },
-      addMountains: () => {
-        this.landscape = add(this.landscape, Mesh.mountains(this.landscape.mesh, 5));
-        this.drawMap();
-      },
-      addRandomSlope: () => {
-        this.landscape = add(this.landscape, Mesh.slope(this.landscape.mesh, randomVector(4)));
-        this.drawMap();
-      },
-      toggleBorders: () => {
-        this.viewBorders = !this.viewBorders;
-        this.drawMap();
-      },
-      toggleCities: () => {
-        this.viewCities = !this.viewCities;
-        this.drawMap();
-      },
-      toggleCoasts: () => {
-        this.viewCoasts = !this.viewCoasts;
-        this.drawMap();
-      },
-      toggleLabels: () => {
-        this.viewLabels = !this.viewLabels;
-        this.drawMap();
-      },
-      togglePoints: () => {
-        this.viewPoints = !this.viewPoints;
-        this.drawMap();
-      },
-      toggleRivers: () => {
-        this.viewRivers = !this.viewRivers;
-        this.drawMap();
-      },
-      toggleScores: () => {
-        this.viewScores = !this.viewScores;
-        this.drawMap();
-      },
-      toggleSlopes: () => {
-        this.viewSlopes = !this.viewSlopes;
-        this.drawMap();
-      },
-      resetMap: () => {
+      randomMap: () => {
         this.doMap();
+      },
+      landscapeActions: {
+        erode: () => {
+          this.landscape = Mesh.doErosion(this.landscape, 0.1, 5);
+          this.drawMap();
+        },
+        normalize: () => {
+          this.landscape = Mesh.normalize(this.landscape);
+          this.drawMap();
+        },
+        roundHills: () => {
+          this.landscape = Mesh.peaky(this.landscape);
+          this.drawMap();
+        },
+        relax: () => {
+          this.landscape = Mesh.relax(this.landscape);
+          this.drawMap();
+        }
+      },
+      add: {
+        city: () => {
+          this.addCity();
+          this.drawMap();
+        },
+        cone: () => {
+          this.landscape = add(this.landscape, Mesh.cone(this.landscape.mesh, -0.5));
+          this.drawMap();
+        },
+        invertedCone: () => {
+          this.landscape = add(this.landscape, Mesh.cone(this.landscape.mesh, 0.5));
+          this.drawMap();
+        },
+        mountains: () => {
+          this.landscape = add(this.landscape, Mesh.mountains(this.landscape.mesh, 5));
+          this.drawMap();
+        },
+        randomSlope: () => {
+          this.landscape = add(this.landscape, Mesh.slope(this.landscape.mesh, randomVector(4)));
+          this.drawMap();
+        }
+      },
+      generate: {
+        borders: () => {
+          this.generateBorders(this.landscape, this.territories);
+          this.drawMap();
+        },
+        cities: () => {
+          this.generateCities();
+          this.drawMap();
+        },
+        coasts: () => {
+          this.generateCoasts(this.landscape);
+          this.drawMap();
+        },
+        labels: () => {
+          this.generateLabels(this.landscape);
+          this.drawMap();
+        },
+        rivers: () => {
+          this.generateRivers(Mesh.zero(this.landscape.mesh), 0.01);
+          this.drawMap();
+        },
+        territories: () => {
+          this.generateTerritories(this.landscape);
+          this.drawMap();
+        }
+      },
+      toggle: {
+        borders: () => {
+          this.viewBorders = !this.viewBorders;
+          this.drawMap();
+        },
+        cities: () => {
+          this.viewCities = !this.viewCities;
+          this.drawMap();
+        },
+        coasts: () => {
+          this.viewCoasts = !this.viewCoasts;
+          this.drawMap();
+        },
+        labels: () => {
+          this.viewLabels = !this.viewLabels;
+          this.drawMap();
+        },
+        points: () => {
+          this.viewPoints = !this.viewPoints;
+          this.drawMap();
+        },
+        rivers: () => {
+          this.viewRivers = !this.viewRivers;
+          this.drawMap();
+        },
+        slopes: () => {
+          this.viewSlopes = !this.viewSlopes;
+          this.drawMap();
+        }
       }
     };
 
@@ -1120,12 +1189,12 @@ class Map {
     this.rivers = [];
     this.territories = [];
     this.landscape = this.settings.generator(this.settings);
-    this.generateTerritories();
-    this.generateBorders();
-    this.generateRivers(0.01);
-    this.generateCoasts();
+    this.generateRivers(this.landscape, 0.01);
+    this.generateCoasts(this.landscape);
     this.generateCities();
-    this.generateLabels();
+    this.generateTerritories(this.landscape);
+    this.generateBorders(this.landscape, this.territories);
+    this.generateLabels(this.landscape);
 
     this.drawMap();
 
@@ -1145,16 +1214,13 @@ class Map {
     this.drawPaths('river', this.viewRivers ? this.rivers : []);
     this.drawSlopes(this.viewSlopes ? this.landscape : {mesh: Mesh.zero(mesh)});
     this.drawPoints(this.viewPoints ? this.landscape.mesh.pts : []);
+    this.drawLabels(this.viewLabels ? this.cityLabels : []);
+    this.drawLabels(this.viewLabels ? this.regionLabels : []);
 
     if (this.viewHeight) {
       this.drawVoronoi(this.landscape, 0, 1);
     } else {
       this.svg.selectAll('path.field').remove();
-    }
-
-    if (!this.viewLabels) {
-      this.svg.selectAll('text.city').remove();
-      this.svg.selectAll('text.region').remove();
     }
 
     if (this.viewScores) {
@@ -1171,23 +1237,26 @@ class Map {
       .style('fill-opacity', 1.0);
 
     this.svg.selectAll('path.border')
+      .style('stroke', 'red')
       .style('stroke-width', 5)
       .style('stroke-dasharray', '4,4')
       .style('stroke-linecap', 'butt');
 
     this.svg.selectAll('circle.city')
       .style('fill', 'white')
+      .style('stroke', 'green')
       .style('stroke-width', 2)
-      .style('stroke-linecap', 'round')
-      .style('stroke', 'green');
+      .style('stroke-linecap', 'round');
 
     this.svg.selectAll('path.coast')
       .style('stroke-width', 3);
 
     this.svg.selectAll('path.river')
+      .style('stroke', 'blue')
       .style('stroke-width', 2);
 
     this.svg.selectAll('line.slope')
+      .style('stroke', 'green')
       .style('stroke-width', 1);
 
     this.svg.selectAll('text')
@@ -1231,6 +1300,58 @@ class Map {
       .raise();
 
     return this;
+  }
+
+  /**
+   *
+   * @param cls
+   * @param pts
+   */
+  drawLabels(cls, pts) {
+    this.svg.selectAll('text.city').remove();
+    this.svg.selectAll('text.region').remove();
+    var cityTexts = this.svg.selectAll('text.city').data(this.cityLabels);
+    cityTexts.enter().append('text').classed('city', true);
+    cityTexts.exit().remove();
+
+    this.svg.selectAll('text.city')
+      .attr('x', function (d) {
+        return 1000 * d.x;
+      })
+      .attr('y', function (d) {
+        return 1000 * d.y;
+      })
+      .style('font-size', function (d) {
+        return d.size;
+      })
+      .style('text-anchor', function (d) {
+        return d.align;
+      })
+      .text(function (d) {
+        return d.text;
+      })
+      .raise();
+
+
+    var regionTexts = this.svg.selectAll('text.region').data(this.regionLabels);
+    regionTexts.enter().append('text').classed('region', true);
+    regionTexts.exit().remove();
+
+    this.svg.selectAll('text.region')
+      .attr('x', function (d) {
+        return 1000 * d.x;
+      })
+      .attr('y', function (d) {
+        return 1000 * d.y;
+      })
+      .style('font-size', function (d) {
+        return 1000 * d.size;
+      })
+      .text(function (d) {
+        return d.text;
+      })
+      .raise();
+
   }
 
   /**
@@ -1378,20 +1499,20 @@ class Map {
    *
    * @returns {Map}
    */
-  generateBorders() {
+  generateBorders(landscape, territories) {
     var edges = [];
-    for (let i = 0; i < this.territories.mesh.edges.length; i++) {
-      var e = this.territories.mesh.edges[i];
+    for (let i = 0; i < territories.mesh.edges.length; i++) {
+      var e = territories.mesh.edges[i];
       if (e[3] == undefined) {
         continue;
       }
-      if (Mesh.isNearEdge(this.territories.mesh, e[0]) || Mesh.isNearEdge(this.territories.mesh, e[1])) {
+      if (Mesh.isNearEdge(territories.mesh, e[0]) || Mesh.isNearEdge(territories.mesh, e[1])) {
         continue;
       }
-      if (this.landscape[e[0]] < 0 || this.landscape[e[1]] < 0) {
+      if (landscape[e[0]] < 0 || landscape[e[1]] < 0) {
         continue;
       }
-      if (this.territories[e[0]] != this.territories[e[1]]) {
+      if (territories[e[0]] != territories[e[1]]) {
         edges.push([e[2], e[3]]);
       }
     }
@@ -1420,8 +1541,8 @@ class Map {
    *
    * @returns {Map}
    */
-  generateCoasts() {
-    this.coasts = Mesh.contour(this.landscape, 0);
+  generateCoasts(landscape) {
+    this.coasts = Mesh.contour(landscape, 0);
 
     return this;
   }
@@ -1430,31 +1551,29 @@ class Map {
    *
    * @returns {Map}
    */
-  generateLabels() {
-    this.svg.selectAll('text.city').remove();
-    this.svg.selectAll('text.region').remove();
+  generateLabels(landscape) {
     var numTer = this.settings.numTerritories,
       avoids = [this.rivers, this.coasts, this.borders],
-      lang = makeRandomLanguage(),
-      cityLabels = [];
+      lang = makeRandomLanguage();
+    this.cityLabels = [];
 
     var penalty = (label) => {
       let pen = 0;
-      if (label.x0 < -0.45 * this.landscape.mesh.extent.width) {
+      if (label.x0 < -0.45 * landscape.mesh.extent.width) {
         pen += 100;
       }
-      if (label.x1 > 0.45 * this.landscape.mesh.extent.width) {
+      if (label.x1 > 0.45 * landscape.mesh.extent.width) {
         pen += 100;
       }
-      if (label.y0 < -0.45 * this.landscape.mesh.extent.height) {
+      if (label.y0 < -0.45 * landscape.mesh.extent.height) {
         pen += 100;
       }
-      if (label.y1 > 0.45 * this.landscape.mesh.extent.height) {
+      if (label.y1 > 0.45 * landscape.mesh.extent.height) {
         pen += 100;
       }
 
-      for (let i = 0; i < cityLabels.length; i++) {
-        let oLabel = cityLabels[i];
+      for (let i = 0; i < this.cityLabels.length; i++) {
+        let oLabel = this.cityLabels[i];
         if (label.x0 < oLabel.x1 && label.x1 > oLabel.x0 &&
           label.y0 < oLabel.y1 && label.y1 > oLabel.y0) {
           pen += 100;
@@ -1462,7 +1581,7 @@ class Map {
       }
 
       for (let i = 0; i < this.cities.length; i++) {
-        let c = this.landscape.mesh.vxs[this.cities[i]];
+        let c = landscape.mesh.vxs[this.cities[i]];
         if (label.x0 < c[0] && label.x1 > c[0] && label.y0 < c[1] && label.y1 > c[1]) {
           pen += 100;
         }
@@ -1486,10 +1605,11 @@ class Map {
 
     // City labels
     for (let i = 0; i < this.cities.length; i++) {
-      let x = this.landscape.mesh.vxs[this.cities[i]][0],
-        y = this.landscape.mesh.vxs[this.cities[i]][1],
+      let x = landscape.mesh.vxs[this.cities[i]][0],
+        y = landscape.mesh.vxs[this.cities[i]][1],
         text = makeName(lang, 'city'),
-        size = i < numTer ? this.settings.fontSizes.city : this.settings.fontSizes.town,
+        town = i < numTer ? false : true,
+        size = town ? this.settings.fontSizes.city : this.settings.fontSizes.town,
         sx = 0.65 * size / 1000 * text.length,
         sy = size / 1000,
         possLabels = [
@@ -1535,33 +1655,11 @@ class Map {
         })];
       label.text = text;
       label.size = size;
-      cityLabels.push(label);
+      this.cityLabels.push(label);
     }
 
-    var cityTexts = this.svg.selectAll('text.city').data(cityLabels);
-    cityTexts.enter().append('text').classed('city', true);
-    cityTexts.exit().remove();
-
-    this.svg.selectAll('text.city')
-      .attr('x', function (d) {
-        return 1000 * d.x;
-      })
-      .attr('y', function (d) {
-        return 1000 * d.y;
-      })
-      .style('font-size', function (d) {
-        return d.size;
-      })
-      .style('text-anchor', function (d) {
-        return d.align;
-      })
-      .text(function (d) {
-        return d.text;
-      })
-      .raise();
-
     // Region labels
-    var regionLabels = [];
+    this.regionLabels = [];
     for (let i = 0; i < numTer; i++) {
       let city = this.cities[i],
         text = makeName(lang, 'region'),
@@ -1571,28 +1669,28 @@ class Map {
         oc = this.getTerritoryCenter(this.territories, city, false),
         best = 0,
         bestScore = -999999;
-      for (let j = 0; j < this.landscape.length; j++) {
+      for (let j = 0; j < landscape.length; j++) {
         let score = 0,
-          v = this.landscape.mesh.vxs[j];
+          v = landscape.mesh.vxs[j];
         score -= 3000 * Math.sqrt((v[0] - lc[0]) * (v[0] - lc[0]) + (v[1] - lc[1]) * (v[1] - lc[1]));
         score -= 1000 * Math.sqrt((v[0] - oc[0]) * (v[0] - oc[0]) + (v[1] - oc[1]) * (v[1] - oc[1]));
         if (this.territories[j] != city) {
           score -= 3000;
         }
         for (let k = 0; k < this.cities.length; k++) {
-          let u = this.landscape.mesh.vxs[this.cities[k]];
+          let u = landscape.mesh.vxs[this.cities[k]];
           if (Math.abs(v[0] - u[0]) < sx && Math.abs(v[1] - sy / 2 - u[1]) < sy) {
             score -= k < numTer ? 4000 : 500;
           }
-          if (v[0] - sx / 2 < cityLabels[k].x1 &&
-            v[0] + sx / 2 > cityLabels[k].x0 &&
-            v[1] - sy < cityLabels[k].y1 &&
-            v[1] > cityLabels[k].y0) {
+          if (v[0] - sx / 2 < this.cityLabels[k].x1 &&
+            v[0] + sx / 2 > this.cityLabels[k].x0 &&
+            v[1] - sy < this.cityLabels[k].y1 &&
+            v[1] > this.cityLabels[k].y0) {
             score -= 5000;
           }
         }
-        for (let k = 0; k < regionLabels.length; k++) {
-          let label = regionLabels[k];
+        for (let k = 0; k < this.regionLabels.length; k++) {
+          let label = this.regionLabels[k];
           if (v[0] - sx / 2 < label.x + label.width / 2 &&
             v[0] + sx / 2 > label.x - label.width / 2 &&
             v[1] - sy < label.y &&
@@ -1600,19 +1698,19 @@ class Map {
             score -= 20000;
           }
         }
-        if (this.landscape[j] <= 0) {
+        if (landscape[j] <= 0) {
           score -= 500;
         }
-        if (v[0] + sx / 2 > 0.5 * this.landscape.mesh.extent.width) {
+        if (v[0] + sx / 2 > 0.5 * landscape.mesh.extent.width) {
           score -= 50000;
         }
-        if (v[0] - sx / 2 < -0.5 * this.landscape.mesh.extent.width) {
+        if (v[0] - sx / 2 < -0.5 * landscape.mesh.extent.width) {
           score -= 50000;
         }
-        if (v[1] > 0.5 * this.landscape.mesh.extent.height) {
+        if (v[1] > 0.5 * landscape.mesh.extent.height) {
           score -= 50000;
         }
-        if (v[1] - sy < -0.5 * this.landscape.mesh.extent.height) {
+        if (v[1] - sy < -0.5 * landscape.mesh.extent.height) {
           score -= 50000;
         }
         if (score > bestScore) {
@@ -1620,33 +1718,14 @@ class Map {
           best = j;
         }
       }
-      regionLabels.push({
+      this.regionLabels.push({
         text: text,
-        x: this.landscape.mesh.vxs[best][0],
-        y: this.landscape.mesh.vxs[best][1],
+        x: landscape.mesh.vxs[best][0],
+        y: landscape.mesh.vxs[best][1],
         size: sy,
         width: sx
       });
     }
-
-    var regionTexts = this.svg.selectAll('text.region').data(regionLabels);
-    regionTexts.enter().append('text').classed('region', true);
-    regionTexts.exit().remove();
-
-    this.svg.selectAll('text.region')
-      .attr('x', function (d) {
-        return 1000 * d.x;
-      })
-      .attr('y', function (d) {
-        return 1000 * d.y;
-      })
-      .style('font-size', function (d) {
-        return 1000 * d.size;
-      })
-      .text(function (d) {
-        return d.text;
-      })
-      .raise();
 
     return this;
   }
@@ -1656,27 +1735,28 @@ class Map {
    * @param {number} limit
    * @returns {Map}
    */
-  generateRivers(limit) {
-    var dh = Mesh.downhill(this.landscape),
-      flux = Mesh.getFlux(this.landscape),
+  generateRivers(landscape, limit) {
+    var dh = Mesh.downhill(landscape),
+      flux = Mesh.getFlux(landscape),
       links = [],
       above = 0;
+    this.rivers = [];
 
-    for (let i = 0; i < this.landscape.length; i++) {
-      if (this.landscape[i] > 0) {
+    for (let i = 0; i < landscape.length; i++) {
+      if (landscape[i] > 0) {
         above++;
       }
     }
 
-    limit *= above / this.landscape.length;
+    limit *= above / landscape.length;
     for (let i = 0; i < dh.length; i++) {
-      if (Mesh.isNearEdge(this.landscape.mesh, i)) {
+      if (Mesh.isNearEdge(landscape.mesh, i)) {
         continue;
       }
-      if (flux[i] > limit && this.landscape[i] > 0 && dh[i] >= 0) {
-        let up = this.landscape.mesh.vxs[i],
-          down = this.landscape.mesh.vxs[dh[i]];
-        if (this.landscape[dh[i]] > 0) {
+      if (flux[i] > limit && landscape[i] > 0 && dh[i] >= 0) {
+        let up = landscape.mesh.vxs[i],
+          down = landscape.mesh.vxs[dh[i]];
+        if (landscape[dh[i]] > 0) {
           links.push([up, down]);
         } else {
           links.push([up, [(up[0] + down[0]) / 2, (up[1] + down[1]) / 2]]);
@@ -1693,12 +1773,13 @@ class Map {
    *
    * @returns {Map}
    */
-  generateTerritories() {
+  generateTerritories(landscape) {
+    this.territories = [];
     var n = this.settings.numTerritories;
     if (n > this.cities.length) {
       n = this.cities.length;
     }
-    let flux = Mesh.getFlux(this.landscape),
+    let flux = Mesh.getFlux(landscape),
       queue = new PriorityQueue({
         comparator: function (a, b) {
           return a.score - b.score;
@@ -1706,17 +1787,17 @@ class Map {
       });
 
     var weight = (u, v) => {
-      var horiz = Mesh.distance(this.landscape.mesh, u, v),
-        vert = this.landscape[v] - this.landscape[u];
+      var horiz = Mesh.distance(landscape.mesh, u, v),
+        vert = landscape[v] - landscape[u];
       if (vert > 0) {
         vert /= 10;
       }
       let diff = 1 + 0.25 * Math.pow(vert / horiz, 2);
       diff += 100 * Math.sqrt(flux[u]);
-      if (this.landscape[u] <= 0) {
+      if (landscape[u] <= 0) {
         diff = 100;
       }
-      if ((this.landscape[u] > 0) != (this.landscape[v] > 0)) {
+      if ((landscape[u] > 0) != (landscape[v] > 0)) {
         return 1000;
       }
 
@@ -1725,7 +1806,7 @@ class Map {
 
     for (let i = 0; i < n; i++) {
       this.territories[this.cities[i]] = this.cities[i];
-      let nbs = Mesh.neighbors(this.landscape.mesh, this.cities[i]);
+      let nbs = Mesh.neighbors(landscape.mesh, this.cities[i]);
       for (let j = 0; j < nbs.length; j++) {
         queue.queue({
           score: weight(this.cities[i], nbs[j]),
@@ -1741,7 +1822,7 @@ class Map {
         continue;
       }
       this.territories[u.vx] = u.city;
-      var nbs = Mesh.neighbors(this.landscape.mesh, u.vx);
+      var nbs = Mesh.neighbors(landscape.mesh, u.vx);
       for (let i = 0; i < nbs.length; i++) {
         let v = nbs[i],
           newDist = weight(u.vx, v);
@@ -1756,24 +1837,9 @@ class Map {
         });
       }
     }
-    this.territories.mesh = this.landscape.mesh;
+    this.territories.mesh = landscape.mesh;
 
     return this;
-  }
-
-  /**
-   *
-   * @param {Array} path
-   * @return {string}
-   */
-  makeD3Path(path) {
-    var p = d3.path();
-    p.moveTo(1000 * path[0][0], 1000 * path[0][1]);
-    for (let i = 1; i < path.length; i++) {
-      p.lineTo(1000 * path[i][0], 1000 * path[i][1]);
-    }
-
-    return p.toString();
   }
 
   /**
@@ -1798,6 +1864,21 @@ class Map {
     }
 
     return [x / n, y / n];
+  }
+
+  /**
+   *
+   * @param {Array} path
+   * @return {string}
+   */
+  makeD3Path(path) {
+    var p = d3.path();
+    p.moveTo(1000 * path[0][0], 1000 * path[0][1]);
+    for (let i = 1; i < path.length; i++) {
+      p.lineTo(1000 * path[i][0], 1000 * path[i][1]);
+    }
+
+    return p.toString();
   }
 
 }

@@ -8,7 +8,7 @@ function datGUI (object) {
     var wGUI = new dat.GUI({resizable: true, autoPlace: true, name: 'Controls'}),
         sFolder = wGUI.addFolder('Settings');
 
-    for (var go in object.settings) {
+    for (let go in object.settings) {
         if (object.settings.hasOwnProperty(go)) {
             let ty = typeof object.settings[go];
             if (ty !== 'object') {
@@ -27,9 +27,22 @@ function datGUI (object) {
         }
     }
     var fFolder = wGUI.addFolder('Functions');
-    for (var fo in object.functions) {
+    for (let fo in object.functions) {
         if (object.functions.hasOwnProperty(fo)) {
-            fFolder.add(object.functions, fo).listen().name(fo);
+            let ty = typeof object.functions[fo];
+            if (ty === 'function') {
+                fFolder.add(object.functions, fo).listen().name(fo);
+            } else {
+                let folder = fFolder.addFolder(fo.charAt(0).toUpperCase() + fo.slice(1));
+                for (var gp in object.functions[fo]) {
+                    if (object.functions[fo].hasOwnProperty(gp)) {
+                        let typ = typeof object.functions[fo][gp];
+                        if (typ === 'function') {
+                            folder.add(object.functions[fo], gp).listen().name(gp);
+                        }
+                    }
+                }
+            }
         }
     }
     wGUI.remember(object);
