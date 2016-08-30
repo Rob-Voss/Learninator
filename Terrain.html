@@ -27,21 +27,22 @@
                     .attr("viewBox", "-" + w + "-" + h + " " + w * 2 + " " + h * 2),
             opts = {
                 extent: {
-                    width: 1,
-                    height: 1
+                    width: 2,
+                    height: 2
                 },
                 fontSizes: {
                     region: 40,
                     city: 25,
                     town: 20
                 },
-                generator: generateIslands,
-                numPts: 16384,
+                generator: generateCoastLine,
+                numPts: 8192,
                 numCities: 5,
                 numTerritories: 3,
                 seaLevel: 0.2
             };
     var map = new Map(opts, svg);
+    map.landscape = map.settings.generator(map.settings);
     map.doMap();
     datGUI(map);
 

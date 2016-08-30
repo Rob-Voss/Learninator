@@ -1,74 +1,5 @@
 "use strict";
 
-/**
- *
- * @param params
- */
-function generateCoastLine(params) {
-  var mesh = Mesh.generateGoodMesh(params.numPts, params.extent);
-  var landscape = add(
-    Mesh.slope(mesh, randomVector(4)),
-    Mesh.cone(mesh, runIf(-1, -1)),
-    Mesh.mountains(mesh, 50)
-  );
-
-  for (let i = 0; i < 10; i++) {
-    landscape = Mesh.relax(landscape);
-  }
-
-  landscape = Mesh.peaky(landscape);
-  landscape = Mesh.doErosion(landscape, runIf(0, 0.1), 5);
-  landscape = Mesh.setSeaLevel(landscape, runIf(0.2, 0.6));
-  landscape = Mesh.fillSinks(landscape);
-  landscape = Mesh.cleanCoast(landscape, 3);
-
-  return landscape;
-}
-
-/**
- *
- * @param params
- */
-function generateIslands(params) {
-  var mesh = Mesh.generateGoodMesh(params.numPts, params.extent);
-
-  var landscape = add(
-    Mesh.slope(mesh, randomVector(4)),
-    Mesh.cone(mesh, runIf(-0.5, 0.5)),
-    Mesh.mountains(mesh, 10)
-  );
-
-  for (let i = 0; i < 20; i++) {
-    landscape = Mesh.relax(landscape);
-  }
-
-  landscape = Mesh.peaky(landscape);
-  landscape = Mesh.doErosion(landscape, runIf(0, 0.2), 5);
-  landscape = Mesh.setSeaLevel(landscape, params.seaLevel || 0.5);
-  landscape = Mesh.fillSinks(landscape, 1e-9);
-  landscape = Mesh.cleanCoast(landscape, 3);
-
-  return landscape;
-}
-
-function generateUneroded() {
-  var mesh = Mesh.generateGoodMesh(4096),
-    landscape = add(
-      Mesh.slope(mesh, randomVector(4)),
-      Mesh.cone(mesh, runIf(-1, 1)),
-      Mesh.mountains(mesh, 50)
-    );
-  landscape = Mesh.peaky(landscape);
-  landscape = Mesh.fillSinks(landscape);
-  landscape = Mesh.setSeaLevel(landscape, 0.5);
-
-  return landscape;
-}
-
-function generateBlob(params) {
-
-}
-
 var rNorm = (function () {
   var z2 = null;
 
@@ -134,8 +65,8 @@ const defaultFontSizes = {
   defaultParams = {
     extent: defaultExtent,
     generator: generateCoastLine,
-    numPts: 16384,
-    numCities: 15,
+    numPts: 10000,
+    numCities: 10,
     numTerritories: 5,
     fontSizes: defaultFontSizes
   },
@@ -163,6 +94,78 @@ const defaultFontSizes = {
     vxs: []
   };
 
+/**
+ *
+ * @param params
+ */
+function generateCoastLine(params = defaultParams) {
+  var mesh = Mesh.generateGoodMesh(params.numPts, params.extent);
+  var landscape = add(
+    Mesh.slope(mesh, randomVector(4)),
+    Mesh.cone(mesh, runIf(-1, -1)),
+    Mesh.mountains(mesh, 50)
+  );
+
+  for (let i = 0; i < 10; i++) {
+    landscape = Mesh.relax(landscape);
+  }
+
+  landscape = Mesh.peaky(landscape);
+  landscape = Mesh.doErosion(landscape, runIf(0, 0.1), 5);
+  landscape = Mesh.setSeaLevel(landscape, runIf(0.2, 0.6));
+  landscape = Mesh.fillSinks(landscape);
+  landscape = Mesh.cleanCoast(landscape, 3);
+
+  return landscape;
+}
+
+/**
+ *
+ * @param params
+ */
+function generateIslands(params = defaultParams) {
+  var mesh = Mesh.generateGoodMesh(params.numPts, params.extent);
+
+  var landscape = add(
+    Mesh.mountains(mesh, 50)
+  );
+
+  for (let i = 0; i < 10; i++) {
+    landscape = Mesh.relax(landscape);
+  }
+
+  landscape = Mesh.peaky(landscape);
+  landscape = Mesh.doErosion(landscape, runIf(0, 0.1), 5);
+  landscape = Mesh.setSeaLevel(landscape, params.seaLevel || 0.5);
+  landscape = Mesh.fillSinks(landscape);
+  landscape = Mesh.cleanCoast(landscape, 3);
+
+  return landscape;
+}
+
+/**
+ *
+ * @param params
+ */
+function generateUneroded(params = defaultParams) {
+  var mesh = Mesh.generateGoodMesh(params.numPts, params.extent),
+    landscape = add(
+      Mesh.slope(mesh, randomVector(4)),
+      Mesh.cone(mesh, runIf(-1, 1)),
+      Mesh.mountains(mesh, 50)
+    );
+
+  for (let i = 0; i < 20; i++) {
+    landscape = Mesh.relax(landscape);
+  }
+
+  landscape = Mesh.peaky(landscape);
+  landscape = Mesh.fillSinks(landscape);
+  landscape = Mesh.setSeaLevel(landscape, 0.5);
+
+  return landscape;
+}
+
 function randomVector(scale) {
   return [scale * rNorm(), scale * rNorm()];
 }
@@ -182,7 +185,6 @@ function add() {
 
   return newVals;
 }
-
 
 /**
  *
@@ -281,21 +283,24 @@ class Mesh {
    *
    * @param {object} landscape
    * @param {number} level
-   * @returns {array}
+   * @returns {Array}
    */
-  static contour(landscape, level) {
-    level = level || 0;
+  static contour(landscape, level = 0) {
     var edges = [];
     for (let i = 0; i < landscape.mesh.edges.length; i++) {
-      var e = landscape.mesh.edges[i];
+      var e = landscape.mesh.edges[i],
+        e0 = e[0],
+        e1 = e[1],
+        lE0 = landscape[e0],
+        lE1 = landscape[e1];
       if (e[3] == undefined) {
         continue;
       }
-      if (Mesh.isNearEdge(landscape.mesh, e[0]) || Mesh.isNearEdge(landscape.mesh, e[1])) {
+      if (Mesh.isNearEdge(landscape.mesh, e0) || Mesh.isNearEdge(landscape.mesh, e1)) {
         continue;
       }
-      if ((landscape[e[0]] > level && landscape[e[1]] <= level) ||
-        (landscape[e[1]] > level && landscape[e[0]] <= level)) {
+      if ((lE0 > level && lE1 <= level) ||
+        (lE1 > level && lE0 <= level)) {
         edges.push([e[2], e[3]]);
       }
     }
@@ -725,13 +730,13 @@ class Mesh {
 
   /**
    *
-   * @param {Array} segs
+   * @param {Array} segments
    * @returns {Array} paths
    */
-  static mergeSegments(segs) {
+  static mergeSegments(segments) {
     var adj = {};
-    for (let i = 0; i < segs.length; i++) {
-      var seg = segs[i],
+    for (let i = 0; i < segments.length; i++) {
+      var seg = segments[i],
         a0 = adj[seg[0]] || [],
         a1 = adj[seg[1]] || [];
       a0.push(seg[1]);
@@ -744,10 +749,10 @@ class Mesh {
       path = null;
     while (true) {
       if (path === null) {
-        for (let i = 0; i < segs.length; i++) {
+        for (let i = 0; i < segments.length; i++) {
           if (done[i]) continue;
           done[i] = true;
-          path = [segs[i][0], segs[i][1]];
+          path = [segments[i][0], segments[i][1]];
           break;
         }
         if (path === null) {
@@ -755,18 +760,18 @@ class Mesh {
         }
       }
       var changed = false;
-      for (let i = 0; i < segs.length; i++) {
+      for (let i = 0; i < segments.length; i++) {
         if (done[i]) {
           continue;
         }
-        if (adj[path[0]].length === 2 && segs[i][0] === path[0]) {
-          path.unshift(segs[i][1]);
-        } else if (adj[path[0]].length === 2 && segs[i][1] === path[0]) {
-          path.unshift(segs[i][0]);
-        } else if (adj[path[path.length - 1]].length === 2 && segs[i][0] === path[path.length - 1]) {
-          path.push(segs[i][1]);
-        } else if (adj[path[path.length - 1]].length === 2 && segs[i][1] === path[path.length - 1]) {
-          path.push(segs[i][0]);
+        if (adj[path[0]].length === 2 && segments[i][0] === path[0]) {
+          path.unshift(segments[i][1]);
+        } else if (adj[path[0]].length === 2 && segments[i][1] === path[0]) {
+          path.unshift(segments[i][0]);
+        } else if (adj[path[path.length - 1]].length === 2 && segments[i][0] === path[path.length - 1]) {
+          path.push(segments[i][1]);
+        } else if (adj[path[path.length - 1]].length === 2 && segments[i][1] === path[path.length - 1]) {
+          path.push(segments[i][0]);
         } else {
           continue;
         }
@@ -1017,6 +1022,8 @@ class Map {
     this.coasts = [];
     this.rivers = [];
     this.territories = [];
+    this.cityLabels = [];
+    this.regionLabels = [];
 
     this.viewBorders = true;
     this.viewCities = true;
@@ -1030,18 +1037,22 @@ class Map {
 
     this.functions = {
       clearMap: () => {
-        this.svg.selectAll().remove();
-        this.borders = [];
-        this.cities = [];
-        this.coasts = [];
-        this.rivers = [];
-        this.territories = [];
-        this.cityLabels = [];
-        this.regionLabels = [];
-        this.landscape = Mesh.zero(Mesh.generateGoodMesh(this.settings.numPts, this.settings.extent));
+        this.clearMap();
         this.drawMap();
       },
-      randomMap: () => {
+      newFullMap: () => {
+        this.clearMap();
+        this.landscape = this.settings.generator(this.settings);
+        this.doMap();
+      },
+      newSimpleMap: () => {
+        this.clearMap();
+        this.landscape = generateUneroded(this.settings);
+        this.doMap();
+      },
+      newIslands: () => {
+        this.clearMap();
+        this.landscape = generateIslands(this.settings);
         this.doMap();
       },
       landscapeActions: {
@@ -1094,12 +1105,13 @@ class Map {
           this.drawMap();
         },
         coasts: () => {
+          this.landscape = Mesh.setSeaLevel(this.landscape, this.settings.seaLevel || 0.5);
           this.generateCoasts(this.landscape);
           this.drawMap();
         },
         labels: () => {
           this.generateLabels(this.landscape);
-          this.drawMap();
+          this.drawLabels();
         },
         rivers: () => {
           this.generateRivers(Mesh.zero(this.landscape.mesh), 0.01);
@@ -1121,6 +1133,14 @@ class Map {
         },
         coasts: () => {
           this.viewCoasts = !this.viewCoasts;
+          this.drawMap();
+        },
+        erosionRate: () => {
+          this.viewErosionRate = !this.viewErosionRate;
+          this.drawMap();
+        },
+        heightMap: () => {
+          this.viewHeight = !this.viewHeight;
           this.drawMap();
         },
         labels: () => {
@@ -1181,14 +1201,21 @@ class Map {
   /**
    *
    */
-  doMap() {
-    this.svg.selectAll().remove();
+  clearMap() {
     this.borders = [];
     this.cities = [];
     this.coasts = [];
     this.rivers = [];
     this.territories = [];
-    this.landscape = this.settings.generator(this.settings);
+    this.cityLabels = [];
+    this.regionLabels = [];
+    this.landscape = Mesh.zero(Mesh.generateGoodMesh(this.settings.numPts, this.settings.extent));
+  }
+
+  /**
+   *
+   */
+  doMap() {
     this.generateRivers(this.landscape, 0.01);
     this.generateCoasts(this.landscape);
     this.generateCities();
@@ -1206,73 +1233,26 @@ class Map {
    * @returns {Map}
    */
   drawMap() {
-    let mesh = this.landscape.mesh;
-
     this.drawPaths('border', this.viewBorders ? this.borders : []);
     this.drawCircles('city', this.viewCities ? this.cities : []);
     this.drawPaths('coast', this.viewCoasts ? this.coasts : []);
     this.drawPaths('river', this.viewRivers ? this.rivers : []);
-    this.drawSlopes(this.viewSlopes ? this.landscape : {mesh: Mesh.zero(mesh)});
+    this.drawSlopes(this.viewSlopes ? this.landscape : Mesh.zero(this.landscape.mesh));
     this.drawPoints(this.viewPoints ? this.landscape.mesh.pts : []);
     this.drawLabels(this.viewLabels ? this.cityLabels : []);
     this.drawLabels(this.viewLabels ? this.regionLabels : []);
 
     if (this.viewHeight) {
-      this.drawVoronoi(this.landscape, 0, 1);
-    } else {
-      this.svg.selectAll('path.field').remove();
+      this.drawVoronoi(this.landscape, -1, 1);
+    }
+
+    if (this.viewErosionRate) {
+      this.drawVoronoi(Mesh.erosionRate(this.landscape));
     }
 
     if (this.viewScores) {
       this.drawScores();
     }
-
-    this.svg.selectAll('path, line')
-      .style('fill', 'none')
-      .style('stroke', 'black')
-      .style('stroke-linecap', 'round');
-
-    this.svg.selectAll('path.field')
-      .style('stroke', 'none')
-      .style('fill-opacity', 1.0);
-
-    this.svg.selectAll('path.border')
-      .style('stroke', 'red')
-      .style('stroke-width', 5)
-      .style('stroke-dasharray', '4,4')
-      .style('stroke-linecap', 'butt');
-
-    this.svg.selectAll('circle.city')
-      .style('fill', 'white')
-      .style('stroke', 'green')
-      .style('stroke-width', 2)
-      .style('stroke-linecap', 'round');
-
-    this.svg.selectAll('path.coast')
-      .style('stroke-width', 3);
-
-    this.svg.selectAll('path.river')
-      .style('stroke', 'blue')
-      .style('stroke-width', 2);
-
-    this.svg.selectAll('line.slope')
-      .style('stroke', 'green')
-      .style('stroke-width', 1);
-
-    this.svg.selectAll('text')
-      .style('font-family', '"Palatino Linotype", "Book Antiqua", "Palatino", "serif"')
-      .style('color', 'black')
-      .style('stroke', 'white')
-      .style('stroke-linejoin', 'round')
-      .style('paint-order', 'stroke');
-
-    this.svg.selectAll('text.city')
-      .style('stroke-width', 2);
-
-    this.svg.selectAll('text.region')
-      .style('font-variant', 'small-caps')
-      .style('text-anchor', 'middle')
-      .style('stroke-width', 5);
 
     return this;
   }
@@ -1282,7 +1262,6 @@ class Map {
    * @returns {Map}
    */
   drawCircles(cls, pts) {
-    this.svg.selectAll('circle.' + cls).remove();
     var circles = this.svg.selectAll('circle.' + cls).data(pts);
     circles.enter().append('circle').classed(cls, true);
     circles.exit().remove();
@@ -1299,6 +1278,12 @@ class Map {
       })
       .raise();
 
+    this.svg.selectAll('circle.city')
+      .style('fill', 'white')
+      .style('stroke', 'green')
+      .style('stroke-width', 2)
+      .style('stroke-linecap', 'round');
+
     return this;
   }
 
@@ -1308,8 +1293,6 @@ class Map {
    * @param pts
    */
   drawLabels(cls, pts) {
-    this.svg.selectAll('text.city').remove();
-    this.svg.selectAll('text.region').remove();
     var cityTexts = this.svg.selectAll('text.city').data(this.cityLabels);
     cityTexts.enter().append('text').classed('city', true);
     cityTexts.exit().remove();
@@ -1352,6 +1335,15 @@ class Map {
       })
       .raise();
 
+    this.svg.selectAll('text.city')
+      .style('stroke-width', 2);
+
+    this.svg.selectAll('text.region')
+      .style('font-variant', 'small-caps')
+      .style('text-anchor', 'middle')
+      .style('stroke-width', 5);
+
+    return this;
   }
 
   /**
@@ -1361,12 +1353,40 @@ class Map {
    * @returns {Map}
    */
   drawPaths(cls, pts) {
-    this.svg.selectAll('path.' + cls).remove();
     var svgPaths = this.svg.selectAll('path.' + cls).data(pts);
     svgPaths.enter().append('path').classed(cls, true);
     svgPaths.exit().remove();
 
     this.svg.selectAll('path.' + cls).attr('d', this.makeD3Path);
+
+    this.svg.selectAll('path, line')
+      .style('fill', 'none')
+      .style('stroke', 'black')
+      .style('stroke-linecap', 'round');
+
+    this.svg.selectAll('text')
+      .style('font-family', '"Palatino Linotype", "Book Antiqua", "Palatino", "serif"')
+      .style('color', 'black')
+      .style('stroke', 'white')
+      .style('stroke-linejoin', 'round')
+      .style('paint-order', 'stroke');
+
+    this.svg.selectAll('path.field')
+      .style('stroke', 'none')
+      .style('fill-opacity', 1.0);
+
+    this.svg.selectAll('path.border')
+      .style('stroke', 'red')
+      .style('stroke-width', 5)
+      .style('stroke-dasharray', '4,4')
+      .style('stroke-linecap', 'butt');
+
+    this.svg.selectAll('path.coast')
+      .style('stroke-width', 3);
+
+    this.svg.selectAll('path.river')
+      .style('stroke', 'blue')
+      .style('stroke-width', 2);
 
     return this;
   }
@@ -1376,7 +1396,6 @@ class Map {
    * @returns {Map}
    */
   drawPoints(pts) {
-    this.svg.selectAll('circle').remove();
     var circle = this.svg.selectAll('circle').data(pts);
     circle.enter().append('circle');
     circle.exit().remove();
@@ -1398,6 +1417,8 @@ class Map {
   drawScores() {
     var score = this.cityScore();
     this.drawVoronoi(score, d3.max(score) - 0.5, d3.max(score) + 0.5);
+
+    return this;
   }
 
   /**
@@ -1405,7 +1426,6 @@ class Map {
    * @returns {Map}
    */
   drawSlopes(landscape) {
-    this.svg.selectAll('line.slope').remove();
     var strokes = [],
       r = 0.25 / Math.sqrt(landscape.length);
     for (let i = 0; i < landscape.length; i++) {
@@ -1463,21 +1483,24 @@ class Map {
         return 1000 * d[1][1];
       });
 
+    this.svg.selectAll('line.slope')
+      .style('stroke', 'green')
+      .style('stroke-width', 1);
+
     return this;
   }
 
   /**
    *
    * @param {object} landscape
-   * @param {number} lo
-   * @param {number} hi
+   * @param {number|null} lo
+   * @param {number|null} hi
    */
-  drawVoronoi(landscape, lo, hi) {
-    this.svg.selectAll('path.field').remove();
-    if (hi == undefined) {
+  drawVoronoi(landscape, lo = null, hi = null) {
+    if (hi == null) {
       hi = d3.max(landscape) + 1e-9;
     }
-    if (lo == undefined) {
+    if (lo == null) {
       lo = d3.min(landscape) - 1e-9;
     }
     var mappedVals = landscape.map(function (x) {
@@ -1493,6 +1516,8 @@ class Map {
       .style('fill', function (d, i) {
         return d3.interpolateViridis(mappedVals[i]);
       });
+
+    return this;
   }
 
   /**
