@@ -43,6 +43,7 @@
      */
     constructor(options) {
       this.controller = MatterPixi;
+      this.options = options;
       this.engine = null;
       this.element = null;
       this.canvas = null;
@@ -52,32 +53,6 @@
       this.displayContainer = null;
       this.primitiveContainer = null;
       this.spriteContainer = null;
-      this.pixiOptions = null;
-      this.options = {
-        width: 800,
-        height: 600,
-        background: '#fafafa',
-        wireframeBackground: '#222',
-        hasBounds: false,
-        enabled: true,
-        showAngleIndicator: false,
-        showAxes: false,
-        showBounds: false,
-        showBroadphase: false,
-        showCollisions: false,
-        showConvexHulls: false,
-        showDebug: false,
-        showIds: false,
-        showInternalEdges: false,
-        showMousePosition: false,
-        showPositions: false,
-        showSeparations: false,
-        showShadows: false,
-        showSleeping: false,
-        showVertexNumbers: false,
-        showVelocity: false,
-        wireframes: true
-      };
       Common.extend(this, options);
       this.transparent = !this.options.wireframes && this.options.background === 'transparent';
 
@@ -307,7 +282,7 @@
         let pGfx,
             part = parts[j],
             partId = 'b-' + part.id,
-            textOpts = {font: '10px Arial', fill: '#FFFFFF', align: 'center'};
+            textOpts = {fontSize: '10px Arial', fill: '#FFFFFF', align: 'center'};
         if (part.render.sprite && part.render.sprite.texture) {
           pGfx = this.sprites[partId];
         } else {
@@ -561,7 +536,7 @@
           metrics = this.engine.metrics,
           bodies = Composite.allBodies(world),
           space = "    \n",
-          textOpts = {font: '10px Arial', fill: '#FFFFFF', align: 'left'};
+          textOpts = {fontSize: '10px Arial', fill: '#FFFFFF', align: 'left'};
       if (!dbgTxt) {
         dbgTxt = this.primitives['debug'] = new PIXI.Text('', textOpts);
       }
@@ -871,7 +846,7 @@
         this.debug();
       }
       if (this.options.hasBounds) {
-        this.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
+        // this.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
       }
       this.renderer.render(this.stage);
 

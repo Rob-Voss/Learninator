@@ -287,7 +287,7 @@ import 'PIXI';
     this.selectedTileText = new PIXI.Text(
         'Selected Tile: ' + 1,
         {
-          font: '12px Arial',
+          fontSize: '12px Arial',
           fill: '#FFFFFF',
           align: 'left'
         }
@@ -302,7 +302,7 @@ import 'PIXI';
   Menu.prototype.constructor = Menu;
 
   Menu.prototype.addMenuButton = function(text, x, y, obj, callback) {
-    let button = new PIXI.Text(text, {font: '40px Arial', fill: '#FFFFFF'});
+    let button = new PIXI.Text(text, {fontSize: '40px Arial', fill: '#FFFFFF'});
     button.position.x = x;
     button.position.y = y;
     button.interactive = true;
@@ -311,28 +311,28 @@ import 'PIXI';
 
     button.mousedown = button.touchstart = function(event) {
       this.data = event.data;
-      button.style = {font: '40px Arial', fill: '#FF0000'};
+      button.style = {fontSize: '40px Arial', fill: '#FF0000'};
     };
 
     button.mouseover = function(event) {
       this.data = event.data;
-      button.style = {font: '40px Arial', fill: '#FFFF00'};
+      button.style = {fontSize: '40px Arial', fill: '#FFFF00'};
     };
 
     button.mouseup = button.touchend = function(event) {
       this.data = event.data;
       callback.call(obj);
-      button.style = {font: '40px Arial', fill: '#FFFFFF'};
+      button.style = {fontSize: '40px Arial', fill: '#FFFFFF'};
     };
 
     button.mouseupoutside = button.touchendoutside = function(event) {
       this.data = event.data;
-      button.style = {font: '40px Arial', fill: '#FFFFFF'};
+      button.style = {fontSize: '40px Arial', fill: '#FFFFFF'};
     };
 
     button.mouseout = function(event) {
       this.data = event.data;
-      button.style = {font: '40px Arial', fill: '#FFFFFF'};
+      button.style = {fontSize: '40px Arial', fill: '#FFFFFF'};
     };
 
     this.addChild(button);

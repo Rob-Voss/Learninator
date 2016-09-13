@@ -43,7 +43,7 @@
             this.addChild(this.background);
 
             // Title text
-            this.titleText = new PIXI.Text(this.displayTitle, {font: "12px Arial", fill: "#FFFFFF", align: "left"});
+            this.titleText = new PIXI.Text(this.displayTitle, {fontSize: "12px Arial", fill: "#FFFFFF", align: "left"});
             this.titleText.position.set(this.displayX + contentMargin, this.displayY + contentMargin);
             this.addChild(this.titleText);
             this.items = new PIXI.Container();
@@ -51,7 +51,7 @@
                 for (var x = 0; x < this.displayCols; x++) {
                     this.layout = [this.displayCols];
                     this.layout[x] = [this.displayRows];
-                    let textObj = new PIXI.Text('R:' + y + 'C:' + x, {font: "10px Arial", fill: "#FF0000"}),
+                    let textObj = new PIXI.Text('R:' + y + 'C:' + x, {fontSize: "10px Arial", fill: "#FF0000"}),
                         colW = (this.displayWidth / this.displayCols) / 2,
                         colH = (this.displayHeight / this.displayRows) / 2,
                         ix = margin + 6 + x * colW,
@@ -81,7 +81,7 @@
          * @param text
          */
         addRow(text) {
-            this.addChild(new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"}));
+            this.addChild(new PIXI.Text(text, {fontSize: "20px Arial", fill: "#FFFFFF"}));
         }
 
         /**
@@ -89,7 +89,7 @@
          * @param text
          */
         addCol(text) {
-            this.addChild(new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"}));
+            this.addChild(new PIXI.Text(text, {fontSize: "20px Arial", fill: "#FFFFFF"}));
         }
 
         /**

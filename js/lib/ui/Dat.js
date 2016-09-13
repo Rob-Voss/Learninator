@@ -6,20 +6,29 @@
  */
 function datGUI (object) {
     var wGUI = new dat.GUI({resizable: true, autoPlace: true, name: 'Controls'}),
-        sFolder = wGUI.addFolder('Settings');
+        sFolder = wGUI.addFolder('Settings'),
+        settings = object.settings || object.options;
 
-    for (let go in object.settings) {
-        if (object.settings.hasOwnProperty(go)) {
-            let ty = typeof object.settings[go];
-            if (ty !== 'object') {
-                sFolder.add(object.settings, go).listen().name(go);
+    for (let go in settings) {
+        if (settings.hasOwnProperty(go)) {
+            let ty = typeof settings[go];
+            if (ty === 'number') {
+                sFolder.add(settings, go).listen().name(go).onFinishChange(function(){
+                    object.draw();
+                }).step(0.1);
+            } else if (ty !== 'object') {
+                sFolder.add(settings, go).listen().name(go).onFinishChange(function(){
+                    object.draw();
+                });
             } else {
                let folder = sFolder.addFolder(go.charAt(0).toUpperCase() + go.slice(1));
-                for (var gp in object.settings[go]) {
-                    if (object.settings[go].hasOwnProperty(gp)) {
-                        let typ = typeof object.settings[go][gp];
+                for (var gp in settings[go]) {
+                    if (settings[go].hasOwnProperty(gp)) {
+                        let typ = typeof settings[go][gp];
                         if (typ !== 'object') {
-                            folder.add(object.settings[go], gp).listen().name(gp);
+                            folder.add(settings[go], gp).listen().name(gp).onFinishChange(function(){
+                                object.draw();
+                            });
                         }
                     }
                 }

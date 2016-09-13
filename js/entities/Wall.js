@@ -35,7 +35,7 @@
       this.position = this.v1.getPointBetween(this.v2, 50);
       this.width = (this.angle !== 0) ? 5 : this.len;
       this.height = (this.angle !== 0) ? this.len : 5;
-      this.fontOpts = {font: '12px Arial', fill: '#000000', align: 'center'};
+      this.fontOpts = {fontSize: '12px Arial', fill: '#000000', align: 'center'};
 
       // Add a container to hold our display cheats
       this.cheatsContainer = new PIXI.Container();

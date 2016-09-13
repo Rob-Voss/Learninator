@@ -92,7 +92,7 @@
      * @return {CellShape}
      */
     addCheats() {
-      this.txtOpts = {font: '10px Arial', fill: '#FF0000', align: 'center'};
+      this.txtOpts = {fontSize: '10px Arial', fill: '#FF0000', align: 'center'};
 
       if (this.cheats.gridLocation && this.gridText === undefined) {
         this.gridText = new PIXI.Text(this.toString(), this.txtOpts);
@@ -134,7 +134,7 @@
             val = this.value.toFixed(2);
           if (this.rewardText === undefined) {
             this.rewardText = new PIXI.Text(rew !== 0.0 ? 'R' + rew : '', {
-              font: '8px Arial',
+              fontSize: '8px Arial',
               fill: rew < 0.0 ? '#000000' : '#00FF00',
               align: 'center'
             });
@@ -148,7 +148,7 @@
 
           if (this.valueText === undefined) {
             this.valueText = new PIXI.Text(val !== 0.00 ? val : '', {
-              font: '8px Arial',
+              fontSize: '8px Arial',
               fill: val < 0.0 ? '#000000' : '#00FF00',
               align: 'center'
             });

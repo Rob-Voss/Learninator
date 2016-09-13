@@ -39,7 +39,7 @@
             size: 15,
             cellSize: 30,
             cellSpacing: 10,
-            useSprite: true,
+            useSprite: false,
             pointy: false,
             fill: false,
             cheats: cheats
@@ -144,246 +144,246 @@
         this.data = event.data;
         this.isDown = true;
         this.alpha = 1;
-        this.guiObj = {
-          id: 'main',
-          draggable: true,
-          component: 'Window',
-          skin: 'MetalWindow',
-          position: {x: 20, y: 20},
-          width: 400,
-          height: 400,
-          z: 1,
-          header: {
-            id: 'title',
-            component: 'Header',
-            skin: 'MetalHeader',
-            text: 'Agent Options',
-            position: {x: 5, y: 0},
-            width: 390,
-            height: 30
-          },
-          layout: [1, 1],
-          children: [{
-            id: 'inputSamples',
-            component: 'Layout',
-            skin: 'MetalLayout',
-            position: {x: 0, y: 0},
-            width: 390,
-            height: 360,
-            layout: [2, 5],
-            children: [{
-              id: 'chk1',
-              text: 'Checkbox #1',
-              component: 'Checkbox',
-              skin: 'MetalCheckbox',
-              position: {x: 0, y: 0},
-              width: 25,
-              height: 25
-            }, {
-              id: 'radio1',
-              text: 'Radio #1',
-              component: 'Radio',
-              skin: 'MetalRadio',
-              group: 'odd',
-              position: {x: 0, y: 0},
-              width: 25,
-              height: 25
-            }, {
-              id: 'chk2',
-              text: 'Checkbox #2',
-              component: 'Checkbox',
-              skin: 'MetalCheckbox',
-              position: {x: 0, y: 0},
-              width: 25,
-              height: 25
-            }, {
-              id: 'radio2',
-              text: 'Radio #2',
-              component: 'Radio',
-              skin: 'MetalRadio',
-              group: 'odd',
-              position: {x: 0, y: 0},
-              width: 25,
-              height: 25
-            }, {
-              id: 'text1',
-              component: 'Input',
-              skin: 'MetalInput',
-              text: 'input here',
-              position: {x: 0, y: 0},
-              width: 150,
-              height: 29
-            }, {
-              id: 'btnDone',
-              component: 'Button',
-              skin: 'MetalButton',
-              text: 'Done',
-              position: {x: 0, y: 0},
-              width: 75,
-              height: 29,
-              font: {
-                color: 'white'
-              }
-            }, {
-              id: 'mySlider',
-              component: 'Slider',
-              position: {x: 0, y: 0},
-              slide: {
-                component: 'Slide',
-                width: 10,
-                height: 10
-              },
-              width: 150,
-              height: 5
-
-            }, {
-              id: 'myLabel',
-              text: 'none',
-              component: 'Label',
-              position: {x: 0, y: 0},
-              width: 120,
-              height: 29
-            }, {
-              id: 'btnCancel',
-              component: 'Button',
-              skin: 'MetalButton',
-              text: 'Cancel',
-              position: {x: 0, y: 0},
-              width: 100,
-              height: 29,
-              font: {
-                color: 'white'
-              }
-            }, {
-              id: 'btnSave',
-              component: 'Button',
-              skin: 'MetalButton',
-              text: 'Save',
-              position: {x: 0, y: 0},
-              width: 100,
-              height: 29,
-              font: {
-                color: 'white'
-              }
-            }]
-          }]
-        };
-        /*this.guiObj = {
-         id: 'mainGlass',
-         draggable: true,
-         component: 'Window',
-         skin: 'GlassWindow',
-         position: {x: 20, y: 20},
-         width: 400,
-         height: 400,
-         z: 1,
-         header: {
-         id: 'titleGlass',
-         component: 'Header',
-         skin: 'GlassHeader',
-         text: 'Options',
-         position: {x: 5, y: 0},
-         width: 390,
-         height: 30
-         },
-         layout: [1, 1],
-         children: [{
-         id: 'inputSamples',
-         component: 'Layout',
-         skin: 'GlassLayout',
-         position: {x: 0, y: 0},
-         width: 380,
-         height: 360,
-         layout: [2, 5],
-         children: [{
-         id: 'chk1',
-         text: 'Checkbox #1',
-         component: 'Checkbox',
-         skin: 'GlassCheckbox',
-         position: {x: 0, y: 0},
-         width: 25,
-         height: 25
-         }, {
-         id: 'radio1',
-         text: 'Radio #1',
-         component: 'Radio',
-         skin: 'GlassRadio',
-         group: 'odd',
-         position: {x: 0, y: 0},
-         width: 25,
-         height: 25
-         }, {
-         id: 'chk2',
-         text: 'Checkbox #2',
-         component: 'Checkbox',
-         skin: 'GlassCheckbox',
-         position: {x: 0, y: 0},
-         width: 25,
-         height: 25
-         }, {
-         id: 'radio2',
-         text: 'Radio #2',
-         component: 'Radio',
-         skin: 'GlassRadio',
-         group: 'odd',
-         position: {x: 0, y: 0},
-         width: 25,
-         height: 25
-         }, {
-         id: 'text1',
-         component: 'Input',
-         skin: 'GlassInput',
-         text: 'input here',
-         position: {x: 0, y: 0},
-         width: 150,
-         height: 29
-         }, {
-         id: 'btnDone',
-         component: 'Button',
-         skin: 'GlassButton',
-         text: 'Done',
-         position: {x: 0, y: 0},
-         width: 75,
-         height: 29
-         }, {
-         id: 'mySlider',
-         component: 'Slider',
-         position: {x: 0, y: 0},
-         slide: {
-         component: 'Slide',
-         width: 10,
-         height: 10
-         },
-         width: 150,
-         height: 5
-
-         }, {
-         id: 'myLabel',
-         component: 'Label',
-         text: 'none',
-         position: {x: 0, y: 0},
-         width: 120,
-         height: 29
-         }, {
-         id: 'btnCancel',
-         component: 'Button',
-         skin: 'GlassButton',
-         text: 'Cancel',
-         position: {x: 0, y: 0},
-         width: 100,
-         height: 29
-         }, {
-         id: 'btnSave',
-         component: 'Button',
-         skin: 'GlassButton',
-         text: 'Save',
-         position: {x: 0, y: 0},
-         width: 100,
-         height: 29
-         }]
-         }]
-         };*/
-        this.loadTheme(this.guiObj, 'space');
+        // this.guiObj = {
+        //   id: 'main',
+        //   draggable: true,
+        //   component: 'Window',
+        //   skin: 'MetalWindow',
+        //   position: {x: 20, y: 20},
+        //   width: 400,
+        //   height: 400,
+        //   z: 1,
+        //   header: {
+        //     id: 'title',
+        //     component: 'Header',
+        //     skin: 'MetalHeader',
+        //     text: 'Agent Options',
+        //     position: {x: 5, y: 0},
+        //     width: 390,
+        //     height: 30
+        //   },
+        //   layout: [1, 1],
+        //   children: [{
+        //     id: 'inputSamples',
+        //     component: 'Layout',
+        //     skin: 'MetalLayout',
+        //     position: {x: 0, y: 0},
+        //     width: 390,
+        //     height: 360,
+        //     layout: [2, 5],
+        //     children: [{
+        //       id: 'chk1',
+        //       text: 'Checkbox #1',
+        //       component: 'Checkbox',
+        //       skin: 'MetalCheckbox',
+        //       position: {x: 0, y: 0},
+        //       width: 25,
+        //       height: 25
+        //     }, {
+        //       id: 'radio1',
+        //       text: 'Radio #1',
+        //       component: 'Radio',
+        //       skin: 'MetalRadio',
+        //       group: 'odd',
+        //       position: {x: 0, y: 0},
+        //       width: 25,
+        //       height: 25
+        //     }, {
+        //       id: 'chk2',
+        //       text: 'Checkbox #2',
+        //       component: 'Checkbox',
+        //       skin: 'MetalCheckbox',
+        //       position: {x: 0, y: 0},
+        //       width: 25,
+        //       height: 25
+        //     }, {
+        //       id: 'radio2',
+        //       text: 'Radio #2',
+        //       component: 'Radio',
+        //       skin: 'MetalRadio',
+        //       group: 'odd',
+        //       position: {x: 0, y: 0},
+        //       width: 25,
+        //       height: 25
+        //     }, {
+        //       id: 'text1',
+        //       component: 'Input',
+        //       skin: 'MetalInput',
+        //       text: 'input here',
+        //       position: {x: 0, y: 0},
+        //       width: 150,
+        //       height: 29
+        //     }, {
+        //       id: 'btnDone',
+        //       component: 'Button',
+        //       skin: 'MetalButton',
+        //       text: 'Done',
+        //       position: {x: 0, y: 0},
+        //       width: 75,
+        //       height: 29,
+        //       font: {
+        //         color: 'white'
+        //       }
+        //     }, {
+        //       id: 'mySlider',
+        //       component: 'Slider',
+        //       position: {x: 0, y: 0},
+        //       slide: {
+        //         component: 'Slide',
+        //         width: 10,
+        //         height: 10
+        //       },
+        //       width: 150,
+        //       height: 5
+        //
+        //     }, {
+        //       id: 'myLabel',
+        //       text: 'none',
+        //       component: 'Label',
+        //       position: {x: 0, y: 0},
+        //       width: 120,
+        //       height: 29
+        //     }, {
+        //       id: 'btnCancel',
+        //       component: 'Button',
+        //       skin: 'MetalButton',
+        //       text: 'Cancel',
+        //       position: {x: 0, y: 0},
+        //       width: 100,
+        //       height: 29,
+        //       font: {
+        //         color: 'white'
+        //       }
+        //     }, {
+        //       id: 'btnSave',
+        //       component: 'Button',
+        //       skin: 'MetalButton',
+        //       text: 'Save',
+        //       position: {x: 0, y: 0},
+        //       width: 100,
+        //       height: 29,
+        //       font: {
+        //         color: 'white'
+        //       }
+        //     }]
+        //   }]
+        // };
+        // /*this.guiObj = {
+        //  id: 'mainGlass',
+        //  draggable: true,
+        //  component: 'Window',
+        //  skin: 'GlassWindow',
+        //  position: {x: 20, y: 20},
+        //  width: 400,
+        //  height: 400,
+        //  z: 1,
+        //  header: {
+        //  id: 'titleGlass',
+        //  component: 'Header',
+        //  skin: 'GlassHeader',
+        //  text: 'Options',
+        //  position: {x: 5, y: 0},
+        //  width: 390,
+        //  height: 30
+        //  },
+        //  layout: [1, 1],
+        //  children: [{
+        //  id: 'inputSamples',
+        //  component: 'Layout',
+        //  skin: 'GlassLayout',
+        //  position: {x: 0, y: 0},
+        //  width: 380,
+        //  height: 360,
+        //  layout: [2, 5],
+        //  children: [{
+        //  id: 'chk1',
+        //  text: 'Checkbox #1',
+        //  component: 'Checkbox',
+        //  skin: 'GlassCheckbox',
+        //  position: {x: 0, y: 0},
+        //  width: 25,
+        //  height: 25
+        //  }, {
+        //  id: 'radio1',
+        //  text: 'Radio #1',
+        //  component: 'Radio',
+        //  skin: 'GlassRadio',
+        //  group: 'odd',
+        //  position: {x: 0, y: 0},
+        //  width: 25,
+        //  height: 25
+        //  }, {
+        //  id: 'chk2',
+        //  text: 'Checkbox #2',
+        //  component: 'Checkbox',
+        //  skin: 'GlassCheckbox',
+        //  position: {x: 0, y: 0},
+        //  width: 25,
+        //  height: 25
+        //  }, {
+        //  id: 'radio2',
+        //  text: 'Radio #2',
+        //  component: 'Radio',
+        //  skin: 'GlassRadio',
+        //  group: 'odd',
+        //  position: {x: 0, y: 0},
+        //  width: 25,
+        //  height: 25
+        //  }, {
+        //  id: 'text1',
+        //  component: 'Input',
+        //  skin: 'GlassInput',
+        //  text: 'input here',
+        //  position: {x: 0, y: 0},
+        //  width: 150,
+        //  height: 29
+        //  }, {
+        //  id: 'btnDone',
+        //  component: 'Button',
+        //  skin: 'GlassButton',
+        //  text: 'Done',
+        //  position: {x: 0, y: 0},
+        //  width: 75,
+        //  height: 29
+        //  }, {
+        //  id: 'mySlider',
+        //  component: 'Slider',
+        //  position: {x: 0, y: 0},
+        //  slide: {
+        //  component: 'Slide',
+        //  width: 10,
+        //  height: 10
+        //  },
+        //  width: 150,
+        //  height: 5
+        //
+        //  }, {
+        //  id: 'myLabel',
+        //  component: 'Label',
+        //  text: 'none',
+        //  position: {x: 0, y: 0},
+        //  width: 120,
+        //  height: 29
+        //  }, {
+        //  id: 'btnCancel',
+        //  component: 'Button',
+        //  skin: 'GlassButton',
+        //  text: 'Cancel',
+        //  position: {x: 0, y: 0},
+        //  width: 100,
+        //  height: 29
+        //  }, {
+        //  id: 'btnSave',
+        //  component: 'Button',
+        //  skin: 'GlassButton',
+        //  text: 'Save',
+        //  position: {x: 0, y: 0},
+        //  width: 100,
+        //  height: 29
+        //  }]
+        //  }]
+        //  };*/
+        // this.loadTheme(this.guiObj, 'space');
 
         return this;
       };

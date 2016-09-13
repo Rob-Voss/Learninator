@@ -67,8 +67,7 @@
           pairs: 0
         }
       },
-      engine = Engine.create(engineOpts),
-      pixiOptions = {
+      pixiOpts = {
         antialiasing: false,
         autoResize: false,
         background: 0xFFFFFF,
@@ -79,7 +78,8 @@
         width: 600,
         height: 600
       },
-      renderer = new PIXI.autoDetectRenderer(pixiOptions.width, pixiOptions.height, pixiOptions),
+      engine = Engine.create(engineOpts),
+      renderer = new PIXI.autoDetectRenderer(pixiOpts.width, pixiOpts.height, pixiOpts),
       /**
        *
        * @type {{element: Element, options: {background: string, pixelRatio: number, enabled: boolean, hasBounds:
@@ -92,7 +92,7 @@
       renderOpts = {
         bounds: {
           min: {x: 0, y: 0},
-          max: {x: pixiOptions.width, y: pixiOptions.height}
+          max: {x: pixiOpts.width, y: pixiOpts.height}
         },
         canvas: renderer.view,
         context: renderer.context,
@@ -102,7 +102,9 @@
         displayContainer: new PIXI.Container(),
         element: container,
         engine: engine,
+        engineOptions: engineOpts,
         renderer: renderer,
+        pixiOptions: pixiOpts,
         options: {
           width: renderer.width,
           height: renderer.height,
@@ -131,18 +133,19 @@
         }
       },
       /**
-       * @type {gridOpts}
+       * @type {gridOpts} gridOpts
        */
       gridOpts = {
         width: renderOpts.options.width,
         height: renderOpts.options.height,
         buffer: 0,
-        size: 3,
-        cellSize: 20,
-        cellSpacing: 5,
-        pointy: false,
+        size: 5,
+        cellSize: 40,
+        cellSpacing: 20,
+        pointy: true,
         useSprite: false,
-        fill: false
+        fill: false,
+        cheats: {}
       },
       orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
       size = new Point(gridOpts.cellSize, gridOpts.cellSize),
@@ -186,6 +189,7 @@
       this.render.mouse = this.mouseConstraint.mouse;
 
       this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
+
       if (useTools) {
         this.useInspector = useInspector;
         this.isMobile = isMobile;
@@ -210,35 +214,11 @@
         Gui.update(this.gui, this.gui.datGui);
       }
 
-      // This is temporary
-      for (let id in cells) {
-        let cellOpts = {
-              isStatic: true,
-              isSensor: false,
-              render: {
-                visible: true
-              },
-              label: 'Hex',
-              shape: 'convex'
-            },
-            cell = cells[id];
-        let cellShape = Bodies.polygon(cell.center.x, cell.center.y, 6, cell.cellSize, cellOpts);
-
-        Body.set(cellShape, 'entity', {
-          type: 0,
-          x: cell.center.x,
-          y: cell.center.y,
-          width: cell.cellSize,
-          height: cell.cellSize
-        });
-        this.addMatter([cellShape]);
-      }
-
       //this.addPerson(200, 200);
       this.addWalls();
       this.addAgents();
       //this.addPlatforms(10, 30, 150);
-      this.addEntities(100);
+      this.addEntities(10);
       this.setEngineEvents();
       this.setRunnerEvents();
       this.setWorldEvents();

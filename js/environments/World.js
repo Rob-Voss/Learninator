@@ -120,6 +120,31 @@
       height: 800
     };
 
+  /**
+   * @typedef {Object} World
+   * @property {worldOpts} options
+   * @property {renderOpts} renderOpts
+   * @property {Array} agents
+   * @property {Array} agentOpts
+   * @property {Array} entityAgents
+   * @property {Array} entityAgentOpts
+   * @property {Array} entities
+   * @property {Array} entityOpts
+   * @property {Array} walls
+   * @property {Grid} grid
+   * @property {Maze} maze
+   * @property {number} simSpeed
+   * @property {string} theme
+   * @property {cheatOpts} cheats
+   * @property {collisionOpts} collision
+   * @property {number} sid
+   * @property {number} stepsPerTick
+   * @property {number} clock
+   * @property {boolean} pause
+   * @property {number} width
+   * @property {number} height
+   * @property {boolean} resizable
+   */
   /*export*/
   class World {
 
@@ -161,17 +186,9 @@
       // Actually place the renderer onto the page for display
       element.appendChild(this.canvas);
 
-      if (this.resizable) {
-        var resize = () => {
-          let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
-          this.stage.scale.x = this.stage.scale.y = ratio;
-          this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
-        };
-        window.addEventListener("resize", resize);
-        resize();
-      }
       this.agents = agents || [];
       this.entityAgents = [];
+      this.entities = [];
       this.agentOpts = Utility.getOpt(this.options, 'agentOpts', {});
       this.agentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
       this.numEntities = Utility.getOpt(this.options, 'numEntities', 0);
@@ -183,12 +200,14 @@
       this.settings = {
         pause: this.pause,
         simSpeed: this.simSpeed,
-        cheats: this.cheats,
+        worldCheats: JSON.parse(JSON.stringify(this.cheats)),
         agents: {
-          cheats: this.agentOpts.cheats
+          cheats: JSON.parse(JSON.stringify(this.agentOpts.cheats)),
+          options: JSON.parse(JSON.stringify(this.agentOpts))
         },
-        entityLayer: {
-          cheats: this.entityOpts.cheats
+        entities: {
+          cheats: JSON.parse(JSON.stringify(this.entityOpts.cheats)),
+          options: JSON.parse(JSON.stringify(this.agentOpts))
         },
         grid: {
           cheats: JSON.parse(JSON.stringify(this.cheats))
@@ -201,22 +220,32 @@
       this.stage = new PIXI.Container();
       this.stage.interactive = true;
 
-      this.worldLayer = new PIXI.Container();
-      this.staticLayer = new PIXI.Container();
-      this.entityLayer = new PIXI.Container();
       this.uiLayer = new PIXI.Container();
-      this.gridLayer = (this.grid) ? this.grid.cellsContainer : new PIXI.Container();
-      this.worldLayer.id = 'worldLayer';
-      this.gridLayer.id = 'gridLayer';
-      this.staticLayer.id = 'staticLayer';
-      this.entityLayer.id = 'entityLayer';
       this.uiLayer.id = 'uiLayer';
+      this.worldLayer = new PIXI.Container();
+      this.worldLayer.id = 'worldLayer';
+      this.staticLayer = new PIXI.Container();
+      this.staticLayer.id = 'staticLayer';
+      this.entityLayer = new PIXI.Container();
+      this.entityLayer.id = 'entityLayer';
+      this.gridLayer = (this.grid) ? this.grid.cellsContainer : new PIXI.Container();
+      this.gridLayer.id = 'gridLayer';
+
       this.worldLayer.addChild(this.gridLayer);
       this.worldLayer.addChild(this.staticLayer);
       this.worldLayer.addChild(this.entityLayer);
       this.stage.addChild(this.worldLayer);
       this.stage.addChild(this.uiLayer);
 
+      if (this.resizable) {
+        var resize = () => {
+          let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
+          this.stage.scale.x = this.stage.scale.y = ratio;
+          this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
+        };
+        window.addEventListener("resize", resize);
+        resize();
+      }
       CollisionDetector.apply(this, [this.collision]);
 
       // this.parallaxTest();

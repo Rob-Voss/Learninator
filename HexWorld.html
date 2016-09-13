@@ -12,37 +12,8 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
-    <script>
-        var world = world || {};
-
-        var goslow = function() {
-            world.stepsPerTick = 1;
-        };
-        var gonormal = function(){
-            world.stepsPerTick = 10;
-        };
-        var gofast = function() {
-            world.stepsPerTick = 25;
-        };
-
-        /**
-         *
-         */
-        function solve() {
-            world.maze.solve();
-            world.maze.drawSolution();
-            world.stage.addChild(world.maze.cheatsContainer);
-            world.renderer.render(world.stage);
-        }
-
-        function start() {
-            PIXI.loader.add("img/hexagon.json").load(() => {
-                world = new HexWorld();
-//                datGUI(this);
-            });
-        }
-    </script>
-    <link rel="import" href="/templates/twitch-nav.html">
+    <link rel="import" href="templates/twitch-nav.html">
+    <link rel="import" href="templates/js-includes.html">
 </head>
 <body onload="start();">
 <div id="container">
@@ -82,34 +53,36 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+<script>
+    var world = world || {};
 
-<script src="js/lib/external/rl.js"></script>
+    var goslow = function() {
+        world.stepsPerTick = 1;
+    };
+    var gonormal = function(){
+        world.stepsPerTick = 10;
+    };
+    var gofast = function() {
+        world.stepsPerTick = 25;
+    };
 
-<script src="js/lib/Utility.js"></script>
-<script src="js/lib/Vec.js"></script>
-<script src="js/entities/Entity.js"></script>
-<script src="js/entities/Agent.js"></script>
-<script src="js/entities/Wall.js"></script>
+    /**
+     *
+     */
+    function solve() {
+        world.maze.solve();
+        world.maze.drawSolution();
+        world.stage.addChild(world.maze.cheatsContainer);
+        world.renderer.render(world.stage);
+    }
 
-<script src="js/lib/grid/Cell.js"></script>
-<script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/Hex.js"></script>
-<script src="js/lib/grid/HexShape.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
-<script src="js/lib/CollisionDetector.js"></script>
-<script src="js/lib/Maze.js"></script>
-<script src="js/lib/QuadTree.js"></script>
-<script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/Camera.js"></script>
-
-<script src="js/environments/World.js"></script>
+    function start() {
+        PIXI.loader.add("img/hexagon.json").load(() => {
+            world = new HexWorld();
+//                datGUI(this);
+        });
+    }
+</script>
 <script src="js/environments/HexWorld.js"></script>
 
 </body>

@@ -247,7 +247,7 @@
           rect = new PIXI.Graphics(),
           popText = new PIXI.Text(
               (aN.items !== undefined) ? aN.items.length : '0',
-              {font: '12px Arial', fill: '#000000', align: 'center'}
+              {fontSize: '12px Arial', fill: '#000000', align: 'center'}
           );
       if (nodes) {
         for (let i = 0; i < nodes.length; i++) {
@@ -371,7 +371,7 @@
         }
         this.collisionOverlay = new PIXI.Container();
 
-        let txtOpts = {font: '10px Arial', fill: '#000000', align: 'center'},
+        let txtOpts = {fontSize: '10px Arial', fill: '#000000', align: 'center'},
             popText = new PIXI.Text(this.population.size, txtOpts);
         popText.position.set(this.width / 2, this.height / 2);
         this.collisionOverlay.addChild(popText);

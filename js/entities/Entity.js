@@ -36,7 +36,7 @@
      */
     constructor(type, position, opts) {
       this.id = Utility.Strings.guid();
-      this.txtOpts = {font: '10px Arial', fill: '#000000', align: 'center'};
+      this.txtOpts = {fontSize: '10px Arial', fill: '#000000', align: 'center'};
       if (typeof type === 'string') {
         this.type = Entity.entityTypes.indexOf(type);
         this.typeName = type;

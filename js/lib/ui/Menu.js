@@ -31,7 +31,7 @@
             this.addChild(this.background);
 
             this.selectedTileText = new PIXI.Text("Selected Agent: ", {
-                font: "10px Arial",
+                fontSize: "10px Arial",
                 fill: "#FFFFFF",
                 align: "left"
             });
@@ -52,7 +52,7 @@
         }
 
         addMenuButton(text, x, y, obj, callback) {
-            var button = new PIXI.Text(text, {font: "20px Arial", fill: "#FFFFFF"});
+            var button = new PIXI.Text(text, {fontSize: "20px Arial", fill: "#FFFFFF"});
             button.position.x = x;
             button.position.y = y;
             button.interactive = true;

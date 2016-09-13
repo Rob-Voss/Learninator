@@ -4,6 +4,8 @@
     <title>Matter World</title>
     <link href="css/matter-tools.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
+    <link rel="import" href="templates/twitch-nav.html">
+    <link rel="import" href="templates/js-includes.html">
 </head>
 <body onload="start();">
 
@@ -14,32 +16,6 @@
     <div id="flotreward"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
-<script src="https://cdn.rawgit.com/schteppe/poly-decomp.js/master/build/decomp.js"></script>
-
-<script src="js/lib/external/gif.js"></script>
-<script src="js/lib/external/matter.js"></script>
-<script src="js/lib/external/matter-tools.js"></script>
-<script src="js/lib/external/rl.js"></script>
-
-<script src="js/lib/graphing/FlotGraph.js"></script>
-<script src="js/lib/Utility.js"></script>
-<script src="js/lib/Vec.js"></script>
-<script src="js/entities/Wall.js"></script>
-<script src="js/lib/grid/Cell.js"></script>
-<script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/Hex.js"></script>
-<script src="js/lib/grid/HexShape.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
-<script src="js/lib/Maze.js"></script>
-<script src="js/lib/MatterPixi.js"></script>
-
-<script src="js/entities/PhysicalEntity.js"></script>
-<script src="js/entities/PhysicalAgent.js"></script>
-<script src="js/environments/MatterWorld.js"></script>
-
 <script>
     var world = world || {};
 
@@ -47,8 +23,12 @@
         PIXI.loader.add("img/hexagon.json").load(() => {
             world = new MatterWorld();
             world.setViewport(100, 100);
+            datGUI(world);
         });
     }
 </script>
+
+<script src="js/environments/MatterWorld.js"></script>
+
 </body>
 </html>
