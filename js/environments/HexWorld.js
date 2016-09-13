@@ -1,11 +1,11 @@
 (function(global) {
   'use strict';
 
-  class HexWorld extends World {
+  class HexWorld extends GameWorld {
     /**
      * A Hexagonal world
      * @name HexWorld
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {HexWorld}

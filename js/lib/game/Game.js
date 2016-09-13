@@ -32,7 +32,7 @@ class Game {
     /**
      * @type {p2.World}
      */
-    this.world = new World(this.options.worldOptions);
+    this.world = new GameWorld(this.options.worldOptions);
 
     this.gameObjects = [];
     this.trackedBody = null;

@@ -26,7 +26,7 @@
       this.cheats = Utility.getOpt(opts, 'cheats', false);
       this.isOver = false;
       this.isDown = false;
-      this.color = 0x000000;
+      this.color = 0xFFFFFF;
       this.alpha = 0;
       this.walls = [];
       this.center = new Vec(

@@ -12,7 +12,7 @@
   /**
    * Collision Detector wrapper
    * @constructor
-   * @extends {World}
+   * @extends {GameWorld}
    *
    * @param {collisionOpts} opts
    */

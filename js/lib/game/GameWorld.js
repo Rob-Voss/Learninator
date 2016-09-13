@@ -114,14 +114,14 @@
       autoResize: false,
       resolution: window.devicePixelRatio,
       resizable: true,
-      transparent: true,
+      transparent: false,
       noWebGL: false,
       width: 800,
       height: 800
     };
 
   /**
-   * @typedef {Object} World
+   * @typedef {Object} GameWorld
    * @property {worldOpts} options
    * @property {renderOpts} renderOpts
    * @property {Array} agents
@@ -146,7 +146,7 @@
    * @property {boolean} resizable
    */
   /*export*/
-  class World {
+  class GameWorld {
 
     /**
      * Make a World
@@ -156,7 +156,7 @@
      * @param {array} walls
      * @param {worldOpts} worldOpts
      * @param {renderOpts} renderOpts
-     * @return {World}
+     * @return {GameWorld}
      */
     constructor(agents, walls, worldOpts, renderOpts) {
       this.walls = walls;
@@ -366,8 +366,8 @@
         },
         animate = () => {
           if (!that.pause) {
-            that.deltaTime = World.time() - that.lastTime;
-            that.lastTime = World.time();
+            that.deltaTime = GameWorld.time() - that.lastTime;
+            that.lastTime = GameWorld.time();
             update();
           }
           that.renderer.render(that.stage);
@@ -375,7 +375,7 @@
         };
 
       this.deltaTime = 0;
-      this.lastTime = World.time();
+      this.lastTime = GameWorld.time();
       initControls();
       animate();
 
@@ -397,8 +397,8 @@
 
       let animate = () => {
         if (!this.pause) {
-          this.deltaTime = World.time() - this.lastTime;
-          this.lastTime = World.time();
+          this.deltaTime = GameWorld.time() - this.lastTime;
+          this.lastTime = GameWorld.time();
           for (let k = 0; k < this.stepsPerTick; k++) {
             this.tick(this.deltaTime);
           }
@@ -408,13 +408,13 @@
       };
 
       this.deltaTime = 0;
-      this.lastTime = World.time();
+      this.lastTime = GameWorld.time();
       animate();
     }
 
     /**
      * Add the Agents
-     * @return {World}
+     * @return {GameWorld}
      */
     addAgents() {
       // Add the agents
@@ -437,7 +437,7 @@
 
     /**
      * Add some noms
-     * @return {World}
+     * @return {GameWorld}
      */
     addEntityAgents() {
       let startXY,
@@ -472,7 +472,7 @@
     /**
      * Add new entities
      * @parameter {number} number
-     * @return {World}
+     * @return {GameWorld}
      */
     addEntities(number = null) {
       let startXY,
@@ -507,7 +507,7 @@
 
     /**
      * Add the Walls
-     * @return {World}
+     * @return {GameWorld}
      */
     addWalls() {
       if (!this.walls) {
@@ -529,7 +529,7 @@
     /**
      * Remove the entity from the world
      * @param {string} id
-     * @return {World}
+     * @return {GameWorld}
      */
     deleteEntity(id) {
       if (this.population.has(id)) {
@@ -612,7 +612,7 @@
     /**
      * Tick the environment
      * @param {number} timeSinceLast
-     * @return {World}
+     * @return {GameWorld}
      */
     tick(timeSinceLast) {
       this.updatePopulation();
@@ -693,10 +693,10 @@
 // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
   if (typeof process !== 'undefined') {
     module.exports = {
-      World: World
+      World: GameWorld
     };
   } else {
-    global.World = World;
+    global.GameWorld = GameWorld;
   }
 
 }(this));

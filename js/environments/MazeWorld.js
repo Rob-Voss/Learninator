@@ -1,12 +1,12 @@
 (function(global) {
   "use strict";
 
-  class MazeWorld extends World {
+  class MazeWorld extends GameWorld {
 
     /**
      * World object contains many agents and walls and food and stuff
      * @name MazeWorld
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {MazeWorld}
@@ -210,7 +210,7 @@
     /**
      * Tick the environment
      * @param {number} timeSinceLast
-     * @return {World}
+     * @return {GameWorld}
      */
     tick(timeSinceLast) {
       this.updatePopulation();

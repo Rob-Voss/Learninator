@@ -163,7 +163,7 @@
      * @return {Array}
      */
     disconnectedNeighbors(cell) {
-      let disc, results,
+      var disc, results,
           neighbors = this.neighbors(cell);
       results = neighbors.filter((c0) => {
         if (c0 === false) {

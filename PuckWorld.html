@@ -13,7 +13,7 @@
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
     <link rel="import" href="templates/twitch-nav.html">
-    <link rel="import" href="templates/js-includes.html">
+    <!--<link rel="import" href="templates/js-includes.html">-->
 </head>
 <body onload="start();">
 <div id="container">
@@ -152,10 +152,62 @@ Speaking of high-dimensional continuous action spaces, this is what Policy Gradi
 </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.0.0/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
+
+<!-- markdown -->
+<script src="js/lib/external/marked.js" type="text/javascript"></script>
+<script src="js/lib/external/highlight.pack.js" type="text/javascript"></script>
+<link href="css/highlight_default.css" rel="stylesheet">
+<script>hljs.initHighlightingOnLoad();</script>
+
+<script src="js/lib/external/matter.js"></script>
+<!--<script src="js/lib/external/gif.js"></script>-->
+<!--<script src="js/lib/external/matter-tools.js"></script>-->
+<script src="js/lib/external/rl.js"></script>
+
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+
+<script src="js/lib/ui/Dat.js"></script>
+<script src="js/lib/ui/Display.js"></script>
+
+<script src="js/lib/game/Camera.js"></script>
+
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/Maze.js"></script>
+<script src="js/lib/grid/Cell.js"></script>
+<script src="js/lib/grid/CellShape.js"></script>
+<script src="js/lib/grid/Hex.js"></script>
+<script src="js/lib/grid/HexShape.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/grid/HexGrid.js"></script>
+<script src="js/lib/QuadTree.js"></script>
+<script src="js/lib/Window.js"></script>
+
+<script src="js/lib/game/MatterPixi.js"></script>
+<script src="js/lib/game/p2Pixi.js"></script>
+<script src="js/lib/game/Game.js"></script>
+<script src="js/lib/game/GameObject.js"></script>
+
+<script src="js/entities/PhysicalEntity.js"></script>
+<script src="js/entities/PhysicalAgent.js"></script>
+<script src="js/entities/Wall.js"></script>
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
+
+<script src="js/lib/game/GameWorld.js"></script>
+
 <script>
     /**
      * Global world object
-     * @type {World}
+     * @type {GameWorld}
      */
     var world = world || {},
             // flot stuff

@@ -1,6 +1,6 @@
 var EvolveWorld = EvolveWorld || {},
     Vec = Vec || {},
-    World = World || {};
+    World = GameWorld || {};
 
 (function (global) {
     "use strict";

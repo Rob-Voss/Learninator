@@ -1,12 +1,12 @@
 (function(global) {
   "use strict";
 
-  class HexMazeWorld extends World {
+  class HexMazeWorld extends GameWorld {
 
     /**
      * World object contains many agents and walls and food and stuff
      * @name MazeWorld
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {HexMazeWorld}

@@ -1,12 +1,12 @@
 (function(global) {
   'use strict';
 
-  class WaterWorldEX extends World {
+  class WaterWorldEX extends GameWorld {
 
     /**
      * World object contains many agents and walls and food and stuff
      * @name WaterWorldEX
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {WaterWorldEX}

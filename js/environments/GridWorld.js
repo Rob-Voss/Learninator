@@ -1,13 +1,13 @@
 (function (global) {
     "use strict";
 
-    class GridWorld extends World {
+    class GridWorld extends GameWorld {
 
         /**
          * GridWorld Environment
          * @return {GridWorld}
          * @name GridWorld
-         * @extends World
+         * @extends GameWorld
          * @constructor
          */
         constructor() {
@@ -516,7 +516,7 @@
     /**
      * Tick the environment
      * @param {number} timeSinceLast
-     * @return {World}
+     * @return {GameWorld}
      */
     GridWorld.prototype.tick = function (timeSinceLast) {
         if (this.sid === -1) {

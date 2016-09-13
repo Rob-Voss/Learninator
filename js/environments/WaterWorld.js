@@ -3,10 +3,10 @@
 
   const renderOpts = {
         backgroundColor: 0xFFFFFF,
-        antialiasing: true,
-        autoResize: true,
-        resizable: true,
-        transparent: true,
+        antialiasing: false,
+        autoResize: false,
+        resizable: false,
+        transparent: false,
         resolution: window.devicePixelRatio,
         noWebGL: false,
         width: 800,
@@ -65,11 +65,11 @@
         fill: false
       };
 
-  class WaterWorld extends World {
+  class WaterWorld extends GameWorld {
 
     /**
      * World object contains many agents and walls and food and stuff
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {WaterWorld}

@@ -1,7 +1,7 @@
 var Brain = Brain || {},
     AgentEvolve = AgentEvolve || {},
     Utility = Utility || {},
-    World = World || {};
+    World = GameWorld || {};
 
 (function (global) {
     "use strict";

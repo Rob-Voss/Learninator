@@ -9,7 +9,7 @@ var PuckWorld = PuckWorld || {},
     /**
      * PuckWorld Environment
      * @name PuckWorld
-     * @extends World
+     * @extends GameWorld
      * @constructor
      *
      * @return {PuckWorld}
