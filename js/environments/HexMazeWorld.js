@@ -49,13 +49,6 @@
           origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
           layout = new Layout(orientation, size, origin),
           shape = HexGrid.shapeRectangle(layout, gridOpts),
-          // shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-          // shape = HexGrid.shapeRing(0, 0, 2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-          // shape = HexGrid.shapeParallelogram(-1, -2, 1, 1, gridOpts.cellSize, layout, gridOpts.fill,
-          // gridOpts.cheats), shape = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats), shape = HexGrid.shapeTriangle1(2, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats), shape = HexGrid.shapeTriangle2(2, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats),
           grid = new HexGrid(gridOpts, shape, layout),
           maze = new Maze(grid.init()),
           worldOpts = {
@@ -79,7 +72,7 @@
       super([], maze.walls, worldOpts, renderOpts);
 
       this.agents = [
-        new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
+        new Agent(new Vec(worldOpts.grid.startCell.center.x, worldOpts.grid.startCell.center.y),
             {
               brainType: 'RL.TDAgent',
               cheats: {id: true},
@@ -118,7 +111,7 @@
                   return this.xyToS(q, r);
                 }
               },
-              numActions: this.grid.startCell.directions.length,
+              numActions: worldOpts.grid.startCell.directions.length,
               numEyes: 0,
               numTypes: 0,
               numProprioception: 0,

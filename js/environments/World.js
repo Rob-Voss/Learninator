@@ -152,8 +152,8 @@
      * Make a World
      * @constructor
      *
-     * @param {array} agents
-     * @param {array} walls
+     * @param {Array} agents
+     * @param {Array} walls
      * @param {worldOpts} worldOpts
      * @param {renderOpts} renderOpts
      * @return {World}
