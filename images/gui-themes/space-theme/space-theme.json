@@ -8,19 +8,14 @@
     ]
   },
   "default": {
-    "bg": {
-      "default": ""
-    },
-    "bgPadding": 5,
-    "line": {
-      "default": ""
-    },
     "scale": 0.5,
-    "corner": {
-      "default": ""
-    },
+    "bg": "",
+    "padding" : 2,
+    "bgPadding": 6,
+    "corner": "",
+    "line": "",
     "font": {
-      "size": "10px",
+      "size": "20px",
       "family": "Arial",
       "color": "black"
     }
@@ -202,23 +197,6 @@
       "default": ""
     },
     "checkmark": "dotGreen.png",
-    "padding": 5,
-    "font": {
-      "size": "10px",
-      "color": "white"
-    }
-  },
-  "GlassCheckbox": {
-    "image": {
-      "default": "glassPanel_bg.png"
-    },
-    "corner": {
-      "default": "glassButton_corner.png"
-    },
-    "line": {
-      "default": "glassButton_line.png"
-    },
-    "checkmark": "squareGreen.png",
     "padding": 5,
     "font": {
       "size": "10px",

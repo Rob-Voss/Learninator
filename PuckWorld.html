@@ -79,7 +79,7 @@ There are several bells and whistles that make Q Learning with function approxim
 A better idea is to instead predict the value \\(Q(s,a)\\) as a neural network that only takes the state \\(s\\), and produces multiple output, each interpreted as the Q value of taking that action in the given state. This way, deciding what action to take reduces to performing a single forward pass of the network and finding the argmax action. A diagram may help get the idea across:
 
 <div style="text-align:center; margin: 20px;">
-    <img src="img/qsa.jpeg" style="max-width:500px;"><br>
+    <img src="images/qsa.jpeg" style="max-width:500px;"><br>
     Simple example with 3-dimensional state space (blue) and 2 possible actions (red). Green nodes are neurons of a neural network f. Left: A naive approach in which it takes multiple forward passes to find the argmax action. Right: A more efficient approach where the Q(s,a) computation is effectively shared among the neurons in the network. Only a single forward pass is required to find the best action to take in any given state.
 </div>
 

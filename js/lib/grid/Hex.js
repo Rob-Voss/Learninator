@@ -235,6 +235,7 @@
     }
 
   }
+
   /**
    *
    * @type {*[]}
@@ -247,6 +248,7 @@
     new Hex(-1, 1, 0),
     new Hex(0, 1, -1)
   ];
+
   /**
    *
    * @type {*[]}
@@ -259,6 +261,14 @@
     new Hex(-1, 2, -1),
     new Hex(1, 1, -2)
   ];
-  global.Hex = Hex;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      Hex: Hex
+    };
+  } else {
+    global.Hex = Hex;
+  }
 
 })(this);

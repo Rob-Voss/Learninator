@@ -424,18 +424,18 @@
         case 3: // Down
           this.force.y += this.speed * 0.095;
           break;
-          // case 4: // Down
-          //     this.force.y += this.speed * 0.95;
-          //     break;
-          // case 5: // Down
-          //     this.force.y += this.speed * 0.95;
-          //     break;
-          // case 6: // Down
-          //     this.force.y += this.speed * 0.95;
-          //     break;
-          // case 7: // Down
-          //     this.force.y += this.speed * 0.95;
-          //     break;
+        case 4: // Down
+          this.force.y += this.speed * 0.95;
+          break;
+        case 5: // Down
+          this.force.y += this.speed * 0.95;
+          break;
+        case 6: // Down
+          this.force.y += this.speed * 0.95;
+          break;
+        case 7: // Down
+          this.force.y += this.speed * 0.95;
+          break;
       }
 
       // Forward the Entity by force

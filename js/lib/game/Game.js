@@ -1,5 +1,4 @@
-﻿
-class Game {
+﻿class Game {
 
   /**
    * Game
@@ -22,9 +21,9 @@ class Game {
           pixelsPerLengthUnit: 40
         };
     /**
-     * @type {p2Pixi}
+     * @type {P2Pixi}
      */
-    this.pixiAdapter = new p2Pixi(this.pixiAdapterOptions);
+    this.pixiAdapter = new P2Pixi(this.pixiAdapterOptions);
     this.options.worldOptions = {};
     this.options.worldOptions.gravity = [0, -9.8];
     this.options.trackedBodyOffset = [0, 0.8];
@@ -43,8 +42,6 @@ class Game {
     this.lastWorldStepTime = null;
     this.assetsLoaded = false;
 
-    this.world.defaultContactMaterial.friction = 0.5;
-    this.world.setGlobalStiffness(1e5);
     this.touchEnabled = false;
 
     this.Ball();
@@ -114,7 +111,7 @@ class Game {
   }
 
   Ball(position) {
-    var self = this;
+    let self = this;
 
     this.actorMaterial = new Material();
     this.actor = new GameObject(this, new Body({mass: 0.1, position: position || [0, 0]}), new Circle({radius: 0.25, material: this.actorMaterial}), {styleOptions: {lineWidthUnits: 0.01, lineColor: 0xFFFFFF, fillColor: 0x0000FF}});
@@ -131,8 +128,8 @@ class Game {
     this.addGameObject(this.actor);
 
     this.groundMaterial = new Material();
-    var heights = [];
-    for (var i = 0; i < 1500; i++) {
+    let heights = [];
+    for (let i = 0; i < 1500; i++) {
       let height = 0.2 * Math.cos(0.2 * i) * Math.sin(0.5 * i) + 0.2 * Math.sin(0.1 * i) * Math.sin(0.05 * i);
       heights.push(height);
     }
@@ -166,7 +163,7 @@ class Game {
     };
 
     document.addEventListener('keydown', function(e) {
-      var keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
+      let keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
       switch (keyID) {
         case 37: // Left
           self.actor.accelerateLeft();
@@ -182,7 +179,7 @@ class Game {
     });
 
     document.addEventListener('keyup', function(e) {
-      var keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
+      let keyID = window.event ? event.keyCode : (e.keyCode !== 0 ? e.keyCode : e.which);
       switch (keyID) {
         case 38: // Up
         case 32: // Space
@@ -195,7 +192,7 @@ class Game {
 
     this.world.on('postStep', (event) => {
       // console.log("postStep");
-      var time = Game.time(),
+      let time = Game.time(),
           bObj = this.actor,
           tDelta = time - bObj.lastCallTime;
       bObj.lastCallTime = time;
@@ -273,7 +270,7 @@ class Game {
    * @param {string[]} assetUrls
    */
   loadAssets(assetUrls) {
-    var loader = PIXI.loader;
+    let loader = PIXI.loader;
     for (let i = 0; i < assetUrls.length; i++) {
       loader.add(assetUrls[i], assetUrls[i]);
     }
@@ -314,7 +311,7 @@ class Game {
     this.maxSubSteps = 10;
     this.lastWorldStepTime = Game.time();
 
-    var update = () => {
+    let update = () => {
       if (this.windowFocused && !this.paused) {
         let timeSinceLastCall = Game.time() - this.lastWorldStepTime;
         this.lastWorldStepTime = Game.time();

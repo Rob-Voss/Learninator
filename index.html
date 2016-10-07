@@ -7,173 +7,209 @@
 
     <title>Learninator</title>
 
+    <link rel="stylesheet" type="text/css"
+          href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="import" href="/templates/twitch-nav.html">
-<body>
-<div id="container">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <h2>
-                    Learninator!
-                </h2>
-                <p>
-                    I ran across @karpathy's <a href="https://github.com/karpathy/convnetjs">ConvNetJS</a> library and
-                    demos,
-                    and then later his <a href="https://github.com/karpathy/reinforcejs">REINFORCEjs</a> library and was
-                    sucked
-                    in after seeing the difference between how the pre-trained and newbie agents acted.
-                    I was determined to freshen up my Javascript skills and play with the code until I understood it
-                    better.
-                    Thus my fun and educational exploration into deep learning took me down the path of learning mo
-                    betta JavaScript skills as well.
-                    Most of them were an exercise in converting the canvas drawing into using the <a
-                        href="https://github.com/pixijs/pixi.js">PIXI.js</a>
-                    animation library and to build an set of Worlds and Entities and basic classes to extend and new and
-                    exciting versions of the demos I fell in love with.
-                </p>
-                <p>
-                    <a class="btn" href="#"></a>
-                </p>
-            </div>
-        </div>
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+    <link rel="stylesheet"
+          href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
+    <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
 
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/WaterWorld.png" width="200px" height="200px" alt="">
-                </a>
+    <script src="js/mdl/MDL.js"></script>
+
+    <script type="text/html" id="header-navigation">
+        <!-- Scrolling MDL Header -->
+        <header class="mdl-layout__header mdl-layout__header--scroll">
+            <div class="mdl-layout__header-row">
+                <span class="{{menu.class}}">
+                    <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
+                </span>
+                <div class="mdl-layout-spacer"></div>
+                <nav class="mdl-navigation">
+                    {{#menu.items}}
+                        <a id="{{id}}" class="{{class}}" href="{{link}}">
+                            <i class="material-icons">{{icon}}</i>{{text}}
+                        </a>
+                    {{/menu.items}}
+                </nav>
             </div>
-            <div class="col-md-10">
-                <h3>Water World</h3>
-                <p>This is barely a modification of the WaterWorld DQN demo from @karpathy's <a
+        </header>
+    </script>
+
+    <script type="text/html" id="header-drawer">
+        <!-- Side Drawer MDL Header -->
+        <div class="mdl-layout__drawer">
+            <span class="{{menu.class}}">
+                <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
+            </span>
+            <nav class="mdl-navigation">
+                {{#menu.items}}
+                    <a id="{{id}}" class="{{class}}" href="{{link}}">
+                        <i class="material-icons">{{icon}}</i>{{text}}
+                    </a>
+                {{/menu.items}}
+            </nav>
+        </div>
+    </script>
+    <style>
+        .card-image {
+            width: 256px;
+            height: 256px;
+            margin-left: 0px;
+            margin-right: 0px;
+        }
+    </style>
+<body onload="loadNav()">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--12-col mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left" class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Learninator!</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <p>
+                            I ran across @karpathy's <a href="https://github.com/karpathy/convnetjs">ConvNetJS</a>
+                            library and demos, and then later his <a href="https://github.com/karpathy/reinforcejs">REINFORCEjs</a>
+                            library
+                            and was sucked in after seeing the difference between how the pre-trained and newbie agents
+                            acted.
+                            I was determined to freshen up my Javascript skills and play with the code until I
+                            understood it better.
+                            Thus my fun and educational exploration into deep learning took me down the path of learning
+                            mo'betta JavaScript skills as well.
+                            Most of them were an exercise in converting the canvas drawing into using the
+                            <a href="https://github.com/pixijs/pixi.js">PIXI.js</a>
+                            animation library and to build a set of World, Entity and basic Util classes to extend and
+                            new and exciting versions of the demos I fell in love with.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Water World</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/WaterWorld.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This is barely a modification of the WaterWorld DQN demo from @karpathy's <a
                         href="https://github.com/karpathy/reinforcejs">REINFORCEjs</a>
-                    library, mainly just converted to using my own attempts at writing a CollisionDetection and
-                    Quad/Grid/Maze libraries.</p>
-                <a class="btn btn-primary" href="WaterWorld.html">View Project <span
-                        class="glyphicon glyphicon-chevron-right"></span></a>
-            </div>
-        </div>
+                        library, mainly just converted to using my own attempts at writing a CollisionDetection and
+                        Quad/Grid/Maze libraries.</p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="WaterWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
 
-        <hr>
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Water World EXtreme</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/WaterWorldEX.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This time I took the concept of the Puck World demo and the Water World and added in an Entity Agent
+                        Class.
+                        The Entity Agent Class is using the same set up as the agent in the Puck World demo and I threw them
+                        into Water World.
+                        They will set one of the Agents as its enemy and try to avoid it, and then set other Agent as a
+                        target to follow like a puppy dog.
+                        What makes this especially fun is that they don't consume the resources, but they do collide with
+                        everything
+                        at twice the mass of the agent. That can lead to them making the agent work harder at catching it's
+                        meals
+                        because the Entity Agent rushed in and knocked them around.</p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="WaterWorldEX.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/WaterWorldEX.png" width="200px" height="200px" alt="">
-                </a>
-            </div>
-            <div class="col-md-10">
-                <h3>Water World EXtreme</h3>
-                <p>This time I took the concept of the Puck World demo and the Water World and added in an Entity Agent
-                    Class.
-                    The Entity Agent Class is using the same set up as the agent in the Puck World demo and I threw them
-                    into Water World.
-                    They will set one of the Agents as its enemy and try to avoid it, and then set other Agent as a
-                    target to follow like a puppy dog.
-                    What makes this especially fun is that they don't consume the resources, but they do collide with
-                    everything
-                    at twice the mass of the agent. That can lead to them making the agent work harder at catching it's
-                    meals
-                    because the Entity Agent rushed in and knocked them around.</p>
-                <a class="btn btn-primary" href="WaterWorldEX.html">View Project <span
-                        class="glyphicon glyphicon-chevron-right"></span></a>
-            </div>
-        </div>
-
-        <hr>
-
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/MatterWorld.png" width="200px" height="200px" alt="">
-                </a>
-            </div>
-            <div class="col-md-10">
-                <h3>Matter World</h3>
-                <p>This is an attempt to take the WaterWorld DQN demo from <a href="https://github.com/karpathy">@karpathy</a>'s <a
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Matter World</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/MatterWorld.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This is an attempt to take the WaterWorld DQN demo from <a href="https://github.com/karpathy">@karpathy</a>'s <a
                         href="https://github.com/karpathy/reinforcejs">REINFORCEjs</a>
-                    library, and convert it to using <a href="https://github.com/liabru/matter-js">Matter.js</a> Physics
-                    library.
-                    I had fun trying to write my own basic Physics engine, but decided it would be better to just use an
-                    established one.
-                </p>
-                <a class="btn btn-primary" href="Matter.html">View Project <span
-                        class="glyphicon glyphicon-chevron-right"></span></a>
-            </div>
-        </div>
+                        library, and convert it to using <a href="https://github.com/liabru/matter-js">Matter.js</a> Physics
+                        library.
+                        I had fun trying to write my own basic Physics engine, but decided it would be better to just use an
+                        established one.
+                        </p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="MatterWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
 
-        <hr>
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Grid World</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/GridWorld.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s original demo, I had already made a Maze
+                        generator and grid based positioning. This resulted in me making a new Maze every
+                        reload instead of relying on a hard-coded environment state and instead could adjust
+                        and generate the states via the generated Maze.
+                        I added in some visible walls and the ability for the environment to dynamically generate a maze and fill
+                        in the rewards and states based on its layout. For example dead ends are a -1 reward now. and the last
+                        square that would be the exit from the maze is the +1 reward. As of right now the start is in the upper
+                        left corner and the exit is in the lower right corner still.</p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="GridWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/GridWorld.png" width="200px" height="200px" alt="">
-                </a>
-            </div>
-            <div class="col-md-10">
-                <h3>Grid World</h3>
-                <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s original demo, I had already made a Maze
-                    generator and grid based positioning. This resulted in me making a new Maze every
-                    reload instead of relying on a hard-coded environment state and instead could adjust
-                    and generate the states via the generated Maze.
-                    I added in some visible walls and the ability for the environment to dynamically generate a maze and fill
-                    in the rewards and states based on its layout. For example dead ends are a -1 reward now. and the last
-                    square that would be the exit from the maze is the +1 reward. As of right now the start is in the upper
-                    left corner and the exit is in the lower right corner still.</p>
-                <a class=" btn btn-primary
-            " href="GridWorld.html">View Project <span class="glyphicon glyphicon-chevron-right"></span></a>
-            </div>
-        </div>
-
-        <hr>
-
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/MazeWorld.png" width="200px" height="200px" alt="">
-                </a>
-            </div>
-            <div class="col-md-10">
-                <h3>Maze World</h3>
-                <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s Deep Q Learning demo using his <a
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Maze World</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/MazeWorld.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s Deep Q Learning demo using his <a
                         href="https://github.com/karpathy/convnetjs">ConvNetJS</a>
-                    libraries. I wanted to again add in a random Maze for the environment and be able to
-                    modify how many walls etc. that the agents would encounter.</p>
-                <a class="btn btn-primary" href="MazeWorld.html">View Project <span
-                        class="glyphicon glyphicon-chevron-right"></span></a>
+                        libraries. I wanted to again add in a random Maze for the environment and be able to
+                        modify how many walls etc. that the agents would encounter.</p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="MazeWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <hr>
-        <div class="row">
-            <div class="col-md-2">
-                <a href="#">
-                    <img class="img-responsive" src="img/thumbs/HexMazeWorld.png" width="200px" height="200px" alt="">
-                </a>
-            </div>
-            <div class="col-md-10">
-                <h3>Hex Maze World</h3>
-                <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s Deep Q Learning demo using his <a
-                        href="https://github.com/karpathy/convnetjs">ConvNetJS</a>
-                    libraries. I wanted to again add in a random Maze for the environment and be able to
-                    modify how many walls etc. that the agents would encounter.</p>
-                <a class="btn btn-primary" href="HexMazeWorld.html">View Project <span
-                        class="glyphicon glyphicon-chevron-right"></span></a>
-            </div>
-        </div>
-
-        <hr>
-
+    </main>
 </div>
+
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
 
 </body>
 </html>

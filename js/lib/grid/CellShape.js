@@ -1,8 +1,3 @@
-/**
- * Original code borrowed from
- * https://github.com/felipecsl/random-maze-generator
- *
- */
 (function (global) {
   'use strict';
 
@@ -40,8 +35,6 @@
         new Vec(this.x * this.size, this.y * this.size + this.size)
       ];
 
-      // Add a container to hold our display cheats
-      this.cheatsContainer = new PIXI.Container();
       if (this.useSprite) {
         this.graphics = new PIXI.Sprite.fromFrame('floor.png');
         this.graphics.width = this.size;
@@ -56,13 +49,13 @@
             this.event = event;
             this.data = event.data;
             this.color = 0x00FF00;
-            this.alpha = 0.5;
+            this.alpha = 1;
             this.isDown = true;
             this.draw();
           })
         .on('mouseup', (event) => {
             this.event = event;
-            this.color = 0x000000;
+            this.color = 0xFFFFFF;
             this.alpha = 0;
             this.isDown = false;
             this.draw();
@@ -76,13 +69,15 @@
           })
         .on('mouseout', (event) => {
             this.event = event;
-            this.color = 0x000000;
+            this.color = 0xFFFFFF;
             this.alpha = 0;
             this.isOver = false;
             this.draw();
           });
-      this.draw();
+      // Add a container to hold our display cheats
+      this.cheatsContainer = new PIXI.Container();
       this.graphics.addChild(this.cheatsContainer);
+      this.draw();
 
       return this;
     }
@@ -120,13 +115,9 @@
       } else {
         this.graphics.clear();
         this.graphics.lineStyle(0, 0x000000, this.alpha);
-        if (this.fill) {
-          this.graphics.beginFill(this.color, this.alpha);
-        }
+        this.graphics.beginFill(this.fill ? this.color : 0xFFFFFF, this.fill ? this.alpha : 0);
         this.graphics.drawRect(this.corners[0].x, this.corners[0].y, this.size, this.size);
-        if (this.fill) {
-          this.graphics.endFill();
-        }
+        this.graphics.endFill();
         this.bounds = this.graphics.getBounds();
 
         if (this.reward && this.value) {

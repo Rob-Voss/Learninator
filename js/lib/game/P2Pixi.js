@@ -1,4 +1,8 @@
-const
+(function(global) {
+  "use strict";
+
+  // P2 aliases
+  const
   Body = p2.Body,
   Box = p2.Box,
   Circle = p2.Circle,
@@ -13,10 +17,10 @@ const
   vec2 = p2.vec2,
   World = p2.World;
 
-class p2Pixi {
+class P2Pixi {
 
   /**
-   * p2Pixi
+   * P2Pixi
    * @constructor
    * @param {Object} options
    */
@@ -109,7 +113,7 @@ class p2Pixi {
 
         container.addChild(sprite);
       } else {
-        var doc = new PIXI.Container();
+        let doc = new PIXI.Container();
         sprite.position.x = (left * ppu);
         sprite.position.y = -(top * ppu);
 
@@ -125,7 +129,7 @@ class p2Pixi {
 
     // If any Pixi vector styles have been specified...
     if (styleOptions) {
-      var graphics = new PIXI.Graphics();
+      let graphics = new PIXI.Graphics();
       graphics.alpha = alpha;
       graphics.position.x = (offset[0] * ppu);
       graphics.position.y = -(offset[1] * ppu);
@@ -156,18 +160,18 @@ class p2Pixi {
       let x = offset[0] * ppu,
         y = -offset[1] * ppu,
         rad = shape.radius * ppu;
-      p2Pixi.drawCircle(graphics, x, y, rad, style);
+      P2Pixi.drawCircle(graphics, x, y, rad, style);
     } else if (shape instanceof Particle) {
       let radius = Math.max(1, Math.round(ppu / 100));
-      p2Pixi.drawCircle(graphics, offset[0] * ppu, -offset[1] * ppu, radius, style);
+      P2Pixi.drawCircle(graphics, offset[0] * ppu, -offset[1] * ppu, radius, style);
     } else if (shape instanceof Plane) {
-      p2Pixi.drawPlane(graphics, -10 * ppu, 10 * ppu, style);
+      P2Pixi.drawPlane(graphics, -10 * ppu, 10 * ppu, style);
     } else if (shape instanceof Line) {
-      p2Pixi.drawLine(graphics, shape.length * ppu, style);
+      P2Pixi.drawLine(graphics, shape.length * ppu, style);
     } else if (shape instanceof Box) {
-      p2Pixi.drawBox(graphics, offset[0] * ppu, -offset[1] * ppu, shape.width * ppu, shape.height * ppu, style);
+      P2Pixi.drawBox(graphics, offset[0] * ppu, -offset[1] * ppu, shape.width * ppu, shape.height * ppu, style);
     } else if (shape instanceof Capsule) {
-      p2Pixi.drawCapsule(graphics, offset[0] * ppu, -offset[1] * ppu, angle, shape.length * ppu, shape.radius * ppu, style);
+      P2Pixi.drawCapsule(graphics, offset[0] * ppu, -offset[1] * ppu, angle, shape.length * ppu, shape.radius * ppu, style);
     } else if (shape instanceof Convex) {
       // Scale vertices
       let vertices = [],
@@ -177,7 +181,7 @@ class p2Pixi {
         vec2.rotate(vrot, v, angle);
         vertices.push([(vrot[0] + offset[0]) * ppu, -(vrot[1] + offset[1]) * ppu]);
       }
-      p2Pixi.drawConvex(graphics, vertices, style);
+      P2Pixi.drawConvex(graphics, vertices, style);
     } else if (shape instanceof Heightfield) {
       let path = [[0, 100 * ppu]],
         heights = shape.heights;
@@ -186,7 +190,7 @@ class p2Pixi {
         path.push([i * shape.elementWidth * ppu, -h * ppu]);
       }
       path.push([heights.length * shape.elementWidth * ppu, 100 * ppu]);
-      p2Pixi.drawPath(graphics, path, style);
+      P2Pixi.drawPath(graphics, path, style);
     }
   }
 
@@ -265,7 +269,7 @@ class p2Pixi {
    * @param {object} style
    */
   static drawCircle(graphics, x, y, radius, style) {
-    var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
+    let lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
       lineColor = style.lineColor || 0x000000,
       fillColor = style.fillColor;
 
@@ -287,7 +291,7 @@ class p2Pixi {
    * @param {object} style
    */
   static drawPlane(graphics, x0, x1, style) {
-    var max = 1e6,
+    let max = 1e6,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
       lineColor = style.lineColor || 0xFF0000,
       fillColor = style.fillColor;
@@ -316,8 +320,8 @@ class p2Pixi {
    * @param {object} style
    */
   static drawLine(graphics, len, style) {
-    var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 1;
-    var lineColor = style.lineColor || 0x000000;
+    let lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 1,
+      lineColor = style.lineColor || 0x000000;
 
     graphics.lineStyle(lineWidth, lineColor, 1);
 
@@ -336,7 +340,7 @@ class p2Pixi {
    * @param {object} style
    */
   static drawCapsule(graphics, x, y, angle, len, radius, style) {
-    var c = Math.cos(angle),
+    let c = Math.cos(angle),
       s = Math.sin(angle),
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
       lineColor = style.lineColor || 0x000000,
@@ -384,7 +388,7 @@ class p2Pixi {
    * @param {object} style
    */
   static drawBox(graphics, x, y, w, h, style) {
-    var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
+    let lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
       lineColor = style.lineColor || 0x000000,
       fillColor = style.fillColor;
 
@@ -405,7 +409,7 @@ class p2Pixi {
    * @param {object} style
    */
   static drawConvex(graphics, verts, style) {
-    var lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
+    let lineWidth = style.lineWidthUnits ? style.lineWidthUnits * style.pixelsPerLengthUnit : style.lineWidth || 0,
       lineColor = style.lineColor || 0x000000,
       fillColor = style.fillColor;
 
@@ -413,8 +417,8 @@ class p2Pixi {
     if (fillColor) {
       graphics.beginFill(fillColor, 1);
     }
-    for (var i = 0; i !== verts.length; i++) {
-      var v = verts[i],
+    for (let i=0; i !== verts.length; i++) {
+      let v = verts[i],
         x = v[0],
         y = v[1];
 
@@ -453,7 +457,7 @@ class p2Pixi {
       graphics.beginFill(fillColor, 1);
     }
 
-    for (var i = 0; i < path.length; i++) {
+    for (let i = 0; i < path.length; i++) {
       let v = path[i],
         x = v[0],
         y = v[1];
@@ -463,7 +467,7 @@ class p2Pixi {
           graphics.moveTo(x, y);
         } else {
           // Check if the lines are parallel
-          var p1x = lastx,
+          let p1x = lastx,
             p1y = lasty,
             p2x = x,
             p2y = y,
@@ -490,3 +494,14 @@ class p2Pixi {
   }
 
 }
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+if (typeof process !== 'undefined') {
+  module.exports = {
+    P2Pixi: P2Pixi
+  };
+} else {
+  global.P2Pixi = P2Pixi;
+}
+
+}(this));

@@ -15,6 +15,7 @@ class GameObject {
     this.constraints = [];
     this.containers = [];
     this.children = [];
+    this.parent = {};
 
     this.addBody(game, body).addShape(game, shape, options);
   }
@@ -51,6 +52,7 @@ class GameObject {
   /**
    * Adds the supplied p2 constraint to the game's world and to
    * this GameObject's constraints collection
+   * @param {Game} game
    * @param {Constraint} constraint
    * @return {GameObject} gameObject
    */
@@ -63,7 +65,7 @@ class GameObject {
 
   /**
    * Adds the supplied p2 shape to the supplied p2 body
-   * @param {Body} body
+   * @param {Game} game
    * @param {Shape|Heightfield} shape
    * @param {Object} options
    * @return {GameObject} gameObject
@@ -86,7 +88,7 @@ class GameObject {
    * Removes this GameObject and all of its children from the game
    * @param {Game} game
    */
-  delete(game) {
+  static deleteObject(game) {
     var world = game.world,
         container = game.pixiAdapter.container;
 
@@ -95,7 +97,7 @@ class GameObject {
     }
 
     for (let i = 0; i < this.constraints.length; i++) {
-      world.removeConstraint(this.constraints[i]);
+      GameObject.removeConstraint(game, this.constraints[i]);
     }
 
     for (let i = 0; i < this.bodies.length; i++) {
@@ -132,7 +134,7 @@ class GameObject {
    * @param {Game} game
    * @param {Constraint} constraint
    */
-  removeConstraint(game, constraint) {
+  static removeConstraint(game, constraint) {
     game.world.removeConstraint(constraint);
   }
 

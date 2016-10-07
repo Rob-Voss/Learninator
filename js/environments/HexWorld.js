@@ -1,4 +1,4 @@
-(function(global) {
+(function (global) {
   'use strict';
 
   class HexWorld extends GameWorld {
@@ -11,99 +11,93 @@
      * @return {HexWorld}
      */
     constructor() {
-      let renderOpts = {
-            backgroundColor: 0xFFFFFF,
-            antialiasing: true,
+      var worldOpts = {
+          collision: {
+            type: 'brute',
+            cheats: {
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
+            },
+          },
+          grid: {
+            width: 800,
+            height: 800,
+            buffer: 0,
+            size: 15,
+            cellSize: 30,
+            cellSpacing: 10,
+            useSprite: false,
+            pointy: false,
+            fill: false
+          },
+          render: {
+            background: 0xFFFFFF,
+            antialiasing: false,
             autoResize: false,
-            resizable: true,
+            resizable: false,
             transparent: false,
             resolution: window.devicePixelRatio,
+            noWebGL: false,
             width: 800,
             height: 800
           },
-          /**
-           * @type {cheatsOpts}
-           */
-          cheats = {
+          cheats: {
             id: false,
             name: false,
             angle: false,
             bounds: false,
             direction: false,
             gridLocation: false,
-            position: false
+            position: false,
+            brute: false,
+            quad: false,
+            grid: false,
+            walls: false
           },
-          /**
-           * @type {agentOpts}
-           */
-          agentOpts = {
+          agent: {
             brainType: 'RL.DQNAgent',
-            range: 90,
-            proximity: 90,
+            range: 85,
+            proximity: 85,
             radius: 10,
             numEyes: 30,
             numTypes: 5,
             numActions: 4,
             numProprioception: 2,
-            collision: true,
+            worker: false,
+            interactive: false,
+            useSprite: false
+          },
+          entity: {
+            number: 20,
+            radius: 10,
+            interactive: true,
+            useSprite: false,
+            moving: true
+          },
+          entityAgent: {
+            number: 0,
+            radius: 0,
             interactive: false,
             useSprite: false,
-            worker: false,
-            cheats: cheats
-          },
-          /**
-           * @type {gridOpts}
-           */
-          gridOpts = {
-            width: renderOpts.width,
-            height: renderOpts.height,
-            buffer: 0,
-            size: 5,
-            cellSize: 40,
-            cellSpacing: 0,
-            pointy: false,
-            useSprite: true,
-            fill: false,
-            cheats: cheats
-          },
-          orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-          size = new Point(gridOpts.cellSize, gridOpts.cellSize),
-          origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
-          //origin = new Point(0, 0),
-          layout = new Layout(orientation, size, origin),
-          cells = HexGrid.shapeRectangle(layout, gridOpts),
-          //cells = HexGrid.shapeHexagon(layout, gridOpts),
-          //cells = HexGrid.shapeRing(0, 0, layout, gridOpts),
-          //cells = HexGrid.shapeParallelogram(-1, -2, 1, 1, layout, gridOpts),
-          //cells = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, layout, gridOpts),
-          //cells = HexGrid.shapeTriangle1(2, layout, gridOpts),
-          //cells = HexGrid.shapeTriangle2(2, layout, gridOpts),
-          grid = new HexGrid(layout, cells, gridOpts),
-          maze = new Maze(grid.init()),
-          agents = [
-            new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts),
-            new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), agentOpts)
-          ],
-          worldOpts = {
-            simSpeed: 1,
-            cheats: cheats,
-            grid: maze.grid,
-            maze: maze,
-            collision: {
-              type: 'brute'
-            },
-            numEntities: 20,
-            entityOpts: {
-              radius: 10,
-              collision: true,
-              interactive: true,
-              useSprite: false,
-              moving: true,
-              cheats: cheats
-            }
-          };
-
-      super(agents, maze.walls, worldOpts, renderOpts);
+            moving: false
+          }
+        },
+        orientation = (worldOpts.grid.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+        size = new Point(worldOpts.grid.width / worldOpts.grid.cellSize, worldOpts.grid.height / worldOpts.grid.cellSize),
+        origin = new Point(worldOpts.grid.width / 2, worldOpts.grid.height / 2),
+        layout = new Layout(orientation, size, origin),
+        shape = HexGrid.shapeRectangle(layout, worldOpts.grid),
+        grid = new HexGrid(worldOpts.grid, shape, layout),
+        maze = new Maze(grid.init()),
+        agents = [
+          new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), worldOpts.agent),
+          new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), worldOpts.agent)
+        ];
+      worldOpts.grid = grid;
+      worldOpts.maze = maze;
+      super(agents, maze.walls, worldOpts);
 
       this.init();
 

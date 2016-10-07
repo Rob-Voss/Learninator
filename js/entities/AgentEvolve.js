@@ -1,12 +1,8 @@
-var Brain = Brain || {},
-    AgentEvolve = AgentEvolve || {},
-    Utility = Utility || {},
-    World = GameWorld || {};
-
 (function (global) {
     "use strict";
 
     class Brain {
+
         /**
          *
          */

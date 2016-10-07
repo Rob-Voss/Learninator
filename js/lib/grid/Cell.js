@@ -1,8 +1,3 @@
-/**
- * Original code borrowed from
- * https://github.com/felipecsl/random-maze-generator
- *
- */
 (function(global) {
   'use strict';
 

@@ -1,5 +1,3 @@
-//import 'PIXI';
-
 (function(global) {
   'use strict';
 

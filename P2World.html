@@ -5,15 +5,19 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 
     <link rel="import" href="templates/twitch-nav.html">
-    <!--<link rel="import" href="templates/js-includes.html">-->
 </head>
 <body onload="start();">
 
+<div id="container">
 <div id="game-container"></div>
-
+</div>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
@@ -28,43 +32,22 @@
 <link href="css/highlight_default.css" rel="stylesheet">
 <script>hljs.initHighlightingOnLoad();</script>
 
-<script src="js/lib/external/matter.js"></script>
-<!--<script src="js/lib/external/gif.js"></script>-->
-<!--<script src="js/lib/external/matter-tools.js"></script>-->
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 
 <script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/ui/Display.js"></script>
 
 <script src="js/lib/game/Camera.js"></script>
 
 <script src="js/lib/CollisionDetector.js"></script>
-<script src="js/lib/graphing/FlotGraph.js"></script>
-<script src="js/lib/Maze.js"></script>
-<script src="js/lib/grid/Cell.js"></script>
-<script src="js/lib/grid/CellShape.js"></script>
-<script src="js/lib/grid/Hex.js"></script>
-<script src="js/lib/grid/HexShape.js"></script>
-<script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/QuadTree.js"></script>
-<script src="js/lib/Window.js"></script>
 
-<script src="js/lib/game/MatterPixi.js"></script>
 <script src="js/lib/game/p2Pixi.js"></script>
-<script src="js/lib/game/Game.js"></script>
 <script src="js/lib/game/GameObject.js"></script>
-
-<script src="js/entities/PhysicalEntity.js"></script>
-<script src="js/entities/PhysicalAgent.js"></script>
-<script src="js/entities/Wall.js"></script>
-<script src="js/entities/Entity.js"></script>
-<script src="js/entities/Agent.js"></script>
-
 <script src="js/lib/game/GameWorld.js"></script>
+<script src="js/lib/game/Game.js"></script>
 
 <script>
     var world = world || {};

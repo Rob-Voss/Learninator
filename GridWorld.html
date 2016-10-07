@@ -88,7 +88,7 @@ $$
 The expectation above is really over two stochastic sources: 1. the environment and 2. the agent policy which in the general case is also stochastic. Unlike Dynamic Programming, Temporal Difference Learning estimates the value functions from the point of view of an agent who is interacting with the environment, collecting experience about its dynamics and adjusting its policy online. That is, the agent's interaction with the environment (which forms our training set) is a long sequence of \\(s\_t, a\_t, r\_t, s\_{t+1}, a\_{t+1}, r\_{t+1}, s\_{t+2}, \ldots \\), indexed by t (time):
 
 <div style="text-align:center; margin: 20px;">
-<img src="img/sarsa.png">
+<img src="images/sarsa.png">
 </div>
 
 However, unlike a standard Machine Learning setting the agent picks the actions, and hence influences its own training set. Fun! The core idea is to notice that the Q function satisfies the Bellman equation, which is a recurrence relation that relates the Q function at one action node \\((s\_t, a\_t)\\) to the next one \\((s\_{t+1}, a\_{t+1})\\). In particular, looking at the above diagram the agent:
@@ -112,7 +112,7 @@ $$
 Here the parameter \\( \alpha \\) is the learning rate, and the quantity inside the bracket is called the **TD Error**. In other words the idea is to interact with the environment by starting with some initial \\(Q\\), using some policy \\(\\pi\\), and keeping track of a chain of (s,a,r,...). We then simply treat this as training data, and use online stochastic gradient descent to minimize the loss function, which in this case is the Bellman recurrence relation. Each time we perform the update to the Q function, we can also update our policy to be greedy with respect to our new belief about Q. That is, in each state the policy becomes to take the action that maximizes Q. This approach of starting with some value function and policy and iteratively updating one based on the other is the **policy iteration** scheme described in Sutton's book:
 
 <div style="text-align:center; margin: 20px;">
-<img src="img/policyiter.png">
+<img src="images/policyiter.png">
 </div>
 
 Now, **SARSA** is called an **on-policy** method because it's evaluating the Q function for a particular policy. It turns out that if you're interested in control rather than estimating Q for some policy, in practice there is an update that works much better. It's called **Q-Learning** and it has the form:
@@ -132,14 +132,14 @@ Looking at the options available to you in the spec for the demo, there are some
 **Eligibility Traces**. The idea behind eligibility traces is to make the TD updates less local and diffuse them backwards through some part of the past experience. In other words, we're keeping a (decaying) trace of where the agent has been previously (the decay strength is controlled by a hyperparameter \\(\lambda\\)), and performing Q value updates not only on one link of the s,a,r,s,a,s,a,r.... chain, but along some recent history of it. This is justified by the fact that when the Q value changes for some state (s,a), then all the other states immediately before it are also influenced due to their recursive dependence. For example, if the agent discovers a reward on some Gridworld square, it would not only update the Q of the immediately previous state, but also several several states it has seen leading up to this state. Use `spec.lambda` to control the decay of the eligibility trace, where 0 means no traces should be used (default).
 
 <div style="text-align:center; margin: 20px;">
-<img src="img/lambda.png"><br>
+<img src="images/lambda.png"><br>
 Image taken from Sutton's book, showing the basic idea of eligibility traces.
 </div>
 
 Additionally, there is one more option to either use replacing, or accumulating traces which can be controlled with `spec.replacing_traces` (default is true). The difference is only with how the trace is accumulated when the same state is visited multiple times (incremented each time, or reset to a fixed maximum value). Again, a nice diagram from Sutton's book shows the strength of the trace for a single state as it is repeatedly visited, and gets the point across nicely:
 
 <div style="text-align:center; margin: 20px;">
-<img src="img/traces.png"><br>
+<img src="images/traces.png"><br>
 </div>
 
 **Planning**. TD methods are by default called **model-free**, because they do not need to estimate the environment model. That is, we do not need to know the transition probabilities \\(\mathcal{P}\\), or the rewards assigned by the environment to the agent \\(\mathcal{R}\\). We only observe samples of these values and distil their sufficient statistics in the action value function \\(Q\\). However, a model of the environment can still prove extremely useful. The basic idea in planning is that we will explicitly maintain a model of how the environment works (trained again, from observation data). That is, what states and actions lead to what other states, and how the rewards are assigned. In other words, based on our training data trace \\(s\_t, a\_t, r\_t, s\_{t+1}, a\_{t+1}, r\_{t+1}, s\_{t+2}, \ldots \\) , the agent keeps track of the environment model:
@@ -202,7 +202,6 @@ some state features, **DQN** (Deep Q Learning) is for you. Head over to the next
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.0.0/pixi.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
 
 <!-- markdown -->
 <script src="js/lib/external/marked.js" type="text/javascript"></script>
@@ -210,42 +209,26 @@ some state features, **DQN** (Deep Q Learning) is for you. Head over to the next
 <link href="css/highlight_default.css" rel="stylesheet">
 <script>hljs.initHighlightingOnLoad();</script>
 
-<script src="js/lib/external/matter.js"></script>
-<!--<script src="js/lib/external/gif.js"></script>-->
-<!--<script src="js/lib/external/matter-tools.js"></script>-->
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 
 <script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/ui/Display.js"></script>
 
-<script src="js/lib/game/Camera.js"></script>
-
-<script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/grid/Cell.js"></script>
 <script src="js/lib/grid/CellShape.js"></script>
-<script src="js/lib/grid/Hex.js"></script>
-<script src="js/lib/grid/HexShape.js"></script>
 <script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
-<script src="js/lib/QuadTree.js"></script>
-<script src="js/lib/Window.js"></script>
 
-<script src="js/lib/game/MatterPixi.js"></script>
-<script src="js/lib/game/p2Pixi.js"></script>
-<script src="js/lib/game/Game.js"></script>
 <script src="js/lib/game/GameObject.js"></script>
 
-<script src="js/entities/PhysicalEntity.js"></script>
-<script src="js/entities/PhysicalAgent.js"></script>
 <script src="js/entities/Wall.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 
+<script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/game/GameWorld.js"></script>
 
 <script>

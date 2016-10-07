@@ -17,6 +17,14 @@
       return this;
     }
   }
-  global.CubeShape = CubeShape;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      CubeShape: CubeShape
+    };
+  } else {
+    global.CubeShape = CubeShape;
+  }
 
 })(this);

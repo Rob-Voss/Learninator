@@ -75,8 +75,8 @@
         resizable: false,
         transparent: false,
         noWebGL: true,
-        width: 600,
-        height: 600
+        width: 800,
+        height: 800
       },
       engine = Engine.create(engineOpts),
       renderer = new PIXI.autoDetectRenderer(pixiOpts.width, pixiOpts.height, pixiOpts),
@@ -106,8 +106,8 @@
         renderer: renderer,
         pixiOptions: pixiOpts,
         options: {
-          width: renderer.width,
-          height: renderer.height,
+          width: pixiOpts.width,
+          height: pixiOpts.height,
           background: '#585858',
           pixelRatio: 1,
           enabled: true,
@@ -142,7 +142,7 @@
         size: 5,
         cellSize: 40,
         cellSpacing: 20,
-        pointy: true,
+        pointy: false,
         useSprite: false,
         fill: false,
         cheats: {}
@@ -183,11 +183,8 @@
       this.render = new MatterPixi(this);
       this.engine.world.gravity = {x: 0, y: 0};
       this.engine.metrics.timing = this.runner;
-      this.mouseConstraint = MouseConstraint.create(this.engine, {
-        element: this.canvas
-      });
+      this.mouseConstraint = MouseConstraint.create(this.engine, {element: this.canvas});
       this.render.mouse = this.mouseConstraint.mouse;
-
       this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
 
       if (useTools) {
@@ -347,6 +344,12 @@
           top = Bodies.rectangle(this.width / 2, buffer, this.width - (buffer * 4), buffer, wallOpts),
           bottom = Bodies.rectangle(this.width / 2, this.height - buffer, this.width - (buffer * 4), buffer, wallOpts);
 
+      for(let i = 0; i < grid.cells.length; i++) {
+        let cell = grid.cells[i],
+          wall = Bodies.fromVertices(cell.center.x, cell.center.y, cell.corners, wallOpts);
+        this.addMatter([wall]);
+      }
+
       Body.set(left, 'entity', {
         type: 0,
         x: left.position.x,
@@ -376,7 +379,7 @@
         height: buffer
       });
 
-      this.addMatter([left, top, right, bottom]);
+      // this.addMatter([left, top, right, bottom]);
 
       return this;
     }

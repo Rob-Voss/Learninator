@@ -310,7 +310,7 @@
        * @return {number}
        */
       randn: function(mu, std) {
-        return mu + Maths.gaussRandom() * std;
+        return mu + this.gaussRandom() * std;
       },
 
       /**

@@ -1,3 +1,6 @@
+/**
+ * Inspired by https://github.com/RobertBrewitz/axial-hexagonal-grid
+ */
 (function(global) {
   'use strict';
 
@@ -24,6 +27,7 @@
           origin = new Point(opts.width / 2, opts.height / 2);
       layout = layout || new Layout(orientation, size, origin);
       cells = cells || HexGrid.shapeHexagon(layout, opts);
+
       super(layout, cells, opts);
       this.layout = layout;
 
@@ -43,7 +47,7 @@
      * Get the cell at the axial coords
      * @param {number} q
      * @param {number} r
-     * @return {Hex|boolean}
+     * @return {Hex|Cell|boolean}
      */
     getCellAt(q, r) {
       let column = this.map.get(q),
@@ -174,7 +178,7 @@
             q = hex.q + n.q,
             r = n.r,
             cell = this.getCellAt(q, r);
-        let neighbor = hex.direction(i);
+        let neighbor = Hex.direction(i);
         result.push((!all) ? cell : neighbor);
       }
 
@@ -189,7 +193,7 @@
      */
     pixelToAxial(x, y) {
       let cube, decimalQR, roundedCube;
-      decimalQR = this.pixelToDecimalQR(x, y);
+      decimalQR = this.pixelToDecimalQR(x, y, 1);
       cube = this.axialToCube(decimalQR);
       roundedCube = this.roundCube(cube);
 
@@ -629,7 +633,7 @@
 
   /**
    *
-   * @param {boolean} orientation
+   * @param {Orientation} orientation
    * @param {Point} size
    * @param {Point} origin
    * @return {Layout}
@@ -708,9 +712,20 @@
 
   Layout.layoutPointy = new Orientation(Math.sqrt(3.0), Math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, Math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5);
   Layout.layoutFlat = new Orientation(3.0 / 2.0, 0.0, Math.sqrt(3.0) / 2.0, Math.sqrt(3.0), 2.0 / 3.0, 0.0, -1.0 / 3.0, Math.sqrt(3.0) / 3.0, 0.0);
-  global.HexGrid = HexGrid;
-  global.Layout = Layout;
-  global.OffsetCoord = OffsetCoord;
-  global.Orientation = Orientation;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      HexGrid: HexGrid,
+      Layout: Layout,
+      OffsetCoord: OffsetCoord,
+      Orientation: Orientation
+    };
+  } else {
+    global.HexGrid = HexGrid;
+    global.Layout = Layout;
+    global.OffsetCoord = OffsetCoord;
+    global.Orientation = Orientation;
+  }
 
 })(this);

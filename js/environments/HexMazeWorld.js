@@ -1,4 +1,4 @@
-(function(global) {
+(function (global) {
   "use strict";
 
   class HexMazeWorld extends GameWorld {
@@ -12,124 +12,142 @@
      * @return {HexMazeWorld}
      */
     constructor() {
-      var cheats = {
-            id: false,
-            name: false,
-            angle: false,
-            bounds: false,
-            direction: false,
-            gridLocation: false,
-            position: false
+      var worldOpts = {
+          collision: {
+            type: 'brute',
+            cheats: {
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
+            },
           },
-          renderOpts = {
-            backgroundColor: 0xFFFFFF,
-            antialiasing: false,
-            autoResize: false,
-            resizable: false,
-            transparent: false,
-            resolution: window.devicePixelRatio,
-            noWebGL: false,
-            width: 600,
-            height: 600
-          },
-          gridOpts = {
-            width: renderOpts.width,
-            height: renderOpts.height,
+          grid: {
+            width: 800,
+            height: 800,
             buffer: 0,
             size: 15,
             cellSize: 30,
             cellSpacing: 10,
             useSprite: false,
             pointy: false,
-            fill: false,
-            cheats: cheats
+            fill: false
           },
-          orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-          size = new Point(gridOpts.width / gridOpts.cellSize, gridOpts.height / gridOpts.cellSize),
-          origin = new Point(gridOpts.width / 2, gridOpts.height / 2),
-          layout = new Layout(orientation, size, origin),
-          shape = HexGrid.shapeRectangle(layout, gridOpts),
-          // shape = HexGrid.shapeHexagon(gridOpts.size, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-          // shape = HexGrid.shapeRing(0, 0, 2, gridOpts.cellSize, layout, gridOpts.fill, gridOpts.cheats),
-          // shape = HexGrid.shapeParallelogram(-1, -2, 1, 1, gridOpts.cellSize, layout, gridOpts.fill,
-          // gridOpts.cheats), shape = HexGrid.shapeTrapezoidal(-1, 1, -2, 1, false, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats), shape = HexGrid.shapeTriangle1(2, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats), shape = HexGrid.shapeTriangle2(2, gridOpts.cellSize, layout,
-          // gridOpts.fill, gridOpts.cheats),
-          grid = new HexGrid(gridOpts, shape, layout),
-          maze = new Maze(grid.init()),
-          worldOpts = {
-            simSpeed: 1,
-            theme: 'space',
-            collision: {
-              type: 'brute'
-            },
-            grid: maze.grid,
-            maze: maze,
-            cheats: cheats,
-            numEntities: 4,
-            entityOpts: {
-              radius: 10,
-              collision: true,
-              interactive: true,
-              useSprite: false,
-              moving: false
-            }
-          };
-      super([], maze.walls, worldOpts, renderOpts);
+          render: {
+            background: 0xFFFFFF,
+            antialiasing: false,
+            autoResize: false,
+            resizable: false,
+            transparent: false,
+            resolution: window.devicePixelRatio,
+            noWebGL: false,
+            width: 800,
+            height: 800
+          },
+          cheats: {
+            id: false,
+            name: false,
+            angle: false,
+            bounds: false,
+            direction: false,
+            gridLocation: false,
+            position: false,
+            brute: false,
+            quad: false,
+            grid: false,
+            walls: false
+          },
+          agent: {
+            brainType: 'RL.DQNAgent',
+            range: 85,
+            proximity: 85,
+            radius: 10,
+            numEyes: 30,
+            numTypes: 5,
+            numActions: 4,
+            numProprioception: 2,
+            worker: false,
+            interactive: false,
+            useSprite: false
+          },
+          entity: {
+            number: 20,
+            radius: 10,
+            interactive: true,
+            useSprite: false,
+            moving: true
+          },
+          entityAgent: {
+            number: 0,
+            radius: 0,
+            interactive: false,
+            useSprite: false,
+            moving: false
+          }
+        },
+        orientation = (worldOpts.grid.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+        size = new Point(worldOpts.grid.width / worldOpts.grid.cellSize, worldOpts.grid.height / worldOpts.grid.cellSize),
+        origin = new Point(worldOpts.grid.width / 2, worldOpts.grid.height / 2),
+        layout = new Layout(orientation, size, origin),
+        shape = HexGrid.shapeRectangle(layout, worldOpts.grid),
+        grid = new HexGrid(worldOpts.grid, shape, layout),
+        maze = new Maze(grid.init());
+      worldOpts.grid = grid;
+      worldOpts.maze = maze;
+      super([], maze.walls, worldOpts);
 
       this.agents = [
         new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
-            {
-              brainType: 'RL.TDAgent',
-              cheats: {id: true},
-              env: {
-                allowedActions: (s) => {
-                  return this.allowedActions(s);
-                },
-                getMaxNumActions: () => {
-                  return this.getMaxNumActions();
-                },
-                getNumStates: () => {
-                  return this.getNumStates();
-                },
-                nextStateDistribution: (s, a) => {
-                  return this.nextStateDistribution(s, a);
-                },
-                randomState: () => {
-                  return this.randomState();
-                },
-                reset: () => {
-                  return this.reset();
-                },
-                sampleNextState: (s, a) => {
-                  return this.sampleNextState(s, a);
-                },
-                startState: () => {
-                  return this.startState();
-                },
-                sToX: (s) => {
-                  return this.sToX(s);
-                },
-                sToY: (s) => {
-                  return this.sToY(s);
-                },
-                xyToS: (q, r) => {
-                  return this.xyToS(q, r);
-                }
+          {
+            brainType: 'RL.TDAgent',
+            cheats: {id: true},
+            env: {
+              allowedActions: (s) => {
+                return this.allowedActions(s);
               },
-              numActions: this.grid.startCell.directions.length,
-              numEyes: 0,
-              numTypes: 0,
-              numProprioception: 0,
-              range: 0,
-              proximity: 0,
-              radius: 10,
-              collision: false,
-              interactive: false,
-              useSprite: false,
-              worker: false
-            }
+              getMaxNumActions: () => {
+                return this.getMaxNumActions();
+              },
+              getNumStates: () => {
+                return this.getNumStates();
+              },
+              nextStateDistribution: (s, a) => {
+                return this.nextStateDistribution(s, a);
+              },
+              randomState: () => {
+                return this.randomState();
+              },
+              reset: () => {
+                return this.reset();
+              },
+              sampleNextState: (s, a) => {
+                return this.sampleNextState(s, a);
+              },
+              startState: () => {
+                return this.startState();
+              },
+              sToX: (s) => {
+                return this.sToX(s);
+              },
+              sToY: (s) => {
+                return this.sToY(s);
+              },
+              xyToS: (q, r) => {
+                return this.xyToS(q, r);
+              }
+            },
+            numActions: this.grid.startCell.directions.length,
+            numEyes: 0,
+            numTypes: 0,
+            numProprioception: 0,
+            range: 0,
+            proximity: 0,
+            radius: 10,
+            collision: false,
+            interactive: false,
+            useSprite: false,
+            worker: false
+          }
         )
       ];
 
@@ -403,7 +421,7 @@
                 for (let l = 0; l < this.agents.length; l++) {
                   // ask agent for an action
                   let agent = this.agents[l],
-                      state = this.state;
+                    state = this.state;
                   let a = agent.brain.act(state);
                   // run it through environment dynamics
                   let obs = this.sampleNextState(state, a);
@@ -470,9 +488,9 @@
     drawGrid() {
       for (let s = 0; s < this.grid.cells.length; s++) {
         var rd = 255,
-            g = 255,
-            b = 255,
-            vv = null;
+          g = 255,
+          b = 255,
+          vv = null;
 
         // get value of state s under agent policy
         for (let a = 0; a < this.agents.length; a++) {
@@ -516,10 +534,10 @@
           // update policy arrows
           for (var z = 0; z < 6; z++) {
             var prob = agent.brain.P[z * this.grid.cells.length + s],
-                nx = 0,
-                ny = 0,
-                actions = this.Aarr[s],
-                avail = actions[z];
+              nx = 0,
+              ny = 0,
+              actions = this.Aarr[s],
+              avail = actions[z];
             if (avail === null || prob < 0.01) {
               // Hide the arrow
             } else {
@@ -639,7 +657,7 @@
         this.guiContainer = undefined;
       }
 
-      return EZGUI.Theme.load(['img/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
+      return EZGUI.Theme.load(['images/gui-themes/' + theme + '-theme/' + theme + '-theme.json'], () => {
         this.guiContainer = EZGUI.create(guiObj, theme);
         this.pause = true;
         EZGUI.components.btnSave.on('click', (event) => {
@@ -701,19 +719,19 @@
    * @param {number} s - State
    * @return {Array}
    */
-  HexMazeWorld.prototype.allowedActions = function(s) {
+  HexMazeWorld.prototype.allowedActions = function (s) {
     let cell = this.grid.cells[s],
-        as = [],
-        actions = this.grid.disconnectedNeighbors(cell);
+      as = [],
+      actions = this.grid.disconnectedNeighbors(cell);
 
     for (let a = 0; a < actions.length; a++) {
       var c = actions[a];
       for (let n = 0; n < cell.neighbors.length; n++) {
         if (cell.neighbors[n]) {
           var dQ = cell.neighbors[n].q,
-              dR = cell.neighbors[n].r,
-              nQ = c.q,
-              nR = c.r;
+            dR = cell.neighbors[n].r,
+            nQ = c.q,
+            nR = c.r;
           if (c && (dQ === nQ && dR === nR)) {
             as.push(n);
           } else {
@@ -730,7 +748,7 @@
    * Return the number of actions
    * @return {number}
    */
-  HexMazeWorld.prototype.getMaxNumActions = function() {
+  HexMazeWorld.prototype.getMaxNumActions = function () {
     return this.grid.startCell.directions.length;
   };
 
@@ -738,7 +756,7 @@
    * Return the number of states
    * @return {number}
    */
-  HexMazeWorld.prototype.getNumStates = function() {
+  HexMazeWorld.prototype.getNumStates = function () {
     return this.grid.cells.length;
   };
 
@@ -748,10 +766,10 @@
    * @param {number} a
    * @return {number}
    */
-  HexMazeWorld.prototype.nextStateDistribution = function(s, a) {
+  HexMazeWorld.prototype.nextStateDistribution = function (s, a) {
     let ns,
-        c = this.grid.cells[s],
-        neighbor = c.neighbors[a];
+      c = this.grid.cells[s],
+      neighbor = c.neighbors[a];
 
     if (s === this.grid.cells.length - 1) {
       ns = this.startState();
@@ -774,14 +792,14 @@
    * Return a rand state
    * @return {number}
    */
-  HexMazeWorld.prototype.randomState = function() {
+  HexMazeWorld.prototype.randomState = function () {
     return Math.floor(Math.random() * this.grid.cells.length);
   };
 
   /**
    * Set up the grid world and the actions avail
    */
-  HexMazeWorld.prototype.reset = function() {
+  HexMazeWorld.prototype.reset = function () {
     let lastState = 0;
     // Specify some rewards
     this.Rarr = Utility.Maths.zeros(this.grid.cells.length);
@@ -793,7 +811,7 @@
       this.Rarr[state] = (state === this.grid.cells.length - 1) ? 1 : 0;
 
       if ((lastState !== 0 && state !== this.grid.cells.length - 1) &&
-          (actionsAvail.length === 1 && state !== 0)) {
+        (actionsAvail.length === 1 && state !== 0)) {
         this.Rarr[state] = -1;
       }
       lastState = state;
@@ -809,7 +827,7 @@
    * @param {number} ns
    * @return {number}
    */
-  HexMazeWorld.prototype.reward = function(s, a, ns) {
+  HexMazeWorld.prototype.reward = function (s, a, ns) {
     return this.Rarr[s];
   };
 
@@ -818,7 +836,7 @@
    * @param {number} s
    * @return {number} q
    */
-  HexMazeWorld.prototype.sToX = function(s) {
+  HexMazeWorld.prototype.sToX = function (s) {
     return this.grid.cells[s].q;
   };
 
@@ -827,7 +845,7 @@
    * @param {number} s
    * @return {number} r
    */
-  HexMazeWorld.prototype.sToY = function(s) {
+  HexMazeWorld.prototype.sToY = function (s) {
     return this.grid.cells[s].r;
   };
 
@@ -837,9 +855,9 @@
    * @param {number} r
    * @return {number}
    */
-  HexMazeWorld.prototype.xyToS = function(q, r) {
+  HexMazeWorld.prototype.xyToS = function (q, r) {
     let cell = this.grid.getCellAt(q, r),
-        id = Utility.Arrays.arrContains(this.grid.cells, cell);
+      id = Utility.Arrays.arrContains(this.grid.cells, cell);
 
     return id;
   };
@@ -850,9 +868,9 @@
    * @param {number} a
    * @return {{ns: (*|Number), r: (*|Number)}}
    */
-  HexMazeWorld.prototype.sampleNextState = function(s, a) {
+  HexMazeWorld.prototype.sampleNextState = function (s, a) {
     let ns = this.nextStateDistribution(s, a),
-        r = this.reward(s, a, ns);
+      r = this.reward(s, a, ns);
 
     // every step takes a bit of negative reward
     r -= 0.01;
@@ -872,7 +890,7 @@
    * Return the starting state
    * @return {number}
    */
-  HexMazeWorld.prototype.startState = function() {
+  HexMazeWorld.prototype.startState = function () {
     return 0;
   };
 

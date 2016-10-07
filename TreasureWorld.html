@@ -2,52 +2,51 @@
 <meta charset="utf-8">
 <title>Treasure hunter</title>
 <body>
-<script src="../js/lib/Utility.js"></script>
-<script src="../js/lib/Vec.js"></script>
-<script src="../js/lib/external/rl.js"></script>
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+<script src="js/lib/external/rl.js"></script>
 
-<script src="../js/entities/Entity.js"></script>
-<script src="../js/entities/Agent.js"></script>
-<script src="../js/entities/EntityRLDQN.js"></script>
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
+<script src="js/entities/EntityRLDQN.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
 <script>
 
     //Aliases
-    var Container = PIXI.Container,
+    var agentO = null,
+            state,
+            explorer,
+            treasure,
+            blobs,
+            gotIt = false,
+            exit,
+            player,
+            dungeon,
+            door,
+            healthBar,
+            message,
+            gameScene,
+            gameOverScene,
+            enemies,
+            id,
+            Container = PIXI.Container,
             autoDetectRenderer = PIXI.autoDetectRenderer,
             loader = PIXI.loader,
             resources = PIXI.loader.resources,
-            TextureCache = PIXI.utils.TextureCache,
-            Texture = PIXI.Texture,
             Sprite = PIXI.Sprite,
             Text = PIXI.Text,
-            Graphics = PIXI.Graphics;
-
-    //Create a Pixi stage and renderer and add the
-    //renderer.view to the DOM
-    var stage = new Container(),
+            Graphics = PIXI.Graphics,
+            stage = new Container(),
             renderer = autoDetectRenderer(512, 512);
     document.body.appendChild(renderer.view);
-
-    loader.add("../img/treasureHunter.json").load(setup);
-
-    //Define variables that might be used in more
-    //than one function
-    var agentO = null, state, explorer, treasure, blobs, gotIt = false, exit, player, dungeon,
-            door, healthBar, message, gameScene, gameOverScene, enemies, id;
+    loader.add("images/treasureHunter.json").load(setup);
 
     function setup() {
         gotIt = false;
-        //Make the game scene and add it to the stage
         gameScene = new Container();
         stage.addChild(gameScene);
-
-        //Make the sprites and add them to the `gameScene`
-        //Create an alias for the texture atlas frame ids
-        id = resources["../img/treasureHunter.json"].textures;
-
-        //Dungeon
+        id = resources["images/treasureHunter.json"].textures;
         dungeon = new Sprite(id["dungeon.png"]);
         gameScene.addChild(dungeon);
 
@@ -84,7 +83,7 @@
                 worker: false
             });
             explorer.type = 3;
-            explorer.speed = 1;
+            explorer.speed = 3;
             explorer.action = randomInt(0, 3);
             explorer.target = treasure;
             explorer.score = 0;
@@ -95,19 +94,19 @@
             // Execute agent's desired action
             switch (explorer.action) {
                 case 0: // Left
-                    explorer.graphics.vx = -1;
+                    explorer.graphics.vx = -explorer.speed * 0.95;
                     explorer.graphics.vy = 0;
                     break;
                 case 1: // Right
-                    explorer.graphics.vx = 1;
+                    explorer.graphics.vx = explorer.speed * 0.95;
                     explorer.graphics.vy = 0;
                     break;
                 case 2: // Up
-                    explorer.graphics.vy = -1;
+                    explorer.graphics.vy = -explorer.speed * 0.95;
                     explorer.graphics.vx = 0;
                     break;
                 case 3: // Down
-                    explorer.graphics.vy = 1;
+                    explorer.graphics.vy = explorer.speed * 0.95;
                     explorer.graphics.vx = 0;
                     break;
             }
@@ -117,7 +116,7 @@
         gameScene.addChild(explorer.graphics);
 
         //Make the blobs
-        var numberOfBlobs = 2,
+        var numberOfBlobs = 8,
                 spacing = 48,
                 xOffset = 150;
 
@@ -148,7 +147,7 @@
             //Space each blob horizontally according to the `spacing` value.
             //`xOffset` determines the point from the left of the screen
             //at which the first blob should be added
-            var x = spacing * i + xOffset,
+            let x = spacing * i + xOffset,
                     //Give the blob a random y position
                     y = randomInt(0, stage.height - blob.graphics.height);
 
@@ -226,14 +225,14 @@
                 down = keyboard(40);
 
         //Left arrow key `press` method
-        left.press = function() {
+        left.press = function () {
             //Change the explorer's velocity when the key is pressed
             explorer.graphics.vx = -1;
             explorer.graphics.vy = 0;
         };
 
         //Left arrow key `release` method
-        left.release = function() {
+        left.release = function () {
             //If the left arrow has been released, and the right arrow isn't down,
             //and the explorer isn't moving vertically:
             //Stop the explorer
@@ -243,33 +242,33 @@
         };
 
         //Up
-        up.press = function() {
+        up.press = function () {
             explorer.graphics.vy = -1;
             explorer.graphics.vx = 0;
         };
-        up.release = function() {
+        up.release = function () {
             if (!down.isDown && explorer.graphics.vx === 0) {
                 explorer.graphics.vy = 0;
             }
         };
 
         //Right
-        right.press = function() {
+        right.press = function () {
             explorer.graphics.vx = 1;
             explorer.graphics.vy = 0;
         };
-        right.release = function() {
+        right.release = function () {
             if (!left.isDown && explorer.graphics.vy === 0) {
                 explorer.graphics.vx = 0;
             }
         };
 
         //Down
-        down.press = function() {
+        down.press = function () {
             explorer.graphics.vy = 1;
             explorer.graphics.vx = 0;
         };
-        down.release = function() {
+        down.release = function () {
             if (!up.isDown && explorer.graphics.vx === 0) {
                 explorer.graphics.vy = 0;
             }
@@ -311,19 +310,19 @@
         // Execute agent's desired action
         switch (agent.action) {
             case 0: // Left
-                agent.graphics.vx = -1;
+                agent.graphics.vx = -agent.speed * 0.95;
                 agent.graphics.vy = 0;
                 break;
             case 1: // Right
-                agent.graphics.vx = 1;
+                agent.graphics.vx = agent.speed * 0.95;
                 agent.graphics.vy = 0;
                 break;
             case 2: // Up
-                agent.graphics.vy = -1;
+                agent.graphics.vy = -agent.speed * 0.95;
                 agent.graphics.vx = 0;
                 break;
             case 3: // Down
-                agent.graphics.vy = 1;
+                agent.graphics.vy = agent.speed * 0.95;
                 agent.graphics.vx = 0;
                 break;
         }
@@ -365,7 +364,7 @@
         //contain(explorer, stage);
 
         //Loop through all the sprites in the `enemies` array
-        blobs.forEach(function(blob) {
+        blobs.forEach(function (blob) {
             agentTick(blob, door, treasure);
 
             //Check the blob's screen boundaries
@@ -544,7 +543,7 @@
         key.press = undefined;
         key.release = undefined;
         //The `downHandler`
-        key.downHandler = function(event) {
+        key.downHandler = function (event) {
             if (event.keyCode === key.code) {
                 if (key.isUp && key.press) {
                     key.press();
@@ -556,7 +555,7 @@
         };
 
         //The `upHandler`
-        key.upHandler = function(event) {
+        key.upHandler = function (event) {
             if (event.keyCode === key.code) {
                 if (key.isDown && key.release) {
                     key.release();

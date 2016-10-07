@@ -163,7 +163,7 @@
      * @return {Array}
      */
     disconnectedNeighbors(cell) {
-      var disc, results,
+      let disc, results,
           neighbors = this.neighbors(cell);
       results = neighbors.filter((c0) => {
         if (c0 === false) {
@@ -195,7 +195,7 @@
      * @param {Cell|Hex} c2
      * @return {number}
      */
-    getCellDistance(c1, c2) {
+    static getCellDistance(c1, c2) {
       let xDist = Math.abs(c1.x - c2.x),
           yDist = Math.abs(c1.y - c2.y);
 
@@ -339,6 +339,5 @@
   } else {
     global.Grid = Grid;
   }
-
 
 }(this));

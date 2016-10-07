@@ -1,9 +1,6 @@
-(function(global) {
+(function (global) {
   'use strict';
-
-//import Entity from './Entity.js';
-
-  /*export*/ class Eye {
+  class Eye {
 
     /**
      * Eye
@@ -24,12 +21,12 @@
       this.range = agent.range;
       this.graphics = new PIXI.Graphics();
       this.v1 = new Vec(
-          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+        agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
+        agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
       );
       this.v2 = new Vec(
-          agent.position.x + this.range * Math.sin(agent.angle + this.angle),
-          agent.position.y + this.range * Math.cos(agent.angle + this.angle)
+        agent.position.x + this.range * Math.sin(agent.angle + this.angle),
+        agent.position.y + this.range * Math.cos(agent.angle + this.angle)
       );
       this.sensed = {
         type: -1,
@@ -47,12 +44,12 @@
      */
     draw(agent) {
       this.v1 = new Vec(
-          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+        agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
+        agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
       );
       this.v2 = new Vec(
-          agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-          agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
+        agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+        agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
       );
       this.graphics.clear();
       this.graphics.moveTo(this.v1.x, this.v1.y);
@@ -121,18 +118,18 @@
       }
 
       this.v1 = new Vec(
-          agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-          agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
+        agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
+        agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
       );
       this.v2 = new Vec(
-          agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-          agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
+        agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+        agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
       );
 
     }
   }
 
-  /*export default*/ class Agent extends Entity {
+  class Agent extends Entity {
 
     /**
      * Options for the Agent
@@ -258,7 +255,7 @@
     act() {
       // in forward pass the agent simply behaves in the environment
       let ne = this.numEyes * this.numTypes,
-          inputArray = new Array(this.numStates);
+        inputArray = new Array(this.numStates);
       for (let ae = 0, ne = this.numEyes; ae < ne; ae++) {
         let eye = this.eyes[ae];
         eye.sense(this);
@@ -435,7 +432,7 @@
         };
 
         let jEnv = Utility.Strings.stringify(this.env),
-            jOpts = Utility.Strings.stringify(this.brainOpts);
+          jOpts = Utility.Strings.stringify(this.brainOpts);
 
         this.brain = new Worker('js/lib/external/rl.js');
         this.brain.onmessage = (e) => {

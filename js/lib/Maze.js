@@ -181,7 +181,7 @@
             if (!openSet.includes(neighbor)) {
               openSet.push(neighbor);
               neighbor.parent = searchCell;
-              neighbor.heuristic = neighbor.score() + this.grid.getCellDistance(neighbor, targetCell);
+              neighbor.heuristic = neighbor.score() + Grid.getCellDistance(neighbor, targetCell);
             }
           }
         }

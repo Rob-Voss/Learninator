@@ -1,6 +1,3 @@
-/**
- * Inspired by https://github.com/RobertBrewitz/axial-hexagonal-grid
- */
 (function (global) {
   'use strict';
 
@@ -56,6 +53,13 @@
       return [this.x, this.y, this.z];
     }
   }
-  global.Cube = Cube;
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      Cube: Cube
+    };
+  } else {
+    global.Cube = Cube;
+  }
 
 })(this);

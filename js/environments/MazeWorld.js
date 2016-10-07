@@ -12,58 +12,83 @@
      * @return {MazeWorld}
      */
     constructor() {
-      var cheats = {
-            id: false,
-            name: false,
-            angle: false,
-            bounds: false,
-            direction: false,
-            gridLocation: false,
-            position: false
+      var worldOpts = {
+          collision: {
+            type: 'brute',
+            cheats: {
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
+            },
           },
-          renderOpts = {
-            backgroundColor: 0xFFFFFF,
+          grid: {
+            width: 800,
+            height: 800,
+            buffer: 0,
+            cellSize: 100,
+            cellSpacing: 0,
+            size: 8,
+            pointy: false,
+            fill: false
+          },
+          render: {
+            background: 0xFFFFFF,
             antialiasing: false,
             autoResize: false,
             resizable: false,
             transparent: false,
             resolution: window.devicePixelRatio,
             noWebGL: false,
-            width: 600,
-            height: 600
+            width: 800,
+            height: 800
           },
-          gridOpts = {
-            width: renderOpts.width,
-            height: renderOpts.height,
-            buffer: 0,
-            size: 10,
-            cellSize: 60,
-            cellSpacing: 0,
-            fill: true,
-            closed: false,
+          cheats: {
+            id: false,
+            name: false,
+            angle: false,
+            bounds: false,
+            direction: false,
+            gridLocation: false,
+            position: false,
+            brute: false,
+            quad: false,
+            grid: false,
+            walls: false
+          },
+          agent: {
+            brainType: 'RL.DQNAgent',
+            range: 85,
+            proximity: 85,
+            radius: 10,
+            numEyes: 30,
+            numTypes: 5,
+            numActions: 4,
+            numProprioception: 2,
+            worker: false,
+            interactive: false,
+            useSprite: false
+          },
+          entity: {
+            number: 20,
+            radius: 10,
+            interactive: true,
             useSprite: false,
-            cheats: cheats
+            moving: true
           },
-          grid = new Grid(null, null, gridOpts),
-          maze = new Maze(grid.init()),
-          worldOpts = {
-            simSpeed: 1,
-            collision: {
-              type: 'brute'
-            },
-            grid: maze.grid,
-            maze: maze,
-            cheats: cheats,
-            numEntities: 4,
-            entityOpts: {
-              radius: 10,
-              collision: true,
-              interactive: true,
-              useSprite: false,
-              moving: false
-            }
-          };
-      super([], maze.walls, worldOpts, renderOpts);
+          entityAgent: {
+            number: 0,
+            radius: 0,
+            interactive: false,
+            useSprite: false,
+            moving: false
+          }
+        },
+          grid = new Grid(null, null, worldOpts.grid),
+          maze = new Maze(grid.init());
+      worldOpts.grid = maze.grid;
+      worldOpts.maze = maze;
+      super([], maze.walls, worldOpts);
 
       this.agents = [
         new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),

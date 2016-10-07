@@ -1,0 +1,51 @@
+{
+  "name": "Learninator",
+  "version": "0.0.1",
+  "description": "Learn stuf!",
+  "scripts": {
+    "start": "webpack-dev-server --hot --inline --port 3000 --config webpack.config.dev.js --content-base demo/",
+    "build": "mustache dataView.json myTemplate.mustache > public/output.html",
+    "jsDocs": "jsdoc -c ./conf.json",
+    "dist": "npm run clean && webpack && npm run copy-assets && npm run copy-html-css",
+    "lint": "eslint src demo --fix"
+  },
+  "author": "Rob Voss",
+  "license": "MIT",
+  "repository": "https://github.com/Digerati-IO/learninator",
+  "dependencies": {
+    "matter-js": "^0.10.0",
+    "webpack-dev-server": "^1.16.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-core": "^6.10.4",
+    "babel-eslint": "^6.1.2",
+    "babel-loader": "^6.2.5",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-react": "^6.11.1",
+    "babel-preset-stage-0": "^6.5.0",
+    "css-loader": "^0.23.1",
+    "eslint": "^3.3.1",
+    "eslint-config-formidable": "^1.0.1",
+    "eslint-plugin-filenames": "^1.1.0",
+    "eslint-plugin-import": "^1.14.0",
+    "eslint-plugin-jsx-a11y": "^2.1.0",
+    "eslint-plugin-react": "^6.1.2",
+    "grunt-jsdoc": "^2.1.0",
+    "html5-gamepad": "^0.1.4",
+    "json-loader": "^0.5.4",
+    "mobx": "^2.5.0",
+    "mobx-react": "^3.5.5",
+    "postcss-loader": "^0.10.1",
+    "raw-loader": "^0.5.1",
+    "react": "^15.3.2",
+    "react-dom": "^15.2.1",
+    "react-hot-loader": "^3.0.0-beta.4",
+    "rimraf": "^2.5.4",
+    "style-loader": "^0.13.1",
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "^1.15.0"
+  }
+}

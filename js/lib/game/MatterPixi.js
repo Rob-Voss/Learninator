@@ -1184,6 +1184,14 @@
           pGfx.lineTo(path[0][0], path[0][1]);
         }
       };
-  global.MatterPixi = MatterPixi;
+
+// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
+  if (typeof process !== 'undefined') {
+    module.exports = {
+      MatterPixi: MatterPixi
+    };
+  } else {
+    global.MatterPixi = MatterPixi;
+  }
 
 }(this));

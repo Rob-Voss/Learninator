@@ -1,15 +1,6 @@
 (function (global) {
   'use strict';
 
-//import 'PIXI';
-//import Utility from '../lib/Utility.js';
-//import Vec from '../lib/Vec.js';
-//import CollisionDetector from '../lib/CollisionDetector.js';
-//import Agent from '../entities/Agent.js';
-//import Entity from '../entities/Entity.js';
-//import EntityRLDQN from '../entities/EntityRLDQN.js';
-//import Wall from '../entities/Wall.js';
-
   /**
    * The flags for what to display for 'cheats'
    * @typedef {Object} cheatsOpts
@@ -20,10 +11,8 @@
    * @property {boolean} direction
    * @property {boolean} gridLocation
    * @property {boolean} position
-   * @type {{id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean,
-   *     position: boolean}}
    */
-  const cheatOptsDef = {
+  let cheatOpts = {
       id: false,
       name: false,
       angle: false,
@@ -34,65 +23,23 @@
     },
     /**
      * Default collision engine options
-     * @type {{type: string, maxChildren: number, maxDepth: number, cheats: {bounds: boolean}}}
+     * @typedef {Object} collisionOpts
+     * @property {String} type - The speed of the simulation
+     * @property {Number} maxChildren - The speed of the simulation
+     * @property {Number} simSpeed - The speed of the simulation
+     * @property {cheatOpts} cheats - The speed of the simulation
      */
-    collisionOptsDef = {
+    collisionOpts = {
       type: 'quad',
       maxChildren: 3,
       maxDepth: 8,
-      cheats: {
-        bounds: cheatOptsDef.bounds
-      }
+      cheats: cheatOpts
     },
     /**
      *
      * @type {Element}
      */
     element = document.body.querySelector('#game-container'),
-    /**
-     * Options for the World
-     * @typedef {Object} worldOpts
-     * @property {number} simSpeed - The speed of the simulation
-     * @property {collisionOpts} collision - The collision definition
-     * @property {cheatsOpts} cheats - The cheats definition
-     * @property {number} numEntities - The number of Entities to spawn
-     * @property {entityOpts} entityOpts - The Entity options to use for them
-     * @property {number} numEntityAgents - The number of EntityAgents to spawn
-     * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
-     * @property {Grid} grid - The grid to use
-     * @property {Maze} maze - The maze to use
-     * @type {{simSpeed: number, collision: {type: string, maxChildren: number, maxDepth: number, cheats: {bounds:
-       *     boolean}}, cheats: {id: boolean, name: boolean, angle: boolean, bounds: boolean, direction: boolean,
-       *     gridLocation: boolean, position: boolean}, numEntities: number, entityOpts: {radius: number, collision:
-       *     boolean, interactive: boolean, useSprite: boolean, moving: boolean, cheats: {id: boolean, name: boolean,
-       *     angle: boolean, bounds: boolean, direction: boolean, gridLocation: boolean, position: boolean}},
-       *     numEntityAgents: number, entityAgentOpts: {radius: number, collision: boolean, interactive: boolean,
-       *     useSprite: boolean, moving: boolean, cheats: {id: boolean, name: boolean, angle: boolean, bounds: boolean,
-       *     direction: boolean, gridLocation: boolean, position: boolean}}}}
-     */
-    worldOptsDef = {
-      simSpeed: 1,
-      collision: collisionOptsDef,
-      cheats: cheatOptsDef,
-      numEntities: 0,
-      entityOpts: {
-        radius: 10,
-        collision: true,
-        interactive: true,
-        useSprite: false,
-        moving: true,
-        cheats: cheatOptsDef
-      },
-      numEntityAgents: 0,
-      entityAgentOpts: {
-        radius: 10,
-        collision: true,
-        interactive: true,
-        useSprite: false,
-        moving: true,
-        cheats: cheatOptsDef
-      }
-    },
     /**
      * Default options for the World renderer
      * @typedef {Object} renderOpts
@@ -105,25 +52,68 @@
      * @property {boolean} noWebGL - prevents selection of WebGL renderer, even if such is present
      * @property {number} width - The width
      * @property {number} height - The height
-     * @type {{antialiasing: boolean, autoResize: boolean, background: number, resolution: *, resizable: boolean,
-       *     transparent: boolean, noWebGL: boolean, width: number, height: number}}
      */
-    renderOptsDef = {
-      background: 0xFFFFFF,
+    renderOpts = {
+      background: '0xFFFFFF',
       antialiasing: true,
       autoResize: false,
       resolution: window.devicePixelRatio,
       resizable: true,
-      transparent: false,
+      transparent: true,
       noWebGL: false,
       width: 800,
       height: 800
+    },
+    /**
+     * Options for the World
+     * @typedef {object} worldOpts
+     * @property {number} simSpeed - The speed of the simulation
+     * @property {collisionOpts} collision - The collision definition
+     * @property {cheatOpts} cheats - The cheats definition
+     * @property {number} numEntities - The number of Entities to spawn
+     * @property {entityOpts} entityOpts - The Entity options to use for them
+     * @property {number} numEntityAgents - The number of EntityAgents to spawn
+     * @property {entityAgentOpts} entityAgentOpts - The EntityAgent options to use for them
+     * @property {Grid} grid - The grid to use
+     * @property {Maze} maze - The maze to use
+     */
+    worldOpts = {
+      simSpeed: 1,
+      collision: collisionOpts,
+      cheats: cheatOpts,
+      render: renderOpts,
+      agent: {
+        number: 0,
+        radius: 10,
+        collision: true,
+        interactive: true,
+        useSprite: false,
+        moving: true,
+        cheats: cheatOpts
+      },
+      entity: {
+        number: 0,
+        radius: 10,
+        collision: true,
+        interactive: true,
+        useSprite: false,
+        moving: true,
+        cheats: cheatOpts
+      },
+      entityAgent: {
+        number: 0,
+        radius: 10,
+        collision: true,
+        interactive: true,
+        useSprite: false,
+        moving: true,
+        cheats: cheatOpts
+      }
     };
 
   /**
    * @typedef {Object} GameWorld
    * @property {worldOpts} options
-   * @property {renderOpts} renderOpts
    * @property {Array} agents
    * @property {Array} agentOpts
    * @property {Array} entityAgents
@@ -145,7 +135,6 @@
    * @property {number} height
    * @property {boolean} resizable
    */
-  /*export*/
   class GameWorld {
 
     /**
@@ -154,67 +143,49 @@
      *
      * @param {array} agents
      * @param {array} walls
-     * @param {worldOpts} worldOpts
-     * @param {renderOpts} renderOpts
+     * @param {worldOpts} options
      * @return {GameWorld}
      */
-    constructor(agents, walls, worldOpts, renderOpts) {
+    constructor(agents, walls, options = worldOpts) {
       this.walls = walls;
-      this.renderOpts = renderOpts || renderOptsDef;
-      this.options = worldOpts || worldOptsDef;
+      this.options = options;
       this.grid = Utility.getOpt(this.options, 'grid', false);
       this.maze = Utility.getOpt(this.options, 'maze', false);
       this.simSpeed = Utility.getOpt(this.options, 'simSpeed', 1);
       this.theme = Utility.getOpt(this.options, 'theme', 'space');
-      this.cheats = Utility.getOpt(this.options, 'cheats', cheatOptsDef);
-      this.collision = Utility.getOpt(this.options, 'collision', collisionOptsDef);
+      this.cheats = Utility.getOpt(this.options, 'cheats', cheatOpts);
+      this.collision = Utility.getOpt(this.options, 'collision', collisionOpts);
+      this.numEntities = Utility.getOpt(this.options.entity, 'number', 0);
+      this.numEntityAgents = Utility.getOpt(this.options.entityAgent, 'number', 0);
 
       this.sid = -1;
       this.stepsPerTick = 1;
       this.clock = 0;
       this.pause = false;
-      this.width = this.renderOpts.width;
-      this.height = this.renderOpts.height;
-      this.resizable = this.renderOpts.resizable;
+      this.width = this.options.render.width;
+      this.height = this.options.render.height;
+      this.resizable = this.options.render.resizable;
 
-      this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.renderOpts);
-      this.renderer.backgroundColor = this.renderOpts.backgroundColor;
+      // this.renderer = new Pixi(element, this.options.render);
+      this.renderer = PIXI.autoDetectRenderer(this.width, this.height, this.options.render, this.options.render.transparent);
+      this.renderer.backgroundColor = this.options.render.background || 0xFFFFFF;
       this.renderer.view.style.pos = 'absolute';
       this.renderer.view.style.top = '0px';
       this.renderer.view.style.left = '0px';
       this.canvas = this.renderer.view;
-      // Actually place the renderer onto the page for display
       element.appendChild(this.canvas);
 
       this.agents = agents || [];
       this.entityAgents = [];
       this.entities = [];
-      this.agentOpts = Utility.getOpt(this.options, 'agentOpts', {});
-      this.agentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
-      this.numEntities = Utility.getOpt(this.options, 'numEntities', 0);
-      this.numEntityAgents = Utility.getOpt(this.options, 'numEntityAgents', 0);
-      this.entityOpts = Utility.getOpt(this.options, 'entityOpts', {});
-      this.entityOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
-      this.entityAgentOpts = Utility.getOpt(this.options, 'entityAgentOpts', {});
-      this.entityAgentOpts.cheats = JSON.parse(JSON.stringify(this.cheats));
       this.settings = {
         pause: this.pause,
         simSpeed: this.simSpeed,
-        worldCheats: JSON.parse(JSON.stringify(this.cheats)),
-        agents: {
-          cheats: JSON.parse(JSON.stringify(this.agentOpts.cheats)),
-          options: JSON.parse(JSON.stringify(this.agentOpts))
-        },
-        entities: {
-          cheats: JSON.parse(JSON.stringify(this.entityOpts.cheats)),
-          options: JSON.parse(JSON.stringify(this.agentOpts))
-        },
-        grid: {
-          cheats: JSON.parse(JSON.stringify(this.cheats))
-        },
-        maze: {
-          cheats: JSON.parse(JSON.stringify(this.cheats))
-        }
+        render: this.options.render,
+        cheats: this.cheats,
+        agents: this.options.agent,
+        entities: this.options.entity,
+        entityAgents: this.options.entityAgent
       };
       this.population = new Map();
       this.stage = new PIXI.Container();
@@ -228,17 +199,18 @@
       this.staticLayer.id = 'staticLayer';
       this.entityLayer = new PIXI.Container();
       this.entityLayer.id = 'entityLayer';
-      this.gridLayer = (this.grid) ? this.grid.cellsContainer : new PIXI.Container();
-      this.gridLayer.id = 'gridLayer';
-
-      this.worldLayer.addChild(this.gridLayer);
+      if (this.grid) {
+        this.gridLayer =  this.grid.cellsContainer;
+        this.gridLayer.id = 'gridLayer';
+        this.worldLayer.addChild(this.gridLayer);
+      }
       this.worldLayer.addChild(this.staticLayer);
       this.worldLayer.addChild(this.entityLayer);
       this.stage.addChild(this.worldLayer);
       this.stage.addChild(this.uiLayer);
 
       if (this.resizable) {
-        var resize = () => {
+        let resize = () => {
           let ratio = Math.min(window.innerWidth / this.width, window.innerHeight / this.height);
           this.stage.scale.x = this.stage.scale.y = ratio;
           this.renderer.resize(Math.ceil(this.width * ratio), Math.ceil(this.height * ratio));
@@ -246,7 +218,9 @@
         window.addEventListener("resize", resize);
         resize();
       }
-      CollisionDetector.apply(this, [this.collision]);
+      if (CollisionDetector) {
+        CollisionDetector.apply(this, [this.collision]);
+      }
 
       // this.parallaxTest();
 
@@ -254,7 +228,7 @@
     }
 
     parallaxTest() {
-      var that = this;
+      let that = this;
       this.zoom = 1;
       this.useZoom = true;
 
@@ -295,7 +269,7 @@
       this.camera.bounds = new PIXI.Rectangle(-this.width, -this.height, this.width * 2, this.height * 2);
       this.uiLayer.addChild(this.bounds);
 
-      var gridOpts = {
+      let gridOpts = {
         width: this.width,
         height: this.height,
         buffer: 0,
@@ -313,10 +287,10 @@
       this.addWalls();
       this.addEntities(40);
 
-      var update = function () {
+      let update = function () {
           if (that.isMoving) {
             that.renderer.plugins.interaction.eventData.data.getLocalPosition(that.target.parent, that._p);
-            var dx = that._p.x - that.target.x,
+            let dx = that._p.x - that.target.x,
               dy = that._p.y - that.target.y,
               angle = Math.atan2(dy, dx);
             that.target.x += 8 * Math.cos(angle);
@@ -334,7 +308,7 @@
           that.isMoving = false;
           that._p = new PIXI.Point(0, 0);
 
-          var zoom = 0.6;
+          let zoom = 0.6;
 
           that.stage.on('mousedown', function (e) {
             that.isMoving = true;
@@ -386,15 +360,6 @@
      * Initialize the world
      */
     init() {
-      // Walls
-      this.addWalls();
-      // Add the entities
-      this.addEntities();
-      // Population of Agents that are considered 'smart' entities for the environment
-      this.addEntityAgents();
-      // Population of Agents for the environment
-      this.addAgents();
-
       let animate = () => {
         if (!this.pause) {
           this.deltaTime = GameWorld.time() - this.lastTime;
@@ -407,6 +372,15 @@
         requestAnimationFrame(animate);
       };
 
+      // Walls
+      this.addWalls();
+      // Add the entities
+      this.addEntities();
+      // Population of Agents that are considered 'smart' entities for the environment
+      this.addEntityAgents();
+      // Population of Agents for the environment
+      this.addAgents();
+
       this.deltaTime = 0;
       this.lastTime = GameWorld.time();
       animate();
@@ -414,6 +388,7 @@
 
     /**
      * Add the Agents
+     *
      * @return {GameWorld}
      */
     addAgents() {
@@ -441,7 +416,7 @@
      */
     addEntityAgents() {
       let startXY,
-        r = this.entityAgentOpts.radius;
+        r = this.options.entityAgent.radius;
       for (let k = 0; k < this.numEntityAgents; k++) {
         if (this.grid && this.grid.startCell !== undefined) {
           let numb = Math.floor(Math.random() * this.grid.cells.length),
@@ -456,7 +431,7 @@
         }
         startXY.vx = Math.random() * 5 - 2.5;
         startXY.vy = Math.random() * 5 - 2.5;
-        let entityAgent = new EntityRLDQN(startXY, this.entityAgentOpts),
+        let entityAgent = new EntityRLDQN(startXY, this.options.entityAgent),
           entity = entityAgent.graphics;
         for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
           entity.addChild(entityAgent.eyes[ei].graphics);
@@ -476,7 +451,7 @@
      */
     addEntities(number = null) {
       let startXY,
-        r = this.entityOpts.radius,
+        r = this.options.entity.radius,
         num = (number) ? number : this.numEntities;
       this.entities = [];
       // Populating the world
@@ -486,7 +461,7 @@
             startCell = this.grid.cells[n],
             randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 - r), this.grid.cellSize / 2 - r);
           startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
-          this.entityOpts.gridLocation = startCell;
+          this.options.entity.gridLocation = startCell;
         } else {
           startXY = new Vec(
             Utility.Maths.randi(r, this.width - r),
@@ -496,7 +471,7 @@
         startXY.vx = Utility.Maths.randf(-3, 3);
         startXY.vy = Utility.Maths.randf(-3, 3);
         let type = Utility.Maths.randi(1, 3),
-          entity = new Entity(type, startXY, this.entityOpts);
+          entity = new Entity(type, startXY, this.options.entity);
         this.entities.push(entity);
         this.entityLayer.addChild(entity.graphics);
         this.population.set(entity.id, entity);
