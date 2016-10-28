@@ -1,5 +1,4 @@
-(function(global) {
-  "use strict";
+class Window {
 
   /**
    * A window stores _size_ number of values and returns averages. Useful for
@@ -10,47 +9,44 @@
    * @param {number} minSize
    * @return {Window}
    */
-  let Window = function(size = 100, minSize = 20) {
+  constructor(size = 100, minSize = 20) {
     this.size = size;
     this.minsize = minSize;
     this.v = [];
     this.sum = 0;
 
     return this;
-  };
+  }
 
-  Window.prototype = {
-    /**
-     * Add a value
-     * @param {number} x
-     */
-    add: function(x) {
-      this.v.push(x);
-      this.sum += x;
-      if (this.v.length > this.size) {
-        let xold = this.v.shift();
-        this.sum -= xold;
-      }
-    },
-    /**
-     * Get the average of all
-     * @return {Number}
-     */
-    getAverage: function() {
-      if (this.v.length < this.minsize) {
-        return -1;
-      }
-      return this.sum / this.v.length;
-    },
-    /**
-     * Reset the Window
-     */
-    reset: function() {
-      this.v = [];
-      this.sum = 0;
+  /**
+   * Add a value
+   * @param {number} x
+   */
+  add(x) {
+    this.v.push(x);
+    this.sum += x;
+    if (this.v.length > this.size) {
+      this.sum -= this.v.shift();
     }
-  };
 
-  global.Window = Window;
+    return this;
+  }
 
-}(this));
+  /**
+   * Get the average of all
+   * @return {Number}
+   */
+  getAverage() {
+    return (this.v.length < this.minsize) ? -1 : this.sum / this.v.length;
+  }
+
+  /**
+   * Reset the Window
+   */
+  reset() {
+    this.v = [];
+    this.sum = 0;
+
+    return this;
+  }
+}

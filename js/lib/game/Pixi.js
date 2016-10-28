@@ -1,7 +1,7 @@
 class Pixi {
 
   constructor(element, renderOptions) {
-    renderOptions.renderer = PIXI.autoDetectRenderer(renderOptions.width, renderOptions.height, renderOptions, renderOptions.transparent);
+    renderOptions.renderer = PIXI.autoDetectRenderer(renderOptions.width, renderOptions.height, renderOptions);
     renderOptions.renderer.backgroundColor = renderOptions.background || 0xFFFFFF;
     renderOptions.renderer.view.style.pos = 'absolute';
     renderOptions.renderer.view.style.top = '0px';

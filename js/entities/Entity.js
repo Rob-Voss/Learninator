@@ -22,6 +22,12 @@
    * @property {boolean} useSprite - Should it use a sprite
    * @property {cheatOpts} cheats - The cheats to display
    */
+
+  /**
+   * @class Entity
+   * @property {PIXI.Graphics} graphics
+   *
+   */
   class Entity {
 
     /**
@@ -122,7 +128,7 @@
      * @return {Entity}
      */
     addCheats() {
-      if (this.cheats.angle && this.anglePointer === undefined) {
+      if (this.cheats.angle) {
         let dirV = new Vec(
             this.position.x + this.radius * Math.sin(this.position.direction),
             this.position.y + this.radius * Math.cos(this.position.direction)
@@ -134,7 +140,7 @@
         this.graphics.endFill();
       }
 
-      if (this.bounds && this.cheats.bounds && this.boundsRect === undefined) {
+      if (this.bounds && this.cheats.bounds) {
         let h = this.bounds.height,
             w = this.bounds.width;
         this.graphics.lineStyle(1, 0xFF0000, 1);
@@ -573,12 +579,6 @@
   Entity.hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
 
 // Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
-  if (typeof process !== 'undefined') {
-    module.exports = {
-      Entity: Entity
-    };
-  } else {
-    global.Entity = Entity;
-  }
+  (typeof process !== 'undefined') ? module.exports = { Entity: Entity } : global.Entity = Entity;
 
 }(this));

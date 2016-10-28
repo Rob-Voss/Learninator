@@ -2,93 +2,113 @@
 <html>
 <head>
     <title>Tilemap</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        canvas {
-            border: 5px solid #000000;
-        }
-    </style>
-
-    <link rel="stylesheet" href="//storage.googleapis.com/code.getmdl.io/1.0.1/material.indigo-pink.min.css">
-    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
-
-    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
-</head>
-<body>
-<div id="container">
-    <p id="demo"></p>
     <script>
-        // For zoomed-in pixel art, we want crisp pixels instead of fuzziness
-        PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
-
-        var tileMapOpts = {
-                    tileMap: {
-                        path: "../images/tiles.json",
-                        size: 16,
-                        width: 64,
-                        height: 50
+        function start() {
+            var tileMapOpts = {
+                        tileMap: {
+                            path: "images/tiles.json",
+                            size: 16,
+                            width: 64,
+                            height: 50
+                        },
+                        render: {
+                            width: 800,
+                            height: 600
+                        },
+                        menu: {
+                            width: 120
+                        }
                     },
-                    render: {
-                        width: 800,
-                        height: 600
-                    },
-                    menu: {
-                        width: 120
-                    }
-                },
-                stage = new PIXI.Container(),
-                renderer = PIXI.autoDetectRenderer(tileMapOpts.render.width, tileMapOpts.render.height),
-                tileAtlas = [tileMapOpts.tileMap.path],
-                loader = PIXI.loader.add(tileMapOpts.tileMap.path).load(onLoaded);
+                    stage = new PIXI.Container(),
+                    renderer = PIXI.autoDetectRenderer(tileMapOpts.render.width, tileMapOpts.render.height, tileMapOpts.render),
+                    tileAtlas = [tileMapOpts.tileMap.path],
+                    loader = PIXI.loader.add(tileMapOpts.tileMap.path).load(onLoaded);
 
-        renderer.backgroundColor = 0xFFFFFF;
-        document.body.appendChild(renderer.view);
+            renderer.backgroundColor = 0xFFFFFF;
+            document.body.appendChild(renderer.view);
 
-        loader.load();
+            loader.load();
 
-        // called when sprites are finished loading
-        function onLoaded() {
-            var tilemap = new TileMap(tileMapOpts);
-            tilemap.position.x = tileMapOpts.menu.width;
-            stage.addChild(tilemap);
+            // called when sprites are finished loading
+            function onLoaded() {
+                var tilemap = new TileMap(tileMapOpts);
+                tilemap.position.x = tileMapOpts.menu.width;
+                stage.addChild(tilemap);
 
-            var menu = new Menu(tilemap, tileMapOpts);
-            tilemap.menu = menu;
-            stage.addChild(menu);
+                var menu = new Menu(tilemap, tileMapOpts);
+                tilemap.menu = menu;
+                stage.addChild(menu);
 
-            // zoom in on the starting tile
-            tilemap.selectTile(tilemap.startLocation.x, tilemap.startLocation.y);
-            tilemap.zoomIn();
+                // zoom in on the starting tile
+                tilemap.selectTile(tilemap.startLocation.x, tilemap.startLocation.y);
+                tilemap.zoomIn();
 
-            // begin drawing
-            requestAnimationFrame(animate);
+                // begin drawing
+                requestAnimationFrame(animate);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(stage);
+            }
+
+            $("#demo").append(renderer.view);
         }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(stage);
-        }
-
-        $("#demo").append(renderer.view);
     </script>
+</head>
+<body onload="start();">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">TileMap</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <p id="demo"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
-<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+<script src="js/lib/external/rl.js"></script>
 
-<script src="//storage.googleapis.com/code.getmdl.io/1.0.1/material.min.js"></script>
-
+<script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
-<script src="js/lib/TileMap.js"></script>
+
+<script src="js/lib/ui/Dat.js"></script>
+
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/QuadTree.js"></script>
+
+<script src="js/lib/game/Game.js"></script>
+<script src="js/lib/game/GameObject.js"></script>
+
+<script src="js/entities/Wall.js"></script>
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
+
+<script src="js/lib/game/GameWorld.js"></script>
+
 </body>
 </html>

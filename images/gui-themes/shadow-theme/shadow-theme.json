@@ -11,11 +11,11 @@
   },
   "default": {
     "scale": 0.5,
-    "bg": "barVertical_shadow_mid.png",
-    "padding" : 2,
-    "bgPadding": 6,
-    "corner": "dotShadow_corner.png",
-    "line": "dotShadow_line.png",
+    "bg": "",
+    "padding" : 0,
+    "bgPadding": 0,
+    "corner": "",
+    "line": "",
     "font": {
       "size": "20px",
       "family": "Arial",
@@ -26,8 +26,8 @@
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
-    "bgPadding": 5,
-    "padding": 5,
+    "bgPadding": 0,
+    "padding": 0,
     "corner": {
       "default": "dotShadow_corner.png"
     },
@@ -35,25 +35,12 @@
       "default": "dotShadow_line.png"
     }
   },
-  "ShadowWindow": {
-    "bg": {
-      "default": "barVertical_shadow_mid.png"
-    },
-    "bgPadding": 0,
-    "padding": 0,
-    "corner": {
-      "default": "buttonShadow_corner.png"
-    },
-    "line": {
-      "default": "buttonShadow_line.png"
-    }
-  },
   "Layout": {
     "bg": {
       "default": "barVertical_shadow_mid.png"
     },
     "bgPadding": 0,
-    "padding": 5,
+    "padding": 0,
     "corner": {
       "default": "buttonShadow_corner.png"
     },
@@ -81,10 +68,10 @@
     "bgPadding": 0,
     "padding": 0,
     "corner": {
-      "default": ""
+      "default": "buttonShadow_corner.png"
     },
     "line": {
-      "default": ""
+      "default": "buttonShadow_line.png"
     },
     "font": {
       "size": "12px",

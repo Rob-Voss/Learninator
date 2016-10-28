@@ -1,576 +1,646 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Treasure hunter</title>
-<body>
-<script src="js/lib/Utility.js"></script>
-<script src="js/lib/Vec.js"></script>
+<script>
+    function start() {
+        //Aliases
+        var agentO = null,
+                state,
+                explorer,
+                treasure,
+                blobs,
+                gotIt = false,
+                exit,
+                player,
+                dungeon,
+                door,
+                healthBar,
+                message,
+                gameScene,
+                gameOverScene,
+                enemies,
+                id,
+                Container = PIXI.Container,
+                autoDetectRenderer = PIXI.autoDetectRenderer,
+                loader = PIXI.loader,
+                resources = PIXI.loader.resources,
+                Sprite = PIXI.Sprite,
+                Text = PIXI.Text,
+                Graphics = PIXI.Graphics,
+                stage = new Container(),
+                renderer = autoDetectRenderer(512, 512);
+        $("#game-container").append(renderer.view);
+        loader.add("images/treasureHunter.json").load(setup);
+
+        function setup() {
+            gotIt = false;
+            gameScene = new Container();
+            stage.addChild(gameScene);
+            id = resources["images/treasureHunter.json"].textures;
+            dungeon = new Sprite(id["dungeon.png"]);
+            gameScene.addChild(dungeon);
+
+            //Door
+            door = {type: 0};
+            door.graphics = new Sprite(id["door.png"]);
+            door.graphics.position.set(32, 0);
+            door.graphics.vx = 0;
+            door.graphics.vy = 0;
+            gameScene.addChild(door.graphics);
+
+            //Treasure
+            treasure = {type: 1};
+            treasure.graphics = new Sprite(id["treasure.png"]);
+            treasure.graphics.x = gameScene.width - treasure.graphics.width - 48;
+            treasure.graphics.y = gameScene.height / 2 - treasure.graphics.height / 2;
+            treasure.graphics.vx = 0;
+            treasure.graphics.vy = 0;
+            gameScene.addChild(treasure.graphics);
+
+            //Explorer
+            if (agentO === null) {
+                explorer = new EntityRLDQN(new Vec(0, 0), {
+                    brainType: 'RL.DQNAgent',
+                    numActions: 4,
+                    numEyes: 2,
+                    numTypes: 4,
+                    numProprioception: 2,
+                    range: 10,
+                    proximity: 10,
+                    radius: 10,
+                    interactive: false,
+                    useSprite: false,
+                    worker: false
+                });
+                explorer.type = 3;
+                explorer.speed = 3;
+                explorer.action = randomInt(0, 3);
+                explorer.target = treasure;
+                explorer.score = 0;
+                explorer.graphics = new Sprite(id["explorer.png"]);
+                explorer.graphics.x = 68;
+                explorer.graphics.y = gameScene.height / 2 - explorer.graphics.height / 2;
+
+                // Execute agent's desired action
+                switch (explorer.action) {
+                    case 0: // Left
+                        explorer.graphics.vx = -explorer.speed * 0.95;
+                        explorer.graphics.vy = 0;
+                        break;
+                    case 1: // Right
+                        explorer.graphics.vx = explorer.speed * 0.95;
+                        explorer.graphics.vy = 0;
+                        break;
+                    case 2: // Up
+                        explorer.graphics.vy = -explorer.speed * 0.95;
+                        explorer.graphics.vx = 0;
+                        break;
+                    case 3: // Down
+                        explorer.graphics.vy = explorer.speed * 0.95;
+                        explorer.graphics.vx = 0;
+                        break;
+                }
+            } else {
+                explorer = agentO;
+            }
+            gameScene.addChild(explorer.graphics);
+
+            //Make the blobs
+            var numberOfBlobs = 8,
+                    spacing = 48,
+                    xOffset = 150;
+
+            //An array to store all the blob monsters
+            blobs = [];
+            //Make as many blobs as there are `numberOfBlobs`
+            for (var i = 0; i < numberOfBlobs; i++) {
+                //Make a blob
+                var blob = new EntityRLDQN(new Vec(0, 0), {
+                    brainType: 'RL.DQNAgent',
+                    numActions: 4,
+                    numEyes: 2,
+                    numTypes: 4,
+                    numProprioception: 2,
+                    range: 10,
+                    proximity: 10,
+                    radius: 10,
+                    interactive: false,
+                    useSprite: false,
+                    worker: false
+                });
+                blob.graphics = new Sprite(id["blob.png"]);
+                blob.type = 2;
+                blob.speed = 1;
+                blob.enemy = door;
+                blob.target = explorer;
+                blob.action = randomInt(0, 3);
+                //Space each blob horizontally according to the `spacing` value.
+                //`xOffset` determines the point from the left of the screen
+                //at which the first blob should be added
+                let x = spacing * i + xOffset,
+                        //Give the blob a random y position
+                        y = randomInt(0, stage.height - blob.graphics.height);
+
+                //Set the blob's position
+                blob.graphics.x = x;
+                blob.graphics.y = y;
+
+                // Execute agent's desired action
+                switch (blob.action) {
+                    case 0: // Left
+                        blob.graphics.vx = -1;
+                        blob.graphics.vy = 0;
+                        break;
+                    case 1: // Right
+                        blob.graphics.vx = 1;
+                        blob.graphics.vy = 0;
+                        break;
+                    case 2: // Up
+                        blob.graphics.vy = -1;
+                        blob.graphics.vx = 0;
+                        break;
+                    case 3: // Down
+                        blob.graphics.vy = 1;
+                        blob.graphics.vx = 0;
+                        break;
+                }
+
+                //Push the blob into the `blobs` array
+                blobs.push(blob);
+
+                //Add the blob to the `gameScene`
+                gameScene.addChild(blob.graphics);
+            }
+            let rand = randomInt(0, blobs.length - 1);
+            explorer.enemy = blobs[rand];
+
+            //Create the health bar
+            healthBar = new Container();
+            healthBar.position.set(stage.width - 170, 6);
+            gameScene.addChild(healthBar);
+
+            //Create the black background rectangle
+            var innerBar = new Graphics();
+            innerBar.beginFill(0x000000);
+            innerBar.drawRect(0, 0, 128, 8);
+            innerBar.endFill();
+            healthBar.addChild(innerBar);
+
+            //Create the front red rectangle
+            var outerBar = new Graphics();
+            outerBar.beginFill(0xFF3300);
+            outerBar.drawRect(0, 0, 128, 8);
+            outerBar.endFill();
+            healthBar.addChild(outerBar);
+
+            healthBar.outer = outerBar;
+
+            //Create the `gameOver` scene
+            gameOverScene = new Container();
+            stage.addChild(gameOverScene);
+
+            //Make the `gameOver` scene invisible when the game first starts
+            gameOverScene.visible = false;
+
+            //Create the text sprite and add it to the `gameOver` scene
+            message = new Text("The End!", {font: "64px Futura", fill: "white"});
+            message.x = 120;
+            message.y = stage.height / 2 - 32;
+            gameOverScene.addChild(message);
+
+            //Capture the keyboard arrow keys
+            var left = keyboard(37),
+                    up = keyboard(38),
+                    right = keyboard(39),
+                    down = keyboard(40);
+
+            //Left arrow key `press` method
+            left.press = function () {
+                //Change the explorer's velocity when the key is pressed
+                explorer.graphics.vx = -1;
+                explorer.graphics.vy = 0;
+            };
+
+            //Left arrow key `release` method
+            left.release = function () {
+                //If the left arrow has been released, and the right arrow isn't down,
+                //and the explorer isn't moving vertically:
+                //Stop the explorer
+                if (!right.isDown && explorer.graphics.vy === 0) {
+                    explorer.graphics.vx = 0;
+                }
+            };
+
+            //Up
+            up.press = function () {
+                explorer.graphics.vy = -1;
+                explorer.graphics.vx = 0;
+            };
+            up.release = function () {
+                if (!down.isDown && explorer.graphics.vx === 0) {
+                    explorer.graphics.vy = 0;
+                }
+            };
+
+            //Right
+            right.press = function () {
+                explorer.graphics.vx = 1;
+                explorer.graphics.vy = 0;
+            };
+            right.release = function () {
+                if (!left.isDown && explorer.graphics.vy === 0) {
+                    explorer.graphics.vx = 0;
+                }
+            };
+
+            //Down
+            down.press = function () {
+                explorer.graphics.vy = 1;
+                explorer.graphics.vx = 0;
+            };
+            down.release = function () {
+                if (!up.isDown && explorer.graphics.vx === 0) {
+                    explorer.graphics.vy = 0;
+                }
+            };
+
+            //Set the game state
+            state = play;
+
+            //Start the game loop
+            gameLoop();
+        }
+
+        function gameLoop() {
+            //Loop this function 60 times per second
+            requestAnimationFrame(gameLoop);
+
+            //Update the current game state
+            state();
+
+            //Render the stage
+            renderer.render(stage);
+        }
+
+        function agentTick(agent, enemy, target) {
+            agent.state = [
+                target.graphics.x - agent.graphics.x,
+                target.graphics.y - agent.graphics.y,
+                target.graphics.vx - agent.graphics.vx,
+                target.graphics.vy - agent.graphics.vy,
+                enemy.graphics.x - agent.graphics.x,
+                enemy.graphics.y - agent.graphics.y,
+                enemy.graphics.vx - agent.graphics.vx,
+                enemy.graphics.vy - agent.graphics.vy,
+                agent.graphics.vx,
+                agent.graphics.vy
+            ];
+            agent.action = agent.brain.act(agent.state);
+
+            // Execute agent's desired action
+            switch (agent.action) {
+                case 0: // Left
+                    agent.graphics.vx = -agent.speed * 0.95;
+                    agent.graphics.vy = 0;
+                    break;
+                case 1: // Right
+                    agent.graphics.vx = agent.speed * 0.95;
+                    agent.graphics.vy = 0;
+                    break;
+                case 2: // Up
+                    agent.graphics.vy = -agent.speed * 0.95;
+                    agent.graphics.vx = 0;
+                    break;
+                case 3: // Down
+                    agent.graphics.vy = agent.speed * 0.95;
+                    agent.graphics.vx = 0;
+                    break;
+            }
+
+            // Compute distances
+            let dx1 = agent.graphics.x - target.graphics.x, // Distance from Noms
+                    dy1 = agent.graphics.y - target.graphics.y, // Distance from Noms
+                    dx2 = agent.graphics.x - enemy.graphics.x, // Distance from Agent
+                    dy2 = agent.graphics.y - enemy.graphics.y, // Distance from Agent
+                    d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
+                    d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
+                    // Compute reward we want to go close to Agent we like
+                    r = -d1 * 0.01,
+                    eRng = enemy.graphics.width * 2;
+
+            if (d2 < eRng) {
+                // but if we're too close to the bad Agent that's bad
+                r += 2 * (d2 - eRng) / eRng;
+            }
+            if (d1 < (stage.width / 2)) {
+                r *= -1;
+            }
+
+            //use the explorer's velocity to make it move
+            agent.graphics.x += agent.graphics.vx;
+            agent.graphics.y += agent.graphics.vy;
+
+            agent.lastReward = r;
+        }
+
+        function play() {
+            //Set `explorerHit` to `false` before checking for a collision
+            var explorerHit = false;
+
+            agentTick(explorer, explorer.enemy, explorer.target);
+
+            //Contain the explorer inside the area of the dungeon
+            contain(explorer.graphics, {x: 28, y: 10, width: 488, height: 480});
+            //contain(explorer, stage);
+
+            //Loop through all the sprites in the `enemies` array
+            blobs.forEach(function (blob) {
+                agentTick(blob, door, treasure);
+
+                //Check the blob's screen boundaries
+                var blobHitsWall = contain(blob.graphics, {x: 28, y: 10, width: 488, height: 480});
+
+                //If the blob hits the top or bottom of the stage, reverse
+                //its direction
+                if (blobHitsWall === "top" || blobHitsWall === "bottom") {
+                    blob.graphics.vy *= -1;
+                }
+
+                //Test for a collision. If any of the enemies are touching
+                //the explorer, set `explorerHit` to `true`
+                if (hitTestRectangle(explorer.graphics, blob.graphics)) {
+                    explorer.enemy = blob;
+                    explorerHit = true;
+                }
+
+                blob.lastReward += (explorerHit) ? 1 : -1;
+                blob.brain.learn(blob.lastReward);
+            });
+
+            //If the explorer is hit...
+            if (explorerHit) {
+                explorer.lastReward += -10;
+                //Make the explorer semi-transparent
+                explorer.graphics.alpha = 0.5;
+
+                //Reduce the width of the health bar's inner rectangle by 1 pixel
+                healthBar.outer.width -= 1;
+            } else {
+                //Make the explorer fully opaque (non-transparent) if it hasn't been hit
+                explorer.graphics.alpha = 1;
+            }
+
+            //Check for a collision between the explorer and the treasure
+            if (hitTestRectangle(explorer.graphics, treasure.graphics)) {
+                //If the treasure is touching the explorer, center it over the explorer
+                treasure.graphics.x = explorer.graphics.x + 8;
+                treasure.graphics.y = explorer.graphics.y + 8;
+                if (!gotIt) {
+                    explorer.lastReward += 10;
+                    explorer.target = door;
+                    gotIt = true;
+                }
+            } else {
+                explorer.lastReward = (explorerHit) ? -1 : 1;
+            }
+            explorer.brain.learn(explorer.lastReward);
+
+            // Does the explorer have enough health? If the width of the `innerBar`
+            // is less than zero, end the game and display "You lost!"
+            if (healthBar.outer.width < 0) {
+//            state = end;
+//            message.text = "You lost!";
+                explorer.lastReward = -20;
+                explorer.brain.learn(explorer.lastReward);
+                explorer.target = treasure;
+                agentO = explorer;
+                setup();
+            }
+
+            if (explorer.score > 3) {
+                console.log();
+            }
+            //If the explorer has brought the treasure to the exit,
+            //end the game and display "You won!"
+            if (hitTestRectangle(treasure.graphics, door.graphics)) {
+//            state = end;
+//            message.text = "You won!";
+                explorer.score++;
+                explorer.lastReward = 20;
+                explorer.brain.learn(explorer.lastReward);
+                explorer.target = treasure;
+                agentO = explorer;
+                setup();
+            }
+        }
+
+        function end() {
+            gameScene.visible = false;
+            gameOverScene.visible = true;
+        }
+
+        /* Helper functions */
+
+        function contain(sprite, container) {
+            var collision = undefined;
+
+            //Left
+            if (sprite.x < container.x) {
+                sprite.x = container.x;
+                collision = "left";
+            }
+
+            //Top
+            if (sprite.y < container.y) {
+                sprite.y = container.y;
+                collision = "top";
+            }
+
+            //Right
+            if (sprite.x + sprite.width > container.width) {
+                sprite.x = container.width - sprite.width;
+                collision = "right";
+            }
+
+            //Bottom
+            if (sprite.y + sprite.height > container.height) {
+                sprite.y = container.height - sprite.height;
+                collision = "bottom";
+            }
+
+            //Return the `collision` value
+            return collision;
+        }
+
+        //The `hitTestRectangle` function
+        function hitTestRectangle(r1, r2) {
+            //Define the variables we'll need to calculate
+            var hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+            //hit will determine whether there's a collision
+            hit = false;
+
+            //Find the center points of each sprite
+            r1.centerX = r1.x + r1.width / 2;
+            r1.centerY = r1.y + r1.height / 2;
+            r2.centerX = r2.x + r2.width / 2;
+            r2.centerY = r2.y + r2.height / 2;
+
+            //Find the half-widths and half-heights of each sprite
+            r1.halfWidth = r1.width / 2;
+            r1.halfHeight = r1.height / 2;
+            r2.halfWidth = r2.width / 2;
+            r2.halfHeight = r2.height / 2;
+
+            //Calculate the distance vector between the sprites
+            vx = r1.centerX - r2.centerX;
+            vy = r1.centerY - r2.centerY;
+
+            //Figure out the combined half-widths and half-heights
+            combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+            combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+            //Check for a collision on the x axis
+            if (Math.abs(vx) < combinedHalfWidths) {
+                //A collision might be occuring. Check for a collision on the y axis
+                if (Math.abs(vy) < combinedHalfHeights) {
+                    //There's definitely a collision happening
+                    hit = true;
+                } else {
+                    //There's no collision on the y axis
+                    hit = false;
+                }
+            } else {
+                //There's no collision on the x axis
+                hit = false;
+            }
+
+            //`hit` will be either `true` or `false`
+            return hit;
+        }
+
+        //The `randomInt` helper function
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        //The `keyboard` helper function
+        function keyboard(keyCode) {
+            var key = {};
+            key.code = keyCode;
+            key.isDown = false;
+            key.isUp = true;
+            key.press = undefined;
+            key.release = undefined;
+            //The `downHandler`
+            key.downHandler = function (event) {
+                if (event.keyCode === key.code) {
+                    if (key.isUp && key.press) {
+                        key.press();
+                    }
+                    key.isDown = true;
+                    key.isUp = false;
+                }
+                event.preventDefault();
+            };
+
+            //The `upHandler`
+            key.upHandler = function (event) {
+                if (event.keyCode === key.code) {
+                    if (key.isDown && key.release) {
+                        key.release();
+                    }
+                    key.isDown = false;
+                    key.isUp = true;
+                }
+                event.preventDefault();
+            };
+
+            //Attach event listeners
+            window.addEventListener("keydown", key.downHandler.bind(key), false);
+            window.addEventListener("keyup", key.upHandler.bind(key), false);
+
+            return key;
+        }
+    }
+</script>
+</head>
+<body onload="start();">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Treasure World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="game-container"></div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
 <script src="js/lib/external/rl.js"></script>
 
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+
+<script src="js/lib/ui/Dat.js"></script>
+
+<script src="js/lib/game/Camera.js"></script>
+
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/QuadTree.js"></script>
+
+<script src="js/lib/game/Game.js"></script>
+<script src="js/lib/game/GameObject.js"></script>
+
+<script src="js/entities/Wall.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 <script src="js/entities/EntityRLDQN.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
-<script>
+<script src="js/lib/game/GameWorld.js"></script>
 
-    //Aliases
-    var agentO = null,
-            state,
-            explorer,
-            treasure,
-            blobs,
-            gotIt = false,
-            exit,
-            player,
-            dungeon,
-            door,
-            healthBar,
-            message,
-            gameScene,
-            gameOverScene,
-            enemies,
-            id,
-            Container = PIXI.Container,
-            autoDetectRenderer = PIXI.autoDetectRenderer,
-            loader = PIXI.loader,
-            resources = PIXI.loader.resources,
-            Sprite = PIXI.Sprite,
-            Text = PIXI.Text,
-            Graphics = PIXI.Graphics,
-            stage = new Container(),
-            renderer = autoDetectRenderer(512, 512);
-    document.body.appendChild(renderer.view);
-    loader.add("images/treasureHunter.json").load(setup);
-
-    function setup() {
-        gotIt = false;
-        gameScene = new Container();
-        stage.addChild(gameScene);
-        id = resources["images/treasureHunter.json"].textures;
-        dungeon = new Sprite(id["dungeon.png"]);
-        gameScene.addChild(dungeon);
-
-        //Door
-        door = {type: 0};
-        door.graphics = new Sprite(id["door.png"]);
-        door.graphics.position.set(32, 0);
-        door.graphics.vx = 0;
-        door.graphics.vy = 0;
-        gameScene.addChild(door.graphics);
-
-        //Treasure
-        treasure = {type: 1};
-        treasure.graphics = new Sprite(id["treasure.png"]);
-        treasure.graphics.x = gameScene.width - treasure.graphics.width - 48;
-        treasure.graphics.y = gameScene.height / 2 - treasure.graphics.height / 2;
-        treasure.graphics.vx = 0;
-        treasure.graphics.vy = 0;
-        gameScene.addChild(treasure.graphics);
-
-        //Explorer
-        if (agentO === null) {
-            explorer = new EntityRLDQN(new Vec(0, 0), {
-                brainType: 'RL.DQNAgent',
-                numActions: 4,
-                numEyes: 2,
-                numTypes: 4,
-                numProprioception: 2,
-                range: 10,
-                proximity: 10,
-                radius: 10,
-                interactive: false,
-                useSprite: false,
-                worker: false
-            });
-            explorer.type = 3;
-            explorer.speed = 3;
-            explorer.action = randomInt(0, 3);
-            explorer.target = treasure;
-            explorer.score = 0;
-            explorer.graphics = new Sprite(id["explorer.png"]);
-            explorer.graphics.x = 68;
-            explorer.graphics.y = gameScene.height / 2 - explorer.graphics.height / 2;
-
-            // Execute agent's desired action
-            switch (explorer.action) {
-                case 0: // Left
-                    explorer.graphics.vx = -explorer.speed * 0.95;
-                    explorer.graphics.vy = 0;
-                    break;
-                case 1: // Right
-                    explorer.graphics.vx = explorer.speed * 0.95;
-                    explorer.graphics.vy = 0;
-                    break;
-                case 2: // Up
-                    explorer.graphics.vy = -explorer.speed * 0.95;
-                    explorer.graphics.vx = 0;
-                    break;
-                case 3: // Down
-                    explorer.graphics.vy = explorer.speed * 0.95;
-                    explorer.graphics.vx = 0;
-                    break;
-            }
-        } else {
-            explorer = agentO;
-        }
-        gameScene.addChild(explorer.graphics);
-
-        //Make the blobs
-        var numberOfBlobs = 8,
-                spacing = 48,
-                xOffset = 150;
-
-        //An array to store all the blob monsters
-        blobs = [];
-        //Make as many blobs as there are `numberOfBlobs`
-        for (var i = 0; i < numberOfBlobs; i++) {
-            //Make a blob
-            var blob = new EntityRLDQN(new Vec(0, 0), {
-                brainType: 'RL.DQNAgent',
-                numActions: 4,
-                numEyes: 2,
-                numTypes: 4,
-                numProprioception: 2,
-                range: 10,
-                proximity: 10,
-                radius: 10,
-                interactive: false,
-                useSprite: false,
-                worker: false
-            });
-            blob.graphics = new Sprite(id["blob.png"]);
-            blob.type = 2;
-            blob.speed = 1;
-            blob.enemy = door;
-            blob.target = explorer;
-            blob.action = randomInt(0, 3);
-            //Space each blob horizontally according to the `spacing` value.
-            //`xOffset` determines the point from the left of the screen
-            //at which the first blob should be added
-            let x = spacing * i + xOffset,
-                    //Give the blob a random y position
-                    y = randomInt(0, stage.height - blob.graphics.height);
-
-            //Set the blob's position
-            blob.graphics.x = x;
-            blob.graphics.y = y;
-
-            // Execute agent's desired action
-            switch (blob.action) {
-                case 0: // Left
-                    blob.graphics.vx = -1;
-                    blob.graphics.vy = 0;
-                    break;
-                case 1: // Right
-                    blob.graphics.vx = 1;
-                    blob.graphics.vy = 0;
-                    break;
-                case 2: // Up
-                    blob.graphics.vy = -1;
-                    blob.graphics.vx = 0;
-                    break;
-                case 3: // Down
-                    blob.graphics.vy = 1;
-                    blob.graphics.vx = 0;
-                    break;
-            }
-
-            //Push the blob into the `blobs` array
-            blobs.push(blob);
-
-            //Add the blob to the `gameScene`
-            gameScene.addChild(blob.graphics);
-        }
-        let rand = randomInt(0, blobs.length - 1);
-        explorer.enemy = blobs[rand];
-
-        //Create the health bar
-        healthBar = new Container();
-        healthBar.position.set(stage.width - 170, 6);
-        gameScene.addChild(healthBar);
-
-        //Create the black background rectangle
-        var innerBar = new Graphics();
-        innerBar.beginFill(0x000000);
-        innerBar.drawRect(0, 0, 128, 8);
-        innerBar.endFill();
-        healthBar.addChild(innerBar);
-
-        //Create the front red rectangle
-        var outerBar = new Graphics();
-        outerBar.beginFill(0xFF3300);
-        outerBar.drawRect(0, 0, 128, 8);
-        outerBar.endFill();
-        healthBar.addChild(outerBar);
-
-        healthBar.outer = outerBar;
-
-        //Create the `gameOver` scene
-        gameOverScene = new Container();
-        stage.addChild(gameOverScene);
-
-        //Make the `gameOver` scene invisible when the game first starts
-        gameOverScene.visible = false;
-
-        //Create the text sprite and add it to the `gameOver` scene
-        message = new Text("The End!", {font: "64px Futura", fill: "white"});
-        message.x = 120;
-        message.y = stage.height / 2 - 32;
-        gameOverScene.addChild(message);
-
-        //Capture the keyboard arrow keys
-        var left = keyboard(37),
-                up = keyboard(38),
-                right = keyboard(39),
-                down = keyboard(40);
-
-        //Left arrow key `press` method
-        left.press = function () {
-            //Change the explorer's velocity when the key is pressed
-            explorer.graphics.vx = -1;
-            explorer.graphics.vy = 0;
-        };
-
-        //Left arrow key `release` method
-        left.release = function () {
-            //If the left arrow has been released, and the right arrow isn't down,
-            //and the explorer isn't moving vertically:
-            //Stop the explorer
-            if (!right.isDown && explorer.graphics.vy === 0) {
-                explorer.graphics.vx = 0;
-            }
-        };
-
-        //Up
-        up.press = function () {
-            explorer.graphics.vy = -1;
-            explorer.graphics.vx = 0;
-        };
-        up.release = function () {
-            if (!down.isDown && explorer.graphics.vx === 0) {
-                explorer.graphics.vy = 0;
-            }
-        };
-
-        //Right
-        right.press = function () {
-            explorer.graphics.vx = 1;
-            explorer.graphics.vy = 0;
-        };
-        right.release = function () {
-            if (!left.isDown && explorer.graphics.vy === 0) {
-                explorer.graphics.vx = 0;
-            }
-        };
-
-        //Down
-        down.press = function () {
-            explorer.graphics.vy = 1;
-            explorer.graphics.vx = 0;
-        };
-        down.release = function () {
-            if (!up.isDown && explorer.graphics.vx === 0) {
-                explorer.graphics.vy = 0;
-            }
-        };
-
-        //Set the game state
-        state = play;
-
-        //Start the game loop
-        gameLoop();
-    }
-
-    function gameLoop() {
-        //Loop this function 60 times per second
-        requestAnimationFrame(gameLoop);
-
-        //Update the current game state
-        state();
-
-        //Render the stage
-        renderer.render(stage);
-    }
-
-    function agentTick(agent, enemy, target) {
-        agent.state = [
-            target.graphics.x - agent.graphics.x,
-            target.graphics.y - agent.graphics.y,
-            target.graphics.vx - agent.graphics.vx,
-            target.graphics.vy - agent.graphics.vy,
-            enemy.graphics.x - agent.graphics.x,
-            enemy.graphics.y - agent.graphics.y,
-            enemy.graphics.vx - agent.graphics.vx,
-            enemy.graphics.vy - agent.graphics.vy,
-            agent.graphics.vx,
-            agent.graphics.vy
-        ];
-        agent.action = agent.brain.act(agent.state);
-
-        // Execute agent's desired action
-        switch (agent.action) {
-            case 0: // Left
-                agent.graphics.vx = -agent.speed * 0.95;
-                agent.graphics.vy = 0;
-                break;
-            case 1: // Right
-                agent.graphics.vx = agent.speed * 0.95;
-                agent.graphics.vy = 0;
-                break;
-            case 2: // Up
-                agent.graphics.vy = -agent.speed * 0.95;
-                agent.graphics.vx = 0;
-                break;
-            case 3: // Down
-                agent.graphics.vy = agent.speed * 0.95;
-                agent.graphics.vx = 0;
-                break;
-        }
-
-        // Compute distances
-        let dx1 = agent.graphics.x - target.graphics.x, // Distance from Noms
-                dy1 = agent.graphics.y - target.graphics.y, // Distance from Noms
-                dx2 = agent.graphics.x - enemy.graphics.x, // Distance from Agent
-                dy2 = agent.graphics.y - enemy.graphics.y, // Distance from Agent
-                d1 = Math.sqrt(dx1 * dx1 + dy1 * dy1),
-                d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2),
-                // Compute reward we want to go close to Agent we like
-                r = -d1 * 0.01,
-                eRng = enemy.graphics.width * 2;
-
-        if (d2 < eRng) {
-            // but if we're too close to the bad Agent that's bad
-            r += 2 * (d2 - eRng) / eRng;
-        }
-        if (d1 < (stage.width / 2)) {
-            r *= -1;
-        }
-
-        //use the explorer's velocity to make it move
-        agent.graphics.x += agent.graphics.vx;
-        agent.graphics.y += agent.graphics.vy;
-
-        agent.lastReward = r;
-    }
-
-    function play() {
-        //Set `explorerHit` to `false` before checking for a collision
-        var explorerHit = false;
-
-        agentTick(explorer, explorer.enemy, explorer.target);
-
-        //Contain the explorer inside the area of the dungeon
-        contain(explorer.graphics, {x: 28, y: 10, width: 488, height: 480});
-        //contain(explorer, stage);
-
-        //Loop through all the sprites in the `enemies` array
-        blobs.forEach(function (blob) {
-            agentTick(blob, door, treasure);
-
-            //Check the blob's screen boundaries
-            var blobHitsWall = contain(blob.graphics, {x: 28, y: 10, width: 488, height: 480});
-
-            //If the blob hits the top or bottom of the stage, reverse
-            //its direction
-            if (blobHitsWall === "top" || blobHitsWall === "bottom") {
-                blob.graphics.vy *= -1;
-            }
-
-            //Test for a collision. If any of the enemies are touching
-            //the explorer, set `explorerHit` to `true`
-            if (hitTestRectangle(explorer.graphics, blob.graphics)) {
-                explorer.enemy = blob;
-                explorerHit = true;
-            }
-
-            blob.lastReward += (explorerHit) ? 1 : -1;
-            blob.brain.learn(blob.lastReward);
-        });
-
-        //If the explorer is hit...
-        if (explorerHit) {
-            explorer.lastReward += -10;
-            //Make the explorer semi-transparent
-            explorer.graphics.alpha = 0.5;
-
-            //Reduce the width of the health bar's inner rectangle by 1 pixel
-            healthBar.outer.width -= 1;
-        } else {
-            //Make the explorer fully opaque (non-transparent) if it hasn't been hit
-            explorer.graphics.alpha = 1;
-        }
-
-        //Check for a collision between the explorer and the treasure
-        if (hitTestRectangle(explorer.graphics, treasure.graphics)) {
-            //If the treasure is touching the explorer, center it over the explorer
-            treasure.graphics.x = explorer.graphics.x + 8;
-            treasure.graphics.y = explorer.graphics.y + 8;
-            if (!gotIt) {
-                explorer.lastReward += 10;
-                explorer.target = door;
-                gotIt = true;
-            }
-        } else {
-            explorer.lastReward = (explorerHit) ? -1 : 1;
-        }
-        explorer.brain.learn(explorer.lastReward);
-
-        // Does the explorer have enough health? If the width of the `innerBar`
-        // is less than zero, end the game and display "You lost!"
-        if (healthBar.outer.width < 0) {
-//            state = end;
-//            message.text = "You lost!";
-            explorer.lastReward = -20;
-            explorer.brain.learn(explorer.lastReward);
-            explorer.target = treasure;
-            agentO = explorer;
-            setup();
-        }
-
-        if (explorer.score > 3) {
-            console.log();
-        }
-        //If the explorer has brought the treasure to the exit,
-        //end the game and display "You won!"
-        if (hitTestRectangle(treasure.graphics, door.graphics)) {
-//            state = end;
-//            message.text = "You won!";
-            explorer.score++;
-            explorer.lastReward = 20;
-            explorer.brain.learn(explorer.lastReward);
-            explorer.target = treasure;
-            agentO = explorer;
-            setup();
-        }
-    }
-
-    function end() {
-        gameScene.visible = false;
-        gameOverScene.visible = true;
-    }
-
-    /* Helper functions */
-
-    function contain(sprite, container) {
-        var collision = undefined;
-
-        //Left
-        if (sprite.x < container.x) {
-            sprite.x = container.x;
-            collision = "left";
-        }
-
-        //Top
-        if (sprite.y < container.y) {
-            sprite.y = container.y;
-            collision = "top";
-        }
-
-        //Right
-        if (sprite.x + sprite.width > container.width) {
-            sprite.x = container.width - sprite.width;
-            collision = "right";
-        }
-
-        //Bottom
-        if (sprite.y + sprite.height > container.height) {
-            sprite.y = container.height - sprite.height;
-            collision = "bottom";
-        }
-
-        //Return the `collision` value
-        return collision;
-    }
-
-    //The `hitTestRectangle` function
-    function hitTestRectangle(r1, r2) {
-        //Define the variables we'll need to calculate
-        var hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
-
-        //hit will determine whether there's a collision
-        hit = false;
-
-        //Find the center points of each sprite
-        r1.centerX = r1.x + r1.width / 2;
-        r1.centerY = r1.y + r1.height / 2;
-        r2.centerX = r2.x + r2.width / 2;
-        r2.centerY = r2.y + r2.height / 2;
-
-        //Find the half-widths and half-heights of each sprite
-        r1.halfWidth = r1.width / 2;
-        r1.halfHeight = r1.height / 2;
-        r2.halfWidth = r2.width / 2;
-        r2.halfHeight = r2.height / 2;
-
-        //Calculate the distance vector between the sprites
-        vx = r1.centerX - r2.centerX;
-        vy = r1.centerY - r2.centerY;
-
-        //Figure out the combined half-widths and half-heights
-        combinedHalfWidths = r1.halfWidth + r2.halfWidth;
-        combinedHalfHeights = r1.halfHeight + r2.halfHeight;
-
-        //Check for a collision on the x axis
-        if (Math.abs(vx) < combinedHalfWidths) {
-            //A collision might be occuring. Check for a collision on the y axis
-            if (Math.abs(vy) < combinedHalfHeights) {
-                //There's definitely a collision happening
-                hit = true;
-            } else {
-                //There's no collision on the y axis
-                hit = false;
-            }
-        } else {
-            //There's no collision on the x axis
-            hit = false;
-        }
-
-        //`hit` will be either `true` or `false`
-        return hit;
-    }
-
-    //The `randomInt` helper function
-    function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    //The `keyboard` helper function
-    function keyboard(keyCode) {
-        var key = {};
-        key.code = keyCode;
-        key.isDown = false;
-        key.isUp = true;
-        key.press = undefined;
-        key.release = undefined;
-        //The `downHandler`
-        key.downHandler = function (event) {
-            if (event.keyCode === key.code) {
-                if (key.isUp && key.press) {
-                    key.press();
-                }
-                key.isDown = true;
-                key.isUp = false;
-            }
-            event.preventDefault();
-        };
-
-        //The `upHandler`
-        key.upHandler = function (event) {
-            if (event.keyCode === key.code) {
-                if (key.isDown && key.release) {
-                    key.release();
-                }
-                key.isDown = false;
-                key.isUp = true;
-            }
-            event.preventDefault();
-        };
-
-        //Attach event listeners
-        window.addEventListener("keydown", key.downHandler.bind(key), false);
-        window.addEventListener("keyup", key.upHandler.bind(key), false);
-
-        return key;
-    }
-</script>
 </body>

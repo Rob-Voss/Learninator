@@ -7,35 +7,169 @@
 
     <title>Puck World</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <script>
+        /**
+         * Global world object
+         * @type {GameWorld}
+         */
+        var world = world || {},
+                // flot stuff
+                nflot = 1000,
+                smoothRewardHistory = [],
+                smoothReward = [],
+                flott = [];
 
-    <link rel="import" href="templates/twitch-nav.html">
-    <!--<link rel="import" href="templates/js-includes.html">-->
+        /**
+         *
+         */
+        function initFlot() {
+            var container = $("#flotreward"),
+                    series = [];
+            for (var a = 0, ac = world.agents.length; a < ac; a++) {
+                flott[a] = 0;
+                series[a] = {
+                    data: getFlotRewards(a),
+                    lines: {fill: true},
+                    color: a,
+                    label: world.agents[a].name
+                };
+            }
+
+            var plot = $.plot(container, series, {
+                grid: {
+                    borderWidth: 1,
+                    minBorderMargin: 20,
+                    labelMargin: 10,
+                    backgroundColor: {
+                        colors: ["#FFF", "#e4f4f4"]
+                    },
+                    margin: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                    }
+                },
+                xaxis: {
+                    min: 0,
+                    max: nflot
+                },
+                yaxis: {
+                    min: -2,
+                    max: 1
+                }
+            });
+
+            setInterval(function () {
+                tick();
+                for (var an = 0, al = world.agents.length; an < al; an++) {
+                    if (typeof series[an] !== 'undefined') {
+                        series[an].data = getFlotRewards(an);
+                    }
+                    world.agents[an].pts = [];
+                }
+                plot.setData(series);
+                plot.draw();
+            }, 100);
+        }
+
+        /**
+         *
+         * @param n
+         * @returns {Array}
+         */
+        function getFlotRewards(n) {
+            // zip rewards into flot data
+            var res = [];
+            if (smoothRewardHistory[n] == null) {
+                smoothRewardHistory[n] = [];
+            }
+            for (var i = 0, hl = smoothRewardHistory[n].length; i < hl; i++) {
+                res.push([i, smoothRewardHistory[n][i]]);
+            }
+            return res;
+        }
+
+        /**
+         *
+         */
+        function tick() {
+            for (var a = 0, ac = world.agents.length; a < ac; a++) {
+                var agent = world.agents[a],
+                        rew = world.agents[a].lastReward;
+
+                if (smoothReward[a] == null) {
+                    smoothReward[a] = rew;
+                }
+                smoothReward[a] = smoothReward[a] * 0.999 + rew * 0.001;
+                flott[a] += 1;
+                if (flott[a] === 50) {
+                    for (var i = 0, hl = smoothRewardHistory[a].length; i <= hl; i++) {
+                        // record smooth reward
+                        if (hl >= nflot) {
+                            smoothRewardHistory[a] = smoothRewardHistory[a].slice(1);
+                        }
+                        smoothRewardHistory[a].push(smoothReward[a]);
+                        flott[a] = 0;
+                    }
+
+                }
+            }
+        }
+
+        /**
+         * Create existence!
+         */
+        function start() {
+            world = new PuckWorld();
+            world.initDraw();
+            initFlot();
+            datGUI(world);
+            $(".md").each(function(){
+                $(this).html(marked($(this).html()));
+            });
+            renderJax();
+            var jaxrendered = false;
+            function renderJax() {
+                if(jaxrendered) { return; }
+                (function () {
+                    var script = document.createElement("script");
+                    script.type = "text/javascript";
+                    script.src  = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                    document.getElementsByTagName("head")[0].appendChild(script);
+                    jaxrendered = true;
+                })();
+            }
+        }
+    </script>
+
 </head>
 <body onload="start();">
-<div id="container">
-    <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-6">
-            <h2>
-                Puck World
-                <small>Funsies</small>
-            </h2>
-            <div id="game-container">
-                <div id="draw"></div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            Average reward graph (high is good)
-            <div id="flotreward" style="width:600px; height: 400px;"></div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div id="exp" class="md">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Puck World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="draw"></div>
+    <div id="exp" class="md">
 
 ### Setup
 
@@ -109,20 +243,20 @@ If you'd like to use REINFORCEjs DQN in your application, define an `env` object
 This seems kind of silly and the name `getNumStates` is a bit of a misnomer because it refers to the size of the state feature vector, not the raw number of unique states, but I chose this interface so that it is consistent with the tabular TD code and DP method. Similar to the tabular TD agent, the IO with the agent has an extremely simple interface:
 
 <pre><code class="js">
-// create environment
-var env = {};
-env.getNumStates = function() { return 8; }
-env.getMaxNumActions = function() { return 4; }
+    // create environment
+    var env = {};
+    env.getNumStates = function() { return 8; }
+    env.getMaxNumActions = function() { return 4; }
 
-// create the agent, yay!
-var spec = { alpha: 0.01 } // see full options on top of this page
-agent = new RL.DQNAgent(env, spec);
+    // create the agent, yay!
+    var spec = { alpha: 0.01 } // see full options on top of this page
+    agent = new RL.DQNAgent(env, spec);
 
-setInterval(function(){ // start the learning loop
-var action = agent.act(s); // s is an array of length 8
-// execute action in environment and get the reward
-agent.learn(reward); // the agent improves its Q,policy,model, etc. reward is a float
-}, 0);
+    setInterval(function(){ // start the learning loop
+    var action = agent.act(s); // s is an array of length 8
+    // execute action in environment and get the reward
+    agent.learn(reward); // the agent improves its Q,policy,model, etc. reward is a float
+    }, 0);
 </code></pre>
 
 As for the available parameters in the DQN agent `spec`:
@@ -146,19 +280,34 @@ The very nice property of DQN agents is that the I/O interface is quite generic 
 
 Speaking of high-dimensional continuous action spaces, this is what Policy Gradient Actor Critic methods are quite good at! Head over to the Policy Gradient (PG) demo. (Oops, coming soon...)
 
+    </div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.0.0/pixi.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
 
 <!-- markdown -->
 <script src="js/lib/external/marked.js" type="text/javascript"></script>
@@ -166,181 +315,27 @@ Speaking of high-dimensional continuous action spaces, this is what Policy Gradi
 <link href="css/highlight_default.css" rel="stylesheet">
 <script>hljs.initHighlightingOnLoad();</script>
 
-<script src="js/lib/external/matter.js"></script>
-<!--<script src="js/lib/external/gif.js"></script>-->
-<!--<script src="js/lib/external/matter-tools.js"></script>-->
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 
 <script src="js/lib/ui/Dat.js"></script>
-<script src="js/lib/ui/Display.js"></script>
 
 <script src="js/lib/game/Camera.js"></script>
 
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
-<script src="js/lib/Maze.js"></script>
-<script src="js/lib/grid/Cell.js"></script>
-<script src="js/lib/grid/CellShape.js"></script>
-<script src="js/lib/grid/Hex.js"></script>
-<script src="js/lib/grid/HexShape.js"></script>
-<script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/QuadTree.js"></script>
-<script src="js/lib/Window.js"></script>
 
-<script src="js/lib/game/MatterPixi.js"></script>
-<script src="js/lib/game/p2Pixi.js"></script>
 <script src="js/lib/game/Game.js"></script>
 <script src="js/lib/game/GameObject.js"></script>
 
-<script src="js/entities/PhysicalEntity.js"></script>
-<script src="js/entities/PhysicalAgent.js"></script>
 <script src="js/entities/Wall.js"></script>
 <script src="js/entities/Entity.js"></script>
 <script src="js/entities/Agent.js"></script>
 
 <script src="js/lib/game/GameWorld.js"></script>
-
-<script>
-    /**
-     * Global world object
-     * @type {GameWorld}
-     */
-    var world = world || {},
-            // flot stuff
-            nflot = 1000,
-            smoothRewardHistory = [],
-            smoothReward = [],
-            flott = [];
-
-    /**
-     *
-     */
-    function initFlot() {
-        var container = $("#flotreward"),
-                series = [];
-        for (var a = 0, ac = world.agents.length; a < ac; a++) {
-            flott[a] = 0;
-            series[a] = {
-                data: getFlotRewards(a),
-                lines: {fill: true},
-                color: a,
-                label: world.agents[a].name
-            };
-        }
-
-        var plot = $.plot(container, series, {
-            grid: {
-                borderWidth: 1,
-                minBorderMargin: 20,
-                labelMargin: 10,
-                backgroundColor: {
-                    colors: ["#FFF", "#e4f4f4"]
-                },
-                margin: {
-                    top: 10,
-                    bottom: 10,
-                    left: 10,
-                }
-            },
-            xaxis: {
-                min: 0,
-                max: nflot
-            },
-            yaxis: {
-                min: -2,
-                max: 1
-            }
-        });
-
-        setInterval(function () {
-            tick();
-            for (var an = 0, al = world.agents.length; an < al; an++) {
-                if (typeof series[an] !== 'undefined') {
-                    series[an].data = getFlotRewards(an);
-                }
-                world.agents[an].pts = [];
-            }
-            plot.setData(series);
-            plot.draw();
-        }, 100);
-    }
-
-    /**
-     *
-     * @param n
-     * @returns {Array}
-     */
-    function getFlotRewards(n) {
-        // zip rewards into flot data
-        var res = [];
-        if (smoothRewardHistory[n] == null) {
-            smoothRewardHistory[n] = [];
-        }
-        for (var i = 0, hl = smoothRewardHistory[n].length; i < hl; i++) {
-            res.push([i, smoothRewardHistory[n][i]]);
-        }
-        return res;
-    }
-
-    /**
-     *
-     */
-    function tick() {
-        for (var a = 0, ac = world.agents.length; a < ac; a++) {
-            var agent = world.agents[a],
-                    rew = world.agents[a].lastReward;
-
-            if (smoothReward[a] == null) {
-                smoothReward[a] = rew;
-            }
-            smoothReward[a] = smoothReward[a] * 0.999 + rew * 0.001;
-            flott[a] += 1;
-            if (flott[a] === 50) {
-                for (var i = 0, hl = smoothRewardHistory[a].length; i <= hl; i++) {
-                    // record smooth reward
-                    if (hl >= nflot) {
-                        smoothRewardHistory[a] = smoothRewardHistory[a].slice(1);
-                    }
-                    smoothRewardHistory[a].push(smoothReward[a]);
-                    flott[a] = 0;
-                }
-
-            }
-        }
-    }
-
-    var jaxrendered = false;
-    function renderJax() {
-        if(jaxrendered) {
-            return;
-        }
-        // render markdown
-        $(".md").each(function () {
-            $(this).html(marked($(this).html()));
-        });
-        (function () {
-            var script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
-            document.getElementsByTagName("head")[0].appendChild(script);
-            jaxrendered = true;
-        })();
-    }
-
-    /**
-     * Create existence!
-     */
-    function start() {
-        world = new PuckWorld();
-        world.initDraw();
-        initFlot();
-        renderJax();
-    }
-</script>
 
 <script src="js/environments/PuckWorld.js"></script>
 

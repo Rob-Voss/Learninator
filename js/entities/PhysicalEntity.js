@@ -10,12 +10,18 @@
     var Body = Matter.Body,
         Common = Matter.Common;
 
+    /**
+     *
+     */
     class PhysicalEntity {
 
         /**
          * Initialize the PhysicalEntity
          * @name PhysicalEntity
+         * @class PhysicalEntity
          * @constructor
+         *
+         * @property {Matter.Body} body
          *
          * @param {number|string} type - A type id (wall,nom,gnar,agent)
          * @param {Matter.Body} body - The Matter.js body

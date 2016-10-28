@@ -1,4 +1,9 @@
-﻿class Game {
+﻿
+  /**
+   * @class Game
+   * @property {object} options
+   */
+  class Game {
 
   /**
    * Game

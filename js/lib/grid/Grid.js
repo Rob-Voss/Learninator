@@ -134,7 +134,9 @@
       }
 
       let removedEdge = this.removedEdges.find((edge) => {
-        return edge.includes(c1) && edge.includes(c2);
+        var inc1 = edge.includes(c1),
+            inc2 = edge.includes(c2);
+        return inc1 && inc2;
       });
 
       return removedEdge === undefined;
@@ -147,7 +149,7 @@
      */
     connectedNeighbors(cell) {
       let con, results,
-          neighbors = this.neighbors(cell);
+          neighbors = cell.neighbors;
       results = neighbors.filter((c0) => {
         con = this.areConnected(cell, c0);
         return con;
@@ -163,8 +165,8 @@
      * @return {Array}
      */
     disconnectedNeighbors(cell) {
-      let disc, results,
-          neighbors = this.neighbors(cell);
+      var disc, results,
+          neighbors = cell.neighbors;
       results = neighbors.filter((c0) => {
         if (c0 === false) {
           return true;

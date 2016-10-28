@@ -7,60 +7,54 @@
 
     <title>Water World</title>
 
-    <link rel="stylesheet" type="text/css"
-          href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
-    <link rel="stylesheet" type="text/css"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-    <link rel="stylesheet" type="text/css"
-          href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
+    <script>
+        var world = world || {};
 
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.0.0/pixi.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
-    <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+        var goslow = function () {
+            world.stepsPerTick = 1;
+        };
+        var gonormal = function () {
+            world.stepsPerTick = 10;
+        };
+        var gofast = function () {
+            world.stepsPerTick = 25;
+        };
 
-    <script type="text/html" id="header-navigation">
-        <!-- Scrolling MDL Header -->
-        <header class="mdl-layout__header mdl-layout__header--scroll">
-            <div class="mdl-layout__header-row">
-                <span class="{{menu.class}} header-nav-toggle">
-                    <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-                </span>
-                <div class="mdl-layout-spacer"></div>
-                <nav class="mdl-navigation sidebar-nav">
-                    {{#menu.items}}
-                    <a id="{{id}}" class="{{class}} nav-link" href="{{link}}">
-                        <i class="material-icons">{{icon}}</i>{{text}}
-                    </a>
-                    {{/menu.items}}
-                </nav>
-            </div>
-        </header>
-    </script>
+        /**
+         *
+         */
+        function solve() {
+            world.uiLayer.addChild(world.maze.drawSolution());
+        }
 
-    <script type="text/html" id="header-drawer">
-        <!-- Side Drawer MDL Header -->
-        <div class="mdl-layout__drawer">
-            <span class="{{menu.class}}">
-                <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-            </span>
-            <nav class="mdl-navigation">
-                {{#menu.items}}
-                <a id="{{id}}" class="{{class}}" href="{{link}}">
-                    <i class="material-icons">{{icon}}</i>{{text}}
-                </a>
-                {{/menu.items}}
-            </nav>
-        </div>
+        function start() {
+            world = new WaterWorld();
+            datGUI(world);
+
+            $(".md").each(function(){
+                $(this).html(marked($(this).html()));
+            });
+            renderJax();
+
+            var jaxrendered = false;
+            function renderJax() {
+                if(jaxrendered) { return; }
+                (function () {
+                    var script = document.createElement("script");
+                    script.type = "text/javascript";
+                    script.src  = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                    document.getElementsByTagName("head")[0].appendChild(script);
+                    jaxrendered = true;
+                })();
+            }
+        }
     </script>
 
 </head>
 <body onload="start();">
 <div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
     <main class="mdl-layout__content">
         <div id="main-content" class="page-content">
             <div class="content-grid mdl-grid">
@@ -76,26 +70,50 @@
                         <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
                             data-mdl-for="menu-bottom-left">
                             <li class="mdl-menu__item">Some Action</li>
-                            <li class="mdl-menu__item">Another Action</li>
                             <li disabled class="mdl-menu__item">Disabled Action</li>
                             <li class="mdl-menu__item">Yet Another Action</li>
                         </ul>
                         <h2 class="mdl-card__title-text">Water World</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
-                        <div id="game-container"></div>
-                        <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="solve();">
                             Show Solution
                         </button>
-                        <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gofast();">
                             Go Fast
                         </button>
-                        <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gonormal();">
                             Go Normal
                         </button>
-                        <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="goslow();">
                             Go Slow
                         </button>
+                        <div id="game-container"></div>
+    <div id="exp" class="md">
+
+### Setup
+
+This is another Deep Q Learning demo with a more realistic and larger setup:
+
+- The **state space** is even larger and continuous: The agent has 30 eye sensors pointing in all
+directions and in each direction is observes 5 variables: the range, the type of sensed object
+(green, red), and the velocity of the sensed object. The agent's proprioception includes two
+additional sensors for its own speed in both x and y directions. This is a total of 152-dimensional
+state space.
+- There are 4 **actions** available to the agent: To apply thrusters to the left, right, up and
+down. This gives the agent control over its velocity.
+- The **dynamics** integrate the velocity of the agent to change its position. The green and red
+targets bounce around.
+- The **reward** awarded to the agent is +1 for making contact with any red target (these are
+apples) and -1 for making contact with any green target (this is poison).
+
+The optimal strategy of the agent is to cruise around, run away from green targets and eat red
+targets. What's interesting about this demo is that the state space is so high-dimensional, and also
+that the sensed variables are agent-relative. They're not just toy x,y coordinates of some fixed
+number of targets as in previous demo.
+
+    </div>
+
                     </div>
                 </div>
                 <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
@@ -110,7 +128,6 @@
                         <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
                             data-mdl-for="menu-bottom-left">
                             <li class="mdl-menu__item">Some Action</li>
-                            <li class="mdl-menu__item">Another Action</li>
                             <li disabled class="mdl-menu__item">Disabled Action</li>
                             <li class="mdl-menu__item">Yet Another Action</li>
                         </ul>
@@ -125,17 +142,18 @@
     </main>
 </div>
 
+<!-- markdown -->
+<script src="js/lib/external/marked.js" type="text/javascript"></script>
+<script src="js/lib/external/highlight.pack.js" type="text/javascript"></script>
+<link href="css/highlight_default.css" rel="stylesheet">
+<script>hljs.initHighlightingOnLoad();</script>
+
 <script src="js/lib/external/rl.js"></script>
 
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 
 <script src="js/lib/ui/Dat.js"></script>
-<script src="js/mdl/MDL.js"></script>
-<script src="js/mdl/Modal.js"></script>
-<script src="js/mdl/Navigation.js"></script>
-
-<script src="js/lib/game/Camera.js"></script>
 
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
@@ -143,7 +161,6 @@
 <script src="js/lib/grid/Cell.js"></script>
 <script src="js/lib/grid/CellShape.js"></script>
 <script src="js/lib/grid/Grid.js"></script>
-<script src="js/lib/grid/HexGrid.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
 
@@ -156,37 +173,6 @@
 
 <script src="js/lib/game/GameWorld.js"></script>
 <script src="js/environments/WaterWorld.js"></script>
-
-
-<script>
-    var world = world || {};
-
-    var goslow = function () {
-        world.stepsPerTick = 1;
-    };
-    var gonormal = function () {
-        world.stepsPerTick = 10;
-    };
-    var gofast = function () {
-        world.stepsPerTick = 25;
-    };
-
-    /**
-     *
-     */
-    function solve() {
-        world.maze.solve();
-        world.maze.drawSolution();
-        world.stage.addChild(world.maze.cheatsContainer);
-        world.renderer.render(world.stage);
-    }
-
-    function start() {
-        loadNav();
-        world = new WaterWorld();
-        datGUI(world);
-    }
-</script>
 
 </body>
 </html>

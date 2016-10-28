@@ -1,6 +1,9 @@
 (function (global) {
   'use strict';
 
+  /**
+   * @extends Cell
+   */
   class CellShape extends Cell {
 
     /**

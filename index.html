@@ -7,50 +7,6 @@
 
     <title>Learninator</title>
 
-    <link rel="stylesheet" type="text/css"
-          href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-    <link rel="stylesheet"
-          href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
-    <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
-
-    <script src="js/mdl/MDL.js"></script>
-
-    <script type="text/html" id="header-navigation">
-        <!-- Scrolling MDL Header -->
-        <header class="mdl-layout__header mdl-layout__header--scroll">
-            <div class="mdl-layout__header-row">
-                <span class="{{menu.class}}">
-                    <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-                </span>
-                <div class="mdl-layout-spacer"></div>
-                <nav class="mdl-navigation">
-                    {{#menu.items}}
-                        <a id="{{id}}" class="{{class}}" href="{{link}}">
-                            <i class="material-icons">{{icon}}</i>{{text}}
-                        </a>
-                    {{/menu.items}}
-                </nav>
-            </div>
-        </header>
-    </script>
-
-    <script type="text/html" id="header-drawer">
-        <!-- Side Drawer MDL Header -->
-        <div class="mdl-layout__drawer">
-            <span class="{{menu.class}}">
-                <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-            </span>
-            <nav class="mdl-navigation">
-                {{#menu.items}}
-                    <a id="{{id}}" class="{{class}}" href="{{link}}">
-                        <i class="material-icons">{{icon}}</i>{{text}}
-                    </a>
-                {{/menu.items}}
-            </nav>
-        </div>
-    </script>
     <style>
         .card-image {
             width: 256px;
@@ -59,8 +15,10 @@
             margin-right: 0px;
         }
     </style>
-<body onload="loadNav()">
+<body>
 <div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
     <main class="mdl-layout__content">
         <div id="main-content" class="page-content">
             <div class="content-grid mdl-grid">
@@ -202,14 +160,27 @@
                         <a href="MazeWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
                     </div>
                 </div>
+
+                <div class="mdl-card mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h1 class="mdl-card__title-text">Hex Maze World</h1>
+                    </div>
+                    <figure class="mdl-card__media">
+                        <img class="card-image" src="images/thumbs/HexMazeWorld.png" alt=""/>
+                    </figure>
+                    <div class="mdl-card__supporting-text">
+                        <p>This is a modification of <a href="https://github.com/karpathy">@karpathy</a>'s Deep Q Learning demo using his <a
+                                href="https://github.com/karpathy/convnetjs">ConvNetJS</a>
+                            libraries. Hexed!</p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a href="HexMazeWorld.html" class="mdl-button mdl-button--raised mdl-button--accent mdl-js-button mdl-js-ripple-effect">Go</a>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 </div>
-
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
 
 </body>
 </html>

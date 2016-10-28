@@ -1,0 +1,149 @@
+{
+  "__config__": {
+    "name": "glass",
+    "resources": [
+      "./glass-atlas.json",
+      "../fonts/kenvector_future.ttf",
+      "../fonts/kenvector_future_thin.ttf"
+    ]
+  },
+  "default": {
+    "scale": 0.5,
+    "bg": "",
+    "padding" : 0,
+    "bgPadding": 0,
+    "corner": "",
+    "line": "",
+    "font": {
+      "size": "20px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "Window": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "glassPanel_corner.png"
+    },
+    "line": {
+      "default": "glassPanel_line.png"
+    }
+  },
+  "Layout": {
+    "image": {
+      "default": ""
+    },
+    "bg": {
+      "default": ""
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "buttonGlass_corner.png"
+    },
+    "line": {
+      "default": "buttonGlass_line.png"
+    }
+  },
+  "List": {
+    "image": {
+      "default": ""
+    },
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 15,
+    "padding": 5,
+    "corner": {
+      "default": "buttonGlass_corner.png"
+    },
+    "line": {
+      "default": "buttonGlass_line.png"
+    }
+  },
+  "Header": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "bgPadding": 5,
+    "corner": {
+      "default": "glassCircle_corner.png"
+    },
+    "line": {
+      "default": "glassPanel_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "black"
+    }
+  },
+  "Button": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "corner": {
+      "default": "buttonGlass_corner.png"
+    },
+    "line": {
+      "default": "buttonGlass_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "black"
+    }
+  },
+  "Input": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "padding": 5,
+    "corner": {
+      "default": "buttonGlass_corner.png"
+    },
+    "line": {
+      "default": "buttonGlass_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "Checkbox": {
+    "bg": {
+      "default": "glassPanel_bg.png"
+    },
+    "corner": {
+      "default": "buttonGlass_corner.png"
+    },
+    "line": {
+      "default": "buttonGlass_line.png"
+    },
+    "checkmark": "squareGreen.png",
+    "padding": 5,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "Radio": {
+    "image": {
+      "default": "dotShadow.png"
+    },
+    "corner": {
+      "default": "glassCircle_corner.png"
+    },
+    "line": {
+      "default": ""
+    },
+    "checkmark": "dotGreen.png",
+    "padding": 5,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  }
+}

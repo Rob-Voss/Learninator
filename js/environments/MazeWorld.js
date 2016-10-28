@@ -12,25 +12,33 @@
      * @return {MazeWorld}
      */
     constructor() {
-      var worldOpts = {
+      var cheatOpts = {
+          id: true,
+          name: false,
+          angle: false,
+          bounds: false,
+          direction: false,
+          gridLocation: true,
+          position: true,
+          brute: false,
+          quad: false,
+          grid: true,
+          walls: false
+        },
+        worldOpts = {
           collision: {
             type: 'brute',
-            cheats: {
-              brute: false,
-              quad: false,
-              grid: false,
-              walls: false
-            },
+            cheats: cheatOpts,
           },
           grid: {
-            width: 800,
-            height: 800,
+            width: 600,
+            height: 600,
             buffer: 0,
-            cellSize: 100,
+            cellSize: 30,
             cellSpacing: 0,
-            size: 8,
+            size: 20,
             pointy: false,
-            fill: false
+            fill: true
           },
           render: {
             background: 0xFFFFFF,
@@ -43,19 +51,7 @@
             width: 800,
             height: 800
           },
-          cheats: {
-            id: false,
-            name: false,
-            angle: false,
-            bounds: false,
-            direction: false,
-            gridLocation: false,
-            position: false,
-            brute: false,
-            quad: false,
-            grid: false,
-            walls: false
-          },
+          cheats: cheatOpts,
           agent: {
             brainType: 'RL.DQNAgent',
             range: 85,
@@ -94,6 +90,17 @@
         new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
             {
               brainType: 'RL.TDAgent',
+              numActions: 4,
+              numStates: 0,
+              numEyes: 0,
+              numTypes: 0,
+              numProprioception: 0,
+              range: 0,
+              proximity: 0,
+              radius: 10,
+              interactive: false,
+              useSprite: false,
+              worker: false,
               env: {
                 allowedActions: (s) => {
                   return this.allowedActions(s);
@@ -128,19 +135,7 @@
                 xyToS: (x, y) => {
                   return this.xyToS(x, y);
                 }
-              },
-              numActions: 4,
-              numStates: 0,
-              numEyes: 0,
-              numTypes: 0,
-              numProprioception: 0,
-              range: 0,
-              proximity: 0,
-              radius: 10,
-              collision: false,
-              interactive: false,
-              useSprite: false,
-              worker: false
+              }
             }
         )
       ];
@@ -155,7 +150,6 @@
       this.nStepsHistory = [];
       this.pause = false;
 
-      this.addAgents();
       Agent.prototype.tick = () => {
         if (this.sid === -1) {
           this.sid = setInterval(() => {
@@ -225,6 +219,9 @@
         }
       };
 
+      this.addWalls();
+      this.addEntities();
+      this.addAgents();
       this.reset();
       this.initFlot();
       this.drawGrid();
@@ -235,7 +232,7 @@
     /**
      * Tick the environment
      * @param {number} timeSinceLast
-     * @return {GameWorld}
+     * @return {MazeWorld}
      */
     tick(timeSinceLast) {
       this.updatePopulation();

@@ -1,32 +1,237 @@
-<link rel="stylesheet" type="text/css"
-      href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
-<link rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-<link rel="stylesheet"
-      href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+<link rel="stylesheet" type="text/css" href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.1.0/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.1/dat.gui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.10.0/matter.min.js"></script>
 <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
-<body>
-<div class="mdl-layout mdl-js-layout">
-    <header class="mdl-layout__header mdl-layout__header--scroll">
-        <div class="mdl-layout__header-row">
-            <span class="mdl-layout-title">Learninator</span>
-            <div class="mdl-layout-spacer"></div>
-            <nav class="mdl-navigation">
-                <a class="mdl-navigation__link" href="#"><i class="material-icons">home</i></a>
-                <a class="mdl-navigation__link" href="#"><i class="material-icons">info</i></a>
-                <a class="mdl-navigation__link" href="#"><i class="material-icons">mail</i></a>
-            </nav>
-        </div>
-    </header>
-    <div class="mdl-layout__drawer">
-        <span class="mdl-layout-title">Learninator</span>
-        <nav class="mdl-navigation">
-            <a class="mdl-navigation__link" href="#">Projects</a>
-            <a class="mdl-navigation__link" href="#">Random</a>
-        </nav>
-    </div>
 
-    <main class="mdl-layout__content">
-        <div class="page-content">
+<script>
+    (function () {
+        var layout = $('#main-layout');
 
-            <div class="content-grid mdl-grid">
+        var drawerTemplate = '' +
+            '<div class="mdl-layout__drawer">' +
+                '<span class="{{menu.class}}">' +
+                '<i class="material-icons">{{menu.icon}}</i>{{menu.title}}' +
+                '</span>' +
+                '<nav class="mdl-navigation">' +
+                    '{{#menu.items}}' +
+                    '<a id="{{id}}" class="{{class}}" href="{{link}}">' +
+                            '<i class="material-icons">{{icon}}</i>{{text}}' +
+                    '</a>' +
+                    '{{/menu.items}}' +
+                '</nav>' +
+            '</div>';
+        var drawerOutput = Mustache.render(drawerTemplate, {
+            menu: {
+                title: "Projects",
+                id: "projects",
+                class: "mdl-layout-title",
+                icon: "",
+                link: "",
+                text: "",
+                items: [
+                    {
+                        title: "B2World",
+                        id: "B2World",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "B2World.html",
+                        text: "B2World"
+                    },
+                    {
+                        title: "CameraWorld",
+                        id: "CameraWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "CameraWorld.html",
+                        text: "CameraWorld"
+                    },
+                    {
+                        title: "Evolve",
+                        id: "Evolve",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "Evolve.html",
+                        text: "Evolve"
+                    },
+                    {
+                        title: "GridWorld",
+                        id: "GridWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "GridWorld.html",
+                        text: "GridWorld"
+                    },
+                    {
+                        title: "GUI",
+                        id: "GUI",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "GUI.html",
+                        text: "GUI"
+                    },
+                    {
+                        title: "HexMazeWorld",
+                        id: "HexMazeWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "HexMazeWorld.html",
+                        text: "HexMazeWorld"
+                    },
+                    {
+                        title: "HexWorld",
+                        id: "HexWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "HexWorld.html",
+                        text: "HexWorld"
+                    },
+                    {
+                        title: "Life",
+                        id: "Life",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "Life.html",
+                        text: "Life"
+                    },
+                    {
+                        title: "MatterWorld",
+                        id: "MatterWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "MatterWorld.html",
+                        text: "MatterWorld"
+                    },
+                    {
+                        title: "MazeWorld",
+                        id: "MazeWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "MazeWorld.html",
+                        text: "MazeWorld"
+                    },
+                    {
+                        title: "P2World",
+                        id: "P2World",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "P2World.html",
+                        text: "P2World"
+                    },
+                    {
+                        title: "PuckWorld",
+                        id: "PuckWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "PuckWorld.html",
+                        text: "PuckWorld"
+                    },
+                    {
+                        title: "TileMap",
+                        id: "TileMap",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "TileMap.html",
+                        text: "TileMap"
+                    },
+                    {
+                        title: "TreasureWorld",
+                        id: "TreasureWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "TreasureWorld.html",
+                        text: "TreasureWorld"
+                    },
+                    {
+                        title: "WaterWorld",
+                        id: "WaterWorld",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "WaterWorld.html",
+                        text: "WaterWorld"
+                    },
+                    {
+                        title: "WaterWorldEX",
+                        id: "WaterWorldEX",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "WaterWorldEX.html",
+                        text: "WaterWorldEX"
+                    },
+                    {
+                        title: "WaterWorldGA",
+                        id: "WaterWorldGA",
+                        class: "mdl-navigation__link",
+                        icon: "public",
+                        link: "WaterWorldGA.html",
+                        text: "WaterWorldGA"
+                    }
+                ]
+            }
+        });
+        var headerTemplate = '' +
+                '<header class="mdl-layout__header mdl-layout__header--scroll">' +
+                '<div class="mdl-layout__header-row">' +
+                '<span class="{{menu.class}} header-nav-toggle">' +
+                '<i class="material-icons">{{menu.icon}}</i>{{menu.title}}' +
+                '</span>' +
+                '<div class="mdl-layout-spacer"></div>' +
+                '<nav class="mdl-navigation sidebar-nav">' +
+                        '{{#menu.items}}' +
+                    '<a id="{{id}}" class="{{class}} nav-link" href="{{link}}">' +
+                    '<i class="material-icons">{{icon}}</i>{{text}}' +
+                    '</a>' +
+                            '{{/menu.items}}' +
+                '</nav>' +
+                '</div>' +
+                '</header>';
+        var headerOutput = Mustache.render(headerTemplate, {
+            menu: {
+                title: "Learninator",
+                id: "Learninator",
+                class: "mdl-layout-title",
+                icon: "",
+                link: "",
+                text: "",
+                items: [
+                    {
+                        title: "Home",
+                        id: "home",
+                        class: "mdl-navigation__link",
+                        icon: "home",
+                        link: "index.html",
+                        text: "Home"
+                    },
+                    {
+                        title: "About",
+                        id: "about",
+                        class: "mdl-navigation__link",
+                        icon: "info",
+                        link: "#",
+                        text: "About"
+                    },
+                    {
+                        title: "Contact",
+                        id: "contact",
+                        class: "mdl-navigation__link",
+                        icon: "mail",
+                        link: "#",
+                        text: "Contact"
+                    }
+                ]
+            }
+        });
+
+        layout.prepend(drawerOutput);
+        layout.prepend(headerOutput);
+    })();
+</script>

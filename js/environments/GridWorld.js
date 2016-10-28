@@ -90,7 +90,7 @@
       this.agents = [
         new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
           {
-            brainType: 'RL.TDAgent',
+            brainType: 'RL.DPAgent',
             env: {
               allowedActions: (s) => {
                 return this.allowedActions(s);
@@ -109,6 +109,9 @@
               },
               reset: () => {
                 return this.reset();
+              },
+              reward: (s, a, ns) => {
+                return this.reward(s, a, ns);
               },
               sampleNextState: (s, a) => {
                 return this.sampleNextState(s, a);
@@ -559,10 +562,10 @@
           agent.nStepsCounter += 1;
           if (typeof obs.resetEpisode !== 'undefined') {
             agent.score += 1;
-            agent.brain.resetEpisode();
+            agent.brain.reset();
 
             agent.gridLocation = this.grid.getCellAt(0, 0);
-            agent.position.set(this.grid.cellWidth / 2, this.grid.cellHeight / 2);
+            agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
             this.state = this.startState();
 
             // record the reward achieved
@@ -576,6 +579,8 @@
             let x = agent.gridLocation.corners[2].x - (this.grid.cellWidth / 2),
               y = agent.gridLocation.corners[2].y - (this.grid.cellHeight / 2);
             agent.position.set(x, y);
+
+            agent.position.set(agent.gridLocation.center.x, agent.gridLocation.center.y);
           }
         }
 

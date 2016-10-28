@@ -7,26 +7,85 @@
 
     <title>B2 World</title>
 
-    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <script>
+        var world = world || {};
+
+        function start() {
+            world = new B2World();
+        }
+    </script>
 </head>
 <body onload="start();">
-<div id="game-container"></div>
-<script>
-    var world = world || {};
 
-    function start() {
-        world = new B2World();
-    }
-</script>
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
 
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/3.0.11/pixi.min.js"></script>
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">B2 World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
+                            Show Solution
+                        </button>
+                        <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">
+                            Go Fast
+                        </button>
+                        <button class="btn btn-success" onclick="gonormal();" style="width:150px;height:50px;margin-bottom:5px;">
+                            Go Normal
+                        </button>
+                        <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">
+                            Go Slow
+                        </button>
+                        <div id="game-container"></div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <button id="menu-bottom-left"
+                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                            <i class="material-icons">more_vert</i>
+                        </button>
+                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
+                            Do <strong>things!</strong>
+                        </div>
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/lib/ui/Dat.js"></script>
 
 <script src="js/lib/external/box2d.min.js"></script>
 <script src="js/lib/game/B2Pixi.js"></script>
-
 <script src="js/environments/B2World.js"></script>
 
 </body>

@@ -1,35 +1,50 @@
-(function(global) {
-  'use strict';
+// Random number utilities
+let retV = false,
+  vVal = 0.0,
 
-  // Random number utilities
-  let retV = false,
-      vVal = 0.0;
   /**
    *
    * @name Utility
-   * @type {Utility}
+   * @type {object}
    * @property {function} assert
-   * @property {function} flt2str
-   * @property {function} getDirection
-   * @property {function} getId
+   * @property {function} getDirection:
+   * @property {function} getElementPosition
    * @property {function} getOpt
    * @property {function} loadJSON
-   * @property {function} parse
-   * @property {function} stringify
-   * @property {function} guid
-   * @property {function} S4
-   * @property {function} loader
-   * @property {function} Arrays
-   * @property {function} Maths
-   * @property {function} Strings
+   * @property {function} rgbToHex
+   * @property {function} hexToRgb
+   * @property {object} Arrays
+   * @property {function} Arrays.arrContains
+   * @property {function} Arrays.arrUnique
+   * @property {function} Arrays.findObject
+   * @property {object} Maths
+   * @property {number} Maths.ONED
+   * @property {function} Maths.clamp
+   * @property {function} Maths.degree
+   * @property {function} Maths.gaussRandom
+   * @property {function} Maths.map
+   * @property {function} Maths.maxMin
+   * @property {function} Maths.randf
+   * @property {function} Maths.randi
+   * @property {function} Maths.randn
+   * @property {function} Maths.randperm
+   * @property {function} Maths.radian
+   * @property {function} Maths.range
+   * @property {function} Maths.weightedSample
+   * @property {function} Maths.zeros
+   * @property {object} Strings
+   * @property {function} Strings.flt2str
+   * @property {function} Strings.parse
+   * @property {function} Strings.stringify
+   * @property {function} Strings.guid
+   * @property {function} Strings.S4
    */
-  /*export default*/
-  let Utility = {
+  Utility = {
 
     /**
      * Utility fun
-     * @param condition
-     * @param message
+     * @param {*} condition
+     * @param {string} message
      */
     assert(condition, message) {
       // from http://stackoverflow.com/questions/15313418/javascript-assert
@@ -44,7 +59,7 @@
 
     /**
      * Calculate the direction.
-     * @param angle
+     * @param {number} angle
      * @return {string}
      */
     getDirection(angle) {
@@ -52,14 +67,41 @@
         angle += 360;
       }
       let directions = ['S', 'SE', 'E', 'NE', 'N', 'NW', 'W', 'SW'],
-          octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
+        octant = Math.round(8 * angle / (2 * Math.PI) + 8) % 8;
+
       return directions[octant];
+    },
+
+    /**
+     *
+     * @param {HTMLElement} element
+     * @return {{x: number, y: number}}
+     */
+    getElementPosition: function (element) {
+      let elem = element,
+        tagname = "",
+        x = 0,
+        y = 0;
+      while ((typeof (elem) === "object") && (typeof (elem.tagName) !== "undefined")) {
+        y += elem.offsetTop;
+        x += elem.offsetLeft;
+        tagname = elem.tagName.toUpperCase();
+        if (tagname === "BODY") {
+          elem = 0;
+        }
+        if (typeof (elem) === "object") {
+          if (typeof (elem.offsetParent) === "object") {
+            elem = elem.offsetParent;
+          }
+        }
+      }
+      return {x: x, y: y};
     },
 
     /**
      * Syntactic sugar function for getting default parameter values
      * @param {Object} opt
-     * @param {String} fieldName
+     * @param {string} fieldName
      * @param {*} defaultV
      * @return {*}
      */
@@ -71,6 +113,32 @@
     },
 
     /**
+     *
+     * @param {number|string} hex
+     * @return {*}
+     */
+    hexToRgb(hex) {
+      if (!isNaN(hex)) {
+        hex = "#" + hex.toString(16);
+      }
+      let ret = {r: 0, g: 0, b: 0},
+        shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+      hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+        return r + r + g + g + b + b;
+      });
+      let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (result) {
+        ret.r = parseInt(result[1], 16);
+        ret.g = parseInt(result[2], 16);
+        ret.b = parseInt(result[3], 16);
+
+        return ret;
+      } else {
+        return null;
+      }
+    },
+
+    /**
      * Load JSON
      * @param {string} file
      * @param {function} callback
@@ -79,40 +147,12 @@
       let xObj = new XMLHttpRequest();
       xObj.overrideMimeType('application/json');
       xObj.open('GET', file, true);
-      xObj.onreadystatechange = function() {
+      xObj.onreadystatechange = function () {
         if (xObj.readyState === 4 && xObj.status === 200) {
           callback(xObj.responseText);
         }
       };
       xObj.send(null);
-    },
-
-    /**
-     *
-     * @param {number} r
-     * @param {number} g
-     * @param {number} b
-     * @return {number}
-     */
-    rgbToHex(r, g, b) {
-      return parseInt("0x" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1));
-    },
-
-    /**
-     *
-     * @param hex
-     * @return {*}
-     */
-    hexToRgb(hex) {
-      if (!isNaN(hex)) {
-        hex = "#" + hex.toString(16);
-      }
-      var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-      hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-        return r + r + g + g + b + b;
-      });
-      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16)} : null;
     },
 
     /**
@@ -136,19 +176,19 @@
        * https://davidwalsh.name/javascript-functions
        */
       function _load(tag) {
-        return function(url) {
+        return function (url) {
           // This promise will be used by Promise.all
           // to determine success or failure
-          return new Promise(function(resolve, reject) {
-            var element = document.createElement(tag);
-            var parent = 'body';
-            var attr = 'src';
+          return new Promise(function (resolve, reject) {
+            var element = document.createElement(tag),
+              parent = 'body',
+              attr = 'src';
 
             // Important success and error for the promise
-            element.onload = function() {
+            element.onload = function () {
               resolve(url);
             };
-            element.onerror = function() {
+            element.onerror = function () {
               reject(url);
             };
 
@@ -180,6 +220,17 @@
 
     /**
      *
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @return {number}
+     */
+    rgbToHex(r, g, b) {
+      return parseInt("0x" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1));
+    },
+
+    /**
+     *
      */
     Arrays: {
 
@@ -188,14 +239,15 @@
        * @param {Array} arr
        * @return {Array}
        */
-      arrUnique: function(arr) {
-        var h = {}, output = [];
-        for (var i = 0, n = arr.length; i < n; i++) {
+      arrUnique: function (arr) {
+        let h = {}, output = [];
+        for (let i = 0, n = arr.length; i < n; i++) {
           if (!h[arr[i]]) {
             h[arr[i]] = true;
             output.push(arr[i]);
           }
         }
+
         return output;
       },
 
@@ -203,14 +255,15 @@
        *
        * @param {Array} arr
        * @param {object} elt
-       * @return {boolean}
+       * @return {number|boolean}
        */
-      arrContains: function(arr, elt) {
-        for (var i = 0, n = arr.length; i < n; i++) {
+      arrContains: function (arr, elt) {
+        for (let i = 0, n = arr.length; i < n; i++) {
           if (arr[i] === elt) {
             return i;
           }
         }
+
         return false;
       },
 
@@ -220,8 +273,8 @@
        * @param {string} id
        * @return {object}
        */
-      findObject: function(ar, id) {
-        ar.map(function(el) {
+      findObject: function (ar, id) {
+        ar.map(function (el) {
           return el.id;
         }).indexOf(id);
       }
@@ -236,16 +289,16 @@
        * Gaussian random number
        * @return {number}
        */
-      gaussRandom: function() {
+      gaussRandom: function () {
         if (retV) {
           retV = false;
           return vVal;
         }
 
         let u = 2 * Math.random() - 1,
-            v = 2 * Math.random() - 1,
-            r = u * u + v * v,
-            c = Math.sqrt(-2 * Math.log(r) / r);
+          v = 2 * Math.random() - 1,
+          r = u * u + v * v,
+          c = Math.sqrt(-2 * Math.log(r) / r);
         if (r === 0 || r > 1) {
           return this.gaussRandom();
         }
@@ -257,19 +310,19 @@
       },
 
       /**
-       * return max and min of a given non-empty array.
-       * @param w
-       * @return {*}
+       * Return max and min of a given non-empty array.
+       * @param {Array} w
+       * @returns {*}
        */
-      maxMin: function(w) {
+      maxMin: function (w) {
         if (w.length === 0) {
           return {};
         } // ... ;s
         let maxv = w[0],
-         minv = w[0],
-         maxi = 0,
-         mini = 0,
-         n = w.length;
+          minv = w[0],
+          maxi = 0,
+          mini = 0,
+          n = w.length;
         for (let i = 1; i < n; i++) {
           if (w[i] > maxv) {
             maxv = w[i];
@@ -280,7 +333,13 @@
             mini = i;
           }
         }
-        return {maxi: maxi, maxv: maxv, mini: mini, minv: minv, dv: maxv - minv};
+        return {
+          maxi: maxi,
+          maxv: maxv,
+          mini: mini,
+          minv: minv,
+          dv: maxv - minv
+        };
       },
 
       /**
@@ -289,7 +348,7 @@
        * @param {number} hi
        * @return {number}
        */
-      randf: function(lo, hi) {
+      randf: function (lo, hi) {
         return Math.random() * (hi - lo) + lo;
       },
 
@@ -299,7 +358,7 @@
        * @param {number} hi
        * @return {number}
        */
-      randi: function(lo, hi) {
+      randi: function (lo, hi) {
         return Math.floor(this.randf(lo, hi));
       },
 
@@ -309,20 +368,20 @@
        * @param {float} std
        * @return {number}
        */
-      randn: function(mu, std) {
+      randn: function (mu, std) {
         return mu + this.gaussRandom() * std;
       },
 
       /**
        * create random permutation of numbers, in range [0...n-1]
-       * @param n
+       * @param {number} n
        * @return {Array}
        */
-      randperm: function(n) {
+      randperm: function (n) {
         let i = n,
-            j = 0,
-            temp,
-            array = [];
+          j = 0,
+          temp,
+          array = [];
         for (let q = 0; q < n; q++) {
           array[q] = q;
         }
@@ -339,9 +398,9 @@
        * A helper function returns array of zeros of length n
        * and uses typed arrays if available
        * @param {number} n
-       * @return {Float64Array}
+       * @return {Float64Array|Array}
        */
-      zeros: function(n) {
+      zeros: function (n) {
         if (typeof n === 'undefined' || isNaN(n)) {
           return [];
         }
@@ -359,35 +418,12 @@
 
       /**
        *
-       * @param element
-       * @return {{x: number, y: number}}
-       */
-      getElementPosition: function(element) {
-        var elem = element, tagname = "", x = 0, y = 0;
-        while ((typeof (elem) === "object") && (typeof (elem.tagName) !== "undefined")) {
-          y += elem.offsetTop;
-          x += elem.offsetLeft;
-          tagname = elem.tagName.toUpperCase();
-          if (tagname === "BODY") {
-            elem = 0;
-          }
-          if (typeof (elem) === "object") {
-            if (typeof (elem.offsetParent) === "object") {
-              elem = elem.offsetParent;
-            }
-          }
-        }
-        return {x: x, y: y};
-      },
-
-      /**
-       *
-       * @param min
-       * @param max
-       * @param round
+       * @param {number} min
+       * @param {number} max
+       * @param {boolean} round
        * @return {*}
        */
-      range: function(min, max, round) {
+      range: function (min, max, round) {
         if (typeof round === "undefined") {
           round = true;
         }
@@ -400,43 +436,43 @@
 
       /**
        *
-       * @param value
+       * @param {number} value
        * @return {number}
        */
-      degree: function(value) {
+      degree: function (value) {
         return value / this.ONED;
       },
 
       /**
        *
-       * @param value
+       * @param {number} value
        * @return {number}
        */
-      radian: function(value) {
+      radian: function (value) {
         return value * this.ONED;
       },
 
       /**
        *
-       * @param val
-       * @param min
-       * @param max
+       * @param {number} val
+       * @param {number} min
+       * @param {number} max
        * @return {number}
        */
-      clamp: function(val, min, max) {
+      clamp: function (val, min, max) {
         return Math.max(min, Math.min(max, val));
       },
 
       /**
        *
-       * @param value
-       * @param low
-       * @param high
-       * @param low2
-       * @param high2
+       * @param {number} value
+       * @param {number} low
+       * @param {number} high
+       * @param {number} low2
+       * @param {number} high2
        * @return {*}
        */
-      map: function(value, low, high, low2, high2) {
+      map: function (value, low, high, low2, high2) {
         let percent = (value - low) / (high - low);
         return low2 + percent * (high2 - low2);
       },
@@ -444,12 +480,12 @@
       /**
        * sample from list lst according to probabilities in list probs
        * the two lists are of same size, and probs adds up to 1
-       * @param lst
-       * @param probs
+       * @param {Array} lst
+       * @param {Array} probs
        * @return {*}
        */
-      weightedSample: function(lst, probs) {
-        let p = randf(0, 1.0),
+      weightedSample: function (lst, probs) {
+        let p = Utility.Maths.randf(0, 1.0),
           cumprob = 0.0;
         for (let k = 0, n = lst.length; k < n; k++) {
           cumprob += probs[k];
@@ -474,7 +510,7 @@
        * @param {number} d Decimals
        * @return {String}
        */
-      flt2str: function(x, d) {
+      flt2str: function (x, d) {
         d = (d === undefined) ? 5 : d;
         let dd = Math.pow(10, d);
 
@@ -486,8 +522,8 @@
        * Parse an object that has been stringified, and rebuild it's functions
        * @param {String} str
        */
-      parse: function(str) {
-        return JSON.parse(str, function(key, value) {
+      parse: function (str) {
+        return JSON.parse(str, function (key, value) {
           if (typeof value !== 'string') {
             return value;
           }
@@ -500,8 +536,8 @@
        * Stringify an object including it's functions if it has any
        * @param {Object} obj
        */
-      stringify: function(obj) {
-        return JSON.stringify(obj, function(key, value) {
+      stringify: function (obj) {
+        return JSON.stringify(obj, function (key, value) {
           return (typeof value === 'function') ? value.toString() : value;
         });
       }
@@ -511,11 +547,11 @@
        * Generate a UUID
        * @return {String}
        */
-      guid: function() {
+      guid: function () {
         let i1 = this.S4() + this.S4(),
-            i2 = this.S4() + '-4' + this.S4().substr(0, 3),
-            i3 = this.S4(),
-            i4 = this.S4() + this.S4() + this.S4();
+          i2 = this.S4() + '-4' + this.S4().substr(0, 3),
+          i3 = this.S4(),
+          i4 = this.S4() + this.S4() + this.S4();
 
         return (i1 + '-' + i2 + '-' + i3 + '-' + i4).toLowerCase();
       }
@@ -525,19 +561,8 @@
        * Do stuff
        * @return {string}
        */
-      S4: function() {
+      S4: function () {
         return (((1 + Math.random()) * 0x10000) || 0).toString(16).substring(1);
       }
     }
   };
-
-// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
-  if (typeof process !== 'undefined') {
-    module.exports = {
-      Utility: Utility
-    };
-  } else {
-    global.Utility = Utility;
-  }
-
-}(this));

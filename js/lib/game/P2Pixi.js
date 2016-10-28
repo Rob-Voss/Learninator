@@ -1,8 +1,5 @@
-(function(global) {
-  "use strict";
-
-  // P2 aliases
-  const
+// P2 aliases
+const
   Body = p2.Body,
   Box = p2.Box,
   Circle = p2.Circle,
@@ -417,7 +414,7 @@ class P2Pixi {
     if (fillColor) {
       graphics.beginFill(fillColor, 1);
     }
-    for (let i=0; i !== verts.length; i++) {
+    for (let i = 0; i !== verts.length; i++) {
       let v = verts[i],
         x = v[0],
         y = v[1];
@@ -492,16 +489,4 @@ class P2Pixi {
       graphics.lineTo(path[0][0], path[0][1]);
     }
   }
-
 }
-
-// Checks for Node.js - http://stackoverflow.com/a/27931000/1541408
-if (typeof process !== 'undefined') {
-  module.exports = {
-    P2Pixi: P2Pixi
-  };
-} else {
-  global.P2Pixi = P2Pixi;
-}
-
-}(this));

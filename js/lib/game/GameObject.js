@@ -1,4 +1,11 @@
-﻿
+﻿/**
+ * @class GameObject
+ * @property {Array} bodies
+ * @property {Array} constraints
+ * @property {Array} containers
+ * @property {Array} children
+ * @property {GameObject|null} parent
+ */
 class GameObject {
 
   /**
@@ -15,7 +22,7 @@ class GameObject {
     this.constraints = [];
     this.containers = [];
     this.children = [];
-    this.parent = {};
+    this.parent = null;
 
     this.addBody(game, body).addShape(game, shape, options);
   }
@@ -43,10 +50,13 @@ class GameObject {
   /**
    * Adds the supplied GameObject as a child of this GameObject
    * @param {GameObject} child
+   * @return {GameObject} gameObject
    */
   addChild(child) {
     child.parent = this;
     this.children.push(child);
+
+    return this;
   }
 
   /**
@@ -73,9 +83,9 @@ class GameObject {
   addShape(game, shape, options) {
     this.shape = shape;
     let offset = options.offset || [0, 0],
-        angle = options.angle || 0;
-    this.shape.collisionGroup = (options.collisionOptions && options.collisionOptions.collisionGroup) || 1;
-    this.shape.collisionMask = (options.collisionOptions && options.collisionOptions.collisionMask) || 1;
+      angle = options.angle || 0;
+    this.shape.collisionGroup = (options.collision && options.collision.collisionGroup) || 1;
+    this.shape.collisionMask = (options.collision && options.collision.collisionMask) || 1;
 
     this.body.addShape(this.shape, offset, angle);
     let container = this.containers[this.bodies.indexOf(this.body)];
@@ -90,7 +100,7 @@ class GameObject {
    */
   static deleteObject(game) {
     var world = game.world,
-        container = game.pixiAdapter.container;
+      container = game.pixiAdapter.container;
 
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].remove();
@@ -118,6 +128,7 @@ class GameObject {
    * from this GameObject's bodies collection
    * @param {Game} game
    * @param {Body} body
+   * @return {GameObject} gameObject
    */
   removeBody(game, body) {
     var index = this.bodies.indexOf(body);
@@ -126,6 +137,8 @@ class GameObject {
 
     game.world.removeBody(body);
     game.pixiAdapter.container.removeChildAt(index);
+
+    return this;
   }
 
   /**
@@ -142,14 +155,15 @@ class GameObject {
    * Updates the PIXI container transforms for this GameObject
    * and all children
    * @param {Game} game
+   * @return {GameObject} gameObject
    */
   updateTransforms(game) {
     let ppu = game.pixiAdapter.pixelsPerLengthUnit,
-        bodies = this.bodies,
-        containers = this.containers;
+      bodies = this.bodies,
+      containers = this.containers;
     for (let i = 0; i < bodies.length; i++) {
       let body = bodies[i],
-          container = containers[i];
+        container = containers[i];
       container.position.x = body.position[0] * ppu;
       container.position.y = -body.position[1] * ppu;
       container.rotation = -body.angle;
@@ -160,6 +174,7 @@ class GameObject {
     for (let i = 0; i < children.length; i++) {
       children[i].updateTransforms(game);
     }
-  }
 
+    return this;
+  }
 }
