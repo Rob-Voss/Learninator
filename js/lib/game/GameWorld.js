@@ -9,7 +9,7 @@
  * @property {boolean} gridLocation
  * @property {boolean} position
  */
-let cheatOpts = {
+const cheatOpts = {
     id: false,
     name: false,
     angle: false,
@@ -145,7 +145,7 @@ class GameWorld {
    * @param {worldOpts} options
    * @return {GameWorld}
    */
-  constructor(agents, walls, options = worldOpts) {
+  constructor(agents = [], walls = [], options = worldOpts) {
     this.walls = walls;
     this.options = options;
     this.grid = Utility.getOpt(this.options, 'grid', false);
@@ -391,16 +391,15 @@ class GameWorld {
   addAgents() {
     // Add the agents
     for (let a = 0; a < this.agents.length; a++) {
-      let agent = this.agents[a].graphics;
       if (this.agents[a].eyes !== undefined) {
         for (let ei = 0; ei < this.agents[a].eyes.length; ei++) {
-          agent.addChild(this.agents[a].eyes[ei].graphics);
+          this.agents[a].graphics.addChild(this.agents[a].eyes[ei].graphics);
         }
       }
       if (this.agents[a].hexStyles !== undefined) {
         this.agents[a].color = this.agents[a].hexStyles[this.agents[a].type];
       }
-      this.entityLayer.addChild(agent);
+      this.entityLayer.addChild(this.agents[a].graphics);
       this.population.set(this.agents[a].id, this.agents[a]);
     }
 
@@ -428,13 +427,12 @@ class GameWorld {
       }
       startXY.vx = Math.random() * 5 - 2.5;
       startXY.vy = Math.random() * 5 - 2.5;
-      let entityAgent = new EntityRLDQN(startXY, this.options.entityAgent),
-        entity = entityAgent.graphics;
+      let entityAgent = new EntityRLDQN(startXY, this.options.entityAgent);
       for (let ei = 0; ei < entityAgent.eyes.length; ei++) {
-        entity.addChild(entityAgent.eyes[ei].graphics);
+        entityAgent.graphics.addChild(entityAgent.eyes[ei].graphics);
       }
       this.entityAgents.push(entityAgent);
-      this.entityLayer.addChild(entity);
+      this.entityLayer.addChild(entityAgent.graphics);
       this.population.set(entityAgent.id, entityAgent);
     }
 
@@ -637,9 +635,8 @@ class GameWorld {
         } else if (entity.type === 2 || entity.type === 1) {
           popCount++;
         }
-      } else {
-        entity.draw();
       }
+      entity.draw();
     }
 
     // If we have less then the number of Items allowed throw a random one in

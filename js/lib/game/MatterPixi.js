@@ -1,8 +1,16 @@
 // Matter aliases
-const Bounds = Matter.Bounds,
-  Composite = Matter.Composite,
+const Engine = Matter.Engine,
+  World = Matter.World,
+  Bodies = Matter.Bodies,
+  Body = Matter.Body,
+  Bounds = Matter.Bounds,
   Common = Matter.Common,
+  Composite = Matter.Composite,
+  Constraint = Matter.Constraint,
   Events = Matter.Events,
+  Grid = Matter.Grid,
+  MouseConstraint = Matter.MouseConstraint,
+  Mouse = Matter.Mouse,
   Vector = Matter.Vector,
 
   entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'],

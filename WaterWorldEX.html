@@ -7,48 +7,6 @@
 
     <title>Water World EXtreme</title>
 
-    <link rel="stylesheet" type="text/css"
-          href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
-    <link rel="stylesheet" type="text/css"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
-    <link rel="stylesheet" type="text/css"
-          href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
-
-    <script type="text/html" id="header-navigation">
-        <!-- Scrolling MDL Header -->
-        <header class="mdl-layout__header mdl-layout__header--scroll">
-            <div class="mdl-layout__header-row">
-                <span class="{{menu.class}} header-nav-toggle">
-                    <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-                </span>
-                <div class="mdl-layout-spacer"></div>
-                <nav class="mdl-navigation sidebar-nav">
-                    {{#menu.items}}
-                        <a id="{{id}}" class="{{class}} nav-link" href="{{link}}">
-                            <i class="material-icons">{{icon}}</i>{{text}}
-                        </a>
-                    {{/menu.items}}
-                </nav>
-            </div>
-        </header>
-    </script>
-
-    <script type="text/html" id="header-drawer">
-        <!-- Side Drawer MDL Header -->
-        <div class="mdl-layout__drawer">
-            <span class="{{menu.class}}">
-                <i class="material-icons">{{menu.icon}}</i>{{menu.title}}
-            </span>
-            <nav class="mdl-navigation">
-                {{#menu.items}}
-                    <a id="{{id}}" class="{{class}}" href="{{link}}">
-                        <i class="material-icons">{{icon}}</i>{{text}}
-                    </a>
-                {{/menu.items}}
-            </nav>
-        </div>
-    </script>
-
     <script>
         var world       = world || {},
                 jaxrendered = false;
@@ -81,7 +39,102 @@
         };
 
         function start() {
-            world = new WaterWorldEX();
+            var cheatOpts = {
+                        id: false,
+                        name: false,
+                        angle: false,
+                        bounds: false,
+                        direction: false,
+                        gridLocation: true,
+                        position: false,
+                        brute: false,
+                        quad: false,
+                        grid: false,
+                        walls: false
+                    },
+                options = {
+                    cheats: cheatOpts,
+                    collision: {
+                        type: 'brute',
+                        cheats: cheatOpts,
+                    },
+                    grid: {
+                        width: 600,
+                        height: 600,
+                        buffer: 0,
+                        cellSize: 60,
+                        cellSpacing: 0,
+                        size: 10,
+                        pointy: false,
+                        fill: false
+                    },
+                    render: {
+                        background: 0xFFFFFF,
+                        antialiasing: true,
+                        autoResize: false,
+                        resizable: false,
+                        transparent: false,
+                        resolution: window.devicePixelRatio,
+                        noWebGL: false,
+                        width: 600,
+                        height: 600
+                    },
+                    agent: {
+                        brainType: 'RL.DQNAgent',
+                        numActions: 4,
+                        numEyes: 30,
+                        numTypes: 5,
+                        numPriopreception: 2,
+                        range: 120,
+                        proximity: 120,
+                        radius: 10,
+                        interactive: false,
+                        useSprite: false,
+                        worker: false
+                    },
+                    entity: {
+                        number: 20,
+                        radius: 10,
+                        interactive: false,
+                        useSprite: false,
+                        moving: true
+                    },
+                    entityAgent: {
+                        number: 2,
+                        brainType: 'RL.DQNAgent',
+                        specDQN: {
+                            update: "qlearn", // qlearn | sarsa
+                            gamma: 0.9, // discount factor, [0, 1)
+                            epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+                            alpha: 0.01, // value function learning rate
+                            experienceAddEvery: 10, // number of time steps before we add another experience to replay memory
+                            experienceSize: 5000, // size of experience
+                            learningStepsPerIteration: 20,
+                            tdErrorClamp: 1.0, // for robustness
+                            numHiddenUnits: 100 // number of neurons in hidden layer
+                        },
+                        numActions: 4,
+                        numEyes: 8,
+                        numTypes: 5,
+                        numPriopreception: 2,
+                        range: 80,
+                        proximity: 80,
+                        radius: 20,
+                        interactive: false,
+                        useSprite: false,
+                        moving: true
+                    }
+                },
+                grid = new Grid(null, null, options.grid),
+                maze = new Maze(grid.init()),
+                agents = [
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), options.agent),
+                    new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), options.agent)
+                ];
+            worldOpts.grid = maze.grid;
+            worldOpts.maze = maze;
+
+            world = new WaterWorldEX(agents, maze.walls, options);
             renderJax();
         }
     </script>

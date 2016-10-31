@@ -14,13 +14,13 @@
          */
         var world = world || {};
 
-        var goslow = function() {
+        var goslow = function () {
             world.stepsPerTick = 1;
         };
-        var gonormal = function(){
+        var gonormal = function () {
             world.stepsPerTick = 10;
         };
-        var gofast = function() {
+        var gofast = function () {
             world.stepsPerTick = 25;
         };
 
@@ -35,7 +35,146 @@
          * Create existence!
          */
         function start() {
-            world = new HexMazeWorld();
+            var cheatOpts = {
+                        id: false,
+                        name: false,
+                        angle: false,
+                        bounds: false,
+                        direction: false,
+                        gridLocation: true,
+                        position: false,
+                        brute: false,
+                        quad: false,
+                        grid: false,
+                        walls: false
+                    },
+                    options = {
+                        cheats: cheatOpts,
+                        collision: {
+                            type: 'brute',
+                            cheats: cheatOpts
+                        },
+                        grid: {
+                            cheats: cheatOpts,
+                            width: 800,
+                            height: 800,
+                            buffer: 0,
+                            size: 15,
+                            cellSize: 30,
+                            cellSpacing: 10,
+                            useSprite: false,
+                            pointy: false,
+                            fill: true
+                        },
+                        render: {
+                            background: 0xFFFFFF,
+                            antialiasing: false,
+                            autoResize: false,
+                            resizable: false,
+                            transparent: false,
+                            resolution: window.devicePixelRatio,
+                            noWebGL: false,
+                            width: 800,
+                            height: 800
+                        },
+                        agent: {
+                            brainType: 'RL.TDAgent',
+                            cheats: cheatOpts,
+                            numActions: 6,
+                            numEyes: 0,
+                            numTypes: 0,
+                            numProprioception: 0,
+                            range: 0,
+                            proximity: 0,
+                            radius: 10,
+                            interactive: false,
+                            useSprite: false,
+                            worker: false
+                        },
+                        entity: {
+                            number: 20,
+                            radius: 10,
+                            interactive: true,
+                            useSprite: false,
+                            moving: false
+                        },
+                        entityAgent: {
+                            number: 0,
+                            radius: 0,
+                            interactive: false,
+                            useSprite: false,
+                            moving: false
+                        }
+                    },
+                    orientation = (options.grid.pointy ? Layout.layoutPointy : Layout.layoutFlat),
+                    size = new Point(options.grid.width / options.grid.cellSize, options.grid.height / options.grid.cellSize),
+                    origin = new Point(options.grid.width / 2, options.grid.height / 2),
+                    layout = new Layout(orientation, size, origin),
+                    grid = new HexGrid(layout, HexGrid.shapeRectangle(layout, options.grid), options.grid),
+                    maze = new Maze(grid.init());
+            options.grid = grid;
+            options.maze = maze;
+            world = new HexMazeWorld([], maze.walls, options);
+
+            world.agents = [
+                new Agent(new Vec(world.grid.startCell.center.x, world.grid.startCell.center.y),
+                        {
+                            brainType: 'RL.TDAgent',
+                            cheats: world.cheats,
+                            gridLocation: world.grid.startCell,
+                            numActions: 6,
+                            numEyes: 0,
+                            numTypes: 0,
+                            numProprioception: 0,
+                            range: 0,
+                            proximity: 0,
+                            radius: 10,
+                            interactive: false,
+                            useSprite: false,
+                            worker: false,
+                            env: {
+                                allowedActions: (s) => {
+                                    return world.allowedActions(s);
+                                },
+                                getMaxNumActions: () => {
+                                    return world.getMaxNumActions();
+                                },
+                                getNumStates: () => {
+                                    return world.getNumStates();
+                                },
+                                nextStateDistribution: (s, a) => {
+                                    return world.nextStateDistribution(s, a);
+                                },
+                                randomState: () => {
+                                    return world.randomState();
+                                },
+                                reset: () => {
+                                    return world.reset();
+                                },
+                                sampleNextState: (s, a) => {
+                                    return world.sampleNextState(s, a);
+                                },
+                                startState: () => {
+                                    return world.startState();
+                                },
+                                sToX: (s) => {
+                                    return world.sToX(s);
+                                },
+                                sToY: (s) => {
+                                    return world.sToY(s);
+                                },
+                                xyToS: (q, r) => {
+                                    return world.xyToS(q, r);
+                                }
+                            }
+                        }
+                )
+            ];
+            world.addAgents();
+            world.reset();
+            world.initFlot();
+            world.drawGrid();
+
             datGUI(world);
         }
     </script>
@@ -66,19 +205,24 @@
                         <h2 class="mdl-card__title-text">Hex Maze World</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="world.agents[0].tick();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="world.agents[0].tick();">
                             Start
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="solve();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="solve();">
                             Show Solution
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gofast();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gofast();">
                             Go Fast
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gonormal();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gonormal();">
                             Go Normal
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="goslow();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="goslow();">
                             Go Slow
                         </button>
                         <div id="game-container"></div>

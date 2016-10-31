@@ -566,7 +566,7 @@ class Vec {
     return this.divideBy(this.length());
   }
 }
-;
+
 
 /**
  *

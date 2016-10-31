@@ -42,7 +42,12 @@
      */
     constructor(type, position, opts) {
       this.id = Utility.Strings.guid();
-      this.txtOpts = {fontSize: '10px Arial', fill: '#000000', align: 'center'};
+      this.txtOpts = {
+        fontSize: '10px',
+        fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
+        fill: '#0000FF',
+        align: 'center'
+      };
       if (typeof type === 'string') {
         this.type = Entity.entityTypes.indexOf(type);
         this.typeName = type;
@@ -98,6 +103,16 @@
         this.graphics.position.y = this.position.y;
       } else {
         this.graphics = new PIXI.Graphics();
+        this.graphics.lineStyle(0.5, 0x000000, 0.8);
+        this.graphics.beginFill(this.color, this.alpha);
+        if (this.type === 2) {
+          this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
+          this.graphics.drawPolygon(this.vertices);
+        } else {
+          this.graphics.drawCircle(this.position.x, this.position.y, this.radius);
+        }
+        this.graphics.endFill();
+        this.bounds = this.graphics.getBounds();
       }
 
       this.draw();
@@ -181,7 +196,7 @@
             textV = ' Vel(' + Utility.Strings.flt2str(this.position.vx, 1) +
                 ', ' + Utility.Strings.flt2str(this.position.vy, 1) + ')';
 
-        this.posText = new PIXI.Text(textP + textV, this.txtOpts);
+        this.posText = new PIXI.Text(textP/* + textV*/, this.txtOpts);
         this.posText.position.set(x, y);
         this.cheatsContainer.addChild(this.posText);
       }
@@ -329,7 +344,6 @@
         this.graphics.lineStyle(0.5, 0x000000, 0.8);
         this.graphics.beginFill(this.color, this.alpha);
         if (this.type === 2) {
-          this.vertices = Entity.drawShape(x, y, 8, 10, 5, 0);
           this.graphics.drawPolygon(this.vertices);
         } else {
           this.graphics.drawCircle(x, y, this.radius);

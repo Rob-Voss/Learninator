@@ -1,20 +1,4 @@
-// Matter aliases
-const Engine = Matter.Engine,
-  World = Matter.World,
-  Bodies = Matter.Bodies,
-  Body = Matter.Body,
-  Bounds = Matter.Bounds,
-  Common = Matter.Common,
-  Composite = Matter.Composite,
-  Constraint = Matter.Constraint,
-  Events = Matter.Events,
-  Grid = Matter.Grid,
-  MouseConstraint = Matter.MouseConstraint,
-  Mouse = Matter.Mouse,
-  Vector = Matter.Vector,
-
-  // Canvas
-  container = document.body.querySelector('#game-container'),
+const container = document.body.querySelector('#game-container'),
   graphContainer = document.body.querySelector('#flotreward'),
 
   // Collision Category Groups

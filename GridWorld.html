@@ -78,7 +78,79 @@
          * Create existence!
          */
         function start() {
-            world = new GridWorld();
+            let worldOpts = {
+                collision: {
+                    type: 'brute',
+                    cheats: {
+                        brute: false,
+                        quad: false,
+                        grid: false,
+                        walls: false
+                    },
+                },
+                grid: {
+                    width: 600,
+                    height: 600,
+                    buffer: 0,
+                    cellSize: 60,
+                    cellSpacing: 0,
+                    size: 10,
+                    pointy: false,
+                    fill: false
+                },
+                render: {
+                    background: 0xFFFFFF,
+                    antialiasing: false,
+                    autoResize: false,
+                    resizable: false,
+                    transparent: false,
+                    resolution: window.devicePixelRatio,
+                    noWebGL: false,
+                    width: 800,
+                    height: 800
+                },
+                cheats: {
+                    id: false,
+                    name: false,
+                    angle: false,
+                    bounds: false,
+                    direction: false,
+                    gridLocation: false,
+                    position: false,
+                    brute: false,
+                    quad: false,
+                    grid: false,
+                    walls: false
+                },
+                agent: {
+                    brainType: 'RL.DQNAgent',
+                    range: 85,
+                    proximity: 85,
+                    radius: 10,
+                    numEyes: 30,
+                    numTypes: 5,
+                    numActions: 4,
+                    numProprioception: 2,
+                    worker: false,
+                    interactive: false,
+                    useSprite: false
+                },
+                entity: {
+                    number: 20,
+                    radius: 10,
+                    interactive: true,
+                    useSprite: false,
+                    moving: true
+                },
+                entityAgent: {
+                    number: 0,
+                    radius: 0,
+                    interactive: false,
+                    useSprite: false,
+                    moving: false
+                }
+            };
+            world = new GridWorld(worldOpts);
             agent = world.agents[0];
 //        world.init();
 
