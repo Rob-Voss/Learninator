@@ -47,7 +47,6 @@ class HexMazeWorld extends GameWorld {
             if (typeof obs.resetEpisode !== 'undefined') {
               agent.score += 1;
               agent.brain.resetEpisode();
-
               this.state = this.startState();
 
               // record the reward achieved
@@ -102,33 +101,31 @@ class HexMazeWorld extends GameWorld {
    * Draw the Grid
    */
   drawGrid() {
-    let agent = this.agents[0];
+    let agent = this.agents[0],
+      l = this.grid.cells.length;
 
-    for (let s = 0; s < this.grid.cells.length; s++) {
+    for (let s = 0; s < l; s++) {
       let cell = this.grid.cells[s],
         rd = 255,
         g = 255,
         b = 255,
-        vv = null,
-        s = this.xyToS(cell.x, cell.y),
-        sx = this.sToX(s),
-        sy = this.sToY(s);
+        vv = null;
 
       // get value of state s under agent policy
       if (typeof agent.brain.V !== 'undefined') {
         vv = agent.brain.V[s];
       } else if (typeof agent.brain.Q !== 'undefined') {
-        var poss = this.allowedActions(s);
+        let poss = this.allowedActions(s);
         vv = -1;
-        for (var i = 0, n = poss.length; i < n; i++) {
-          var qsa = agent.brain.Q[poss[i] * this.grid.cells.length + s];
+        for (let i = 0, n = poss.length; i < n; i++) {
+          let qsa = agent.brain.Q[poss[i] * l + s];
           if (i === 0 || qsa > vv) {
             vv = qsa;
           }
         }
       }
 
-      var ms = 10000;
+      let ms = 10000;
       if (vv > 0) {
         g = 255;
         rd = 255 - (vv * ms);
@@ -148,12 +145,12 @@ class HexMazeWorld extends GameWorld {
       cell.draw();
 
       // update policy arrows
-      for (var z = 0; z < 6; z++) {
-        var prob = agent.brain.P[z * this.grid.cells.length + s],
+      for (let a = 0; a < 6; a++) {
+        let prob = agent.brain.P[a * l + s],
           nx = 0,
           ny = 0,
           actions = this.Aarr[s],
-          avail = actions[z];
+          avail = actions[a];
         if (avail === null || prob < 0.01) {
           // Hide the arrow
         } else {
@@ -161,9 +158,9 @@ class HexMazeWorld extends GameWorld {
         }
 
         // The length of the arrow based on experience
-        var ss = this.grid.cellSize / 2 * (prob * 0.9);
+        let ss = this.grid.cellSize / 2 * (prob * 0.9);
 
-        switch (z) {
+        switch (a) {
           case 0: // Left
             nx = -ss;
             ny = 0;
@@ -180,13 +177,21 @@ class HexMazeWorld extends GameWorld {
             nx = ss;
             ny = 0;
             break;
+          case 4: // Right
+            nx = ss;
+            ny = 0;
+            break;
+          case 5: // Right
+            nx = ss;
+            ny = 0;
+            break;
         }
         // Draw the arrow using below as guide
-        // cell.graphics.lineStyle(2, 0x000000);
-        // cell.graphics.beginFill(0x000000);
-        // cell.graphics.moveTo(cell.center.x - ss, cell.center.y - ss);
-        // cell.graphics.lineTo(cell.center.x + nx, cell.center.y + ny);
-        // cell.graphics.endFill();
+        cell.graphics.lineStyle(1, 0x000000);
+        cell.graphics.beginFill(0x000000);
+        cell.graphics.moveTo(cell.center.x - ss, cell.center.y - ss);
+        cell.graphics.lineTo(cell.center.x + nx, cell.center.y + ny);
+        cell.graphics.endFill();
       }
     }
     this.renderer.render(this.stage);

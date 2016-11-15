@@ -29,13 +29,16 @@ class Maze {
     this.grid = grid;
     this.xCount = Utility.getOpt(grid, 'xCount', 6);
     this.yCount = Utility.getOpt(grid, 'yCount', 6);
+    this.buffer = Utility.getOpt(grid, 'buffer', 0);
     this.width = Utility.getOpt(grid, 'width', 600);
     this.height = Utility.getOpt(grid, 'height', 600);
+    this.size = Utility.getOpt(grid, 'size', 5);
+    this.cellSize = Utility.getOpt(grid, 'cellSize', 20);
+    this.cellSpacing = Utility.getOpt(grid, 'cellSpacing', 0);
     this.cheats = Utility.getOpt(grid, 'cheats', false);
     this.closed = Utility.getOpt(grid, 'closed', false);
-    this.buffer = Utility.getOpt(grid, 'buffer', 0);
-    this.cellWidth = (this.width - this.buffer) / this.xCount;
-    this.cellHeight = (this.height - this.buffer) / this.yCount;
+    this.cellWidth = Utility.getOpt(grid, 'cellWidth', (this.width / this.xCount) - this.buffer * 2);
+    this.cellHeight = Utility.getOpt(grid, 'cellHeight', (this.height / this.yCount) - this.buffer * 2);
     this.initialCell = grid.startCell;
 
     this.walls = [];

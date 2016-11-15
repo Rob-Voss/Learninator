@@ -164,11 +164,17 @@ class Agent extends Entity {
     this.gridLocation = Utility.getOpt(opts, 'gridLocation', new Vec(0, 0));
     // Just a text value for the brain type, also useful for worker posts
     this.brainType = Utility.getOpt(opts, 'brainType', 'RL.DQNAgent');
+    // The number of actions the Agent can do
     this.numActions = Utility.getOpt(opts, 'numActions', 4);
+    // The number of item types the Agent's eyes can see
     this.numTypes = Utility.getOpt(opts, 'numTypes', 3);
+    // The number of Agent's eyes
     this.numEyes = Utility.getOpt(opts, 'numEyes', 9);
+    // The number of Agent's proprioception values
     this.numProprioception = Utility.getOpt(opts, 'numProprioception', 0);
+    // The range of the Agent's eyes
     this.range = Utility.getOpt(opts, 'range', 85);
+    // The proximity of the Agent's eyes
     this.proximity = Utility.getOpt(opts, 'proximity', 85);
     // The number of Agent's eyes times the number of known types
     // plus the number of proprioception values it is tracking
@@ -178,25 +184,33 @@ class Agent extends Entity {
     this.carrot = 1;
     this.stick = -1;
 
-    this.action = null;
+    this.age = 0;
+    this.action = 0;
     this.avgReward = 0;
     this.lastReward = 0;
     this.digestionSignal = 0.0;
     this.epsilon = 0.000;
+    this.brain = {};
+    this.brainState = {};
 
     this.nStepsHistory = [];
     this.nStepsCounter = 0;
     this.nflot = 1000;
     this.score = 0;
     this.pts = [];
-    this.brain = {};
-    this.brainState = {};
 
     // The Agent's actions
     this.actions = [];
     for (let i = 0; i < this.numActions; i++) {
       this.actions.push(i);
     }
+
+    // The Agent's environment
+    this.env = Utility.getOpt(opts, 'env', {
+      getNumStates: () => this.numStates,
+      getMaxNumActions: () => this.numActions,
+      startState: () => 0
+    });
 
     // The Agent's eyes
     if (this.eyes === undefined) {
@@ -208,13 +222,6 @@ class Agent extends Entity {
         this.eyes.push(eye);
       }
     }
-
-    // The Agent's environment
-    this.env = Utility.getOpt(opts, 'env', {
-      getNumStates: () => this.numStates,
-      getMaxNumActions: () => this.numActions,
-      startState: () => 0
-    });
 
     // Set the brain options
     this.brainOpts = [];

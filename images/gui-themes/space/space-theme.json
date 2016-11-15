@@ -10,8 +10,8 @@
   "default": {
     "scale": 0.5,
     "bg": "",
-    "padding" : 2,
-    "bgPadding": 6,
+    "padding" : 0,
+    "bgPadding": 0,
     "corner": "",
     "line": "",
     "font": {
@@ -20,61 +20,138 @@
       "color": "black"
     }
   },
+  "Window": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 0,
+    "padding": 0,
+    "corner": {
+      "default": "dotShadow_corner.png"
+    },
+    "line": {
+      "default": "dotShadow_line.png"
+    }
+  },
+  "Layout": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 0,
+    "padding": 0,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    }
+  },
+  "List": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 0,
+    "padding": 0,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    }
+  },
   "Header": {
     "bg": {
-      "default": ""
+      "default": "barVertical_shadow_mid.png"
     },
-    "image": {
-      "default": ""
-    },
-    "line": {
-      "default": ""
-    },
-    "corner": {
-      "default": ""
-    },
-    "font": {
-      "size": "10px",
-      "color": "black"
-    }
-  },
-  "Slider": {
-    "image": {
-      "default": "shadowLine.png"
-    },
-    "padding": 5,
-    "corner": {
-      "default": ""
-    },
-    "line": {
-      "default": ""
-    }
-  },
-  "Slide": {
-    "image": {
-      "default": "squareWhite.png"
-    },
-    "corner": {
-      "default": ""
-    },
-    "line": {
-      "default": ""
-    }
-  },
-  "Label": {
     "bgPadding": 0,
-    "bg": {
-      "default": ""
-    },
+    "padding": 0,
     "corner": {
-      "default": ""
+      "default": "buttonShadow_corner.png"
     },
     "line": {
-      "default": ""
+      "default": "buttonShadow_line.png"
+    },
+    "font": {
+      "size": "12px",
+      "color": "white"
+    }
+  },
+  "Button": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
+    },
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    },
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "Input": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
+    },
+    "bgPadding": 0,
+    "padding": 0,
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
     },
     "font": {
       "size": "10px",
       "color": "black"
+    }
+  },
+  "Checkbox": {
+    "bg": {
+      "default": "barVertical_shadow_mid.png",
+      "down": "barVertical_shadow_mid.png",
+      "up": "barVertical_shadow_mid.png",
+      "hover": "glassPanel_bg.png",
+      "out": "barVertical_shadow_mid.png"
+    },
+    "corner": {
+      "default": "buttonShadow_corner.png"
+    },
+    "line": {
+      "default": "buttonShadow_line.png"
+    },
+    "checkmark": "squareGreen.png",
+    "bgPadding": 0,
+    "padding": 0,
+    "font": {
+      "size": "10px",
+      "color": "white"
+    }
+  },
+  "Radio": {
+    "image": {
+      "default": "dotShadow.png",
+      "down": "dotShadow.png",
+      "up": "dotShadow.png",
+      "hover": "dotWhite.png",
+      "out": "dotShadow.png"
+    },
+    "checkmark": "dotGreen.png",
+    "bgPadding": 0,
+    "padding": 0,
+    "font": {
+      "size": "10px",
+      "color": "white"
     }
   },
   "GlassWindow": {

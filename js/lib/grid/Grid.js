@@ -51,9 +51,9 @@ class Grid {
    * @return {Grid}
    */
   constructor(layout, cells, opts) {
+    this.buffer = Utility.getOpt(opts, 'buffer', 0);
     this.width = Utility.getOpt(opts, 'width', 600);
     this.height = Utility.getOpt(opts, 'height', 600);
-    this.buffer = Utility.getOpt(opts, 'buffer', 0);
     this.size = Utility.getOpt(opts, 'size', 5);
     this.cellSize = Utility.getOpt(opts, 'cellSize', 20);
     this.cellSpacing = Utility.getOpt(opts, 'cellSpacing', 0);
@@ -63,10 +63,10 @@ class Grid {
     this.cheats = Utility.getOpt(opts, 'cheats', false);
     this.xCount = this.width / this.cellSize;
     this.yCount = this.height / this.cellSize;
-    this.cellWidth = (this.width - this.buffer) / this.xCount;
-    this.cellHeight = (this.height - this.buffer) / this.yCount;
+    this.cellWidth = (this.width / this.xCount) - this.buffer * 2;
+    this.cellHeight = (this.height / this.yCount) - this.buffer * 2;
     this.layout = layout || {};
-    this.cells = cells || Grid.shapeRectangle(opts);
+    this.cells = cells || Grid.shapeRectangle(this);
     this.path = [];
     this.removedEdges = [];
     this.walls = [];
@@ -107,7 +107,10 @@ class Grid {
         }
 
         cell.neighbors[dir] = (neighb) ? this.getCellAt(neighb.x, neighb.y) : null;
-        cell.walls[dir] = new Wall(v1, v2, dir, {cheats: this.cheats, sprite: 'stone_wall.png'});
+        cell.walls[dir] = new Wall(v1, v2, dir, {
+          cheats: this.cheats,
+          useSprite: false
+        });
       }
       this.cellsContainer.addChild(cell.graphics);
     });
@@ -303,8 +306,8 @@ class Grid {
    */
   static shapeRectangle(opts) {
     let cells = [];
-    for (let x = 0; x < opts.size; x++) {
-      for (let y = 0; y < opts.size; y++) {
+    for (let x = 0; x < opts.xCount; x++) {
+      for (let y = 0; y < opts.yCount; y++) {
         let cellShape = new CellShape(x, y, opts);
         cells.push(cellShape);
       }

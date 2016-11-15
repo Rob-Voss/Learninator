@@ -28,6 +28,15 @@ class Cell {
   }
 
   /**
+   * Check if this Cell is equal to another
+   * @param {Cell} other
+   * @return {boolean}
+   */
+  equals(other) {
+    return this.x === other.x && this.y === other.y && this.z === other.z;
+  }
+
+  /**
    * Calculate the path to the origin
    * @return {Array}
    */
@@ -84,16 +93,6 @@ class Cell {
     this.visited = true;
 
     return this;
-  }
-
-  /**
-   * Get the neighbor
-   * @param {Cell|object} cell
-   * @param {number} dir
-   * @return {Cell}
-   */
-  neighbor(cell, dir) {
-    return Cell.add(cell, Cell.cellDirections[dir]);
   }
 
   /* Static Functions */

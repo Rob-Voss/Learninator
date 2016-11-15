@@ -2,10 +2,15 @@ const container = document.body.querySelector('#game-container'),
   graphContainer = document.body.querySelector('#flotreward'),
 
   // Collision Category Groups
-  wallCategory = 0x0001,
-  nomCategory = 0x0002,
-  gnarCategory = 0x0004,
-  agentCategory = 0x0008,
+  wallCollision = 0x0001,
+  nomCollision = 0x0002,
+  gnarCollision = 0x0004,
+  agentCollision = 0x0008,
+
+  entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'],
+  textColorStyles = ['black', 'green', 'red', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'],
+  hexColorStyles = [0x000000, 0x00FF00, 0xFF0000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00],
+  entityCollisionCategories = [wallCollision, nomCollision, gnarCollision, agentCollision],
 
   // Collision Category Colors
   redColor = '#C44D58',
@@ -13,24 +18,68 @@ const container = document.body.querySelector('#game-container'),
   blueColor = '#4ECDC4',
   blackColor = '#000000',
 
-  width = 800,
-  height = 800,
+  width = 600,
+  height = 600,
 
-  /**
-   *
-   * @type {{enabled: boolean, enableSleeping: boolean, constraintIterations: number, positionIterations: number,
-       *     velocityIterations: number, metrics: {extended: boolean, narrowDetections: number, narrowphaseTests:
-       *     number, narrowReuse: number, narrowReuseCount: number, midphaseTests: number, broadphaseTests: number,
-       *     narrowEff: number, midEff: number, broadEff: number, collisions: number, buckets: number, bodies: number,
-       *     pairs: number}, timing: {timeScale: number}}}
-   */
-  engineOpts = {
+  pixiOptions = {
+    antialiasing: false,
+    autoResize: false,
+    background: 0xFFFFFF,
+    resolution: window.devicePixelRatio,
+    resizable: false,
+    transparent: false,
+    noWebGL: false
+  },
+
+  renderOptions =  {
+    background: '#585858',
+    bounds: {
+      min: {
+        x: 0,
+        y: 0
+      },
+      max: {
+        x: width,
+        y: height
+      }
+    },
+    viewport: {
+      x: width / 2,
+      y: height / 2
+    },
+    element: container,
+    height: height,
+    width: width,
+    enabled: true,
+    hasBounds: true,
+    pixelRatio: 1,
+    showAngleIndicator: false,
+    showAxes: false,
+    showSleeping: false,
+    showBounds: false,
+    showBroadphase: false,
+    showCollisions: false,
+    showConvexHulls: false,
+    showDebug: false,
+    showIds: false,
+    showInternalEdges: false,
+    showMousePosition: false,
+    showPositions: false,
+    showShadows: false,
+    showSeparations: false,
+    showVelocity: false,
+    showVertexNumbers: false,
+    wireframes: false,
+    wireframeBackground: '#222'
+  },
+
+  engineOptions = {
     enableSleeping: false,
     constraintIterations: 2,
-    positionIterations: 6,
-    velocityIterations: 4,
+    positionIterations: 10,
+    velocityIterations: 8,
     broadphase: {
-      controller: Grid
+      controller: Matter.Grid
     },
     metrics: {
       extended: true,
@@ -50,90 +99,30 @@ const container = document.body.querySelector('#game-container'),
     },
     timing: {
       timeScale: 1
-    }
-  },
-  pixiOpts = {
-    antialiasing: false,
-    autoResize: false,
-    background: 0xFFFFFF,
-    resolution: window.devicePixelRatio,
-    resizable: false,
-    transparent: false,
-    noWebGL: false
-  },
-  engine = Engine.create(engineOpts),
-  renderer = new PIXI.autoDetectRenderer(width, height, pixiOpts),
-  /**
-   *
-   * @type {{element: Element, options: {background: string, pixelRatio: number, enabled: boolean, hasBounds:
-       *     boolean, showAngleIndicator: boolean, showAxes: boolean, showSleeping: boolean, showBounds: boolean,
-       *     showBroadphase: boolean, showCollisions: boolean, showConvexHulls: boolean, showDebug: boolean, showIds:
-       *     boolean, showInternalEdges: boolean, showMousePosition: boolean, showPositions: boolean, showShadows:
-       *     boolean, showSeparations: boolean, showVelocity: boolean, showVertexNumbers: boolean, wireframes: boolean,
-       *     wireframeBackground: string}}}
-   */
-  renderOpts = {
-    bounds: {
-      min: {x: 0, y: 0},
-      max: {x: width, y: height}
     },
-    canvas: renderer.view,
-    context: renderer.context,
-    stage: new PIXI.Container(),
-    primitiveContainer: new PIXI.Container(),
-    spriteContainer: new PIXI.Container(),
-    displayContainer: new PIXI.Container(),
-    element: container,
-    engine: engine,
-    engineOptions: engineOpts,
-    renderer: renderer,
-    pixiOptions: pixiOpts,
-    options: {
-      width: width,
-      height: height,
-      background: '#585858',
-      pixelRatio: 1,
-      enabled: true,
-      hasBounds: true,
-      showAngleIndicator: false,
-      showAxes: false,
-      showSleeping: false,
-      showBounds: false,
-      showBroadphase: false,
-      showCollisions: false,
-      showConvexHulls: false,
-      showDebug: false,
-      showIds: false,
-      showInternalEdges: false,
-      showMousePosition: false,
-      showPositions: false,
-      showShadows: false,
-      showSeparations: false,
-      showVelocity: false,
-      showVertexNumbers: false,
-      wireframes: false,
-      wireframeBackground: '#222'
+    gravity: {
+      x: 0,
+      y: 0
     }
-  };
-  /*
-  const gridOpts = {
-    width: width,
-    height: height,
+  },
+
+  totalWidth = renderOptions.width + (renderOptions.viewport.x / 2),
+  totalHeight = renderOptions.height + (renderOptions.viewport.y / 2),
+
+  gridOptions = {
     buffer: 0,
-    size: 5,
-    cellSize: 40,
-    cellSpacing: 20,
+    size: 3,
+    cellSize: 200,
+    cellSpacing: 0,
+    width: totalWidth,
+    height: totalHeight,
     pointy: false,
     useSprite: false,
     fill: false,
     cheats: {}
   },
-  orientation = (gridOpts.pointy ? Layout.layoutPointy : Layout.layoutFlat),
-  size = new Point(gridOpts.cellSize, gridOpts.cellSize),
-  origin = new Point(width / 2, height / 2),
-  layout = new Layout(orientation, size, origin),
-  cells = HexGrid.shapeRectangle(layout, gridOpts),
-  grid = new HexGrid(layout, cells, gridOpts);*/
+  grid = new Grid(null, null, gridOptions),
+  maze = new Maze(grid.init());
 
 // MatterTools aliases
 if (window.MatterTools) {
@@ -165,51 +154,58 @@ class MatterWorld {
    *
    * @return {MatterWorld}
    */
-  constructor() {
-    Common.extend(this, renderOpts);
+  constructor(renderOpts, pixiOpts, engineOpts, gridOpts) {
     this.clock = 0;
     this.agents = [];
-    this.width = this.options.width;
-    this.height = this.options.height;
+    Common.extend(engineOptions, engineOpts);
+    Common.extend(pixiOptions, pixiOpts);
+    Common.extend(renderOptions, renderOpts);
+    Common.extend(gridOptions, gridOpts);
+    this.engineOptions = engineOptions;
+    this.pixiOptions = pixiOptions;
+    this.renderOptions = renderOptions;
+    this.gridOptions = gridOptions;
+    this.bounds = this.renderOptions.bounds;
+    this.element = this.renderOptions.element;
+    this.width = this.renderOptions.width;
+    this.height = this.renderOptions.height;
+    this.renderer = new PIXI.autoDetectRenderer(this.width, this.height, this.pixiOptions);
+
+    this.stage = new PIXI.Container();
+    this.primitiveContainer = new PIXI.Container();
+    this.spriteContainer = new PIXI.Container();
+    this.displayContainer = new PIXI.Container();
+
+    this.stage.addChild(this.primitiveContainer);
+    this.stage.addChild(this.spriteContainer);
+    this.stage.addChild(this.displayContainer);
+
+    this.canvas = this.renderer.view;
+    this.context = this.canvas.getContext(this.renderer.CONTEXT_UID);
+    this.engine = Engine.create(this.engineOptions);
     this.runner = Engine.run(this.engine);
     this.render = new MatterPixi(this);
-    this.engine.world.gravity = {x: 0, y: 0};
+    this.engine.world.gravity = this.engineOptions.gravity;
     this.mouseConstraint = MouseConstraint.create(this.engine, {element: this.canvas});
     this.render.mouse = this.mouseConstraint.mouse;
-    this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
+    this.setViewport(this.renderOptions.viewport.x, this.renderOptions.viewport.y)
 
     if (useTools) {
-      this.useInspector = useInspector;
-      this.isMobile = isMobile;
-      this.guiOptions = {
-        broadphase: 'grid',
-        amount: 1,
-        size: 40,
-        sides: 4,
-        density: 0.001,
-        restitution: 0,
-        friction: 0.1,
-        frictionStatic: 0.5,
-        frictionAir: 0.01,
-        offset: {x: 0, y: 0},
-        renderer: 'canvas',
-        chamfer: 0,
-        isRecording: false
-      };
-      // create a Matter.Gui
-      this.gui = Gui.create(this.engine, this.runner, this.render, this.guiOptions);
-      this.initControls();
-      Gui.update(this.gui, this.gui.datGui);
+      this.setupTools();
     }
 
-    //this.addPerson(200, 200);
-    this.addWalls();
-    this.addAgents();
-    //this.addPlatforms(10, 30, 150);
-    this.addEntities(10);
+    // this.addOuterWalls();
+    // this.addPlatforms(10, 30, 150, 50);
+    this.addWalls(maze.walls);
+    this.addAgents(1);
+    this.addEntities(50);
+
     this.setEngineEvents();
+    this.setRenderEvents();
     this.setRunnerEvents();
     this.setWorldEvents();
+
+    this.rewards = (graphContainer) ? new FlotGraph(this.agents) : false;
 
     this.render.run();
 
@@ -225,7 +221,7 @@ class MatterWorld {
     // Populating the world
     for (let k = 0; k < number; k++) {
       let agentOpts = {
-          worker: false,
+          worker: true,
           numEyes: 30,
           numTypes: 5,
           numActions: 4,
@@ -236,23 +232,25 @@ class MatterWorld {
         entityOpt = {
           shape: 'circle',
           position: {
-            x: 400,
-            y: 400
+            x: Utility.Maths.randi(50, 400),
+            y: Utility.Maths.randi(50, 400)
           },
           render: {
-            strokeStyle: Common.shadeColor(blackColor, -20),
-            fillStyle: Common.shadeColor(blueColor, -20)
+            lineColor: Common.shadeColor(blackColor, -20),
+            fillColor: Common.shadeColor(blueColor, -20)
           },
           friction: 0,
           frictionAir: Utility.Maths.randf(0.0, 0.9),
           frictionStatic: 0,
           restitution: 0,
-          density: Utility.Maths.randf(0.001, 0.01)
+          density: Utility.Maths.randf(0.001, 0.01),
+          radius: 10
         },
-        body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt),
+        body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, entityOpt.radius, entityOpt),
         entity = new PhysicalAgent(body, agentOpts);
 
       Body.set(body, 'entity', entity);
+      Body.set(body, 'radius', entityOpt.radius);
       this.addMatter([body]);
 
       this.agents.push(entity);
@@ -267,7 +265,7 @@ class MatterWorld {
    * @return {MatterWorld}
    */
   addEntities(number = 1) {
-    let bodies = [], body2;
+    let bodies = [];
     // Populating the world
     for (let k = 0; k < number; k++) {
       let body, entity,
@@ -276,33 +274,35 @@ class MatterWorld {
             x: Utility.Maths.randi(10, this.width - 10),
             y: Utility.Maths.randi(10, this.height - 10)
           },
-          friction: 0.1,
-          frictionAir: Utility.Maths.randf(0.0, 0.9),
-          frictionStatic: 0.5,
+          friction: 0,
+          frictionAir: 0,
+          frictionStatic: 0,
           restitution: 1,
-          density: Utility.Maths.randf(0.005, 0.01)
+          density: 0.01,
+          radius: 10
         },
         type = Utility.Maths.randi(1, 3);
+
       if (type === 1) {
         entityOpt.shape = 'circle';
         entityOpt.render = {
           lineWidth: 0.75,
           lineColor: Common.shadeColor(blackColor, -20),
-          strokeStyle: Common.shadeColor(greenColor, -20),
-          fillStyle: Common.shadeColor(greenColor, -20)
+          fillColor: Common.shadeColor(greenColor, -20)
         };
-        body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, 10, entityOpt);
+        body = Bodies.circle(entityOpt.position.x, entityOpt.position.y, entityOpt.radius, entityOpt);
+        Body.set(body, 'radius', entityOpt.radius);
       } else if (type === 2) {
         entityOpt.shape = 'convex';
         entityOpt.render = {
           lineWidth: 0.75,
           lineColor: Common.shadeColor(blackColor, -20),
-          strokeStyle: Common.shadeColor(redColor, -20),
-          fillStyle: Common.shadeColor(redColor, -20)
+          fillColor: Common.shadeColor(redColor, -20)
         };
-        // entityOpt.vertices = MatterWorld.drawShape(entityOpt.position.x, entityOpt.position.y, 8, 10, 4, 0);
+        // entityOpt.vertices = MatterWorld.drawStarHexShape(entityOpt.position.x, entityOpt.position.y, 8, 10, 4, 0);
         // body = Body.create(entityOpt);
-        body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, 10, entityOpt);
+        body = Bodies.polygon(entityOpt.position.x, entityOpt.position.y, 8, entityOpt.radius, entityOpt);
+        Body.set(body, 'radius', entityOpt.radius);
       }
       entity = new PhysicalEntity(type, body);
 
@@ -312,31 +312,6 @@ class MatterWorld {
     this.addMatter(bodies);
 
     return this;
-  }
-
-  /**
-   *
-   * @param {number} x
-   * @param {number} y
-   * @param {number} points - number of points (or number of sides for polygons)
-   * @param {number} radA - "outer" radius of the star
-   * @param {number} radB - "inner" radius of the star (if equal to radius1, a polygon is drawn)
-   * @param {number} a - initial angle (clockwise), by default, stars and polygons are 'pointing' up
-   */
-  static drawShape(x, y, points, radA, radB, a) {
-    let i, angle, radius, vertices = [];
-    if (radB !== radA) {
-      points = 2 * points;
-    }
-    for (i = 0; i <= points; i++) {
-      angle = i * 2 * Math.PI / points - Math.PI / 2 + a;
-      radius = i % 2 === 0 ? radA : radB;
-      let px = x + radius * Math.cos(angle),
-        py = y + radius * Math.sin(angle);
-      vertices.push({x: px, y: py});
-    }
-
-    return vertices;
   }
 
   /**
@@ -354,10 +329,19 @@ class MatterWorld {
    * Add walls to the world
    * @return {MatterWorld}
    */
-  addWalls() {
+  addOuterWalls() {
     // Ground
     let buffer = 5,
-      wallOpts = {isStatic: true, render: {visible: true}, label: 'Wall', shape: 'convex'},
+      wallOpts = {
+        isStatic: true,
+        label: 'Wall',
+        render: {
+          visible: true,
+          fillColor: '#FFFFFF',
+          lineColor: '#FFFFFF'
+        },
+        shape: 'rectangle'
+      },
       left = Bodies.rectangle(buffer, this.height / 2, buffer, this.height - (buffer * 4), wallOpts),
       right = Bodies.rectangle(this.width - buffer, this.height / 2, buffer, this.height - (buffer * 4), wallOpts),
       top = Bodies.rectangle(this.width / 2, buffer, this.width - (buffer * 4), buffer, wallOpts),
@@ -374,202 +358,56 @@ class MatterWorld {
       x: left.position.x,
       y: buffer,
       width: buffer,
-      height: this.height - (buffer * 2)
+      height: this.height - (buffer * 2),
+      speed: 0,
+      position: Vector.create(left.position.x, buffer),
+      force: Vector.create(0, 0)
     });
+    Body.set(left, 'width', left.entity.width);
+    Body.set(left, 'height', left.entity.height);
+
     Body.set(top, 'entity', {
       type: 0,
       x: buffer,
       y: top.position.y,
       width: this.width - (buffer * 2),
-      height: buffer
+      height: buffer,
+      speed: 0,
+      position: Vector.create(buffer, top.position.y),
+      force: Vector.create(0, 0)
     });
+    Body.set(top, 'width', top.entity.width);
+    Body.set(top, 'height', top.entity.height);
+
     Body.set(right, 'entity', {
       type: 0,
       x: right.position.x,
       y: buffer,
       width: buffer,
-      height: this.height - (buffer * 2)
+      height: this.height - (buffer * 2),
+      speed: 0,
+      position: Vector.create(right.position.x, buffer),
+      force: Vector.create(0, 0)
     });
+    Body.set(right, 'width', right.entity.width);
+    Body.set(right, 'height', right.entity.height);
+
     Body.set(bottom, 'entity', {
       type: 0,
       x: buffer,
       y: bottom.position.y,
       width: this.width - (buffer * 2),
-      height: buffer
+      height: buffer,
+      speed: 0,
+      position: Vector.create(buffer, bottom.position.y),
+      force: Vector.create(0, 0)
     });
+    Body.set(bottom, 'width', bottom.entity.width);
+    Body.set(bottom, 'height', bottom.entity.height);
 
     this.addMatter([left, top, right, bottom]);
 
     return this;
-  }
-
-  /**
-   *
-   * @param {number} x
-   * @param {number} y
-   * @returns {MatterWorld}
-   */
-  addPerson(x, y) {
-    var currGroup = -1;
-    var headOptions = {
-        label: 'head',
-        friction: 1,
-        frictionAir: .05,
-        collisionFilter: {
-          group: currGroup
-        }
-      },
-      chestOptions = {
-        label: 'chest',
-        friction: 1,
-        frictionAir: .05,
-        collisionFilter: {
-          group: currGroup - 1
-        }
-      },
-      armOptions = {
-        type: 'capsule',
-        label: 'arm',
-        friction: 1,
-        frictionAir: .03,
-        collisionFilter: {
-          group: currGroup
-        }
-      },
-      legOptions = {
-        type: 'capsule',
-        label: 'leg',
-        friction: 1,
-        frictionAir: .03,
-        collisionFilter: {
-          group: currGroup - 1
-        }
-      },
-      head = Bodies.circle(x, y - 70, 30, headOptions),
-      chest = Bodies.rectangle(x, y, 60, 80, chestOptions),
-      rightUpperArm = Bodies.rectangle(x + 40, y - 20, 20, 40, armOptions),
-      rightLowerArm = Bodies.rectangle(x + 40, y + 20, 20, 60, armOptions),
-      leftUpperArm = Bodies.rectangle(x - 40, y - 20, 20, 40, armOptions),
-      leftLowerArm = Bodies.rectangle(x - 40, y + 20, 20, 60, armOptions),
-      leftUpperLeg = Bodies.rectangle(x - 20, y + 60, 20, 40, legOptions),
-      leftLowerLeg = Bodies.rectangle(x - 20, y + 100, 20, 60, legOptions),
-      rightUpperLeg = Bodies.rectangle(x + 20, y + 60, 20, 40, legOptions),
-      rightLowerLeg = Bodies.rectangle(x + 20, y + 100, 20, 60, legOptions),
-
-      //personBody = Body.create({
-      //  parts: [head, chest, leftUpperArm, rightUpperArm, leftUpperLeg, rightUpperLeg, leftLowerArm,
-      // rightLowerArm, leftLowerLeg, rightLowerLeg], collisionFilter: {group: currGroup - 1}, }),
-
-      headConstraint = Constraint.create({
-        label: 'headConstraint',
-        bodyA: head,
-        bodyB: chest,
-        pointA: {x: 0, y: 30},
-        pointB: {x: 0, y: -40},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      chestToRightUpperArm = Constraint.create({
-        label: 'chestToRightUpperArm',
-        bodyA: chest,
-        bodyB: rightUpperArm,
-        pointA: {x: 25, y: -35},
-        pointB: {x: 0, y: -15},
-        angularStiffness: 0.7,
-        stiffness: 0.7,
-      }),
-      chestToLeftUpperArm = Constraint.create({
-        label: 'chestToLeftUpperArm',
-        bodyA: chest,
-        bodyB: leftUpperArm,
-        pointA: {x: -25, y: -35},
-        pointB: {x: 0, y: -15},
-        angularStiffness: 0.7,
-        stiffness: 0.7,
-      }),
-      upperToLowerRightArm = Constraint.create({
-        label: 'upperToLowerRightArm',
-        bodyA: rightUpperArm,
-        bodyB: rightLowerArm,
-        pointA: {x: 0, y: 15},
-        pointB: {x: 0, y: -25},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      upperToLowerLeftArm = Constraint.create({
-        label: 'upperToLowerLeftArm',
-        bodyA: leftUpperArm,
-        bodyB: leftLowerArm,
-        pointA: {x: 0, y: 15},
-        pointB: {x: 0, y: -25},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      chestToUpperLeftLeg = Constraint.create({
-        label: 'chestToUpperLeftLeg',
-        bodyA: chest,
-        bodyB: leftUpperLeg,
-        pointA: {x: -20, y: 35},
-        pointB: {x: 0, y: -15},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      chestToUpperRightLeg = Constraint.create({
-        label: 'chestToUpperRightLeg',
-        bodyA: chest,
-        bodyB: rightUpperLeg,
-        pointA: {x: 20, y: 35},
-        pointB: {x: 0, y: -15},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      upperToLowerLeftLeg = Constraint.create({
-        label: 'upperToLowerLeftLeg',
-        bodyA: leftUpperLeg,
-        bodyB: leftLowerLeg,
-        pointA: {x: 0, y: 15},
-        pointB: {x: 0, y: -25},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      }),
-      upperToLowerRightLeg = Constraint.create({
-        label: 'upperToLowerRightLeg',
-        bodyA: rightUpperLeg,
-        bodyB: rightLowerLeg,
-        pointA: {x: 0, y: 15},
-        pointB: {x: 0, y: -25},
-        angularStiffness: 0.7,
-        stiffness: 0.7
-      });
-
-    var person = Composite.create({
-      bodies: [
-        head,
-        chest,
-        rightUpperArm,
-        rightLowerArm,
-        leftUpperArm,
-        leftLowerArm,
-        leftUpperLeg,
-        leftLowerLeg,
-        rightUpperLeg,
-        rightLowerLeg
-      ],
-      constraints: [
-        headConstraint,
-        chestToLeftUpperArm,
-        chestToRightUpperArm,
-        chestToUpperRightLeg,
-        chestToUpperLeftLeg,
-        upperToLowerLeftArm,
-        upperToLowerRightArm,
-        upperToLowerLeftLeg,
-        upperToLowerRightLeg
-      ]
-    });
-
-    return this.addMatter([person]);
-    //return World.add(this.engine.world, [person]);
   }
 
   /**
@@ -580,120 +418,92 @@ class MatterWorld {
    * @param {number} spacing
    * @returns {MatterWorld}
    */
-  addPlatforms(number, minWidth, maxWidth, spacing) {
-    // Ground
-    var n = Math.floor((this.height - 20) / number),
-      rows = Array(n),
-      platOpts = {isStatic: true, render: {visible: true}, label: 'Platform', shape: 'convex'},
-      plats = [];
+  addPlatforms(number, minWidth, maxWidth) {
+    let platOpts = {
+        isStatic: true,
+        label: 'Platform',
+        render: {
+          visible: true,
+          fillColor: '#FFFFFF',
+          lineColor: '#FFFFFF'
+        },
+        shape: 'rectangle'
+      },
+      platforms = [];
+
     for (let i = 0; i < number; i++) {
       let w = Utility.Maths.randi(minWidth, maxWidth),
         h = 5,
         x = Utility.Maths.randi(10, this.width - w),
         y = Utility.Maths.randi(10, this.height - h),
-        plat = Bodies.rectangle(x, y, w, h, platOpts);
-      plats.push(plat);
-      Body.set(plat, 'entity', {type: 0, x: x - w, y: y - h, width: w, height: h});
+        platform = Bodies.rectangle(x, y, w, h, platOpts);
+
+      Body.set(platform, 'entity', {
+        type: 0,
+        x: x - w,
+        y: y - h,
+        width: w,
+        height: h,
+        speed: 0,
+        position: Vector.create(x - w, y - h),
+        force: Vector.create(0, 0)
+      });
+      Body.set(platform, 'width', platform.entity.width);
+      Body.set(platform, 'height', platform.entity.height);
+
+      this.checkBounds(platform);
+      platforms.push(platform);
+
     }
 
-    this.addMatter(plats);
+    this.addMatter(platforms);
 
     return this;
   }
 
   /**
-   * Set the viewport
-   * @param {number} x
-   * @param {number} y
+   *
+   * @param {number} number
+   * @param {number} minWidth
+   * @param {number} maxWidth
+   * @param {number} spacing
+   * @returns {MatterWorld}
    */
-  setViewport(x, y) {
-    this.viewportCenter = {
-      x: this.width * 0.5,
-      y: this.height * 0.5
-    };
+  addWalls(walls) {
+    let wallOpts = {
+        isStatic: true,
+        label: 'Wall',
+        render: {
+          visible: true,
+          fillColor: '#FFFFFF',
+          lineColor: '#FFFFFF'
+        },
+        shape: 'rectangle'
+      },
+      wallBodies = [];
 
-    // make the world bounds a little bigger than the render bounds
-    this.engine.world.bounds.min.x = -x;
-    this.engine.world.bounds.min.y = -y;
-    this.engine.world.bounds.max.x = this.width + x;
-    this.engine.world.bounds.max.y = this.height + y;
+    for (let i = 0; i < walls.length; i++) {
+      let wall = walls[i],
+        body = Bodies.rectangle(wall.position.x, wall.position.y, wall.width, wall.height, wallOpts);
 
-    // keep track of current bounds scale (view zoom)
-    this.boundsScaleTarget = 1;
-    this.boundsScale = {x: 1, y: 1};
+      Body.set(body, 'entity', {
+        type: 0,
+        x: wall.position.x,
+        y: wall.position.y,
+        width: wall.width,
+        height: wall.height,
+        speed: 0,
+        position: Vector.create(wall.position.x - wall.width, wall.position.y - wall.height),
+        force: Vector.create(0, 0)
+      });
+      Body.set(body, 'width', body.entity.width);
+      Body.set(body, 'height', body.entity.height);
+      wallBodies.push(body);
+    }
 
-    // use the engine tick event to control our view
-    Events.on(this.engine, 'beforeTick', () => {
-      // mouse wheel controls zoom
-      let scaleFactor = this.render.mouse.wheelDelta * -0.1;
-      if (scaleFactor !== 0) {
-        if ((scaleFactor < 0 && this.boundsScale.x >= 0.6) || (scaleFactor > 0 && this.boundsScale.x <= 1.4)) {
-          this.boundsScaleTarget += scaleFactor;
-        }
-      }
+    this.addMatter(wallBodies);
 
-      // if scale has changed
-      if (Math.abs(this.boundsScale.x - this.boundsScaleTarget) > 0.01) {
-        // smoothly tween scale factor
-        scaleFactor = (this.boundsScaleTarget - this.boundsScale.x) * 0.2;
-        this.boundsScale.x += scaleFactor;
-        this.boundsScale.y += scaleFactor;
-
-        // scale the render bounds
-        this.render.bounds.max.x = this.render.bounds.min.x + this.width * this.boundsScale.x;
-        this.render.bounds.max.y = this.render.bounds.min.y + this.height * this.boundsScale.y;
-
-        // translate so zoom is from centre of view
-        this.translate = {
-          x: this.width * scaleFactor * -0.5,
-          y: this.height * scaleFactor * -0.5
-        };
-
-        Bounds.translate(this.render.bounds, this.translate);
-
-        // update mouse
-        Mouse.setScale(this.render.mouse, this.boundsScale);
-        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
-      }
-
-      // get vector from mouse relative to centre of viewport
-      let deltaCenter = Vector.sub(this.render.mouse.absolute, this.viewportCenter),
-        centerDist = Vector.magnitude(deltaCenter),
-        buttonHeld = this.render.mouse.button > -1;
-
-      // translate the view if mouse has moved over 50px from the
-      // center of viewport and the button is being held
-      if (centerDist > 50 && buttonHeld) {
-        // create a vector to translate the view, allowing the user to control view speed
-        let direction = Vector.normalise(deltaCenter),
-          speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
-
-        this.translate = Vector.mult(direction, speed);
-
-        // prevent the view moving outside the world bounds
-        if (this.render.bounds.min.x + this.translate.x < this.engine.world.bounds.min.x) {
-          this.translate.x = this.engine.world.bounds.min.x - this.render.bounds.min.x;
-        }
-
-        if (this.render.bounds.max.x + this.translate.x > this.engine.world.bounds.max.x) {
-          this.translate.x = this.engine.world.bounds.max.x - this.render.bounds.max.x;
-        }
-
-        if (this.render.bounds.min.y + this.translate.y < this.engine.world.bounds.min.y) {
-          this.translate.y = this.engine.world.bounds.min.y - this.render.bounds.min.y;
-        }
-
-        if (this.render.bounds.max.y + this.translate.y > this.engine.world.bounds.max.y) {
-          this.translate.y = this.engine.world.bounds.max.y - this.render.bounds.max.y;
-        }
-
-        // move the view
-        Bounds.translate(this.render.bounds, this.translate);
-
-        // we must update the mouse too
-        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
-      }
-    });
+    return this;
   }
 
   /**
@@ -701,13 +511,16 @@ class MatterWorld {
    * @param {Matter.Body} body
    */
   checkBounds(body) {
-    let maxX = this.engine.world.bounds.max.x - body.entity.radius,
-      maxY = this.engine.world.bounds.max.y - body.entity.radius,
-      minX = this.engine.world.bounds.min.x + body.entity.radius,
-      minY = this.engine.world.bounds.min.y + body.entity.radius,
+    let type = body.shape,
+      w = (type !== 'circle') ? body.width : body.entity.radius,
+      h = (type !== 'circle') ? body.height : body.entity.radius,
+      maxX = this.engine.world.bounds.max.x - w,
+      maxY = this.engine.world.bounds.max.y - h,
+      minX = this.engine.world.bounds.min.x + w,
+      minY = this.engine.world.bounds.min.y + h,
       spdAdj = body.entity.speed * 0.00025,
-      newPos = Vector.create(body.position.x, body.position.y),
-      newForce = Vector.create(body.entity.force.x, body.entity.force.y);
+      newPos = Matter.Vector.create(body.position.x, body.position.y),
+      newForce = Matter.Vector.create(body.entity.force.x, body.entity.force.y);
     if (body.speed > 2) {
       body.speed = body.entity.speed;
     }
@@ -736,77 +549,162 @@ class MatterWorld {
     this.updateBody(body, newPos, newForce);
   }
 
-  /**
-   * Set up the GUI for MatterTools
-   * @return {MatterWorld}
-   */
-  initControls() {
-    // need to add mouse constraint back in after gui clear or load is pressed
-    Events.on(this.gui, 'clear load', () => {
-      // add a mouse controlled constraint
-      this.mouseConstraint = MouseConstraint.create(this.engine, {
-        element: this.render.canvas
-      });
-      // pass mouse to renderer to enable showMousePosition
-      this.render.mouse = this.mouseConstraint.mouse;
-      World.add(this.engine.world, this.mouseConstraint);
-    });
+  setupTools() {
+    this.useInspector = useInspector;
+    this.isMobile = isMobile;
+    this.guiOptions = {
+      broadphase: 'grid',
+      amount: 1,
+      size: 40,
+      sides: 4,
+      density: 0.001,
+      restitution: 0,
+      friction: 0.1,
+      frictionStatic: 0.5,
+      frictionAir: 0.01,
+      offset: {
+        x: 0,
+        y: 0
+      },
+      renderer: 'canvas',
+      chamfer: 0,
+      isRecording: false
+    };
 
-    // need to rebind mouse on render change
-    Events.on(this.gui, 'setRenderer', () => {
-      Mouse.setElement(this.mouseConstraint.mouse, this.canvas);
-    });
-
-    // create a Matter.Inspector
-    if (Inspector && this.useInspector) {
-      this.inspector = Inspector.create(this.engine);
-
-      Events.on(this.inspector, 'import', () => {
-        this.mouseConstraint = MouseConstraint.create(this.engine);
+    let initControls = () => {
+      // need to add mouse constraint back in after gui clear or load is pressed
+      Events.on(this.gui, 'clear load', () => {
+        // add a mouse controlled constraint
+        this.mouseConstraint = MouseConstraint.create(this.engine, {
+          element: this.render.canvas
+        });
+        // pass mouse to renderer to enable showMousePosition
+        this.render.mouse = this.mouseConstraint.mouse;
         World.add(this.engine.world, this.mouseConstraint);
       });
 
-      Events.on(this.inspector, 'play', () => {
-        this.mouseConstraint = MouseConstraint.create(this.engine);
-        World.add(this.engine.world, this.mouseConstraint);
+      // need to rebind mouse on render change
+      Events.on(this.gui, 'setRenderer', () => {
+        Mouse.setElement(this.mouseConstraint.mouse, this.canvas);
       });
 
-      Events.on(this.inspector, 'selectStart', () => {
-        this.mouseConstraint.constraint.render.visible = false;
-      });
+      // create a Matter.Inspector
+      if (Inspector && this.useInspector) {
+        this.inspector = Inspector.create(this.engine);
 
-      Events.on(this.inspector, 'selectEnd', () => {
-        this.mouseConstraint.constraint.render.visible = true;
-      });
-    }
+        Events.on(this.inspector, 'import', () => {
+          this.mouseConstraint = MouseConstraint.create(this.engine);
+          World.add(this.engine.world, this.mouseConstraint);
+        });
 
-    return this;
+        Events.on(this.inspector, 'play', () => {
+          this.mouseConstraint = MouseConstraint.create(this.engine);
+          World.add(this.engine.world, this.mouseConstraint);
+        });
+
+        Events.on(this.inspector, 'selectStart', () => {
+          this.mouseConstraint.constraint.render.visible = false;
+        });
+
+        Events.on(this.inspector, 'selectEnd', () => {
+          this.mouseConstraint.constraint.render.visible = true;
+        });
+      }
+
+      return this;
+    };
+
+    // create a Matter.Gui
+    this.gui = Gui.create(this.engine, this.runner, this.render, this.guiOptions);
+    initControls();
+    Gui.update(this.gui, this.gui.datGui);
   }
-
   /**
-   * Set the events for the World to respond to remove/add
-   * @return {MatterWorld}
+   * Set the viewport
+   * @param {number} x
+   * @param {number} y
    */
-  setWorldEvents() {
-    // Body Add Events
-    Events.on(this.engine.world, 'beforeAdd', (event) => {
+  setViewport(x, y) {
+    document.addEventListener("contextmenu", function(e){
+      e.preventDefault();
+    }, false);
 
+    this.viewportCenter = Vector.create(this.width * 0.5, this.height * 0.5);
+    // Make the world bounds a little bigger than the render bounds
+    this.engine.world.bounds.min = Vector.create(-x, -y);
+    this.engine.world.bounds.max = Vector.create(this.width + x, this.height + y);
+
+    // keep track of current bounds scale (view zoom)
+    this.boundsScaleTarget = 1;
+    this.boundsScale = Vector.create(1, 1);
+
+    // use the engine tick event to control our view
+    Events.on(this.engine, 'beforeTick', () => {
+      // mouse wheel controls zoom
+      let scaleFactor = this.render.mouse.wheelDelta * -0.1;
+      if (scaleFactor !== 0) {
+        if ((scaleFactor < 0 && this.boundsScale.x >= 0.6) || (scaleFactor > 0 && this.boundsScale.x <= 1.4)) {
+          this.boundsScaleTarget += scaleFactor;
+        }
+      }
+
+      // If the scale has changed
+      if (Math.abs(this.boundsScale.x - this.boundsScaleTarget) > 0.01) {
+        // Smoothly tween scale factor
+        scaleFactor = (this.boundsScaleTarget - this.boundsScale.x) * 0.2;
+        this.boundsScale.x += scaleFactor;
+        this.boundsScale.y += scaleFactor;
+
+        // Scale the render bounds
+        this.render.bounds.max.x = this.render.bounds.min.x + this.width * this.boundsScale.x;
+        this.render.bounds.max.y = this.render.bounds.min.y + this.height * this.boundsScale.y;
+
+        // Translate so the zoom happens from the center of view
+        this.translate = Vector.create(this.width * scaleFactor * -0.5, this.height * scaleFactor * -0.5);
+
+        Bounds.translate(this.render.bounds, this.translate);
+
+        // Update the mouse
+        Mouse.setScale(this.render.mouse, this.boundsScale);
+        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
+      }
+
+      // Get the Vector of the mouse relative to center of the viewport
+      let deltaCenter = Vector.sub(this.render.mouse.absolute, this.viewportCenter),
+        centerDist = Vector.magnitude(deltaCenter),
+        buttonHeld = this.render.mouse.button;
+
+      // Translate the view if mouse has moved over 50px from the
+      // center of the viewport and the right button is being held
+      if (centerDist > 50 && buttonHeld === 2) {
+        // Create a vector to translate the view, allowing the user
+        // to control the view speed
+        let direction = Vector.normalise(deltaCenter),
+          speed = Math.min(10, Math.pow(centerDist - 50, 2) * 0.0002);
+        this.translate = Vector.mult(direction, speed);
+
+        // Prevent the view from moving outside the world bounds
+        if (this.render.bounds.min.x + this.translate.x < this.engine.world.bounds.min.x) {
+          this.translate.x = this.engine.world.bounds.min.x - this.render.bounds.min.x;
+        }
+        if (this.render.bounds.max.x + this.translate.x > this.engine.world.bounds.max.x) {
+          this.translate.x = this.engine.world.bounds.max.x - this.render.bounds.max.x;
+        }
+
+        if (this.render.bounds.min.y + this.translate.y < this.engine.world.bounds.min.y) {
+          this.translate.y = this.engine.world.bounds.min.y - this.render.bounds.min.y;
+        }
+        if (this.render.bounds.max.y + this.translate.y > this.engine.world.bounds.max.y) {
+          this.translate.y = this.engine.world.bounds.max.y - this.render.bounds.max.y;
+        }
+
+        // Move the view
+        Bounds.translate(this.render.bounds, this.translate);
+
+        // Update the mouse too
+        Mouse.setOffset(this.render.mouse, this.render.bounds.min);
+      }
     });
-
-    Events.on(this.engine.world, 'afterAdd', (event) => {
-
-    });
-
-    // Body Remove Events
-    Events.on(this.engine.world, 'beforeRemove', (event) => {
-
-    });
-
-    Events.on(this.engine.world, 'afterRemove', (event) => {
-      this.addEntities();
-    });
-
-    return this;
   }
 
   /**
@@ -849,12 +747,33 @@ class MatterWorld {
   }
 
   /**
+   * Set the Renderer's events for updates
+   * @return {MatterWorld}
+   */
+  setRenderEvents() {
+    // Render events
+    Events.on(this.render, 'beforeRender', (event) => {
+
+    });
+
+    Events.on(this.render, 'afterRender', (event) => {
+
+    });
+  }
+
+  /**
    * Set the Runner's events for updates
    * @return {MatterWorld}
    */
   setRunnerEvents() {
     // Tick Events
     Events.on(this.runner, 'beforeTick', (event) => {
+
+    });
+
+    // Update events
+    Events.on(this.runner, 'beforeUpdate', (event) => {
+
     });
 
     Events.on(this.runner, 'tick', (event) => {
@@ -866,10 +785,6 @@ class MatterWorld {
       }
     });
 
-    Events.on(this.runner, 'beforeUpdate', (event) => {
-
-    });
-
     Events.on(this.runner, 'afterUpdate', (event) => {
       let bodies = Composite.allBodies(this.engine.world);
       for (let i = 0; i < bodies.length; i++) {
@@ -877,14 +792,6 @@ class MatterWorld {
           this.checkBounds(bodies[i]);
         }
       }
-    });
-
-    Events.on(this.render, 'beforeRender', (event) => {
-
-    });
-
-    Events.on(this.render, 'afterRender', (event) => {
-
     });
 
     Events.on(this.runner, 'afterTick', (event) => {
@@ -897,6 +804,33 @@ class MatterWorld {
   }
 
   /**
+   * Set the events for the World to respond to remove/add
+   * @return {MatterWorld}
+   */
+  setWorldEvents() {
+    // Body Add Events
+    Events.on(this.engine.world, 'beforeAdd', (event) => {
+
+    });
+
+    Events.on(this.engine.world, 'afterAdd', (event) => {
+
+    });
+
+    // Body Remove Events
+    Events.on(this.engine.world, 'beforeRemove', (event) => {
+
+    });
+
+    Events.on(this.engine.world, 'afterRemove', (event) => {
+      this.addEntities();
+    });
+
+    return this;
+  }
+
+
+  /**
    * Update the body with new position and force
    * @param {Matter.Body} body
    * @param {Matter.Vector} position
@@ -905,8 +839,42 @@ class MatterWorld {
    */
   updateBody(body, position, force) {
     body.entity.force = force;
-    Body.setPosition(body, position);
+    Body.applyForce(body, position, force);
 
     return this;
   }
+
+
+  /**
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} points - number of points (or number of sides for polygons)
+   * @param {number} radA - "outer" radius of the star
+   * @param {number} radB - "inner" radius of the star (if equal to radius1, a polygon is drawn)
+   * @param {number} a - initial angle (clockwise), by default, stars and polygons are 'pointing' up
+   */
+  static drawStarHexShape(x, y, points, radA, radB, a) {
+    let i, angle, radius, vertices = [];
+    if (radB !== radA) {
+      points = 2 * points;
+    }
+    for (i = 0; i <= points; i++) {
+      angle = i * 2 * Math.PI / points - Math.PI / 2 + a;
+      radius = i % 2 === 0 ? radA : radB;
+      let px = x + radius * Math.cos(angle),
+        py = y + radius * Math.sin(angle);
+      vertices.push({
+        x: px,
+        y: py
+      });
+    }
+
+    return vertices;
+  }
 }
+
+MatterWorld.entityTypes = entityTypes;
+MatterWorld.textColorStyles = textColorStyles;
+MatterWorld.hexColorStyles = hexColorStyles;
+MatterWorld.entityCollisionCategories = entityCollisionCategories;

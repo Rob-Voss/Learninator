@@ -1,0 +1,135 @@
+{
+  "__config__": {
+    "name": "plastic",
+    "resources": [
+      "./plastic-atlas.json",
+      "../fonts/desyrel.fnt"
+    ]
+  },
+  "default": {
+    "scale": 0.5,
+    "bg": "grey_layout_center",
+    "padding" : 0,
+    "bgPadding": 0,
+    "corner": "",
+    "line": "",
+    "font": {
+      "size": "20px",
+      "family": "Arial",
+      "color": "black"
+    }
+  },
+  "Window": {
+    "bgPadding": 0,
+    "padding": 0,
+    "line": {
+      "default": "beige_layout_top"
+    },
+    "corner": {
+      "default": "beige_layout_tl_corner"
+    }
+  },
+  "List": {
+    "bgPadding": 0,
+    "padding": 0,
+    "bg": "grey_layout_center",
+    "line-l": {
+      "default": "beige_layout_left"
+    },
+    "line-r": {
+      "default": "beige_layout_right"
+    },
+    "line-t": {
+      "default": "beige_layout_top"
+    },
+    "line-b": {
+      "default": "beige_window_bottom_middle"
+    },
+    "corner-bl": {
+      "default": "beige_window_bottom_left"
+    },
+    "corner-br": {
+      "default": "beige_window_bottom_right"
+    },
+    "corner-tl": {
+      "default": "beige_layout_tl_corner"
+    },
+    "corner-tr": {
+      "default": "beige_layout_tr_corner"
+    }
+  },
+  "Layout": {
+    "bgPadding": 0,
+    "padding": 0,
+    "line": {
+      "default": "beige_layout_top"
+    },
+    "corner": {
+      "default": "beige_layout_tl_corner"
+    }
+  },
+  "Header": {
+    "bgPadding": 0,
+    "padding": 0,
+    "line": {
+      "default": "beige_layout_top"
+    },
+    "corner": {
+      "default": "beige_layout_tl_corner"
+    },
+    "font": {
+      "size": "12px"
+    }
+  },
+  "Button": {
+    "line": {
+      "default": "beige_layout_top"
+    },
+    "corner": {
+      "default": "beige_layout_tl_corner"
+    },
+    "font": {
+      "size": "10px"
+    }
+  },
+  "Input": {
+    "bgPadding": 0,
+    "padding": 0,
+    "line": {
+      "default": "beige_layout_top"
+    },
+    "font": {
+      "size": "10px"
+    }
+  },
+  "Checkbox": {
+    "checkmark": "beige_checkbox_checked",
+    "bgPadding": 0,
+    "padding": 0,
+    "bg": {
+      "default": "beige_checkbox_empty",
+      "down": "beige_checkbox_empty",
+      "up": "beige_checkbox_empty",
+      "hover": "beige_checkbox_empty",
+      "out": "beige_checkbox_empty"
+    },
+    "font": {
+      "size": "10px"
+    }
+  },
+  "Radio": {
+    "checkmark": "beige_radio_checked",
+    "bgPadding": 0,
+    "padding": 0,
+    "bg": {
+      "default": "beige_radio_empty",
+      "down": "beige_radio_checked",
+      "up": "beige_radio_empty",
+      "hover": "beige_radio_empty",
+      "out": "beige_radio_empty"
+    },
+    "font": {
+      "size": "10px"
+    }
+  }
+}

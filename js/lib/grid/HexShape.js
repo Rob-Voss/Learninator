@@ -13,6 +13,7 @@ class HexShape extends Hex {
    */
   constructor(hex, layout, opts) {
     super(hex.q, hex.r, hex.s);
+
     this.layout = layout;
     this.size = Utility.getOpt(opts, 'size', 10);
     this.cellSize = Utility.getOpt(opts, 'cellSize', 50);
@@ -32,15 +33,20 @@ class HexShape extends Hex {
 
     this.isOver = false;
     this.isDown = false;
+    this.color = HexShape.colorForHex(this.q, this.r, this.s);
+    this.alpha = 1;
     this.reward = null;
     this.value = null;
     this.walls = [];
-
+    this.txtOpts = {
+      fontSize: '9px',
+      fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
+      fill: '#000000',
+      align: 'left'
+    };
     // Add a container to hold our display cheats
     this.cheatsContainer = new PIXI.Container();
     this.wallContainer = new PIXI.Container();
-    this.color = HexShape.colorForHex(this.q, this.r, this.s);
-    this.alpha = 1;
     if (this.useSprite) {
       this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame('dirt_0' + Utility.Maths.randi(1, 9) + '.png'));
       this.graphics.anchor.set(0.5, 0.5);
@@ -54,8 +60,6 @@ class HexShape extends Hex {
     } else {
       this.graphics = new PIXI.Graphics();
     }
-
-    this.draw();
 
     this.graphics.interactive = true;
     this.graphics
@@ -89,6 +93,8 @@ class HexShape extends Hex {
         this.draw();
       });
     this.graphics.addChild(this.cheatsContainer);
+    // this.graphics.addChild(this.wallContainer);
+    this.draw();
 
     return this;
   }
@@ -98,12 +104,6 @@ class HexShape extends Hex {
    * @returns {HexShape}
    */
   addCheats() {
-    this.txtOpts = {
-      fontSize: '10px',
-      fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
-      fill: "#000000",
-      align: "center"
-    };
     if (this.cheats.id) {
       this.corners.forEach((corner, id) => {
         if (corner.idText === undefined) {
@@ -148,6 +148,10 @@ class HexShape extends Hex {
     return this;
   }
 
+  /**
+   *
+   * @return {HexShape}
+   */
   updateCheats() {
     this.addCheats();
     if (this.cheats.id) {
@@ -212,8 +216,7 @@ class HexShape extends Hex {
       this.graphics.alpha = this.alpha;
     } else {
       this.graphics.clear();
-      this.graphics.color = this.color;
-      this.graphics.lineStyle(0, 0x000000, 0);
+      this.graphics.lineStyle(0, 0x000000, this.alpha);
       if (this.fill) {
         this.graphics.beginFill(this.color, this.alpha);
       }
@@ -222,40 +225,32 @@ class HexShape extends Hex {
         this.graphics.endFill();
       }
       this.bounds = this.graphics.getBounds();
-      /*
 
-       if (this.reward !== null && this.value !== null) {
-       let textOpts = {
-       fontSize: '10px',
-       fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
-       fill: '#000000',
-       align: 'left'
-       };
-       let rew = this.reward.toFixed(1),
-       val = this.value.toFixed(2),
-       rewTxt = 'R:' + rew,
-       valTxt = 'V:' + val;
-       if (this.rewardText === undefined) {
-       this.rewardText = new PIXI.Text(rewTxt, textOpts);
-       this.rewardText.anchor = new PIXI.Point(0.5, 0.5);
-       this.rewardText.position.set(this.center.x, this.center.y - 8);
-       this.graphics.addChild(this.rewardText);
-       } else {
-       this.rewardText = this.graphics.getChildAt(this.graphics.getChildIndex(this.rewardText));
-       this.rewardText.text = rewTxt;
-       }
+      if (this.reward !== null && this.value !== null) {
+        let rew = this.reward.toFixed(1),
+          val = this.value.toFixed(2),
+          rewTxt = 'R:' + rew,
+          valTxt = 'V:' + val;
+        if (this.rewardText === undefined) {
+          this.rewardText = new PIXI.Text(rewTxt, this.txtOpts);
+          this.rewardText.anchor = new PIXI.Point(0.5, 0.5);
+          this.rewardText.position.set(this.center.x, this.center.y - 8);
+          this.graphics.addChild(this.rewardText);
+        } else {
+          this.rewardText = this.graphics.getChildAt(this.graphics.getChildIndex(this.rewardText));
+        }
+        this.rewardText.text = (rew != 0) ? rewTxt : '';
 
-       if (this.valueText === undefined) {
-       this.valueText = new PIXI.Text(valTxt, textOpts);
-       this.valueText.anchor = new PIXI.Point(0.5, 0.5);
-       this.valueText.position.set(this.center.x, this.center.y + 8);
-       this.graphics.addChild(this.valueText);
-       } else {
-       this.valueText = this.graphics.getChildAt(this.graphics.getChildIndex(this.valueText));
-       this.valueText.text = valTxt;
-       }
-       }
-       */
+        if (this.valueText === undefined) {
+          this.valueText = new PIXI.Text(valTxt, this.txtOpts);
+          this.valueText.anchor = new PIXI.Point(0.5, 0.5);
+          this.valueText.position.set(this.center.x, this.center.y + 8);
+          this.graphics.addChild(this.valueText);
+        } else {
+          this.valueText = this.graphics.getChildAt(this.graphics.getChildIndex(this.valueText));
+        }
+        this.valueText.text = (val != 0) ? valTxt : '';
+      }
     }
 
     this.updateCheats();

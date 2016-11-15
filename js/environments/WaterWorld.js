@@ -37,7 +37,7 @@
             autoResize: false,
             resizable: false,
             transparent: false,
-            resolution: window.devicePixelRatio,
+            resolution: 1,
             noWebGL: false,
             width: 800,
             height: 800
@@ -64,7 +64,7 @@
             numTypes: 5,
             numActions: 4,
             numProprioception: 2,
-            worker: false,
+            worker: true,
             interactive: false,
             useSprite: false
           },

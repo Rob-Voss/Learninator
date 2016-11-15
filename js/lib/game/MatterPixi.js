@@ -8,14 +8,11 @@ const Engine = Matter.Engine,
   Composite = Matter.Composite,
   Constraint = Matter.Constraint,
   Events = Matter.Events,
-  Grid = Matter.Grid,
   MouseConstraint = Matter.MouseConstraint,
   Mouse = Matter.Mouse,
-  Vector = Matter.Vector,
-
-  entityTypes = ['Wall', 'Nom', 'Gnar', 'Entity Agent', 'Agent', 'Agent Worker'],
-  styles = ['black', 'green', 'red', 'olive', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'lime'],
-  hexStyles = [0x000000, 0x00FF00, 0xFF0000, 0x808000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x00FF00];
+  Query = Matter.Query,
+  Runner = Matter.Runner,
+  Vector = Matter.Vector;
 
 let _requestAnimationFrame,
   _cancelAnimationFrame;
@@ -43,27 +40,13 @@ class MatterPixi {
 
   /**
    * Creates a new Pixi.js WebGL renderer
-   * @param options
+   * @param {MatterWorld} world
    * @returns {MatterPixi}
    */
-  constructor(options) {
+  constructor(world) {
     this.controller = MatterPixi;
-    this.options = options;
-    this.engine = null;
-    this.element = null;
-    this.canvas = null;
-    this.runner = null;
-    this.renderer = null;
-    this.stage = null;
-    this.displayContainer = null;
-    this.primitiveContainer = null;
-    this.spriteContainer = null;
-    Common.extend(this, options);
-    this.transparent = !this.options.wireframes && this.options.background === 'transparent';
-
-    this.stage.addChild(this.primitiveContainer);
-    this.stage.addChild(this.spriteContainer);
-    this.stage.addChild(this.displayContainer);
+    Common.extend(this, world);
+    this.transparent = !this.renderOptions.wireframes && this.renderOptions.background === 'transparent';
 
     // event listeners
     Events.on(this.engine, 'beforeUpdate', () => {
@@ -100,18 +83,24 @@ class MatterPixi {
       let pGfx,
         part = body.parts[k],
         partId = 'b-' + part.id,
-        lineWidth = part.render.lineWidth,
-        fillStyle = Common.colorToNumber(part.render.fillStyle),
-        strokeStyle = Common.colorToNumber(part.render.strokeStyle),
-        strokeStyleWireframe = Common.colorToNumber('#bbb'),
+        showInternal = this.renderOptions.showInternalEdges,
+        showWireframes = this.renderOptions.wireframes,
+        wireframeBackground = this.renderOptions.wireframeBackground,
+        lineWidth = part.render.lineWidth || 1,
+        alpha = part.render.alpha || 1,
+        wireframeFillColor = Common.colorToNumber(wireframeBackground || '#000000'),
+        fillColor = Common.colorToNumber(part.render.fillColor || '#000000'),
+        lineColor = Common.colorToNumber(part.render.lineColor || '#000000'),
+        lineColorWireframe = Common.colorToNumber('#bbb'),
         styleSettings = {
-          alpha: 1,
+          alpha: alpha,
           lineWidth: lineWidth,
-          fillStyle: (this.options.wireframes) ? 0 : fillStyle,
-          lineStyle: (this.options.wireframes) ? strokeStyleWireframe : strokeStyle
+          fillColor: (showWireframes) ? wireframeFillColor : fillColor,
+          lineColor: (showWireframes) ? lineColorWireframe : lineColor
         },
         x = part.position.x - body.position.x,
         y = part.position.y - body.position.y;
+
       if (!part.render.visible) {
         continue;
       }
@@ -120,7 +109,7 @@ class MatterPixi {
         pGfx = this.sprites[partId];
         // Create it if it doesn't exist in cache
         if (!pGfx) {
-          this._createBodySprite(this, part);
+          MatterPixi._createBodySprite(this, part);
           pGfx = this.sprites[partId];
         }
         pGfx.scale.x = body.render.sprite.xScale || 1;
@@ -129,19 +118,24 @@ class MatterPixi {
         pGfx = this.primitives[partId];
         // Create it if it doesn't exist in cache
         if (!pGfx) {
-          this._createBodyPrimitive(this, part);
+          MatterPixi._createBodyPrimitive(this, part);
           pGfx = this.primitives[partId];
           pGfx.initialAngle = body.angle;
         }
-        if (part.shape === 'circle') {
-          // If it's a circle
-          this._drawCircle(pGfx, x, y, part.circleRadius, styleSettings);
-        } else if (part.shape === 'capsule') {
-          // If it's a capsule
-          this._drawCapsule(pGfx, x, y, 1.6, 40, 10, styleSettings);
+        if (part.shape === 'capsule') {
+          MatterPixi._drawCapsule(pGfx, x, y, 1.6, 40, 10, styleSettings);
+        } else if (part.shape === 'circle') {
+          MatterPixi._drawCircle(pGfx, x, y, part.circleRadius, styleSettings);
         } else if (part.shape === 'convex') {
-          // If it's a convex shape
-          this._drawConvex(pGfx, part, part.vertices, styleSettings);
+          MatterPixi._drawConvex(pGfx, part, part.vertices, styleSettings, showInternal);
+        } else if (part.shape === 'line') {
+          MatterPixi._drawLine(pGfx, length, styleSettings);
+        } else if (part.shape === 'path') {
+          MatterPixi._drawPath(pGfx, part.vertices, styleSettings);
+        } else if (part.shape === 'plane') {
+          MatterPixi._drawPlane(pGfx, styleSettings);
+        } else if (part.shape === 'rectangle') {
+          MatterPixi._drawRectangle(pGfx, x, y, part.width, part.height, styleSettings);
         }
       }
       pGfx.position.x = part.position.x;
@@ -161,7 +155,7 @@ class MatterPixi {
           eye.v2 = Vector.create(eyeEndX, eyeEndY);
 
           // Draw the agent's line of sights
-          pGfx.lineStyle(1, (eye.sensed.type > -1) ? hexStyles[eye.sensed.type] : 0xFFFFFF, 1);
+          pGfx.lineStyle(1, (eye.sensed.type > -1) ? hexColorStyles[eye.sensed.type] : 0xFFFFFF, 1);
           pGfx.beginFill();
           pGfx.moveTo(eye.v1.x, eye.v1.y);
           pGfx.lineTo(eye.v2.x, eye.v2.y);
@@ -196,8 +190,8 @@ class MatterPixi {
         pGfx = this.primitives[partId];
       }
       if (pGfx) {
-        if (this.options.showAxes) {
-          if (this.options.wireframes) {
+        if (this.renderOptions.showAxes) {
+          if (this.renderOptions.wireframes) {
             pGfx.lineStyle(1, strokeStyleWireframeIndicator, 0.7);
           } else {
             pGfx.lineStyle(1, strokeStyleIndicator, 1);
@@ -215,7 +209,7 @@ class MatterPixi {
           }
           pGfx.endFill();
         } else {
-          if (this.options.wireframes) {
+          if (this.renderOptions.wireframes) {
             pGfx.lineStyle(1, strokeStyleWireframeIndicator, 1);
           } else {
             pGfx.lineStyle(1, strokeStyleIndicator);
@@ -249,9 +243,6 @@ class MatterPixi {
     }
 
     for (let j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
-      /**
-       * @type {PIXI.Graphics} pGfx
-       */
       let pGfx,
         part = parts[j],
         partId = 'b-' + part.id;
@@ -261,7 +252,7 @@ class MatterPixi {
         pGfx = this.primitives[partId];
       }
       if (pGfx) {
-        if (this.options.wireframes) {
+        if (this.renderOptions.wireframes) {
           pGfx.lineStyle(1, Common.colorToNumber('rgba(255,255,255)'), 0.8);
         } else {
           pGfx.lineStyle(1, Common.colorToNumber('rgba(0,0,0)'), 0.8);
@@ -333,16 +324,14 @@ class MatterPixi {
       if (pGfx) {
         pGfx.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.8);
         pGfx.drawCircle(pX, pY, 2);
-        //partGraphic.arc(pX, pY, 2, 0, 2 * Math.PI, false);
         pGfx.endFill();
 
-        if (this.options.wireframes) {
+        if (this.renderOptions.wireframes) {
           pGfx.beginFill(0xB0171F, 0.1);
         } else {
           pGfx.beginFill(0x000000, 0.5);
         }
         pGfx.drawCircle(x, y, 3);
-        //partGraphic.arc(x, y, 3, 0, 2 * Math.PI, false);
         pGfx.endFill();
       }
     }
@@ -375,7 +364,7 @@ class MatterPixi {
           px = x + (part.positionPrev.x - body.position.x),
           py = y + (part.positionPrev.y - body.position.y);
         pGfx.lineStyle(1, 0x6495ED, 1);
-        pGfx.beginFill();
+        pGfx.beginFill(1, 0x6495ED);
         pGfx.moveTo(x, y);
         pGfx.lineTo(px * 2, py * 2);
         pGfx.endFill();
@@ -388,13 +377,11 @@ class MatterPixi {
    * @method clear
    */
   clear() {
-    // Clear stage container
-    this.stage.removeChildren();
-    this.primitiveContainer.removeChildren();
-    this.spriteContainer.removeChildren();
-    this.displayContainer.removeChildren();
-
-    let bgSprite = this.sprites['bg-0'];
+    // Clear stage and all other containers
+    this.stage.removeChildren(0, this.stage.children.length);
+    this.primitiveContainer.removeChildren(0, this.primitiveContainer.children.length);
+    this.spriteContainer.removeChildren(0, this.spriteContainer.children.length);
+    this.displayContainer.removeChildren(0, this.displayContainer.children.length);
 
     // Clear caches
     this.textures = {};
@@ -402,9 +389,8 @@ class MatterPixi {
     this.primitives = {};
 
     // Set background sprite
-    this.sprites['bg-0'] = bgSprite;
-    if (bgSprite) {
-      this.stage.addChildAt(bgSprite, 0);
+    if (this.sprites['bg-0']) {
+      this.stage.addChildAt(this.sprites['bg-0'], 0);
     }
 
     // Reset background state
@@ -424,7 +410,7 @@ class MatterPixi {
    * Show the collision points
    * @private
    * @method collisions
-   * @param {pair[]} pairs
+   * @param {Array} pairs
    */
   collisions(pairs) {
     // render collision positions
@@ -440,7 +426,7 @@ class MatterPixi {
           cGfx = new PIXI.Graphics();
 
         cGfx.clear();
-        if (this.options.wireframes) {
+        if (this.renderOptions.wireframes) {
           cGfx.beginFill(0xFFFFFF, 0.7);
         } else {
           cGfx.beginFill(0xFFA500, 1);
@@ -463,7 +449,7 @@ class MatterPixi {
 
       cGfx.clear();
       cGfx.beginFill();
-      if (this.options.wireframes) {
+      if (this.renderOptions.wireframes) {
         cGfx.lineStyle(1, Common.colorToNumber('rgba(255,165,0)'), 0.7);
       } else {
         cGfx.lineStyle(1, 0xFFA500, 1);
@@ -515,7 +501,8 @@ class MatterPixi {
       return;
     }
 
-    // render the constraint on every update, since they can change dynamically
+    // render the constraint on every update,
+    // since they can change dynamically
     pGfx.clear();
     pGfx.beginFill(0, 0);
     pGfx.lineStyle(constraintRender.lineWidth, Common.colorToNumber(constraintRender.strokeStyle), 1);
@@ -551,7 +538,7 @@ class MatterPixi {
       dbgTxt = this.primitives['debug'] = new PIXI.Text('', textOpts);
     }
 
-    var text = "";
+    let text = "";
 
     if (metrics.timing) {
       text += "fps: " + Math.round(metrics.timing.fps) + space;
@@ -595,7 +582,7 @@ class MatterPixi {
       if (grid.buckets[bucketId].length < 2) {
         continue;
       }
-      if (this.options.wireframes) {
+      if (this.renderOptions.wireframes) {
         gridGfx.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.1);
       } else {
         gridGfx.beginFill(Common.colorToNumber('rgba(255,180,0)'), 0.5);
@@ -617,9 +604,9 @@ class MatterPixi {
    * @method mousePosition
    */
   mousePosition() {
-    //var c = context;
-    //c.fillStyle = 'rgba(255,255,255,0.8)';
-    //c.fillText(mouse.position.x + '  ' + mouse.position.y, mouse.position.x + 5, mouse.position.y - 5);
+    var c = context;
+    c.fillStyle = 'rgba(255,255,255,0.8)';
+    c.fillText(mouse.position.x + '  ' + mouse.position.y, mouse.position.x + 5, mouse.position.y - 5);
   }
 
   /**
@@ -661,7 +648,7 @@ class MatterPixi {
    * Show the separations
    * @private
    * @method separations
-   * @param {pair[]} pairs
+   * @param {Array} pairs
    */
   separations(pairs) {
     // render separations
@@ -670,7 +657,7 @@ class MatterPixi {
         sepGfx = new PIXI.Graphics();
 
       sepGfx.clear();
-      if (this.options.wireframes) {
+      if (this.renderOptions.wireframes) {
         sepGfx.beginFill(Common.colorToNumber('rgba(255,165,0)'), 0.5);
       } else {
         sepGfx.beginFill(0xFFA500, 1);
@@ -701,6 +688,7 @@ class MatterPixi {
       sepGfx.moveTo(bodyA.position.x, bodyA.position.y);
       sepGfx.lineTo(bodyA.position.x + collision.penetration.x * k, bodyA.position.y + collision.penetration.y * k);
       sepGfx.endFill();
+
       this.displayContainer.addChild(sepGfx);
     }
   }
@@ -724,7 +712,7 @@ class MatterPixi {
       } else {
         // initialise background sprite if needed
         if (!bgSprite) {
-          let texture = this._getTexture(this, background);
+          let texture = MatterPixi._getTexture(this, background);
           bgSprite = this.sprites['bg-0'] = new PIXI.Sprite(texture);
           bgSprite.position.x = 0;
           bgSprite.position.y = 0;
@@ -741,31 +729,27 @@ class MatterPixi {
    * @method stop
    * @param {render} render
    */
-  stop(render) {
+  static stop(render) {
     _cancelAnimationFrame(render.frameRequestId);
   }
 
   /**
    * Perform world actions
-   * @param {number} delta
    */
-  world(delta) {
+  world() {
     let allBodies = Composite.allBodies(this.engine.world),
       allConstraints = Composite.allConstraints(this.engine.world),
       constraints = [],
       bodies = [],
+      showWireframes = this.renderOptions.wireframes,
       event = {
         timestamp: this.engine.timing.timestamp
       };
 
-    if (this.options.wireframes) {
-      this.setBackground(this.options.wireframeBackground);
-    } else {
-      this.setBackground(this.options.background);
-    }
+    this.setBackground((showWireframes) ? this.renderOptions.wireframeBackground : this.renderOptions.background);
 
     Events.trigger(this, 'beforeRender', event);
-    if (this.options.hasBounds) {
+    if (this.renderOptions.hasBounds) {
       this.engine.world.bounds = this.bounds;
       // Handle bounds
       let boundsWidth = this.bounds.max.x - this.bounds.min.x,
@@ -780,7 +764,7 @@ class MatterPixi {
         if (over) {
           bodies.push(body);
         } else {
-          console.log();
+          // console.log();
         }
       }
       // Hide constraints that are not in view
@@ -806,7 +790,10 @@ class MatterPixi {
 
       // transform the view
       this.stage.scale.set(1 / boundsScaleX, 1 / boundsScaleY);
-      this.stage.position.set(-this.bounds.min.x * (1 / boundsScaleX), -this.bounds.min.y * (1 / boundsScaleY));
+      this.stage.position.set(
+        -this.bounds.min.x * (1 / boundsScaleX),
+        -this.bounds.min.y * (1 / boundsScaleY)
+      );
     } else {
       constraints = allConstraints;
     }
@@ -815,22 +802,22 @@ class MatterPixi {
       this.body(bodies[i]);
 
       // Body display options
-      if (this.options.showIds) {
+      if (this.renderOptions.showIds) {
         this.bodyIds(bodies[i]);
       }
-      if (this.options.showBounds) {
+      if (this.renderOptions.showBounds) {
         this.bodyBounds(bodies[i]);
       }
-      if (this.options.showAxes || this.options.showAngleIndicator) {
+      if (this.renderOptions.showAxes || this.renderOptions.showAngleIndicator) {
         this.bodyAxes(bodies[i]);
       }
-      if (this.options.showPositions) {
+      if (this.renderOptions.showPositions) {
         this.bodyPositions(bodies[i]);
       }
-      if (this.options.showVelocity) {
+      if (this.renderOptions.showVelocity) {
         this.bodyVelocity(bodies[i]);
       }
-      if (this.options.showVertexNumbers) {
+      if (this.renderOptions.showVertexNumbers) {
         this.vertexNumbers(bodies[i]);
       }
     }
@@ -840,26 +827,26 @@ class MatterPixi {
     }
 
     // Engine display options
-    if (this.options.showSeparations) {
+    if (this.renderOptions.showSeparations) {
       this.separations(this.engine.pairs.list);
     }
-    if (this.options.showCollisions) {
+    if (this.renderOptions.showCollisions) {
       this.collisions(this.engine.pairs.list);
     }
-    if (this.options.showMousePosition) {
+    if (this.renderOptions.showMousePosition) {
       this.mousePosition(this.mouse);
     }
-    if (this.options.showBroadphase) {
+    if (this.renderOptions.showBroadphase) {
       this.grid();
     }
-    if (this.options.showDebug) {
+    if (this.renderOptions.showDebug) {
       this.debug();
     }
-    if (this.options.hasBounds) {
-      // this.context.setTransform(this.options.pixelRatio, 0, 0, this.options.pixelRatio, 0, 0);
+    if (this.renderOptions.hasBounds) {
+      // this.context.setTransform(this.renderOptions.pixelRatio, 0, 0, this.renderOptions.pixelRatio, 0, 0);
     }
-    this.renderer.render(this.stage);
 
+    this.renderer.render(this.stage);
     Events.trigger(this, 'afterRender', event);
   }
 
@@ -871,14 +858,15 @@ class MatterPixi {
    * @param {Matter.Body} body
    * @return {PIXI.Sprite} sprite
    */
-  _createBodySprite(render, body) {
+  static _createBodySprite(render, body) {
     // handle compound parts
     for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
       let part = body.parts[k],
         partRender = part.render,
         texturePath = partRender.sprite.texture,
-        texture = this._getTexture(render, texturePath),
-        pGfx = new PIXI.Sprite(texture);
+        texture = MatterPixi._getTexture(render, texturePath),
+        pGfx = new PIXI.Sprite(texture),
+        container = render.spriteContainer;
       pGfx.anchor.x = body.render.sprite.xOffset;
       pGfx.anchor.y = body.render.sprite.yOffset;
       pGfx.scale.x = body.render.sprite.xScale || 1;
@@ -886,8 +874,8 @@ class MatterPixi {
       render.sprites['b-' + part.id] = pGfx;
 
       // Add to scene graph if not already there
-      if (Common.indexOf(render.spriteContainer.children, pGfx) === -1) {
-        render.spriteContainer.addChild(pGfx);
+      if (Common.indexOf(container.children, pGfx) === -1) {
+        container.addChild(pGfx);
       }
     }
   }
@@ -900,16 +888,18 @@ class MatterPixi {
    * @param {Matter.Body} body
    * @return {PIXI.Graphics} graphics
    */
-  _createBodyPrimitive(render, body) {
+  static _createBodyPrimitive(render, body) {
     for (let k = body.parts.length > 1 ? 1 : 0; k < body.parts.length; k++) {
       let part = body.parts[k],
-        pGfx = new PIXI.Graphics();
+        pGfx = new PIXI.Graphics(),
+        container = render.primitiveContainer;
+
       pGfx.initialAngle = part.angle;
       render.primitives['b-' + part.id] = pGfx;
 
       // Add to scene graph if not already there
-      if (Common.indexOf(render.primitiveContainer.children, pGfx) === -1) {
-        render.primitiveContainer.addChild(pGfx);
+      if (Common.indexOf(container.children, pGfx) === -1) {
+        container.addChild(pGfx);
       }
     }
   }
@@ -922,12 +912,12 @@ class MatterPixi {
    * @param {string} imagePath
    * @return {PIXI.Texture} texture
    */
-  _getTexture(render, imagePath) {
-    let texture = render.textures[imagePath];
-    if (!texture) {
-      texture = render.textures[imagePath] = PIXI.Texture.fromImage(imagePath);
+  static _getTexture(render, imagePath) {
+    if (!render.textures[imagePath]) {
+      render.textures[imagePath] = PIXI.Texture.fromImage(imagePath);
     }
-    return texture;
+
+    return render.textures[imagePath];
   }
 
   /**
@@ -937,7 +927,7 @@ class MatterPixi {
    * @param {HTMLElement} canvas
    * @return {Number} pixel ratio
    */
-  _getPixelRatio(canvas) {
+  static _getPixelRatio(canvas) {
     let context = canvas.getContext('2d'),
       devicePixelRatio = window.devicePixelRatio || 1,
       backingStorePixelRatio = context.webkitBackingStorePixelRatio || context.mozBackingStorePixelRatio
@@ -956,14 +946,15 @@ class MatterPixi {
    * @param  {Number} radius
    * @param  {object} style
    */
-  _drawCircle(pGfx, x, y, radius, style = {}) {
+  static _drawCircle(pGfx, x, y, radius, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000;
-    pGfx.lineStyle(lineWidth, lineColor, 1);
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
+      alpha = style.alpha || 1;
+    pGfx.lineStyle(lineWidth, lineColor, alpha);
     if (fillColor) {
-      pGfx.beginFill(fillColor, 1);
+      pGfx.beginFill(fillColor, alpha);
     }
     pGfx.drawCircle(x, y, radius);
     if (fillColor) {
@@ -980,15 +971,16 @@ class MatterPixi {
    * @param  {Number} color
    * @param  {object} style
    */
-  _drawPlane(pGfx, x0, x1, color, style = {}) {
+  static _drawPlane(pGfx, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000,
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
+      alpha = style.alpha || 1,
       max = 1e6;
-    pGfx.lineStyle(lineWidth, lineColor, 1);
+    pGfx.lineStyle(lineWidth, lineColor, alpha);
     if (fillColor) {
-      pGfx.beginFill(fillColor, 1);
+      pGfx.beginFill(fillColor, alpha);
     }
     pGfx.moveTo(-max, 0);
     pGfx.lineTo(max, 0);
@@ -998,7 +990,7 @@ class MatterPixi {
       pGfx.endFill();
     }
     // Draw the actual plane
-    pGfx.lineStyle(lineWidth, lineColor);
+    pGfx.lineStyle(lineWidth, lineColor, alpha);
     pGfx.moveTo(-max, 0);
     pGfx.lineTo(max, 0);
   }
@@ -1010,15 +1002,22 @@ class MatterPixi {
    * @param  {Number} len
    * @param  {object} style
    */
-  _drawLine(pGfx, len, style = {}) {
+  static _drawLine(pGfx, len, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000;
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
+      alpha = style.alpha || 1;
 
     pGfx.lineStyle(lineWidth, lineColor, 1);
+    if (fillColor) {
+      pGfx.beginFill(fillColor, alpha);
+    }
     pGfx.moveTo(-len / 2, 0);
     pGfx.lineTo(len / 2, 0);
+    if (fillColor) {
+      pGfx.endFill();
+    }
   }
 
   /**
@@ -1032,11 +1031,11 @@ class MatterPixi {
    * @param  {Number} radius
    * @param  {object} style
    */
-  _drawCapsule(pGfx, x, y, angle, len, radius, style = {}) {
+  static _drawCapsule(pGfx, x, y, angle, len, radius, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000,
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
       alpha = style.alpha || 1,
       c = Math.cos(angle),
       s = Math.sin(angle);
@@ -1083,11 +1082,11 @@ class MatterPixi {
    * @param  {Number} h
    * @param  {object} style
    */
-  _drawRectangle(pGfx, x, y, w, h, style = {}) {
+  static _drawRectangle(pGfx, x, y, w, h, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000,
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
       alpha = style.alpha || 1;
     pGfx.lineStyle(lineWidth, lineColor, alpha);
     if (fillColor) {
@@ -1103,14 +1102,16 @@ class MatterPixi {
    * Draws a convex polygon onto a PIXI.Graphics object
    * -Borrowed from https://github.com/TomWHall/p2Pixi
    * @param  {PIXI.Graphics} pGfx
+   * @param  {Matter.Body} body
    * @param  {Array} vertices
    * @param  {object} style
+   * @param  {boolean} showInternalEdges
    */
-  _drawConvex(pGfx, body, vertices, style = {}) {
+  static _drawConvex(pGfx, body, vertices, style = {}, showInternalEdges = false) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000,
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
       alpha = style.alpha || 1;
 
     pGfx.lineStyle(lineWidth, lineColor, alpha);
@@ -1119,12 +1120,12 @@ class MatterPixi {
     }
     pGfx.moveTo(vertices[0].x - body.position.x, vertices[0].y - body.position.y);
     for (let j = 1; j < vertices.length; j++) {
-      if (!vertices[j - 1].isInternal || this.options.showInternalEdges) {
+      if (!vertices[j - 1].isInternal || showInternalEdges) {
         pGfx.lineTo(vertices[j].x - body.position.x, vertices[j].y - body.position.y);
       } else {
         pGfx.moveTo(vertices[j].x - body.position.x, vertices[j].y - body.position.y);
       }
-      if (vertices[j].isInternal && !this.options.showInternalEdges) {
+      if (vertices[j].isInternal && !showInternalEdges) {
         let vId = (j + 1) % vertices.length;
         pGfx.moveTo(vertices[vId].x - body.position.x, vertices[vId].y - body.position.y);
       }
@@ -1144,11 +1145,11 @@ class MatterPixi {
    * @param  {Array} path
    * @param  {object} style
    */
-  _drawPath(pGfx, path, style = {}) {
+  static _drawPath(pGfx, path, style = {}) {
     let lineWidthUnits = style.lineWidth || 0,
       lineWidth = style.lineWidthUnits ? style.lineWidthUnits : lineWidthUnits,
-      lineColor = style.strokeStyle || 0x000000,
-      fillColor = style.fillStyle || 0x000000,
+      lineColor = style.lineColor || 0x000000,
+      fillColor = style.fillColor || 0x000000,
       alpha = style.alpha || 1,
       lastx = null,
       lasty = null;

@@ -18,101 +18,119 @@
                 mainScreen,
                 secondScreen,
                 thirdScreen,
-                theme = 'shadow',
-                appWidth = 400,
-                appHeight = 640,
+                theme = 'slate-blue',
+                appWidth = 640,
+                appHeight = 840,
+                winWidth = appWidth - 140,
+                winHeight = appHeight - 240,
+
                 shadowGuiObj = {
-                    id: 'mainShadow',
+                    id: 'mainWindow',
                     component: 'Window',
-                    skin: 'ShadowRoundWindow',
                     position: {x: 20, y: 20},
-                    width: 400,
-                    height: 400,
+                    width: winWidth,
+                    height: winHeight,
+                    padding: 0,
                     draggable: true,
-                    layout: [1, 1],
                     z: 1,
                     header: {
                         id: 'titleShadow',
                         component: 'Header',
                         text: 'Options',
-                        position: {x: 0, y: 0},
+                        position: {x: 1, y: 0},
+                        width: winWidth - 2,
                         height: 30
                     },
+                    layout: [1, 3],
                     children: [
                         {
                             id: 'inputSamples',
                             component: 'Layout',
-                            skin: 'ShadowLayout',
-                            position: {x: 0, y: 0},
-                            width: 390,
-                            height: 365,
-                            layout: [1, 5],
+                            padding: 3,
+                            position: {x: 2, y: 1},
+                            width: winWidth - 4,
+                            height: winHeight - 4,
+                            layout: [2, 2],
                             children: [
                                 {
-                                    id: 'inputLayout1',
+                                    id: 'characterOptions',
                                     component: 'Layout',
-                                    position: {x: 0, y: 0},
-                                    width: 380,
-                                    height: 170,
+                                    skin: 'LayoutNoBorder',
                                     padding: 3,
-                                    layout: [2, 3],
+                                    position: {x: 0, y: 0},
+                                    width: 200,
+                                    height: 150,
+                                    layout: [2, 6],
                                     children: [
+                                        {
+                                            id: 'radioMale',
+                                            component: 'Radio',
+                                            text: 'Male',
+                                            group: 'gender',
+                                            position: {x: 1, y: 1},
+                                            width: 10,
+                                            height: 10
+                                        },
+                                        null,
+
+                                        {
+                                            id: 'radioFemale',
+                                            component: 'Radio',
+                                            text: 'Female',
+                                            group: 'gender',
+                                            position: {x: 1, y: 1},
+                                            width: 10,
+                                            height: 10
+                                        },
+                                        null,
+
                                         {
                                             id: 'chk1',
                                             component: 'Checkbox',
-                                            skin: 'ShadowCheckbox',
                                             text: 'Checkbox #1',
-                                            position: {x: 0, y: 0},
-                                            width: 15,
-                                            height: 15
+                                            position: {x: 1, y: 1},
+                                            width: 10,
+                                            height: 10
                                         },
-                                        {
-                                            id: 'radio1',
-                                            component: 'Radio',
-                                            skin: 'ShadowRadio',
-                                            text: 'Radio #1',
-                                            group: 'odd',
-                                            position: {x: 0, y: 0},
-                                            width: 15,
-                                            height: 15
-                                        },
+                                        null,
+
                                         {
                                             id: 'chk2',
                                             component: 'Checkbox',
-                                            skin: 'ShadowCheckbox',
                                             text: 'Checkbox #2',
-                                            position: {x: 0, y: 0},
-                                            width: 15,
-                                            height: 15
+                                            position: {x: 1, y: 1},
+                                            width: 10,
+                                            height: 10
                                         },
+                                        null,
+
+                                        null,
+                                        null
+                                    ]
+                                },
+                                {
+                                    id: 'characterName',
+                                    component: 'Layout',
+                                    skin: 'LayoutNoBorder',
+                                    padding: 3,
+                                    position: {x: 0, y: 0},
+                                    width: 250,
+                                    height: 50,
+                                    layout: [2, 1],
+                                    children: [
                                         {
-                                            id: 'radio2',
-                                            component: 'Radio',
-                                            skin: 'ShadowRadio',
-                                            text: 'Radio #2',
-                                            group: 'odd',
-                                            position: {x: 0, y: 0},
-                                            width: 15,
-                                            height: 15
-                                        },
-                                        {
-                                            id: 'text1',
+                                            id: 'textName',
                                             component: 'Input',
-                                            skin: 'ShadowInput',
-                                            text: 'input here',
+                                            text: 'Name',
                                             position: {x: 0, y: 0},
-                                            width: 150,
-                                            height: 20,
-                                            font: {
-                                                color: 'white'
-                                            }
+                                            width: 180,
+                                            height: 20
                                         },
                                         {
-                                            id: 'btnDone',
+                                            id: 'btnRandom',
                                             component: 'Button',
-                                            skin: 'ShadowButton',
-                                            text: 'Done',
-                                            position: {x: 0, y: 0},
+                                            text: 'Random',
+                                            position: {x: 70, y: 0},
                                             width: 50,
                                             height: 20,
                                             font: {
@@ -121,362 +139,134 @@
                                         }
                                     ]
                                 },
-                                null,
                                 {
-                                    id: 'listHoriz',
-                                    component: 'List',
-                                    skin: 'ShadowList',
-                                    position: 'center',
-                                    width: 300,
-                                    height: 70,
-                                    layout: [6, null],
+                                    id: 'avatarOptions',
+                                    component: 'Layout',
+                                    skin: 'LayoutNoBorder',
+                                    padding: 0,
+                                    position: {x: 4, y: 0},
+                                    width: 250,
+                                    height: 160,
+                                    layout: [1, 2],
                                     children: [
                                         {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
+                                            id: 'listAvatar',
+                                            component: 'List',
+                                            position: {x: 0, y: 0},
+                                            width: 230,
+                                            height: 140,
+                                            padding: 0,
+                                            layout: [2, null],
+                                            children: [
+                                                {
+                                                    id: 'avatar1',
+                                                    text: '1',
+                                                    userData: 'avatar 1',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                },
+                                                {
+                                                    id: 'avatar2',
+                                                    text: '2',
+                                                    userData: 'avatar 2',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                },
+                                                {
+                                                    id: 'avatar3',
+                                                    text: '3',
+                                                    userData: 'avatar 3',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                },
+                                                {
+                                                    id: 'avatar4',
+                                                    text: '4',
+                                                    userData: 'avatar 4',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                },
+                                                {
+                                                    id: 'avatar5',
+                                                    text: '5',
+                                                    userData: 'avatar 5',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                },
+                                                {
+                                                    id: 'avatar6',
+                                                    text: '6',
+                                                    userData: 'avatar 6',
+                                                    component: 'Button',
+                                                    position: 'center',
+                                                    width: 100,
+                                                    height: 120
+                                                }
+                                            ]
                                         },
-                                        null,
                                         {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
-                                        },
-                                        {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
-                                        },
-                                        {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
-                                        },
-                                        {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
-                                        },
-                                        {
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            position: 'center',
-                                            width: 60,
-                                            height: 60
+                                            id: 'slider1',
+                                            component: 'Slider',
+                                            text: 'Slider #1',
+                                            position: {x: 0, y: 60},
+                                            width: 230,
+                                            height: 10
                                         }
                                     ]
                                 },
-                                null,
+                                null
+                            ]
+                        },
+                        {
+                            id: 'buttons',
+                            component: 'Layout',
+                            skin: 'LayoutNoBorder',
+                            padding: 3,
+                            position: {x: 2, y: 1},
+                            width: winWidth - 4,
+                            height: 50,
+                            layout: [2, 1],
+                            children: [
                                 {
-                                    id: 'inputLayout2',
-                                    component: 'Layout',
-                                    position: {x: 0, y: 0},
-                                    width: 370,
-                                    height: 40,
-                                    padding: 3,
-                                    layout: [2, 1],
-                                    children: [
-                                        {
-                                            id: 'btnCancel',
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            text: 'Cancel',
-                                            position: 'left',
-                                            width: 100,
-                                            height: 29,
-                                            font: {
-                                                color: 'white'
-                                            }
-                                        },
-                                        {
-                                            id: 'btnSave',
-                                            component: 'Button',
-                                            skin: 'ShadowButton',
-                                            text: 'Save',
-                                            position: 'right',
-                                            width: 100,
-                                            height: 29,
-                                            font: {
-                                                color: 'white'
-                                            }
-                                        }
-                                    ]
+                                    id: 'btnCancel',
+                                    component: 'Button',
+                                    text: 'Cancel',
+                                    position: 'left',
+                                    width: 100,
+                                    height: 29,
+                                    font: {
+                                        color: 'white'
+                                    }
+                                },
+                                {
+                                    id: 'btnSave',
+                                    component: 'Button',
+                                    text: 'Save',
+                                    position: 'right',
+                                    width: 100,
+                                    height: 29,
+                                    font: {
+                                        color: 'white'
+                                    }
                                 }
                             ]
                         }
                     ]
                 },
-                glassGuiObj = {
-                    id: 'mainGlass',
-                    draggable: true,
-                    component: 'Window',
-                    skin: 'GlassWindow',
-                    position: {x: 20, y: 20},
-                    width: 400,
-                    height: 400,
-                    z: 1,
-                    header: {
-                        id: 'titleGlass',
-                        component: 'Header',
-                        skin: 'GlassHeader',
-                        text: 'Options',
-                        position: {x: 5, y: 0},
-                        width: 390,
-                        height: 30
-                    },
-                    layout: [1, 1],
-                    children: [{
-                        id: 'inputSamples',
-                        component: 'Layout',
-                        skin: 'GlassLayout',
-                        position: {x: 0, y: 0},
-                        width: 380,
-                        height: 360,
-                        layout: [2, 5],
-                        children: [{
-                            id: 'chk1',
-                            text: 'Checkbox #1',
-                            component: 'Checkbox',
-                            skin: 'GlassCheckbox',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'radio1',
-                            text: 'Radio #1',
-                            component: 'Radio',
-                            skin: 'GlassRadio',
-                            group: 'odd',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'chk2',
-                            text: 'Checkbox #2',
-                            component: 'Checkbox',
-                            skin: 'GlassCheckbox',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'radio2',
-                            text: 'Radio #2',
-                            component: 'Radio',
-                            skin: 'GlassRadio',
-                            group: 'odd',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'text1',
-                            component: 'Input',
-                            skin: 'GlassInput',
-                            text: 'input here',
-                            position: {x: 0, y: 0},
-                            width: 150,
-                            height: 29
-                        }, {
-                            id: 'btnDone',
-                            component: 'Button',
-                            skin: 'GlassButton',
-                            text: 'Done',
-                            position: {x: 0, y: 0},
-                            width: 75,
-                            height: 29
-                        }, {
-                            id: 'mySlider',
-                            component: 'Slider',
-                            position: {x: 0, y: 0},
-                            slide: {
-                                component: 'Slide',
-                                width: 10,
-                                height: 10
-                            },
-                            width: 150,
-                            height: 5
-
-                        }, {
-                            id: 'myLabel',
-                            component: 'Label',
-                            text: 'none',
-                            position: {x: 0, y: 0},
-                            width: 120,
-                            height: 29
-                        }, {
-                            id: 'btnCancel',
-                            component: 'Button',
-                            skin: 'GlassButton',
-                            text: 'Cancel',
-                            position: {x: 0, y: 0},
-                            width: 100,
-                            height: 29
-                        }, {
-                            id: 'btnSave',
-                            component: 'Button',
-                            skin: 'GlassButton',
-                            text: 'Save',
-                            position: {x: 0, y: 0},
-                            width: 100,
-                            height: 29
-                        }]
-                    }]
-                },
-                metalGuiObj = {
-                    id: 'main',
-                    draggable: true,
-                    component: 'Window',
-                    skin: 'MetalWindow',
-                    position: {x: 20, y: 20},
-                    width: 400,
-                    height: 400,
-                    z: 1,
-                    header: {
-                        id: 'title',
-                        component: 'Header',
-                        skin: 'MetalHeader',
-                        text: 'Agent Options',
-                        position: {x: 5, y: 0},
-                        width: 390,
-                        height: 30
-                    },
-                    layout: [1, 1],
-                    children: [{
-                        id: 'inputSamples',
-                        component: 'Layout',
-                        skin: 'MetalPlateLayout',
-                        position: {x: 0, y: 0},
-                        width: 390,
-                        height: 360,
-                        layout: [2, 5],
-                        children: [{
-                            id: 'chk1',
-                            text: 'Checkbox #1',
-                            component: 'Checkbox',
-                            skin: 'MetalCheckbox',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'radio1',
-                            text: 'Radio #1',
-                            component: 'Radio',
-                            skin: 'MetalRadio',
-                            group: 'odd',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'chk2',
-                            text: 'Checkbox #2',
-                            component: 'Checkbox',
-                            skin: 'MetalCheckbox',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'radio2',
-                            text: 'Radio #2',
-                            component: 'Radio',
-                            skin: 'MetalRadio',
-                            group: 'odd',
-                            position: {x: 0, y: 0},
-                            width: 25,
-                            height: 25
-                        }, {
-                            id: 'text1',
-                            component: 'Input',
-                            skin: 'MetalInput',
-                            text: 'input here',
-                            position: {x: 0, y: 0},
-                            width: 150,
-                            height: 29
-                        }, {
-                            id: 'btnDone',
-                            component: 'Button',
-                            skin: 'MetalButton',
-                            text: 'Done',
-                            position: {x: 0, y: 0},
-                            width: 75,
-                            height: 29,
-                            font: {
-                                color: 'black'
-                            }
-                        }, {
-                            id: 'mySlider',
-                            component: 'Slider',
-                            position: {x: 0, y: 0},
-                            slide: {
-                                component: 'Slide',
-                                width: 10,
-                                height: 10
-                            },
-                            width: 150,
-                            height: 5
-
-                        }, {
-                            id: 'myLabel',
-                            text: 'none',
-                            component: 'Label',
-                            position: {x: 0, y: 0},
-                            width: 120,
-                            height: 29
-                        }, {
-                            id: 'btnCancel',
-                            component: 'Button',
-                            skin: 'MetalButton',
-                            text: 'Cancel',
-                            position: {x: 0, y: 0},
-                            width: 100,
-                            height: 29,
-                            font: {
-                                color: 'black'
-                            }
-                        }, {
-                            id: 'btnSave',
-                            component: 'Button',
-                            skin: 'MetalButton',
-                            text: 'Save',
-                            position: {x: 0, y: 0},
-                            width: 100,
-                            height: 29,
-                            font: {
-                                color: 'black'
-                            }
-                        }]
-                    }]
-                };
-
-        function resize() {
-            // Determine which screen dimension is most constrained
-            var ratio = Math.min(window.innerWidth / width, window.innerHeight / height);
-
-            // Scale the view appropriately to fill that dimension
-            stage.scale.x = stage.scale.y = ratio;
-
-            // Update the renderer dimensions
-            renderer.resize(Math.ceil(width * ratio), Math.ceil(height * ratio));
-        }
-
-        function animate() {
-            renderer.render(stage);
-            requestAnimationFrame(animate);
-        }
-
-        var mainScreenJSON = {
+                mainScreenJSON = {
                     id: 'mainScreen',
                     component: 'Window',
-                    padding: 5,
-                    z: 1,
+                    padding: 1,
                     position: {x: 0, y: 0},
                     width: appWidth,
                     height: appHeight,
@@ -486,122 +276,119 @@
                             text: 'Screen 1',
                             font: {
                                 size: '20px',
-                                family: 'Arial',
-                                color: '#fff'
+                                family: 'Arial'
                             },
                             component: 'Header',
-                            position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            position: {x: 0, y: 1},
+                            width: appWidth - 2,
                             height: 40
                         },
                         {
                             component: 'Layout',
                             z: 1, //the Z index allow to bring the navigation to the top so it can receive events (this is a workaround to the way PIXI handles events)
-                            padding: 3,
-                            position: {x: 0, y: 0},
-                            width: appWidth-10,
-                            height: 60,
-                            layout: [3, 1],
+                            padding: 16,
+                            position: {x: 0, y: 2},
+                            width: appWidth,
+                            height: 500,
+                            layout: [null, 2],
                             children: [
-                                null,
-                                null,
                                 {
                                     id: 'btNext1',
                                     text: 'Next',
                                     component: 'Button',
-                                    position: 'center',
+                                    position: {x: 0, y: 0},
                                     width: 100,
-                                    height: 40
+                                    height: 30
+                                },
+                                {
+                                    id: 'list1',
+                                    component: 'List',
+                                    padding: 13,
+                                    bgPadding: 0,
+                                    position: 'center',
+                                    width: appWidth,
+                                    height: 300,
+                                    layout: [null, 5],
+                                    children: [
+                                        {
+                                            text: 'list item 1',
+                                            component: 'Button',
+                                            position: 'center',
+                                            z: 0,
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 2',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 3',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 4',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 5',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 6',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 7',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 8',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 9',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        },
+                                        {
+                                            text: 'list item 10',
+                                            component: 'Button',
+                                            position: 'center',
+                                            width: appWidth - 30,
+                                            height: 50
+                                        }
+                                    ]
                                 }
                             ]
                         },
-                        //force height to occupy all remaining space
-                        {
-                            id: 'list1',
-                            component: 'List',
-                            padding: 3,
-                            position: {x: 0, y: 20},
-                            width: appWidth-10,
-                            height: 500,
-                            layout: [null, 5],
-                            children: [
-                                {
-                                    text: 'list item 1',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 2',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 3',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 4',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 5',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 6',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 7',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 8',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 9',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                                {
-                                    text: 'list item 10',
-                                    component: 'Button',
-                                    position: 'center',
-                                    width: appWidth,
-                                    height: 100
-                                },
-                            ]
-                        },
-                        //Fill intermediate children spaces with nulls
                         null, null, null, null, null, null,
                         null, null, null, null, null, null,
                         {
-                            text: 'App footer : vertical slide',
+                            text: 'Footer',
                             font: {
                                 size: '20px',
                                 family: 'Arial',
@@ -609,7 +396,7 @@
                             },
                             component: 'Header',
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 40
                         }
                     ]
@@ -617,7 +404,8 @@
                 secondScreenJSON = {
                     id: 'secondScreen',
                     component: 'Window',
-                    padding: 5,
+                    padding: 1,
+                    z: 1,
                     position: {x: 0, y: 0},
                     width: appWidth,
                     height: appHeight,
@@ -632,16 +420,16 @@
                             },
                             component: 'Header',
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 40
                         },
                         {
                             component: 'Layout',
                             z: 1, //the Z index allow to bring the navigation to the top so it can receive events (this is a workaround to the way PIXI handles events)
-                            padding: 3,
+                            padding: 0,
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
-                            height: 60,
+                            width: appWidth - 2,
+                            height: 50,
                             layout: [3, 1],
                             children: [
                                 {
@@ -650,7 +438,7 @@
                                     component: 'Button',
                                     position: 'center',
                                     width: 100,
-                                    height: 40
+                                    height: 30
                                 },
                                 null,
                                 {
@@ -659,51 +447,103 @@
                                     component: 'Button',
                                     position: 'center',
                                     width: 100,
-                                    height: 40
+                                    height: 30
                                 },
                             ]
                         },
-                        //force height to occupy all remaining space
                         {
                             component: 'List',
-                            skin: 'ShadowList',
-                            padding: 3,
                             dragY: false,
-                            position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            padding: 0,
+                            bgPadding: 3,
+                            position: {x: 3, y: 15},
+                            width: appWidth - 8,
                             height: 500,
                             layout: [2, 4],
                             children: [
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
-                                {text: 'item', component: 'Button', position: 'center', width: 100, height: 100},
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                },
+                                {
+                                    text: 'item',
+                                    component: 'Button',
+                                    position: 'center',
+                                    width: 100,
+                                    height: 100
+                                }
                             ]
                         },
-                        //Fill intermediate children spaces with nulls
                         null, null, null, null, null, null,
                         null, null, null, null, null, null,
                         {
-                            text: 'App footer : horizontal slide',
+                            text: 'Footer',
                             font: {
                                 size: '20px',
                                 family: 'Arial',
@@ -711,7 +551,7 @@
                             },
                             component: 'Header',
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 40
                         }
                     ]
@@ -719,7 +559,8 @@
                 thirdScreenJSON = {
                     id: 'thirdScreen',
                     component: 'Window',
-                    padding: 5,
+                    padding: 1,
+                    z: 1,
                     position: {x: 0, y: 0},
                     width: appWidth,
                     height: appHeight,
@@ -734,16 +575,16 @@
                             },
                             component: 'Header',
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 40
                         },
                         {
                             component: 'Layout',
                             z: 1, //the Z index allow to bring the navigation to the top so it can receive events (this is a workaround to the way PIXI handles events)
-                            padding: 3,
+                            padding: 1,
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
-                            height: 60,
+                            width: appWidth - 2,
+                            height: 50,
                             layout: [3, 1],
                             children: [
                                 {
@@ -752,19 +593,18 @@
                                     component: 'Button',
                                     position: 'center',
                                     width: 100,
-                                    height: 40
+                                    height: 30
                                 },
                                 null,
                                 null,
                             ]
                         },
-                        //force height to occupy all remaining space
                         {
                             component: 'Layout',
-                            padding: 3,
+                            padding: 1,
                             dragY: false,
                             position: {x: 0, y: 20},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 500,
                             layout: [2, 5],
                             children: [
@@ -849,7 +689,7 @@
                         null, null, null, null, null, null,
                         null, null, null, null, null, null,
                         {
-                            text: 'App footer : Radio and checkbox',
+                            text: 'Footer',
                             font: {
                                 size: '20px',
                                 family: 'Arial',
@@ -857,11 +697,25 @@
                             },
                             component: 'Header',
                             position: {x: 0, y: 0},
-                            width: appWidth-10,
+                            width: appWidth - 2,
                             height: 40
                         }
                     ]
                 };
+
+        function resize() {
+            // Determine which screen dimension is most constrained
+            let ratio = Math.min(window.innerWidth / width, window.innerHeight / height);
+            // Scale the view appropriately to fill that dimension
+            stage.scale.x = stage.scale.y = ratio;
+            // Update the renderer dimensions
+            renderer.resize(Math.ceil(width * ratio), Math.ceil(height * ratio));
+        }
+
+        function animate() {
+            renderer.render(stage);
+            requestAnimationFrame(animate);
+        }
 
         function setupGUI() {
             EZGUI.components.btNext1.on('click', (event, btn) => {
@@ -911,13 +765,11 @@
         }
 
         function start() {
-            // Create the canvas in which the game will show, and a
-            // generic container for all the graphical objects
             renderer = PIXI.autoDetectRenderer(appWidth, appHeight, {
                 antialiasing: false,
                 autoResize: false,
                 background: 0xFFFFFF,
-                resolution: 1,//window.devicePixelRatio,
+                resolution: 1,
                 resizable: false,
                 transparent: false,
                 noWebGL: false
@@ -935,19 +787,19 @@
                 window.addEventListener("resize", resize);
             }
 
-            var themeName = 'images/gui-themes/' + theme + '-theme/' + theme + '-theme.json';
+            var themeName = 'images/gui-themes/' + theme + '/' + theme + '-theme.json';
             EZGUI.Theme.load([themeName], () => {
-                mainScreen = EZGUI.create(mainScreenJSON, theme);
-                secondScreen = EZGUI.create(secondScreenJSON, theme);
-                secondScreen.visible = false;
-                thirdScreen = EZGUI.create(thirdScreenJSON, theme);
-                thirdScreen.visible = false;
+                mainScreen = EZGUI.create(shadowGuiObj, theme);
+//                mainScreen = EZGUI.create(mainScreenJSON, theme);
+//                secondScreen = EZGUI.create(secondScreenJSON, theme);
+//                secondScreen.visible = false;
+//                thirdScreen = EZGUI.create(thirdScreenJSON, theme);
+//                thirdScreen.visible = false;
 
                 stage.addChild(mainScreen);
-                stage.addChild(secondScreen);
-                stage.addChild(thirdScreen);
-
-                setupGUI();
+//                stage.addChild(secondScreen);
+//                stage.addChild(thirdScreen);
+//                setupGUI();
                 requestAnimationFrame(animate);
             });
 
@@ -958,7 +810,6 @@
 <body onload="start();">
 <div id="main-layout" class="mdl-layout mdl-js-layout">
     <link rel="import" href="templates/mdl/topnav.html">
-
     <main class="mdl-layout__content">
         <div id="main-content" class="page-content">
             <div class="content-grid mdl-grid">
@@ -989,6 +840,7 @@
 </div>
 
 <script src="js/lib/external/EZGUI.js"></script>
+
 
 </body>
 </html>

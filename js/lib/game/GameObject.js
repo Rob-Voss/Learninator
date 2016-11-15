@@ -29,7 +29,7 @@ class GameObject {
 
   /**
    *
-   * Adds the supplied p2 body to the game's world and to
+   * Adds the supplied body to the game's world and to
    * this GameObject's bodies collection
    * Also creates a corresponding PIXI Container object for rendering.
    * @param {Game} game

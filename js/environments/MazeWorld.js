@@ -11,134 +11,8 @@
      *
      * @return {MazeWorld}
      */
-    constructor() {
-      var cheatOpts = {
-          id: true,
-          name: false,
-          angle: false,
-          bounds: false,
-          direction: false,
-          gridLocation: true,
-          position: true,
-          brute: false,
-          quad: false,
-          grid: true,
-          walls: false
-        },
-        worldOpts = {
-          collision: {
-            type: 'brute',
-            cheats: cheatOpts,
-          },
-          grid: {
-            width: 600,
-            height: 600,
-            buffer: 0,
-            cellSize: 30,
-            cellSpacing: 0,
-            size: 20,
-            pointy: false,
-            fill: true
-          },
-          render: {
-            background: 0xFFFFFF,
-            antialiasing: false,
-            autoResize: false,
-            resizable: false,
-            transparent: false,
-            resolution: window.devicePixelRatio,
-            noWebGL: false,
-            width: 800,
-            height: 800
-          },
-          cheats: cheatOpts,
-          agent: {
-            brainType: 'RL.DQNAgent',
-            range: 85,
-            proximity: 85,
-            radius: 10,
-            numEyes: 30,
-            numTypes: 5,
-            numActions: 4,
-            numProprioception: 2,
-            worker: false,
-            interactive: false,
-            useSprite: false
-          },
-          entity: {
-            number: 20,
-            radius: 10,
-            interactive: true,
-            useSprite: false,
-            moving: true
-          },
-          entityAgent: {
-            number: 0,
-            radius: 0,
-            interactive: false,
-            useSprite: false,
-            moving: false
-          }
-        },
-          grid = new Grid(null, null, worldOpts.grid),
-          maze = new Maze(grid.init());
-      worldOpts.grid = maze.grid;
-      worldOpts.maze = maze;
-      super([], maze.walls, worldOpts);
-
-      this.agents = [
-        new Agent(new Vec(this.grid.startCell.center.x, this.grid.startCell.center.y),
-            {
-              brainType: 'RL.TDAgent',
-              numActions: 4,
-              numStates: 0,
-              numEyes: 0,
-              numTypes: 0,
-              numProprioception: 0,
-              range: 0,
-              proximity: 0,
-              radius: 10,
-              interactive: false,
-              useSprite: false,
-              worker: false,
-              env: {
-                allowedActions: (s) => {
-                  return this.allowedActions(s);
-                },
-                getMaxNumActions: () => {
-                  return this.getMaxNumActions();
-                },
-                getNumStates: () => {
-                  return this.getNumStates();
-                },
-                nextStateDistribution: (s, a) => {
-                  return this.nextStateDistribution(s, a);
-                },
-                randomState: () => {
-                  return this.randomState();
-                },
-                reset: () => {
-                  return this.reset();
-                },
-                sampleNextState: (s, a) => {
-                  return this.sampleNextState(s, a);
-                },
-                startState: () => {
-                  return this.startState();
-                },
-                sToX: (s) => {
-                  return this.sToX(s);
-                },
-                sToY: (s) => {
-                  return this.sToY(s);
-                },
-                xyToS: (x, y) => {
-                  return this.xyToS(x, y);
-                }
-              }
-            }
-        )
-      ];
+    constructor(agents = [], walls = [], options = worldOpts) {
+      super(agents, walls, options);
 
       this.selected = -1;
       this.Rarr = null;
@@ -150,10 +24,22 @@
       this.nStepsHistory = [];
       this.pause = false;
 
+      this.addWalls();
+      this.addEntities();
+
+      Agent.prototype.onMouseDown = (event) => {
+        this.data = event.data;
+        this.isDown = true;
+        this.alpha = 1;
+
+        return this;
+      };
+
       Agent.prototype.tick = () => {
         if (this.sid === -1) {
           this.sid = setInterval(() => {
             for (let k = 0; k < this.stepsPerTick; k++) {
+              this.updatePopulation();
               // ask agent for an action
               let agent = this.agents[0],
                   state = this.state,
@@ -167,10 +53,6 @@
               if (typeof obs.resetEpisode !== 'undefined') {
                 agent.score += 1;
                 agent.brain.resetEpisode();
-
-                agent.gridLocation = this.grid.getCellAt(0, 0);
-                agent.graphics.position.x = agent.position.x = agent.gridLocation.center.x;
-                agent.graphics.position.y = agent.position.y = agent.gridLocation.center.y;
                 this.state = this.startState();
 
                 // record the reward achieved
@@ -179,13 +61,12 @@
                 }
                 agent.nStepsHistory.push(agent.nStepsCounter);
                 agent.nStepsCounter = 0;
-              } else {
-                let x = this.sToX(this.state),
-                    y = this.sToY(this.state);
-                agent.gridLocation = this.grid.getCellAt(x, y);
-                agent.graphics.position.x = agent.position.x = agent.gridLocation.center.x;
-                agent.graphics.position.y = agent.position.y = agent.gridLocation.center.y;
               }
+
+              agent.gridLocation = this.grid.getCellAt(this.sToX(this.state), this.sToY(this.state));
+              agent.position = agent.gridLocation.center;
+              agent.draw();
+
               // Check them for collisions
               this.check(agent);
 
@@ -204,13 +85,23 @@
                   } else if (col.entity.type === 2) {
                     obs.r -= 0.1;
                   }
-                  col.entity.cleanUp = true;
+                  this.deleteEntity(col.entity.id);
                 }
               }
               // allow opportunity for the agent to learn
               agent.brain.learn(obs.r);
 
-              this.tick();
+              for (let [id, entity] of this.population.entries()) {
+                if (entity.type !== 0 && entity.type !== 4) {
+                  // Check them for collisions
+                  this.check(entity);
+
+                  // Tick them
+                  entity.tick();
+                }
+                entity.draw();
+              }
+              this.drawGrid();
             }
           }, 20);
         } else {
@@ -219,50 +110,6 @@
         }
       };
 
-      this.addWalls();
-      this.addEntities();
-      this.addAgents();
-      this.reset();
-      this.initFlot();
-      this.drawGrid();
-
-      return this;
-    }
-
-    /**
-     * Tick the environment
-     * @param {number} timeSinceLast
-     * @return {MazeWorld}
-     */
-    tick(timeSinceLast) {
-      this.updatePopulation();
-
-      let popCount = 0;
-      for (let [id, entity] of this.population.entries()) {
-        if (entity.type !== 0 && entity.type !== 4) {
-          // Check them for collisions
-          this.check(entity);
-
-          // Tick them
-          entity.tick();
-
-          if (entity.type === 2 || entity.type === 1) {
-            popCount++;
-            if (entity.age > 5000 || entity.cleanUp === true) {
-              this.deleteEntity(entity.id);
-              popCount--;
-            }
-          }
-        }
-        entity.draw();
-      }
-
-      // If we have less then the number of Items allowed throw a random one in
-      if (popCount < this.numEntities) {
-        this.addEntities(this.numEntities - popCount);
-      }
-      this.drawGrid();
-
       return this;
     }
 
@@ -270,92 +117,89 @@
      * Draw the Grid
      */
     drawGrid() {
-      for (var x = 0; x < this.grid.xCount; x++) {
-        for (var y = 0; y < this.grid.yCount; y++) {
-          var rd = 255,
-              g = 255,
-              b = 255,
-              s = this.xyToS(x, y),
-              vv = null;
+      let agent = this.agents[0],
+        l = this.grid.cells.length;
 
-          // get value of state s under agent policy
-          if (typeof this.agents[0].brain.V !== 'undefined') {
-            vv = this.agents[0].brain.V[s];
-          } else if (typeof this.agents[0].brain.Q !== 'undefined') {
-            var poss = this.allowedActions(s);
-            vv = -1;
-            for (var i = 0, n = poss.length; i < n; i++) {
-              var qsa = this.agents[0].brain.Q[poss[i] * this.grid.cells.length + s];
-              if (i === 0 || qsa > vv) {
-                vv = qsa;
-              }
+      for (let s = 0; s < l; s++) {
+        let cell = this.grid.cells[s],
+          rd = 255,
+          g = 255,
+          b = 255,
+          vv = null;
+
+        // get value of state s under agent policy
+        if (typeof agent.brain.V !== 'undefined') {
+          vv = agent.brain.V[s];
+        } else if (typeof agent.brain.Q !== 'undefined') {
+          let poss = this.allowedActions(s);
+          vv = -1;
+          for (let i = 0, n = poss.length; i < n; i++) {
+            let qsa = agent.brain.Q[poss[i] * l + s];
+            if (i === 0 || qsa > vv) {
+              vv = qsa;
             }
           }
+        }
 
-          var ms = 10000;
-          if (vv > 0) {
-            g = 255;
-            rd = 255 - (vv * ms);
-            b = 255 - (vv * ms);
+        let ms = 10000;
+        if (vv > 0) {
+          g = 255;
+          rd = 255 - (vv * ms);
+          b = 255 - (vv * ms);
+        }
+        if (vv < 0) {
+          g = 255 + (vv * ms);
+          rd = 255;
+          b = 255 + (vv * ms);
+        }
+
+        cell.color = Utility.rgbToHex(rd, g, b);
+        // Write the reward value text
+        cell.reward = this.Rarr[s];
+        // Write the value text
+        cell.value = vv;
+        cell.draw();
+
+        // update policy arrows
+        for (let a = 0; a < 4; a++) {
+          let prob = agent.brain.P[a * l + s],
+            nx = 0,
+            ny = 0,
+            actions = this.Aarr[s],
+            avail = actions[a];
+          if (avail === null || prob < 0.01) {
+            // Hide the arrow
+          } else {
+            // Show the arrow
           }
-          if (vv < 0) {
-            g = 255 + (vv * ms);
-            rd = 255;
-            b = 255 + (vv * ms);
+
+          // The length of the arrow based on experience
+          let ss = this.grid.cellSize / 2 * (prob * 0.9);
+
+          switch (a) {
+            case 0: // Left
+              nx = -ss;
+              ny = 0;
+              break;
+            case 1: // Down
+              nx = 0;
+              ny = ss;
+              break;
+            case 2: // Up
+              nx = 0;
+              ny = -ss;
+              break;
+            case 3: // Right
+              nx = ss;
+              ny = 0;
+              break;
           }
-
-          let cell = this.grid.getCellAt(x, y);
-          if (cell) {
-            cell.color = Utility.rgbToHex(rd, g, b);
-
-            // Write the reward value text
-            cell.reward = this.Rarr[s];
-
-            // Write the value text
-            cell.value = vv;
-
-            cell.draw();
-          }
-          // update policy arrows
-          for (var a = 0; a < 4; a++) {
-            var prob = this.agents[0].brain.P[a * this.grid.cells.length + s],
-                nx = 0,
-                ny = 0,
-                actions = this.Aarr[s],
-                avail = actions[a];
-            if (avail === null || prob < 0.01) {
-              // Hide the arrow
-            } else {
-              // Show the arrow
-            }
-
-            // The length of the arrow based on experience
-            var ss = this.grid.cellSize / 2 * (prob * 0.9);
-
-            switch (a) {
-              case 0: // Left
-                nx = -ss;
-                ny = 0;
-                break;
-              case 1: // Down
-                nx = 0;
-                ny = ss;
-                break;
-              case 2: // Up
-                nx = 0;
-                ny = -ss;
-                break;
-              case 3: // Right
-                nx = ss;
-                ny = 0;
-                break;
-            }
-            //     // Draw the arrow using below as guide
-            //     pa.attr('x1', xcoord + (this.grid.cellSize / 2))
-            //         .attr('y1', ycoord + (this.grid.cellSize / 2))
-            //         .attr('x2', xcoord + (this.grid.cellSize / 2) + nx)
-            //         .attr('y2', ycoord + (this.grid.cellSize / 2) + ny);
-          }
+          // Draw the arrow using below as guide
+          cell.graphics.lineStyle(2, 0x000000);
+          cell.graphics.beginFill(0x000000);
+          cell.graphics.moveTo(cell.center.x - nx, cell.center.y - ny);
+          cell.graphics.lineTo(cell.center.x + nx, cell.center.y + ny);
+          cell.graphics.endFill();
         }
       }
       this.renderer.render(this.stage);
@@ -363,7 +207,6 @@
 
     /**
      * zip rewards into flot data
-     * @param {Number} an
      * @return {Array}
      */
     getFlotRewards() {
