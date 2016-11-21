@@ -46,15 +46,15 @@ class Entity {
       align: 'center'
     };
     if (typeof type === 'string') {
-      this.type = Entity.entityTypes.indexOf(type);
+      this.type = entityTypes.indexOf(type);
       this.typeName = type;
       this.name = (this.name === undefined) ? type : this.name;
     } else if (typeof type === 'number') {
       this.type = type || 1;
-      this.typeName = Entity.entityTypes[this.type];
-      this.name = (this.name === undefined) ? Entity.entityTypes[this.type] : this.name;
+      this.typeName = entityTypes[this.type];
+      this.name = (this.name === undefined) ? entityTypes[this.type] : this.name;
     }
-    this.color = Entity.hexStyles[this.type];
+    this.color = hexColorStyles[this.type];
     this.alpha = 1;
     this.options = opts || {
         radius: 10,

@@ -15,6 +15,9 @@
  * @property {Grid} opts.grid - The Grid
  */
 
+/**
+ *
+ */
 class Maze {
 
   /**
@@ -44,6 +47,9 @@ class Maze {
     this.walls = [];
     this.cellStack = [];
     this.path = [];
+
+    this.treeMap = GrowingTree.create(50, 50, 0);
+    this.caveMap = Caves.create(50, 50, 0.5, 5);
 
     this.draw();
 

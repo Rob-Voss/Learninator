@@ -108,7 +108,24 @@ const cheatOpts = {
     },
     grid: {},
     maze: {}
-  };
+  },
+
+  // Collision Category Groups
+  wallCollision = 0x0001,
+  nomCollision = 0x0002,
+  gnarCollision = 0x0004,
+  agentCollision = 0x0008,
+
+  entityTypes = ['Wall', 'Nom', 'Gnar', 'Agent', 'Agent Worker', 'Entity Agent'],
+  textColorStyles = ['black', 'green', 'red', 'blue', 'navy', 'magenta', 'cyan', 'purple', 'aqua', 'olive', 'lime'],
+  hexColorStyles = [0x000000, 0x00FF00, 0xFF0000, 0x0000FF, 0x000080, 0xFF00FF, 0x00FFFF, 0x800080, 0x00FFFF, 0x808000, 0x00FF00],
+  entityCollisionCategories = [wallCollision, nomCollision, gnarCollision, agentCollision],
+
+  // Collision Category Colors
+  redColor = '#C44D58',
+  greenColor = '#C7F464',
+  blueColor = '#4ECDC4',
+  blackColor = '#000000';
 
 /**
  * @class GameWorld

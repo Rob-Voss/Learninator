@@ -80,25 +80,25 @@
                     options = {
                         collision: {
                             type: 'brute',
-                            cheats: cheatOpts,
+                            cheats: cheatOpts
                         },
                         grid: {
                             width: 600,
                             height: 600,
                             buffer: 0,
+                            size: 20,
                             cellSize: 30,
                             cellSpacing: 0,
-                            size: 20,
                             pointy: false,
                             fill: true
                         },
                         render: {
                             background: 0xFFFFFF,
-                            antialiasing: false,
+                            antialiasing: true,
                             autoResize: false,
                             resizable: false,
                             transparent: false,
-                            resolution: window.devicePixelRatio,
+                            resolution: 1,
                             noWebGL: false,
                             width: 600,
                             height: 600
@@ -196,8 +196,6 @@
             world.reset();
             world.initFlot();
             world.drawGrid();
-
-            datGUI(world);
         }
 
     </script>
@@ -212,39 +210,31 @@
             <div class="content-grid mdl-grid">
                 <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
                     <div class="mdl-card__title">
-                        <button id="menu-bottom-left"
-                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
-                            <i class="material-icons">more_vert</i>
-                        </button>
-                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
-                            Do <strong>things!</strong>
-                        </div>
-                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
-                            data-mdl-for="menu-bottom-left">
-                            <li class="mdl-menu__item">Some Action</li>
-                            <li disabled class="mdl-menu__item">Disabled Action</li>
-                            <li class="mdl-menu__item">Yet Another Action</li>
-                        </ul>
                         <h2 class="mdl-card__title-text">Maze World</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
-
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="solve();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="solve();">
                             Show Solution
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gofast();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gofast();">
                             Go Fast
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="gonormal();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gonormal();">
                             Go Normal
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="goslow();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="goslow();">
                             Go Slow
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="newMaze();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="newMaze();">
                             New Maze
                         </button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" onclick="world.agents[0].tick();">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="world.agents[0].tick();">
                             Start Learning
                         </button>
                         <div id="game-container"></div>
@@ -252,19 +242,6 @@
                 </div>
                 <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
                     <div class="mdl-card__title">
-                        <button id="menu-bottom-left"
-                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
-                            <i class="material-icons">more_vert</i>
-                        </button>
-                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
-                            Do <strong>things!</strong>
-                        </div>
-                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
-                            data-mdl-for="menu-bottom-left">
-                            <li class="mdl-menu__item">Some Action</li>
-                            <li disabled class="mdl-menu__item">Disabled Action</li>
-                            <li class="mdl-menu__item">Yet Another Action</li>
-                        </ul>
                         <h2 class="mdl-card__title-text">Graph</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
@@ -285,6 +262,7 @@
 
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/MapGenerator.js"></script>
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/grid/Cell.js"></script>
 <script src="js/lib/grid/CellShape.js"></script>

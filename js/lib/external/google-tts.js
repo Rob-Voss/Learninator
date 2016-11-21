@@ -1,11 +1,69 @@
 /**
- * The API instance.
+ * Maximum no. of characters which can be be submitted in a single request.
  *
- * @param defaultLanguage Optional. The language to use when not specified. 'en' is default.
- * @constructor
+ * This value was found through trial-and-error, see https://github.com/hiddentao/google-tts/issues/9
+ * @type {Number}
  */
-class TTS {
+const MAX_CHARS_PER_REQUEST = 100,
 
+  /**
+   * Full list of languages.
+   * @type {Object}
+   */
+  languages = {
+    'af': 'Afrikaans',
+    'sq': 'Albanian',
+    'ar': 'Arabic',
+    'hy': 'Armenian',
+    'ca': 'Catalan',
+    'zh-CN': 'Mandarin (simplified)',
+    'zh-TW': 'Mandarin (traditional)',
+    'hr': 'Croatian',
+    'cs': 'Czech',
+    'da': 'Danish',
+    'nl': 'Dutch',
+    'en': 'English',
+    'eo': 'Esperanto',
+    'fi': 'Finnish',
+    'fr': 'French',
+    'de': 'German',
+    'el': 'Greek',
+    'ht': 'Haitian Creole',
+    'hi': 'Hindi',
+    'hu': 'Hungarian',
+    'is': 'Icelandic',
+    'id': 'Indonesian',
+    'it': 'Italian',
+    'ja': 'Japanese',
+    'ko': 'Korean',
+    'la': 'Latin',
+    'lv': 'Latvian',
+    'mk': 'Macedonian',
+    'no': 'Norwegian',
+    'pl': 'Polish',
+    'pt': 'Portuguese',
+    'ro': 'Romanian',
+    'ru': 'Russian',
+    'sr': 'Serbian',
+    'sk': 'Slovak',
+    'es': 'Spanish',
+    'sw': 'Swahili',
+    'sv': 'Swedish',
+    'ta': 'Tamil',
+    'th': 'Thai',
+    'tr': 'Turkish',
+    'vi': 'Vietnamese',
+    'cy': 'Welsh'
+  };
+
+class GoogleTTS {
+
+  /**
+   * The API instance.
+   *
+   * @param defaultLanguage Optional. The language to use when not specified. 'en' is default.
+   * @constructor
+   */
   constructor(defaultLanguage) {
     /**
      * Default language (code).
@@ -14,72 +72,13 @@ class TTS {
     this.defaultLanguage = defaultLanguage || 'en';
 
     /**
-     * Maximum no. of characters which can be be submitted in a single request.
-     *
-     * This value was found through trial-and-error, see https://github.com/hiddentao/google-tts/issues/9
-     * @type {Number}
-     */
-    let MAX_CHARS_PER_REQUEST = 100,
-
-      /**
-       * Full list of languages.
-       * @type {Object}
-       */
-      languages = {
-        'af': 'Afrikaans',
-        'sq': 'Albanian',
-        'ar': 'Arabic',
-        'hy': 'Armenian',
-        'ca': 'Catalan',
-        'zh-CN': 'Mandarin (simplified)',
-        'zh-TW': 'Mandarin (traditional)',
-        'hr': 'Croatian',
-        'cs': 'Czech',
-        'da': 'Danish',
-        'nl': 'Dutch',
-        'en': 'English',
-        'eo': 'Esperanto',
-        'fi': 'Finnish',
-        'fr': 'French',
-        'de': 'German',
-        'el': 'Greek',
-        'ht': 'Haitian Creole',
-        'hi': 'Hindi',
-        'hu': 'Hungarian',
-        'is': 'Icelandic',
-        'id': 'Indonesian',
-        'it': 'Italian',
-        'ja': 'Japanese',
-        'ko': 'Korean',
-        'la': 'Latin',
-        'lv': 'Latvian',
-        'mk': 'Macedonian',
-        'no': 'Norwegian',
-        'pl': 'Polish',
-        'pt': 'Portuguese',
-        'ro': 'Romanian',
-        'ru': 'Russian',
-        'sr': 'Serbian',
-        'sk': 'Slovak',
-        'es': 'Spanish',
-        'sw': 'Swahili',
-        'sv': 'Swedish',
-        'ta': 'Tamil',
-        'th': 'Thai',
-        'tr': 'Turkish',
-        'vi': 'Vietnamese',
-        'cy': 'Welsh'
-      };
-
-
-    /**
      * Available players.
      * @type {Array}
      * @private
      */
     this._players = [
-      new TTS.HTML5Player(),
-      new TTS.SM2Player()
+      new HTML5Player(),
+      new SM2Player()
     ];
 
 
@@ -90,9 +89,9 @@ class TTS {
      * @throws Error if passed-in item is not an instance of GoogleTTS.Player
      */
     this.addPlayer = (pm) => {
-      if (!(pm instanceof TTS.Player))
+      if (!(pm instanceof TTSPlayer)) {
         throw new Error('Must be a instance of base Player class');
-
+      }
       this._players.push(pm);
     };
 
@@ -118,7 +117,7 @@ class TTS {
         return cb(null, this.availablePlayer);
       }
 
-      var _testNextMechanism,
+      let _testNextMechanism,
         index = -1;
 
       (_testNextMechanism = () => {
@@ -130,6 +129,7 @@ class TTS {
         this._players[index].available((canPlay) => {
           if (canPlay) {
             this.availablePlayer = this._players[index];
+
             return cb(null, this.availablePlayer);
           } else {
             _testNextMechanism();
@@ -147,10 +147,10 @@ class TTS {
     this.urls = (txt, lang) => {
       lang = lang || this.defaultLanguage;
 
-      if (!txt || 0 >= txt.length)
+      if (!txt || 0 >= txt.length) {
         throw new Error('Need some text');
-
-      var slices = this._sliceInput(txt, MAX_CHARS_PER_REQUEST),
+      }
+      let slices = this._sliceInput(txt, MAX_CHARS_PER_REQUEST),
         urls = [];
 
       for (let i = 0; i < slices.length; ++i) {
@@ -173,7 +173,7 @@ class TTS {
      * @private
      */
     this._sliceInput = (txt, maxSliceLength) => {
-      var slices = [],
+      let slices = [],
         start = 0;
 
       do {
@@ -193,7 +193,7 @@ class TTS {
      * @param cb Completion callback with signature (err).
      */
     this.play = (txt, lang, cb) => {
-      this.getPlayer(function (err, player) {
+      this.getPlayer((err, player) => {
         if (err) {
           return cb(err);
         }
@@ -204,9 +204,13 @@ class TTS {
         let urls = this.urls(txt, lang),
           _playFn = null;
 
-        (_playFn = function (err) {
-          if (err) return cb(err);
-          if (0 >= urls.length) return cb();
+        (_playFn = (err) => {
+          if (err) {
+            return cb(err);
+          }
+          if (0 >= urls.length) {
+            return cb();
+          }
 
           player.play(urls.shift(), _playFn);
         }).call();
@@ -218,12 +222,12 @@ class TTS {
   };
 }
 
-/**
- * Represents a playback mechanism.
- * @constructor
- */
 class TTSPlayer {
 
+  /**
+   * Represents a playback mechanism.
+   * @constructor
+   */
   constructor() {
     /**
      * Get whether this playback mechanism is available for use.
@@ -253,15 +257,17 @@ class TTSPlayer {
   };
 }
 
-/**
- * Playback using HTML5 Audio.
- * @constructor
- */
 class HTML5Player extends TTSPlayer {
+
+  /**
+   * Playback using HTML5 Audio.
+   * @constructor
+   */
   constructor() {
+    super();
     this._available = null;
 
-    this.available = function (cb) {
+    this.available = (cb) => {
       if (null === this._available) {
 
         // check if HTML5 audio playback is possible
@@ -270,7 +276,7 @@ class HTML5Player extends TTSPlayer {
             if ('undefined' === typeof window.Audio) {
               return next(null, false);
             }
-            var audio = new Audio();
+            let audio = new Audio();
 
             //Shortcut which doesn't work in Chrome (always returns ""); pass through
             // if "maybe" to do asynchronous check by loading MP3 data: URI
@@ -313,7 +319,7 @@ class HTML5Player extends TTSPlayer {
     this.play = (url, cb) => {
       // load the MP3
       try {
-        var audio = new Audio();
+        let audio = new Audio();
         audio.src = url;
         audio.addEventListener('ended', function () {
           cb();
@@ -331,19 +337,19 @@ class HTML5Player extends TTSPlayer {
 
 }
 
-
-/**
- * Playback using SoundManager2 (https://github.com/scottschiller/SoundManager2).
- * @constructor
- */
 class SM2Player extends TTSPlayer {
-  constructor() {
 
+  /**
+   * Playback using SoundManager2 (https://github.com/scottschiller/SoundManager2).
+   * @constructor
+   */
+  constructor() {
+    super();
     this._available = null;
     this._soundId = 0;
     this._unique_instance_id = parseInt(Math.random() * 1000, 10);
 
-    this.available = function (cb) {
+    this.available = (cb) => {
       if (null === this._available) {
         if ('undefined' !== typeof window.soundManager && 'function' === typeof window.soundManager.ok) {
           this._available = window.soundManager.ok();
@@ -353,7 +359,7 @@ class SM2Player extends TTSPlayer {
       cb(this._available);
     };
 
-    this.play = function (url, cb) {
+    this.play = (url, cb) => {
       try {
         (window.soundManager.createSound({
           id: 'googletts-' + this._unique_instance_id + '-' + (++this._soundId),

@@ -152,6 +152,7 @@
             };
             world = new GridWorld(worldOpts);
             agent = world.agents[0];
+            agent.tick();
 //        world.init();
 
             $("#rewardslider").slider({
