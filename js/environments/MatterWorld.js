@@ -124,16 +124,6 @@ const container = document.body.querySelector('#game-container'),
   grid = new Grid(null, null, gridOptions),
   maze = new Maze(grid.init());
 
-// MatterTools aliases
-if (window.MatterTools) {
-  var MatterTools = window.MatterTools,
-    useTools = true,
-    Gui = MatterTools.Gui,
-    Inspector = MatterTools.Inspector,
-    useInspector = window.location.hash.indexOf('-inspect') !== -1,
-    isMobile = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
-}
-
 /**
  * @class MatterWorld
  * @property {number} clock
@@ -188,10 +178,14 @@ class MatterWorld {
     this.engine.world.gravity = this.engineOptions.gravity;
     this.mouseConstraint = MouseConstraint.create(this.engine, {element: this.canvas});
     this.render.mouse = this.mouseConstraint.mouse;
-    this.setViewport(this.renderOptions.viewport.x, this.renderOptions.viewport.y)
+    this.setViewport(this.renderOptions.viewport.x, this.renderOptions.viewport.y);
 
-    if (useTools) {
-      this.setupTools();
+    // MatterTools aliases
+    if (window.MatterTools) {
+      let MatterTools = window.MatterTools,
+        useInspector = window.location.hash.indexOf('-inspect') !== -1,
+        isMobile = /(ipad|iphone|ipod|android)/gi.test(navigator.userAgent);
+      // this.setupTools(MatterTools, useInspector, isMobile);
     }
 
     // this.addOuterWalls();
@@ -221,7 +215,7 @@ class MatterWorld {
     // Populating the world
     for (let k = 0; k < number; k++) {
       let agentOpts = {
-          worker: true,
+          worker: false,
           numEyes: 30,
           numTypes: 5,
           numActions: 4,
@@ -549,7 +543,7 @@ class MatterWorld {
     this.updateBody(body, newPos, newForce);
   }
 
-  setupTools() {
+  setupTools(MatterTools, useInspector, isMobile) {
     this.useInspector = useInspector;
     this.isMobile = isMobile;
     this.guiOptions = {
@@ -589,8 +583,8 @@ class MatterWorld {
       });
 
       // create a Matter.Inspector
-      if (Inspector && this.useInspector) {
-        this.inspector = Inspector.create(this.engine);
+      if (MatterTools.Inspector && this.useInspector) {
+        this.inspector = MatterTools.Inspector.create(this.engine);
 
         Events.on(this.inspector, 'import', () => {
           this.mouseConstraint = MouseConstraint.create(this.engine);
@@ -615,9 +609,9 @@ class MatterWorld {
     };
 
     // create a Matter.Gui
-    this.gui = Gui.create(this.engine, this.runner, this.render, this.guiOptions);
+    this.gui = MatterTools.Gui.create(this.engine, this.runner, this.render, this.guiOptions);
     initControls();
-    Gui.update(this.gui, this.gui.datGui);
+    MatterTools.Gui.update(this.gui, this.gui.datGui);
   }
   /**
    * Set the viewport

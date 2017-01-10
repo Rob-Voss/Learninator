@@ -32,51 +32,30 @@
 
     <main class="mdl-layout__content">
         <div id="main-content" class="page-content">
-            <div id="game-container"></div>
-            <!--<div class="content-grid mdl-grid">-->
-                <!--<div class="mdl-cell mdl-cell&#45;&#45;8-col mdl-cell&#45;&#45;4-col-tablet mdl-shadow&#45;&#45;16dp">-->
-                    <!--<div class="mdl-card__title">-->
-                        <!--<button id="menu-world"-->
-                                <!--class="mdl-button mdl-js-button mdl-button&#45;&#45;icon mdl-button&#45;&#45;colored">-->
-                            <!--<i class="material-icons">more_vert</i>-->
-                        <!--</button>-->
-                        <!--<div class="mdl-tooltip" data-mdl-for="menu-bottom-left">-->
-                            <!--Do <strong>things!</strong>-->
-                        <!--</div>-->
-                        <!--<ul class="mdl-menu mdl-menu&#45;&#45;bottom-left mdl-js-menu mdl-js-ripple-effect"-->
-                            <!--data-mdl-for="menu-bottom-left">-->
-                            <!--<li class="mdl-menu__item">Some Action</li>-->
-                            <!--<li disabled class="mdl-menu__item">Disabled Action</li>-->
-                            <!--<li class="mdl-menu__item">Yet Another Action</li>-->
-                        <!--</ul>-->
-                        <!--<h2 class="mdl-card__title-text">Matter World</h2>-->
-                    <!--</div>-->
-                    <!--<div class="mdl-card__supporting-text">-->
-                        <!--<div id="game-container"></div>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<div class="mdl-cell mdl-cell&#45;&#45;4-col mdl-cell&#45;&#45;2-col-tablet mdl-shadow&#45;&#45;16dp">-->
-                    <!--<div class="mdl-card__title">-->
-                        <!--<button id="menu-graph"-->
-                                <!--class="mdl-button mdl-js-button mdl-button&#45;&#45;icon mdl-button&#45;&#45;colored">-->
-                            <!--<i class="material-icons">more_vert</i>-->
-                        <!--</button>-->
-                        <!--<div class="mdl-tooltip" data-mdl-for="menu-bottom-left">-->
-                            <!--Do <strong>things!</strong>-->
-                        <!--</div>-->
-                        <!--<ul class="mdl-menu mdl-menu&#45;&#45;bottom-left mdl-js-menu mdl-js-ripple-effect"-->
-                            <!--data-mdl-for="menu-bottom-left">-->
-                            <!--<li class="mdl-menu__item">Some Action</li>-->
-                            <!--<li disabled class="mdl-menu__item">Disabled Action</li>-->
-                            <!--<li class="mdl-menu__item">Yet Another Action</li>-->
-                        <!--</ul>-->
-                        <!--<h2 class="mdl-card__title-text">Graph</h2>-->
-                    <!--</div>-->
-                    <!--<div class="mdl-card__supporting-text">-->
-                        <!--<div id="flotreward" style="width:600px; height: 400px;"></div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Matter World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="game-container"></div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </div>
@@ -86,12 +65,14 @@
 <script src="js/lib/external/gif.js"></script>
 <script src="js/lib/external/matter-tools.js"></script>
 <script src="js/lib/external/rl.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
 <script src="js/lib/Utility.js"></script>
 <script src="js/lib/Vec.js"></script>
 <script src="js/lib/ui/Dat.js"></script>
 <script src="js/lib/grid/Grid.js"></script>
 <script src="js/lib/grid/Cell.js"></script>
 <script src="js/lib/grid/CellShape.js"></script>
+<script src="js/lib/MapGenerator.js"></script>
 <script src="js/lib/Maze.js"></script>
 <script src="js/lib/game/MatterPixi.js"></script>
 <script src="js/entities/Wall.js"></script>

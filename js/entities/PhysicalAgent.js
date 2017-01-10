@@ -38,6 +38,23 @@ class Eye {
 class PhysicalAgent {
 
   /**
+   * Options for the Agent
+   * @typedef {object} agentOpts
+   * @property {boolean} worker - Is the Agent a Web Worker
+   * @property {string} brainType - The type of Brain to use
+   * @property {number} numActions - The number of actions the Agent can take
+   * @property {number} numTypes - The number of item types the Agent's eyes can see
+   * @property {number} numEyes - The number of Agent's eyes
+   * @property {number} numProprioception - The number of Agent's proprioception values
+   * @property {number} range - The range of the Agent's eyes
+   * @property {number} proximity - The proximity of the Agent's eyes
+   * @property {cheatOpts} cheats - The cheats to display
+   * @property {object} specTD - The brain options
+   * @property {object} specDQN - The brain options
+   * @property {envObject} env - The environment
+   */
+
+  /**
    * Initialize the Agent
    * @extends Entity
    * @constructor

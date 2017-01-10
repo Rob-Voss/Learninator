@@ -88,16 +88,6 @@ class MazeWorld extends GameWorld {
             // allow opportunity for the agent to learn
             agent.brain.learn(obs.r);
 
-            for (let [id, entity] of this.population.entries()) {
-              if (entity.type !== 0 && entity.type !== 4) {
-                // Check them for collisions
-                this.check(entity);
-
-                // Tick them
-                entity.tick();
-              }
-              entity.draw();
-            }
             this.drawGrid();
           }
         }, 20);
