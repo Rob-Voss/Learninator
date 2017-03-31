@@ -50,8 +50,8 @@ var FlotGraph = function (agents) {
       max: this.nflot
     },
     yaxis: {
-      min: -0.1,
-      max: 0.1
+      min: -0.07,
+      max: 0.07
     }
   });
 

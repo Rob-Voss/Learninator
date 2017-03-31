@@ -5,6 +5,7 @@ class MapGen {
 
   /**
    * @constructor
+   * @returns {MapGen}
    */
   constructor() {
     return this;
@@ -22,8 +23,8 @@ class MapGen {
 
   /**
    *
-   * @param begin
-   * @param end
+   * @param {number} begin
+   * @param {number} end
    * @returns {Array}
    */
   static range(begin, end) {
@@ -37,9 +38,9 @@ class MapGen {
 
   /**
    *
-   * @param field
-   * @param width
-   * @param height
+   * @param {Array} field
+   * @param {number} width
+   * @param {number} height
    */
   static print(field, width, height) {
     for (let y in MapGen.range(0, height)) {
@@ -54,11 +55,14 @@ class MapGen {
     }
   }
 }
-MapGen.legend = {};
-MapGen.legend.wall = '#';
-MapGen.legend.empty = '.';
-MapGen.legend.exposed = ',';
-MapGen.legend.unexposed = '?';
+MapGen.legend = {
+    wall: '#',
+    empty: '.',
+    exposed: ',',
+    unexposed: '?'
+};
+
+// var MapGen = new MapGen();
 
 /**
  * @class MapExport
@@ -148,6 +152,8 @@ class MapExport {
   }
 }
 
+// var MapExport = new MapExport();
+
 /**
  * @class Caves
  */
@@ -163,10 +169,10 @@ class Caves {
 
   /**
    *
-   * @param width
-   * @param height
+   * @param {number} width
+   * @param {number} height
    * @param firstPassFillRate
-   * @param iterations
+   * @param {number} iterations
    * @returns {*|Array}
    */
   static create(width, height, firstPassFillRate, iterations) {
@@ -188,7 +194,9 @@ class Caves {
   static randomRow(width, fillRate) {
     let empty = MapGen.repeat(0, width);
 
-    return empty.map(() => (Math.random() < fillRate) ? MapGen.legend.wall : MapGen.legend.empty);
+    return empty.map(() => {
+      return (Math.random() < fillRate) ? MapGen.legend.wall : MapGen.legend.empty
+    });
   }
 
   /**
@@ -549,12 +557,10 @@ Demo.draw = function (map, width, height, zoom) {
   console.log('draw() started.');
   let tileSize = Demo.tileSize * zoom,
     canvas = document.getElementById("canvas"),
-    context = canvas.getContext("2d"),
-    widthPx = width * Demo.tileSize * zoom,
-    heightPx = height * Demo.tileSize * zoom;
+    context = canvas.getContext("2d");
 
-  canvas.width = widthPx;
-  canvas.height = heightPx;
+  canvas.width = width * Demo.tileSize * zoom;
+  canvas.height = height * Demo.tileSize * zoom;
 
   context.fillStyle = "#eeeeee";
   context.fillRect(0, 0, canvas.width, canvas.height);

@@ -50,7 +50,7 @@ class HexShape extends Hex {
     if (this.useSprite) {
       this.graphics = new PIXI.Sprite(PIXI.Texture.fromFrame('dirt_0' + Utility.Maths.randi(1, 9) + '.png'));
       this.graphics.anchor.set(0.5, 0.5);
-      this.graphics.scale.set(1, 1);
+      this.graphics.scale.set(1,1);
       this.graphics.position.x = this.center.x;
       this.graphics.position.y = this.center.y;
       this.graphics.alpha = this.alpha;
@@ -214,6 +214,7 @@ class HexShape extends Hex {
       this.graphics.position.x = this.center.x;
       this.graphics.position.y = this.center.y;
       this.graphics.alpha = this.alpha;
+      this.graphics.scale = 0.5;
     } else {
       this.graphics.clear();
       this.graphics.lineStyle(0, 0x000000, this.alpha);

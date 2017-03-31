@@ -5,14 +5,14 @@
 /**
  * Options for the Maze
  * @typedef {Object} mazeOpts
- * @property {number} opts.xCount - The horizontal Cell count
- * @property {number} opts.yCount - The vertical Cell count
- * @property {number} opts.width - The width
- * @property {number} opts.height - The height
- * @property {boolean} opts.cheats - Show info about Maze
- * @property {boolean} opts.closed - Whether the maze is closed or not
- * @property {number} opts.buffer - The buffer in pixels to use
- * @property {Grid} opts.grid - The Grid
+ * @property {number} xCount - The horizontal Cell count
+ * @property {number} yCount - The vertical Cell count
+ * @property {number} width - The width
+ * @property {number} height - The height
+ * @property {boolean} cheats - Show info about Maze
+ * @property {boolean} closed - Whether the maze is closed or not
+ * @property {number} buffer - The buffer in pixels to use
+ * @property {Grid} grid - The Grid
  */
 
 /**
@@ -48,8 +48,8 @@ class Maze {
     this.cellStack = [];
     this.path = [];
 
-    this.treeMap = GrowingTree.create(50, 50, 0);
-    this.caveMap = Caves.create(50, 50, 0.5, 5);
+    // this.treeMap = GrowingTree.create(50, 50, 0);
+    // this.caveMap = Caves.create(50, 50, 0.5, 5);
 
     this.draw();
 

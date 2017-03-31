@@ -1,18 +1,3 @@
-// P2 aliases
-const
-  Body = p2.Body,
-  Box = p2.Box,
-  Circle = p2.Circle,
-  Capsule = p2.Capsule,
-  Convex = p2.Convex,
-  ContactMaterial = p2.ContactMaterial,
-  Heightfield = p2.Heightfield,
-  Line = p2.Line,
-  Material = p2.Material,
-  Plane = p2.Plane,
-  Particle = p2.Particle,
-  vec2 = p2.vec2,
-  World = p2.World;
 
 class P2Pixi {
 

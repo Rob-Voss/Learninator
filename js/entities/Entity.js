@@ -21,7 +21,8 @@
  */
 
 /**
- * @class Entity
+ * Entity
+ * @class
  * @property {PIXI.Graphics} graphics
  *
  */
@@ -42,7 +43,7 @@ class Entity {
     this.txtOpts = {
       fontSize: '10px',
       fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
-      fill: '#0000FF',
+      fill: '#000000',
       align: 'center'
     };
     if (typeof type === 'string') {
@@ -103,7 +104,7 @@ class Entity {
       this.graphics.lineStyle(0.5, 0x000000, 0.8);
       this.graphics.beginFill(this.color, this.alpha);
       if (this.type === 2) {
-        this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, 0);
+        this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, this.position.angle);
         this.graphics.drawPolygon(this.vertices);
       } else {
         this.graphics.drawCircle(this.position.x, this.position.y, this.radius);
@@ -119,16 +120,36 @@ class Entity {
       this.isDown = false;
       this.graphics.interactive = true;
       this.graphics
-        .on('mousedown', (e) => this.onMouseDown(e))
-        .on('touchstart', (e) => this.onDragStart(e))
-        .on('mouseup', (e) => this.onMouseUp(e))
-        .on('mouseupoutside', (e) => this.onDragEnd(e))
-        .on('touchend', (e) => this.onDragEnd(e))
-        .on('touchendoutside', (e) => this.onDragEnd(e))
-        .on('mouseover', (e) => this.onMouseOver(e))
-        .on('mouseout', (e) => this.onMouseOut(e))
-        .on('mousemove', (e) => this.onDragMove(e))
-        .on('touchmove', (e) => this.onDragMove(e));
+        .on('mousedown', (e) => {
+          this.onMouseDown(e)
+        })
+        .on('touchstart', (e) => {
+          this.onDragStart(e)
+        })
+        .on('mouseup', (e) => {
+          this.onMouseUp(e)
+        })
+        .on('mouseupoutside', (e) => {
+          this.onDragEnd(e)
+        })
+        .on('touchend', (e) => {
+          this.onDragEnd(e)
+        })
+        .on('touchendoutside', (e) => {
+          this.onDragEnd(e)
+        })
+        .on('mouseover', (e) => {
+          this.onMouseOver(e)
+        })
+        .on('mouseout', (e) => {
+          this.onMouseOut(e)
+        })
+        .on('mousemove', (e) => {
+          this.onDragMove(e)
+        })
+        .on('touchmove', (e) => {
+          this.onDragMove(e)
+        });
     }
     this.graphics.addChild(this.cheatsContainer);
 
@@ -137,28 +158,31 @@ class Entity {
 
   /**
    * Set up the cheat displays
+   *
    * @return {Entity}
    */
   addCheats() {
-    if (this.cheats.angle) {
+    if (this.cheats.angle && this.angleGraphics === undefined) {
       let dirV = new Vec(
         this.position.x + this.radius * Math.sin(this.position.direction),
         this.position.y + this.radius * Math.cos(this.position.direction)
       );
-      this.graphics.lineStyle(2, 0x000000, 2);
-      this.graphics.beginFill();
-      this.graphics.moveTo(this.position.x, this.position.y);
-      this.graphics.lineTo(dirV.x, dirV.y);
-      this.graphics.endFill();
+      this.angleGraphics = new PIXI.Graphics();
+      this.angleGraphics.lineStyle(2, 0x000000, 2);
+      this.angleGraphics.beginFill();
+      this.angleGraphics.moveTo(this.position.x, this.position.y);
+      this.angleGraphics.lineTo(dirV.x, dirV.y);
+      this.angleGraphics.endFill();
+      this.cheatsContainer.addChild(this.angleGraphics);
     }
 
-    if (this.bounds && this.cheats.bounds) {
-      let h = this.bounds.height,
-        w = this.bounds.width;
-      this.graphics.lineStyle(1, 0xFF0000, 1);
-      this.graphics.beginFill();
-      this.graphics.drawRect(this.bounds.x, this.bounds.y, w, h);
-      this.graphics.endFill();
+    if (this.cheats.bounds && this.boundsGraphics === undefined) {
+      this.boundsGraphics = new PIXI.Graphics();
+      this.boundsGraphics.lineStyle(1, 0xFF0000, 1);
+      this.boundsGraphics.beginFill(0xFFFFFF, 0);
+      this.boundsGraphics.drawRect(this.bounds.x, this.bounds.y, this.size, this.size);
+      this.boundsGraphics.endFill();
+      this.cheatsContainer.addChild(this.boundsGraphics);
     }
 
     if (this.cheats.id && this.idText === undefined) {
@@ -212,30 +236,48 @@ class Entity {
 
   /**
    * Update the cheats if they are on
+   *
    * @return {Entity}
    */
   updateCheats() {
-    this.addCheats();
-
     if (this.cheats.angle) {
       let dirV = new Vec(
         this.position.x + this.radius * Math.sin(this.position.direction),
         this.position.y + this.radius * Math.cos(this.position.direction)
       );
-      this.graphics.lineStyle(2, 0x000000, 2);
-      this.graphics.beginFill();
-      this.graphics.moveTo(this.position.x, this.position.y);
-      this.graphics.lineTo(dirV.x, dirV.y);
-      this.graphics.endFill();
+      this.angleGraphics.clear();
+      this.angleGraphics.lineStyle(2, 0x000000, 2);
+      this.angleGraphics.beginFill();
+      this.angleGraphics.moveTo(this.position.x, this.position.y);
+      this.angleGraphics.lineTo(dirV.x, dirV.y);
+      this.angleGraphics.endFill();
+    } else {
+      if (this.angleGraphics !== undefined) {
+        this.cheatsContainer.removeChildAt(
+          this.cheatsContainer.getChildIndex(this.angleGraphics)
+        );
+        this.angleGraphics = undefined;
+      }
     }
 
     if (this.cheats.bounds) {
-      let h = this.bounds.height,
-        w = this.bounds.width;
-      this.graphics.lineStyle(1, 0xFF0000, 1);
-      this.graphics.beginFill();
-      this.graphics.drawRect(this.bounds.x, this.bounds.y, w, h);
-      this.graphics.endFill();
+      this.bounds = this.graphics.getBounds();
+      this.boundsGraphics = this.cheatsContainer.getChildAt(
+        this.cheatsContainer.getChildIndex(this.boundsGraphics)
+      );
+      this.boundsGraphics.clear();
+      this.boundsGraphics.lineStyle(1, 0xFF0000, 1);
+      this.boundsGraphics.beginFill(0xFFFFFF, 0);
+      this.boundsGraphics.moveTo(this.position.x, this.position.y);
+      this.boundsGraphics.drawRect(this.bounds.x, this.bounds.y, this.size, this.size);
+      this.boundsGraphics.endFill();
+    } else {
+      if (this.boundsGraphics !== undefined) {
+        this.cheatsContainer.removeChildAt(
+          this.cheatsContainer.getChildIndex(this.boundsGraphics)
+        );
+        this.boundsGraphics = undefined;
+      }
     }
 
     if (this.cheats.id) {
@@ -328,43 +370,42 @@ class Entity {
 
   /**
    * Draws it
+   *
    * @return {Entity}
    */
   draw() {
-    let x = this.position.x,
-      y = this.position.y;
     if (this.useSprite) {
-      this.graphics.position.x = x;
-      this.graphics.position.y = y;
+      this.graphics.position.x = this.position.x;
+      this.graphics.position.y = this.position.y;
     } else {
       this.graphics.clear();
       this.graphics.lineStyle(0.5, 0x000000, 0.8);
       this.graphics.beginFill(this.color, this.alpha);
       if (this.type === 2) {
+        this.vertices = Entity.drawShape(this.position.x, this.position.y, 8, 10, 5, this.position.angle);
         this.graphics.drawPolygon(this.vertices);
       } else {
-        this.graphics.drawCircle(x, y, this.radius);
+        this.graphics.drawCircle(this.position.x, this.position.y, this.radius);
       }
       this.graphics.endFill();
       this.bounds = this.graphics.getBounds();
     }
 
+    this.addCheats();
     this.updateCheats();
 
     return this;
   }
 
   /**
+   * Draw a star/hex shape
    *
    * @param {number} x
    * @param {number} y
-   * @param {number} points - number of points
-   * (or number of sides for polygons)
+   * @param {number} points - number of points (or number of sides for polygons)
    * @param {number} radA - "outer" radius of the star
-   * @param {number} radB - "inner" radius of the star
-   * (if equal to radius1, a polygon is drawn)
-   * @param {number} a - initial angle (clockwise),
-   * by default, stars and polygons are 'pointing' up
+   * @param {number} radB - "inner" radius of the star (if equal to radius1, a polygon is drawn)
+   * @param {number} a - initial angle (clockwise), by default, stars and polygons are 'pointing' up
    */
   static drawShape(x, y, points, radA, radB, a) {
     let i, angle, radius, vertices = [];
@@ -384,6 +425,7 @@ class Entity {
 
   /**
    * Move around
+   *
    * @return {Entity}
    */
   move() {
@@ -442,16 +484,16 @@ class Entity {
         this.force.y += this.speed * 0.095;
         break;
       case 4: // Down
-        this.force.y += this.speed * 0.95;
+        this.force.y += this.speed * 0.095;
         break;
       case 5: // Down
-        this.force.y += this.speed * 0.95;
+        this.force.y += this.speed * 0.095;
         break;
       case 6: // Down
-        this.force.y += this.speed * 0.95;
+        this.force.y += this.speed * 0.095;
         break;
       case 7: // Down
-        this.force.y += this.speed * 0.95;
+        this.force.y += this.speed * 0.095;
         break;
     }
 
@@ -469,6 +511,7 @@ class Entity {
 
   /**
    * Do work son
+   *
    * @return {Entity}
    */
   tick() {
@@ -491,6 +534,7 @@ class Entity {
     this.data = event.data;
     this.alpha = 0.5;
     this.dragging = true;
+    this.localPosition = this.data.getLocalPosition(event.currentTarget.parent);
 
     return this;
   }
@@ -503,9 +547,8 @@ class Entity {
   onDragMove(event) {
     this.data = event.data;
     if (this.dragging) {
-      let newPosition = this.data.getLocalPosition(event.target.parent);
-      this.position.set(newPosition.x, newPosition.y);
-      this.draw();
+      this.localPosition = this.data.getLocalPosition(event.currentTarget.parent);
+      this.position.set(this.localPosition.x, this.localPosition.y);
     }
 
     return this;
@@ -520,8 +563,8 @@ class Entity {
     this.data = event.data;
     this.alpha = 1;
     this.dragging = false;
-    let newPosition = this.data.getLocalPosition(event.target.parent);
-    this.position.set(newPosition.x, newPosition.y);
+    this.localPosition = this.data.getLocalPosition(event.currentTarget.parent);
+    this.position.set(this.localPosition.x, this.localPosition.y);
 
     // set the interaction data to null
     this.data = null;
@@ -538,6 +581,7 @@ class Entity {
     this.data = event.data;
     this.isDown = true;
     this.alpha = 1;
+    this.localPosition = this.data.getLocalPosition(event.currentTarget.parent);
 
     return this;
   }
@@ -550,6 +594,7 @@ class Entity {
   onMouseUp(event) {
     this.data = event.data;
     this.isDown = false;
+    this.localPosition = this.data.getLocalPosition(event.currentTarget.parent);
 
     return this;
   }

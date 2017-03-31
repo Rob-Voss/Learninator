@@ -42,7 +42,7 @@ class GameObject {
     this.container = new PIXI.Container();
     this.containers.push(this.container);
     game.world.addBody(this.body);
-    game.pixiAdapter.container.addChild(this.container);
+    game.renderer.container.addChild(this.container);
 
     return this;
   }
@@ -89,7 +89,7 @@ class GameObject {
 
     this.body.addShape(this.shape, offset, angle);
     let container = this.containers[this.bodies.indexOf(this.body)];
-    game.pixiAdapter.addShape(container, shape, options);
+    game.renderer.addShape(container, shape, options);
 
     return this;
   }
@@ -100,7 +100,7 @@ class GameObject {
    */
   static deleteObject(game) {
     var world = game.world,
-      container = game.pixiAdapter.container;
+      container = game.renderer.container;
 
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].remove();
@@ -136,7 +136,7 @@ class GameObject {
     this.containers.splice(index, 1);
 
     game.world.removeBody(body);
-    game.pixiAdapter.container.removeChildAt(index);
+    game.renderer.container.removeChildAt(index);
 
     return this;
   }
@@ -158,7 +158,7 @@ class GameObject {
    * @return {GameObject} gameObject
    */
   updateTransforms(game) {
-    let ppu = game.pixiAdapter.pixelsPerLengthUnit,
+    let ppu = game.renderer.pixelsPerLengthUnit,
       bodies = this.bodies,
       containers = this.containers;
     for (let i = 0; i < bodies.length; i++) {

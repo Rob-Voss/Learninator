@@ -1,3 +1,22 @@
+/**
+ * Cell
+ * @class
+ *
+ * @property {number} x
+ * @property {number} y
+ * @property {number} z
+ * @property {Point} center
+ * @property {boolean} visited
+ * @property {Cell} parent
+ * @property {number} heuristic
+ * @property {number} reward
+ * @property {number} value
+ * @property {Array} corners
+ * @property {Array} polyCorners
+ * @property {Array} neighbors
+ * @property {Array} directions
+ * @property {Map} population
+ */
 class Cell {
 
   /**
@@ -99,8 +118,8 @@ class Cell {
 
   /**
    * Add a Cell to another one
-   * @param {Cell|object} a
-   * @param {Cell|object} b
+   * @param {Cell|Object} a
+   * @param {Cell|Object} b
    * @return {Cell}
    */
   static add(a, b) {
@@ -109,7 +128,7 @@ class Cell {
 
   /**
    * Get the neighbor
-   * @param {Cell|object} cell
+   * @param {Cell|Object} cell
    * @param {number} dir
    * @return {Cell}
    */
@@ -119,6 +138,10 @@ class Cell {
 
 }
 
+/**
+ *
+ * @type {[Cell]}
+ */
 Cell.cellDirections = [
   new Cell(0, -1),
   new Cell(1, 0),

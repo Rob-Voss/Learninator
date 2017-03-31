@@ -89,10 +89,9 @@
         origin = new Point(worldOpts.grid.width / 2, worldOpts.grid.height / 2),
         layout = new Layout(orientation, size, origin),
         shape = HexGrid.shapeRectangle(layout, worldOpts.grid),
-        grid = new HexGrid(worldOpts.grid, shape, layout),
+        grid = new HexGrid(layout, shape, worldOpts.grid),
         maze = new Maze(grid.init()),
         agents = [
-          new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), worldOpts.agent),
           new Agent(new Vec(grid.startCell.center.x, grid.startCell.center.y), worldOpts.agent)
         ];
       worldOpts.grid = grid;

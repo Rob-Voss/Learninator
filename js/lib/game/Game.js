@@ -1,5 +1,20 @@
-﻿
-  /**
+﻿// P2 aliases
+const
+  Body = p2.Body,
+  Box = p2.Box,
+  Circle = p2.Circle,
+  Capsule = p2.Capsule,
+  Convex = p2.Convex,
+  ContactMaterial = p2.ContactMaterial,
+  Heightfield = p2.Heightfield,
+  Line = p2.Line,
+  Material = p2.Material,
+  Plane = p2.Plane,
+  Particle = p2.Particle,
+  vec2 = p2.vec2,
+  World = p2.World;
+
+/**
    * @class Game
    * @property {object} options
    */
@@ -12,23 +27,23 @@
    */
   constructor(options = {}) {
     this.options = options;
-    this.pixiAdapterOptions = options.pixiAdapterOptions || {
+    this.rendererOptions = options.renderOptions || {
           background: 0x000000,
           antialiasing: true,
           autoResize: false,
-          resizable: true,
+          resizable: false,
           transparent: false,
-          noWebGL: false,
+          noWebGL: true,
           useDeviceAspect: false,
-          resolution: window.devicePixelRatio,
+          resolution: 1,//window.devicePixelRatio,
           width: 800,
-          height: 800,
-          pixelsPerLengthUnit: 40
+          height: 400,
+          pixelsPerLengthUnit: 100
         };
     /**
      * @type {P2Pixi}
      */
-    this.pixiAdapter = new P2Pixi(this.pixiAdapterOptions);
+    this.renderer = new P2Pixi(this.rendererOptions);
     this.options.worldOptions = {};
     this.options.worldOptions.gravity = [0, -9.8];
     this.options.trackedBodyOffset = [0, 0.8];
@@ -36,7 +51,7 @@
     /**
      * @type {p2.World}
      */
-    this.world = new GameWorld(this.options.worldOptions);
+    this.world = new World(this.options.worldOptions);
 
     this.gameObjects = [];
     this.trackedBody = null;
@@ -56,6 +71,12 @@
     } else {
       this.runIfReady();
     }
+  }
+
+
+  addBody() {
+    this.world.addBody(this.body);
+    this.renderer.container.addChild(this.container);
   }
 
   /**
@@ -80,10 +101,10 @@
     let trackedBody = this.trackedBody;
     // Focus on tracked body, if set
     if (trackedBody !== null) {
-      let pixiAdapter = this.pixiAdapter,
-          renderer = pixiAdapter.renderer,
-          ppu = pixiAdapter.pixelsPerLengthUnit,
-          containerPosition = pixiAdapter.container.position,
+      let render = this.renderer,
+          renderer = render.renderer,
+          ppu = render.pixelsPerLengthUnit,
+          containerPosition = render.container.position,
           trackedBodyPosition = trackedBody.position,
           trackedBodyOffset = this.options.trackedBodyOffset,
           x = ((trackedBodyOffset[0] + 1) * renderer.width * 0.5) - (trackedBodyPosition[0] * ppu),
@@ -202,17 +223,20 @@
           tDelta = time - bObj.lastCallTime;
       bObj.lastCallTime = time;
 
-      if (bObj.direction == -1) {
+      if (bObj.direction === -1) {
+        // Left
         bObj.speed -= (tDelta * (bObj.accelerationRate * (bObj.speed > 0 ? bObj.reverseDirectionRate : 1)));
         if (bObj.speed < -bObj.maximumSpeed) {
           bObj.speed = -bObj.maximumSpeed;
         }
-      } else if (bObj.direction  == 1) {
+      } else if (bObj.direction  === 1) {
+        // Right
         bObj.speed += (tDelta * (bObj.accelerationRate * (bObj.speed < 0 ? bObj.reverseDirectionRate : 1)));
         if (bObj.speed > bObj.maximumSpeed) {
           bObj.speed = bObj.maximumSpeed;
         }
-      } else if (bObj.direction  == 2)  {
+        bObj.angle = 0.8;
+      } else if (bObj.direction  === 2)  {
         if (bObj.speed < 0) {
           bObj.speed += (tDelta * bObj.decelerationRate);
         } else if (bObj.speed > 0) {
@@ -305,7 +329,7 @@
     for (let i = 0; i < this.gameObjects.length; i++) {
       this.gameObjects[i].updateTransforms(this);
     }
-    this.pixiAdapter.renderer.render(this.pixiAdapter.stage);
+    this.renderer.renderer.render(this.renderer.stage);
   }
 
   /**

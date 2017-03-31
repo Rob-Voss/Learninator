@@ -15,10 +15,11 @@
 
 /**
  * Grid
- * @typedef {Grid} Grid
+ * @class
+ *
+ * @property {number} buffer
  * @property {number} width
  * @property {number} height
- * @property {number} buffer
  * @property {number} size
  * @property {number} cellSize
  * @property {number} cellSpacing
@@ -31,13 +32,13 @@
  * @property {number} cellWidth
  * @property {number} cellHeight
  * @property {number} layout
- * @property {Cell} startCell
- * @property {array} cells
- * @property {array} path
- * @property {array} removedEdges
- * @property {array} walls
+ * @property {Array} cells
+ * @property {Array} path
+ * @property {Array} removedEdges
+ * @property {Array} walls
  * @property {Map} map
  * @property {PIXI.Container} cellsContainer
+ * @property {Cell|Hex} startCell
  */
 class Grid {
 
@@ -46,7 +47,7 @@ class Grid {
    * @constructor
    *
    * @param {Layout} layout -
-   * @param {array} cells -
+   * @param {Array} cells -
    * @param {gridOpts} opts - The options for the Grid
    * @return {Grid}
    */
@@ -72,6 +73,7 @@ class Grid {
     this.walls = [];
     this.map = new Map();
     this.cellsContainer = new PIXI.Container();
+
     this.mapCells();
 
     return this;
@@ -107,6 +109,7 @@ class Grid {
         }
 
         cell.neighbors[dir] = (neighb) ? this.getCellAt(neighb.x, neighb.y) : null;
+
         cell.walls[dir] = new Wall(v1, v2, dir, {
           cheats: this.cheats,
           useSprite: false
@@ -121,20 +124,17 @@ class Grid {
 
   /**
    * Returns true if there is an edge between c1 and c2
-   * @param {Cell} c1
-   * @param {Cell} c2
+   * @param {Cell|Hex} c1
+   * @param {Cell|Hex} c2
    * @return {boolean}
    */
   areConnected(c1, c2) {
-    if (!c1 || !c2) {
-      return false;
-    }
-    if (Math.abs(c1.x - c2.x) > 1 || Math.abs(c1.y - c2.y) > 1) {
+    if ((!c1 || !c2) || (Math.abs(c1.x - c2.x) > 1 || Math.abs(c1.y - c2.y) > 1)) {
       return false;
     }
 
     let removedEdge = this.removedEdges.find((edge) => {
-      var inc1 = edge.includes(c1),
+      let inc1 = edge.includes(c1),
         inc2 = edge.includes(c2);
       return inc1 && inc2;
     });
@@ -144,7 +144,7 @@ class Grid {
 
   /**
    * Returns all neighbors of this Cell that are separated by an edge
-   * @param {Cell} cell
+   * @param {Cell|Hex} cell
    * @return {Array}
    */
   connectedNeighbors(cell) {
@@ -165,7 +165,7 @@ class Grid {
    * @return {Array}
    */
   disconnectedNeighbors(cell) {
-    var disc, results,
+    let disc, results,
       neighbors = cell.neighbors;
     results = neighbors.filter((c0) => {
       if (c0 === false) {
@@ -180,8 +180,8 @@ class Grid {
 
   /**
    * Get a Cell at a specific point
-   * @param {Number} x
-   * @param {Number} y
+   * @param {number} x
+   * @param {number} y
    * @return {Cell|Hex|boolean}
    */
   getCellAt(x, y) {
@@ -248,7 +248,7 @@ class Grid {
   /**
    * Returns all neighbors of this cell, regardless if they are connected or not.
    * @param {Cell|Hex} cell
-   * @param {Boolean} all
+   * @param {boolean} all
    * @return {Array}
    */
   neighbors(cell, all = false) {

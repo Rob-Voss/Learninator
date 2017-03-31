@@ -107,13 +107,15 @@ let CollisionDetector = function (opts) {
     let collisionObj,
       entP = ent.position,
       tarP = tar.position,
-      size = ent.radius + tar.radius,
-      collPtX = ((entP.x * tar.radius) + (tarP.x * ent.radius)) / size,
-      collPtY = ((entP.y * tar.radius) + (tarP.y * ent.radius)) / size,
+      entR = ent.radius + 1,
+      tarR = tar.radius + 1,
+      size = entR + tarR,
+      collPtX = ((entP.x * tarR) + (tarP.x * entR)) / size,
+      collPtY = ((entP.y * tarR) + (tarP.y * entR)) / size,
       xDist = tar.position.x - ent.position.x,
       yDist = tar.position.y - ent.position.y,
       distFrom = tar.position.distanceTo(ent.position),
-      radiusDist = tar.radius + ent.radius,
+      radiusDist = tarR + entR,
       distSquared = xDist * xDist + yDist * yDist;
 
     // Check the squared distances instead of the the distances,
@@ -129,14 +131,14 @@ let CollisionDetector = function (opts) {
         let collisionScale = dotProduct / distSquared,
           xCollision = xDist * collisionScale,
           yCollision = yDist * collisionScale,
-          eS = (ent.type === 5 ? ent.radius * 2 : ent.radius),
-          tS = (tar.type === 5 ? tar.radius * 2 : tar.radius),
+          eS = (ent.type === 5 ? entR * 2 : entR),
+          tS = (tar.type === 5 ? tarR * 2 : tarR),
           // The Collision vector is the speed difference
           // projected on the Dist vector, thus it is the
           // component of the speed difference needed for the collision.
           combinedMass = tS + eS,
-          collisionWeightA = 2 * ent.radius / combinedMass,
-          collisionWeightB = 2 * tar.radius / combinedMass,
+          collisionWeightA = 2 * entR / combinedMass,
+          collisionWeightB = 2 * tarR / combinedMass,
           vecI = new Vec(collPtX, collPtY);
         collisionObj = {
           vecI: vecI,

@@ -21,9 +21,9 @@ const cheatOpts = {
   /**
    * Default collision engine options
    * @typedef {Object} collisionOpts
-   * @property {String} type - The speed of the simulation
-   * @property {Number} maxChildren - The speed of the simulation
-   * @property {Number} simSpeed - The speed of the simulation
+   * @property {string} type - The speed of the simulation
+   * @property {number} maxChildren - The speed of the simulation
+   * @property {number} simSpeed - The speed of the simulation
    * @property {cheatOpts} cheats - The speed of the simulation
    */
   collisionOpts = {
@@ -63,7 +63,7 @@ const cheatOpts = {
   },
   /**
    * Options for the World
-   * @typedef {object} worldOpts
+   * @typedef {Object} worldOpts
    * @property {number} simSpeed - The speed of the simulation
    * @property {collisionOpts} collision - The collision definition
    * @property {cheatOpts} cheats - The cheats definition
@@ -397,6 +397,7 @@ class GameWorld {
 
     this.deltaTime = 0;
     this.lastTime = GameWorld.time();
+
     animate();
   }
 
@@ -424,7 +425,8 @@ class GameWorld {
   }
 
   /**
-   * Add some noms
+   * Add some entities that are Agents
+   *
    * @return {GameWorld}
    */
   addEntityAgents() {
@@ -458,6 +460,7 @@ class GameWorld {
 
   /**
    * Add new entities
+   *
    * @parameter {number} number
    * @return {GameWorld}
    */
@@ -472,7 +475,12 @@ class GameWorld {
         let n = Math.floor(Math.random() * this.grid.cells.length),
           startCell = this.grid.cells[n],
           randAdd = Utility.Maths.randi(-(this.grid.cellSize / 2 - r), this.grid.cellSize / 2 - r);
-        startXY = new Vec(startCell.center.x + randAdd, startCell.center.y + randAdd);
+        startXY = new Vec(
+          Utility.Maths.randi(r, this.width - r),
+          Utility.Maths.randi(r, this.height - r)
+          // startCell.center.x + randAdd,
+          // startCell.center.y + randAdd
+        );
         this.options.entity.gridLocation = startCell;
       } else {
         startXY = new Vec(
@@ -482,12 +490,14 @@ class GameWorld {
       }
       startXY.vx = Utility.Maths.randf(-3, 3);
       startXY.vy = Utility.Maths.randf(-3, 3);
-      let type = Utility.Maths.randi(1, 3),
-        entity = new Entity(type, startXY, this.options.entity);
+      let entity = new Entity(Utility.Maths.randi(1, 3), startXY, this.options.entity);
 
       this.entities.push(entity);
       this.entityLayer.addChild(entity.graphics);
       this.population.set(entity.id, entity);
+      // if (entity.cheatsContainer !== undefined) {
+      //   this.uiLayer.addChild(entity.cheatsContainer);
+      // }
     }
 
     return this;
@@ -495,10 +505,11 @@ class GameWorld {
 
   /**
    * Add the Walls
+   *
    * @return {GameWorld}
    */
   addWalls() {
-    if (!this.walls) {
+    if (this.walls.length < 1) {
       this.walls = [];
       this.walls.push(new Wall(new Vec(1, 1), new Vec(this.width - 1, 1), this.cheats, 'Top'));
       this.walls.push(new Wall(new Vec(this.width - 1, 1), new Vec(this.width - 1, this.height - 1), this.cheats, 'Right'));
@@ -516,6 +527,7 @@ class GameWorld {
 
   /**
    * Remove the entity from the world
+   *
    * @param {string} id
    * @return {GameWorld}
    */
@@ -531,6 +543,7 @@ class GameWorld {
   }
 
   /**
+   * Load a EZGUI theme
    *
    * @param guiObj
    * @param theme
@@ -599,6 +612,7 @@ class GameWorld {
 
   /**
    * Tick the environment
+   *
    * @param {number} timeSinceLast
    * @return {GameWorld}
    */
@@ -662,6 +676,7 @@ class GameWorld {
     }
 
     if (this.rewards) {
+
       this.rewards.graphRewards();
     }
 
@@ -670,6 +685,7 @@ class GameWorld {
 
   /**
    * Return the time
+   *
    * @return {number}
    */
   static time() {

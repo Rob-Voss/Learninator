@@ -147,50 +147,18 @@ class HexMazeWorld extends GameWorld {
       // update policy arrows
       for (let a = 0; a < 6; a++) {
         let prob = agent.brain.P[a * l + s],
-          nx = 0,
-          ny = 0,
-          actions = this.Aarr[s],
-          avail = actions[a];
-        if (avail === null || prob < 0.01) {
-          // Hide the arrow
-        } else {
-          // Show the arrow
-        }
-
+          avail = this.Aarr[s][a],
+          possiblePaths = this.grid.disconnectedNeighbors(cell);
+        // Show the arrow
         // The length of the arrow based on experience
-        let ss = this.grid.cellSize / 2 * (prob * 0.9);
+        let ss = this.grid.cellSize / 2 * (prob * 0.9),
+          startPt = cell.center,
+          endPt = (possiblePaths[a]) ? new Point(possiblePaths[a].center.x, possiblePaths[a].center.y) : startPt;
 
-        switch (a) {
-          case 0: // Left
-            nx = -ss;
-            ny = 0;
-            break;
-          case 1: // Down
-            nx = 0;
-            ny = ss;
-            break;
-          case 2: // Up
-            nx = 0;
-            ny = -ss;
-            break;
-          case 3: // Right
-            nx = ss;
-            ny = 0;
-            break;
-          case 4: // Right
-            nx = ss;
-            ny = 0;
-            break;
-          case 5: // Right
-            nx = ss;
-            ny = 0;
-            break;
-        }
-        // Draw the arrow using below as guide
-        cell.graphics.lineStyle(1, 0x000000);
+        cell.graphics.lineStyle(prob, 0x000000);
         cell.graphics.beginFill(0x000000);
-        cell.graphics.moveTo(cell.center.x - ss, cell.center.y - ss);
-        cell.graphics.lineTo(cell.center.x + nx, cell.center.y + ny);
+        cell.graphics.moveTo(startPt.x, startPt.y);
+        cell.graphics.lineTo(endPt.x, endPt.y);
         cell.graphics.endFill();
       }
     }
@@ -222,7 +190,7 @@ class HexMazeWorld extends GameWorld {
     this.flott = [];
     this.series = [];
 
-    for (var a = 0; a < this.agents.length; a++) {
+    for (let a = 0; a < this.agents.length; a++) {
       this.smoothReward[a] = null;
       this.smoothRewardHistory[a] = null;
       this.flott[a] = 0;
@@ -262,7 +230,7 @@ class HexMazeWorld extends GameWorld {
     });
 
     setInterval(() => {
-      for (var a = 0; a < this.agents.length; a++) {
+      for (let a = 0; a < this.agents.length; a++) {
         this.series[a].data = this.getFlotRewards(a);
       }
       this.plot.setData(this.series);
@@ -293,10 +261,10 @@ HexMazeWorld.prototype.allowedActions = function (s) {
     actions = this.grid.disconnectedNeighbors(cell);
 
   for (let a = 0; a < actions.length; a++) {
-    var c = actions[a];
+    let c = actions[a];
     for (let n = 0; n < cell.neighbors.length; n++) {
       if (cell.neighbors[n]) {
-        var dQ = cell.neighbors[n].q,
+        let dQ = cell.neighbors[n].q,
           dR = cell.neighbors[n].r,
           nQ = c.q,
           nR = c.r;

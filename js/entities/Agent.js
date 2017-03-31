@@ -1,10 +1,14 @@
+/**
+ * Eye
+ *
+ * @class
+ */
 class Eye {
 
   /**
-   * Eye
+   * Eye sensor has a maximum range and senses entities and walls
    * @constructor
    *
-   * Eye sensor has a maximum range and senses entities and walls
    * @param {number} angle
    * @param {Agent} agent
    * @return {Eye}
@@ -23,8 +27,8 @@ class Eye {
       agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
     );
     this.v2 = new Vec(
-      agent.position.x + this.range * Math.sin(agent.angle + this.angle),
-      agent.position.y + this.range * Math.cos(agent.angle + this.angle)
+      this.v1.x * Math.sin(agent.angle + this.angle),
+      this.v1.y * Math.cos(agent.angle + this.angle)
     );
     this.sensed = {
       type: -1,
@@ -39,19 +43,27 @@ class Eye {
 
   /**
    * Draw the lines for the eyes
+   *
+   * @param {Agent} agent
    */
   draw(agent) {
     this.v1 = new Vec(
       agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
       agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
     );
+
     this.v2 = new Vec(
-      agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-      agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
+      this.v1.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
+      this.v1.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
     );
+
     this.graphics.clear();
     this.graphics.moveTo(this.v1.x, this.v1.y);
     switch (this.sensed.type) {
+      case 0:
+        // Is it wall or nothing?
+        this.graphics.lineStyle(1, 0x000000, 1);
+        break;
       case 1:
         // It is noms
         this.graphics.lineStyle(1, 0x00FF00, 1);
@@ -77,6 +89,8 @@ class Eye {
 
   /**
    * Sense the surroundings
+   *
+   * @param {Agent} agent
    */
   sense(agent) {
     // Reset our eye data
@@ -104,51 +118,43 @@ class Eye {
         if (closeObj.distance <= this.range) {
           this.sensed.type = closeObj.entity.type;
           this.sensed.proximity = closeObj.distance;
-          this.sensed.position = closeObj.vecI;
-          if ('vx' in closeObj.vecI) {
-            this.sensed.velocity.x = closeObj.vecI.vx;
-            this.sensed.velocity.y = closeObj.vecI.vy;
-          } else {
-            this.sensed.velocity = new Vec(0, 0);
-          }
+          this.sensed.position.x = closeObj.vecI.x;
+          this.sensed.position.y = closeObj.vecI.y;
+          this.sensed.velocity.x = ('vx' in closeObj.vecI) ? closeObj.vecI.vx : 0;
+          this.sensed.velocity.y = ('vy' in closeObj.vecI) ? closeObj.vecI.vy : 0;
         }
       }
     }
-
-    this.v1 = new Vec(
-      agent.position.x + agent.radius * Math.sin(agent.angle + this.angle),
-      agent.position.y + agent.radius * Math.cos(agent.angle + this.angle)
-    );
-    this.v2 = new Vec(
-      agent.position.x + this.sensed.proximity * Math.sin(agent.angle + this.angle),
-      agent.position.y + this.sensed.proximity * Math.cos(agent.angle + this.angle)
-    );
-
   }
 }
 
+/**
+ * Options for the Agent
+ * @typedef {object} agentOpts
+ * @property {boolean} worker - Is the Agent a Web Worker
+ * @property {string} brainType - The type of Brain to use
+ * @property {number} numActions - The number of actions the Agent can take
+ * @property {number} numTypes - The number of item types the Agent's eyes can see
+ * @property {number} numEyes - The number of Agent's eyes
+ * @property {number} numProprioception - The number of Agent's proprioception values
+ * @property {number} range - The range of the Agent's eyes
+ * @property {number} proximity - The proximity of the Agent's eyes
+ * @property {cheatOpts} cheats - The cheats to display
+ * @property {object} specTD - The brain options
+ * @property {object} specDQN - The brain options
+ * @property {envObject} env - The environment
+ */
+
+/**
+ * Initialize the Agent
+ *
+ * @extends {Entity}
+ * @class
+ */
 class Agent extends Entity {
 
   /**
-   * Options for the Agent
-   * @typedef {object} agentOpts
-   * @property {boolean} worker - Is the Agent a Web Worker
-   * @property {string} brainType - The type of Brain to use
-   * @property {number} numActions - The number of actions the Agent can take
-   * @property {number} numTypes - The number of item types the Agent's eyes can see
-   * @property {number} numEyes - The number of Agent's eyes
-   * @property {number} numProprioception - The number of Agent's proprioception values
-   * @property {number} range - The range of the Agent's eyes
-   * @property {number} proximity - The proximity of the Agent's eyes
-   * @property {cheatOpts} cheats - The cheats to display
-   * @property {object} specTD - The brain options
-   * @property {object} specDQN - The brain options
-   * @property {envObject} env - The environment
-   */
-
-  /**
-   * Initialize the Agent
-   * @extends {Entity}
+   * Agent
    * @constructor
    *
    * @param {Vec} position - The x, y location
@@ -259,6 +265,7 @@ class Agent extends Entity {
 
   /**
    * Agent's chance to act on the world
+   *
    * @return {Agent}
    */
   act() {
@@ -296,7 +303,8 @@ class Agent extends Entity {
 
   /**
    * Modify position based on collision
-   * @param {object} collisionObj
+   *
+   * @param {Object} collisionObj
    */
   collision(collisionObj) {
     if (collisionObj.distance <= this.radius) {
@@ -328,6 +336,7 @@ class Agent extends Entity {
   }
 
   /**
+   * Draw the Agent
    *
    * @returns {Agent}
    */
@@ -343,6 +352,7 @@ class Agent extends Entity {
 
   /**
    * Agent's chance to learn
+   *
    * @return {Agent}
    */
   learn() {
@@ -376,7 +386,8 @@ class Agent extends Entity {
 
   /**
    * Load a pre-trained agent
-   * @param {String} file
+   *
+   * @param {string} file
    * @return {Agent}
    */
   load(file) {
@@ -399,6 +410,7 @@ class Agent extends Entity {
 
   /**
    * Move around
+   *
    * @return {Agent}
    */
   move() {
@@ -436,6 +448,7 @@ class Agent extends Entity {
 
   /**
    * Reset or set up the Agent
+   *
    * @return {Agent}
    */
   reset() {
@@ -502,6 +515,7 @@ class Agent extends Entity {
 
   /**
    * Save the brain state
+   *
    * @return {Agent}
    */
   save() {
@@ -516,6 +530,7 @@ class Agent extends Entity {
 
   /**
    * Tick the agent
+   *
    * @return {Agent}
    */
   tick() {

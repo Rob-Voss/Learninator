@@ -1,5 +1,26 @@
 /**
+ * CellShape
+ * @class
  * @extends Cell
+ * @property {number} cellSize
+ * @property {number} cellWidth
+ * @property {number} cellHeight
+ * @property {number} cellSpacing
+ * @property {boolean} pointy
+ * @property {boolean} useSprite
+ * @property {boolean} fill
+ * @property {boolean} cheats
+ * @property {Vec} center
+ * @property {Array} corners
+ * @property {boolean} isOver
+ * @property {boolean} isDown
+ * @property {string} color
+ * @property {number} alpha
+ * @property {Array} walls
+ * @property {txtOpts} txtOpts
+ * @property {PIXI.Container} cheatsContainer
+ * @property {PIXI.Container} wallContainer
+ * @property {PIXI.Sprite|PIXI.Graphics} graphics
  */
 class CellShape extends Cell {
 
@@ -37,8 +58,6 @@ class CellShape extends Cell {
     this.isDown = false;
     this.color = 0xFFFFFF;
     this.alpha = 0;
-    this.reward = null;
-    this.value = null;
     this.walls = [];
     this.txtOpts = {
       fontSize: '9px',
@@ -150,7 +169,7 @@ class CellShape extends Cell {
   }
 
   /**
-   *
+   * Update the values of the cheats
    * @return {CellShape}
    */
   updateCheats() {
@@ -206,7 +225,7 @@ class CellShape extends Cell {
   }
 
   /**
-   *
+   * Draw the graphics
    * @return {CellShape}
    */
   draw() {
@@ -258,30 +277,62 @@ class CellShape extends Cell {
     return this;
   }
 
+  /**
+   * Add a cell
+   * @param {Cell} a
+   * @param {Cell} b
+   * @returns {Cell}
+   */
   add(a, b) {
     return super.add(a, b);
   }
 
+  /**
+   *
+   * @returns {Array}
+   */
   pathToOrigin() {
     return super.pathToOrigin();
   }
 
+  /**
+   *
+   * @param cell
+   * @param dir
+   * @returns {Cell}
+   */
   neighbor(cell, dir) {
     return Cell.neighbor(cell, dir);
   }
 
+  /**
+   *
+   * @returns {number}
+   */
   score() {
     return super.score();
   }
 
+  /**
+   *
+   * @returns {*[]}
+   */
   toArray() {
     return super.toArray();
   }
 
+  /**
+   *
+   * @returns {string}
+   */
   toString() {
     return super.toString();
   }
 
+  /**
+   *
+   * @returns {Cell}
+   */
   visit() {
     return super.visit();
   }

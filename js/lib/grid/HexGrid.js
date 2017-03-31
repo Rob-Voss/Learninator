@@ -33,12 +33,20 @@ class HexGrid extends Grid {
   }
 
   /**
-   * Return an array of neigh
+   * Returns all neighbors of this Cell that are NOT separated by an edge
+   * This means there is a maze path between both cells.
    * @param {Hex|HexShape} cell
    * @returns {Array}
    */
   disconnectedNeighbors(cell) {
-    return super.disconnectedNeighbors(cell);
+    let results, tmp = [];
+    results = cell.neighbors.filter((c0, idx) => {
+      let disc = (c0 === false) ? false : !this.areConnected(cell, c0);
+      tmp[idx] = disc ? c0 : false;
+      return disc;
+    });
+
+    return tmp;
   }
 
   /**
@@ -65,8 +73,8 @@ class HexGrid extends Grid {
         entity.bounds.y + entity.bounds.height / 2
       ),
       hex = this.layout.pixelToHex(center),
-      cube = this.roundCube(this.axialToCube(hex)),
-      hexR = this.cubeToAxial(cube);
+      cube = HexGrid.roundCube(HexGrid.axialToCube(hex)),
+      hexR = HexGrid.cubeToAxial(cube);
 
     return this.getCellAt(hexR.q, hexR.r);
   }
@@ -185,10 +193,10 @@ class HexGrid extends Grid {
   pixelToAxial(x, y) {
     let cube, decimalQR, roundedCube;
     decimalQR = this.pixelToDecimalQR(x, y, 1);
-    cube = this.axialToCube(decimalQR);
-    roundedCube = this.roundCube(cube);
+    cube = HexGrid.axialToCube(decimalQR);
+    roundedCube = HexGrid.roundCube(cube);
 
-    return this.cubeToAxial(roundedCube);
+    return HexGrid.cubeToAxial(roundedCube);
   }
 
   /**
