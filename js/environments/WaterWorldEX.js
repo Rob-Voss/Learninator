@@ -1,114 +1,55 @@
-(function(global) {
-  'use strict';
+class WaterWorldEX extends GameWorld {
 
-  class WaterWorldEX extends World {
+  /**
+   * World object contains many agents and walls and food and stuff
+   * @name WaterWorldEX
+   * @extends GameWorld
+   * @constructor
+   *
+   * @return {WaterWorldEX}
+   */
+  constructor(agents = [], walls = [], worldOpts = worldOpts) {
+    super(agents, walls, worldOpts);
 
-    /**
-     * World object contains many agents and walls and food and stuff
-     * @name WaterWorldEX
-     * @extends World
-     * @constructor
-     *
-     * @return {WaterWorldEX}
-     */
-    constructor() {
-      let renderOpts = {
-            antialiasing: false,
-            autoResize: false,
-            backgroundColor: 0xFFFFFF,
-            resizable: false,
-            transparent: false,
-            resolution: 1,//window.devicePixelRatio,
-            width: 600,
-            height: 600
-          },
-          cheats = {
-            id: false,
-            name: false,
-            angle: false,
-            bounds: false,
-            direction: false,
-            gridLocation: false,
-            position: false,
-            walls: false
-          },
-          agentOpts = {
-            brainType: 'RL.DQNAgent',
-            numActions: 4,
-            numEyes: 30,
-            numTypes: 5,
-            numPriopreception: 2,
-            range: 120,
-            proximity: 120,
-            radius: 10,
-            interactive: false,
-            useSprite: false,
-            worker: false,
-            cheats: cheats
-          },
-          agents = [
-            new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts),
-            new Agent(new Vec(renderOpts.width / 2, renderOpts.height / 2), agentOpts)
-          ],
-          gridOptions = {
-            width: renderOpts.width,
-            height: renderOpts.height,
-            cheats: cheats,
-            buffer: 0,
-            cellSize: 200,
-            cellSpacing: 0,
-            size: 3,
-            pointy: false,
-            fill: false
-          },
-          grid = new Grid(null, null, gridOptions),
-          maze = new Maze(grid.init()),
-          worldOpts = {
-            collision: {
-              type: 'brute',
-              cheats: cheats
-            },
-            numEntities: 10,
-            entityOpts: {
-              radius: 10,
-              interactive: false,
-              useSprite: false,
-              moving: true,
-              cheats: cheats
-            },
-            numEntityAgents: 2,
-            entityAgentOpts: {
-              brainType: 'RL.DQNAgent',
-              numActions: 5,
-              numEyes: 6,
-              numTypes: 5,
-              numProprioception: 2,
-              range: 85,
-              proximity: 85,
-              radius: 10,
-              interactive: false,
-              useSprite: false,
-              worker: false,
-              cheats: cheats
-            },
-            grid: maze.grid,
-            maze: maze,
-            cheats: cheats
-          };
+    this.init();
 
-      super(agents, maze.walls, worldOpts, renderOpts);
-
-      this.entityAgents[0].enemy = this.agents[0];
-      this.entityAgents[0].target = this.agents[1];
-
-      this.entityAgents[1].enemy = this.agents[1];
-      this.entityAgents[1].target = this.agents[0];
-
-      this.init();
-
-      return this;
-    }
+    return this;
   }
-  global.WaterWorldEX = WaterWorldEX;
 
-}(this));
+  /**
+   * Initialize the world
+   */
+  init() {
+    let animate = () => {
+      if (!this.pause) {
+        this.deltaTime = GameWorld.time() - this.lastTime;
+        this.lastTime = GameWorld.time();
+        for (let k = 0; k < this.stepsPerTick; k++) {
+          this.tick(this.deltaTime);
+        }
+      }
+      this.renderer.render(this.stage);
+      requestAnimationFrame(animate);
+    };
+
+    // Walls
+    this.addWalls();
+    // Add the entities
+    this.addEntities();
+    // Population of Agents that are considered 'smart' entities for the environment
+    this.addEntityAgents();
+    // Population of Agents for the environment
+    this.addAgents();
+
+    this.entityAgents[0].enemy = this.agents[0];
+    this.entityAgents[0].target = this.agents[1];
+
+    this.entityAgents[1].enemy = this.agents[1];
+    this.entityAgents[1].target = this.agents[0];
+
+    this.deltaTime = 0;
+    this.lastTime = GameWorld.time();
+    animate();
+  }
+
+}

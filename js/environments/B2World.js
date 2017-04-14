@@ -205,7 +205,7 @@
       this.graphics = new PIXI.Graphics();
       this.stage.addChild(this.graphics);
       this.world = new b2World(new b2Vec2(0, 10), true);
-      this.world.SetDebugDraw(new b2Pixi(this.graphics, new b2Vec2(0, 0)));
+      this.world.SetDebugDraw(new B2Pixi(this.graphics, new b2Vec2(0, 0)));
 
       this.merps();
 

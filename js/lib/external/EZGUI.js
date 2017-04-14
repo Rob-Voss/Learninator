@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var EZGUI;
 (function (EZGUI) {
     EZGUI.Easing = {
@@ -14,8 +19,9 @@ var EZGUI;
                 return k * (2 - k);
             },
             InOut: function (k) {
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return 0.5 * k * k;
+                }
                 return -0.5 * (--k * (k - 2) - 1);
             }
         },
@@ -27,8 +33,9 @@ var EZGUI;
                 return --k * k * k + 1;
             },
             InOut: function (k) {
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return 0.5 * k * k * k;
+                }
                 return 0.5 * ((k -= 2) * k * k + 2);
             }
         },
@@ -40,8 +47,9 @@ var EZGUI;
                 return 1 - (--k * k * k * k);
             },
             InOut: function (k) {
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return 0.5 * k * k * k * k;
+                }
                 return -0.5 * ((k -= 2) * k * k * k - 2);
             }
         },
@@ -53,8 +61,9 @@ var EZGUI;
                 return --k * k * k * k * k + 1;
             },
             InOut: function (k) {
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return 0.5 * k * k * k * k * k;
+                }
                 return 0.5 * ((k -= 2) * k * k * k * k + 2);
             }
         },
@@ -77,12 +86,15 @@ var EZGUI;
                 return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
             },
             InOut: function (k) {
-                if (k === 0)
+                if (k === 0) {
                     return 0;
-                if (k === 1)
+                }
+                if (k === 1) {
                     return 1;
-                if ((k *= 2) < 1)
+                }
+                if ((k *= 2) < 1) {
                     return 0.5 * Math.pow(1024, k - 1);
+                }
                 return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
             }
         },
@@ -94,54 +106,65 @@ var EZGUI;
                 return Math.sqrt(1 - (--k * k));
             },
             InOut: function (k) {
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return -0.5 * (Math.sqrt(1 - k * k) - 1);
+                }
                 return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
             }
         },
         Elastic: {
             In: function (k) {
                 var s, a = 0.1, p = 0.4;
-                if (k === 0)
+                if (k === 0) {
                     return 0;
-                if (k === 1)
+                }
+                if (k === 1) {
                     return 1;
+                }
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
                 }
-                else
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
+                }
                 return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
             },
             Out: function (k) {
                 var s, a = 0.1, p = 0.4;
-                if (k === 0)
+                if (k === 0) {
                     return 0;
-                if (k === 1)
+                }
+                if (k === 1) {
                     return 1;
+                }
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
                 }
-                else
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
+                }
                 return (a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1);
             },
             InOut: function (k) {
                 var s, a = 0.1, p = 0.4;
-                if (k === 0)
+                if (k === 0) {
                     return 0;
-                if (k === 1)
+                }
+                if (k === 1) {
                     return 1;
+                }
                 if (!a || a < 1) {
                     a = 1;
                     s = p / 4;
                 }
-                else
+                else {
                     s = p * Math.asin(1 / a) / (2 * Math.PI);
-                if ((k *= 2) < 1)
+                }
+                if ((k *= 2) < 1) {
                     return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+                }
                 return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
             }
         },
@@ -156,8 +179,9 @@ var EZGUI;
             },
             InOut: function (k) {
                 var s = 1.70158 * 1.525;
-                if ((k *= 2) < 1)
+                if ((k *= 2) < 1) {
                     return 0.5 * (k * k * ((s + 1) * k - s));
+                }
                 return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
             }
         },
@@ -180,8 +204,9 @@ var EZGUI;
                 }
             },
             InOut: function (k) {
-                if (k < 0.5)
+                if (k < 0.5) {
                     return EZGUI.Easing.Bounce.In(k * 2) * 0.5;
+                }
                 return EZGUI.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
             }
         }
@@ -192,10 +217,12 @@ var EZGUI;
     EZGUI.Interpolation = {
         Linear: function (v, k) {
             var m = v.length - 1, f = m * k, i = Math.floor(f), fn = EZGUI.Interpolation.Utils.Linear;
-            if (k < 0)
+            if (k < 0) {
                 return fn(v[0], v[1], f);
-            if (k > 1)
+            }
+            if (k > 1) {
                 return fn(v[m], v[m - 1], m - f);
+            }
             return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
         },
         Bezier: function (v, k) {
@@ -208,15 +235,18 @@ var EZGUI;
         CatmullRom: function (v, k) {
             var m = v.length - 1, f = m * k, i = Math.floor(f), fn = EZGUI.Interpolation.Utils.CatmullRom;
             if (v[0] === v[m]) {
-                if (k < 0)
+                if (k < 0) {
                     i = Math.floor(f = m * (1 + k));
+                }
                 return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
             }
             else {
-                if (k < 0)
+                if (k < 0) {
                     return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
-                if (k > 1)
+                }
+                if (k > 1) {
                     return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+                }
                 return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
             }
         },
@@ -232,10 +262,12 @@ var EZGUI;
                 var a = [1];
                 return function (n) {
                     var s = 1, i;
-                    if (a[n])
+                    if (a[n]) {
                         return a[n];
-                    for (i = n; i > 1; i--)
+                    }
+                    for (i = n; i > 1; i--) {
                         s *= i;
+                    }
                     return a[n] = s;
                 };
             })(),
@@ -246,8 +278,8 @@ var EZGUI;
         }
     };
 })(EZGUI || (EZGUI = {}));
-/// <reference path="easing.ts" />
-/// <reference path="interpolation.ts" />
+/// <reference path="Easing.ts" />
+/// <reference path="Interpolation.ts" />
 /**
  * This is a part of Tween.js converted to TypeScript
  *
@@ -283,7 +315,6 @@ var EZGUI;
                 this._valuesStart[field] = parseFloat(object[field], 10);
             }
         }
-
         Tween.getAll = function () {
             return this._tweens;
         };
@@ -300,8 +331,9 @@ var EZGUI;
             }
         };
         Tween.update = function (time) {
-            if (this._tweens.length === 0)
+            if (this._tweens.length === 0) {
                 return false;
+            }
             var i = 0;
             time = time !== undefined ? time : window.performance.now();
             while (i < this._tweens.length) {
@@ -473,17 +505,16 @@ var EZGUI;
         //#region Static part replacing TWEEN namespace from original tweenjs
         Tween._tweens = [];
         return Tween;
-    })();
+    }());
     EZGUI.Tween = Tween;
 })(EZGUI || (EZGUI = {}));
 var EZGUI;
 (function (EZGUI) {
-    var utils;
-    (function (utils) {
+    var Utils;
+    (function (Utils) {
         var EventHandler = (function () {
             function EventHandler() {
             }
-
             EventHandler.prototype.bind = function (event, fct) {
                 this._events = this._events || {};
                 this._events[event] = this._events[event] || [];
@@ -493,8 +524,9 @@ var EZGUI;
             EventHandler.prototype.on = function (event, fct, nbcalls) {
                 this._events = this._events || {};
                 this._events[event] = this._events[event] || [];
-                if (nbcalls)
+                if (nbcalls) {
                     fct.__nbcalls__ = nbcalls;
+                }
                 this._events[event].push(fct);
             };
             //unbind(event, fct) {
@@ -505,8 +537,9 @@ var EZGUI;
             //}
             EventHandler.prototype.unbind = function (event, fct) {
                 this._events = this._events || {};
-                if (event in this._events === false || !this._events[event] || !(this._events[event] instanceof Array))
+                if (event in this._events === false || !this._events[event] || !(this._events[event] instanceof Array)) {
                     return;
+                }
                 this._events[event].splice(this._events[event].indexOf(fct), 1);
             };
             EventHandler.prototype.unbindEvent = function (event) {
@@ -515,8 +548,9 @@ var EZGUI;
             };
             EventHandler.prototype.unbindAll = function () {
                 this._events = this._events || {};
-                for (var event in this._events)
+                for (var event in this._events) {
                     this._events[event] = false;
+                }
             };
             EventHandler.prototype.trigger = function (event) {
                 var args = [];
@@ -537,14 +571,14 @@ var EZGUI;
                 }
             };
             return EventHandler;
-        })();
-        utils.EventHandler = EventHandler;
-    })(utils = EZGUI.utils || (EZGUI.utils = {}));
+        }());
+        Utils.EventHandler = EventHandler;
+    })(Utils = EZGUI.Utils || (EZGUI.Utils = {}));
 })(EZGUI || (EZGUI = {}));
 /**
- * Hack in support for Function.name for browsers that don't support it.
- * IE, I'm looking at you.
- **/
+* Hack in support for Function.name for browsers that don't support it.
+* IE, I'm looking at you.
+**/
 if (Function.prototype['name'] === undefined && Object.defineProperty !== undefined) {
     Object.defineProperty(Function.prototype, 'name', {
         get: function () {
@@ -552,45 +586,41 @@ if (Function.prototype['name'] === undefined && Object.defineProperty !== undefi
             var results = (funcNameRegex).exec((this).toString());
             return (results && results.length > 1) ? results[1].trim() : "";
         },
-        set: function (value) {
-        }
+        set: function (value) { }
     });
 }
-/// <reference path="polyfills/ie.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
-        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-        function __() {
-            this.constructor = d;
-        }
-
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
+/// <reference path="polyfills/IE.ts" />
 //declare var __extends;
 var EZGUI;
 (function (EZGUI) {
     var Compatibility;
     (function (Compatibility) {
-        Compatibility.PIXIVersion = (PIXI.VERSION.indexOf('v3.') == 0 || PIXI.VERSION.indexOf('3.') == 0) ? 3 : 2;
+        Compatibility.PIXIVersion = 2;
+        if (PIXI.VERSION.indexOf('v3.') == 0 || PIXI.VERSION.indexOf('3.') == 0)
+            Compatibility.PIXIVersion = 3;
+        if (PIXI.VERSION.indexOf('v4.') == 0 || PIXI.VERSION.indexOf('4.') == 0)
+            Compatibility.PIXIVersion = 4;
         Compatibility.isPhaser = (typeof Phaser != 'undefined');
         Compatibility.isPhaser24 = Compatibility.isPhaser && Phaser.VERSION.indexOf('2.4') == 0;
+        Compatibility.isPhaser25 = Compatibility.isPhaser && Phaser.VERSION.indexOf('2.5') == 0;
+        Compatibility.isPhaser26 = Compatibility.isPhaser && Phaser.VERSION.indexOf('2.6') == 0;
+        Compatibility.isPhaser24plus = Compatibility.isPhaser24 || Compatibility.isPhaser25 || Compatibility.isPhaser26;
         Compatibility.BitmapText = Compatibility.PIXIVersion >= 3 ? PIXI.extras.BitmapText : PIXI.BitmapText;
         var TilingSprite = (function () {
             function TilingSprite(texture, width, height) {
             }
-
             return TilingSprite;
-        })();
+        }());
         Compatibility.TilingSprite = TilingSprite;
         var GUIContainer = (function (_super) {
             __extends(GUIContainer, _super);
             function GUIContainer() {
                 _super.apply(this, arguments);
             }
-
             return GUIContainer;
-        })(PIXI.Container);
+        }(PIXI.Container));
         Compatibility.GUIContainer = GUIContainer;
-        if (Compatibility.PIXIVersion == 3) {
+        if (Compatibility.PIXIVersion == 3 || Compatibility.PIXIVersion == 4) {
             Compatibility['GUIContainer'] = PIXI['Container'];
         }
         else {
@@ -602,37 +632,33 @@ var EZGUI;
                 _super.call(this);
                 if (typeof Phaser != 'undefined') {
                     var game = Phaser.GAMES[0];
-                    if (!GUIDisplayObjectContainer.globalPhaserGroup)
+                    if (!GUIDisplayObjectContainer.globalPhaserGroup) {
                         GUIDisplayObjectContainer.globalPhaserGroup = new Phaser.Group(game, game.stage, 'guigroup');
+                    }
                     this.phaserGroup = GUIDisplayObjectContainer.globalPhaserGroup.create(0, 0); //new Phaser.Group(Phaser.GAMES[0]);
                     this.phaserGroup.addChild(this);
                     this.phaserGroup.guiSprite = this;
                 }
             }
-
             return GUIDisplayObjectContainer;
-        })(GUIContainer);
+        }(GUIContainer));
         Compatibility.GUIDisplayObjectContainer = GUIDisplayObjectContainer;
-        //var dummy:any = (function (_super) {
-        //    __extends(GUIDisplayObjectContainer, _super);
-        //    function GUIDisplayObjectContainer() {
-        //        _super.call(this, [Phaser.GAMES[0]]);
-        //    }
-        //    return GUIDisplayObjectContainer;
-        //})(Phaser.Group);
-        //Compatibility['GUIDisplayObjectContainer'] = dummy;
         function createRenderTexture(width, height) {
             if (!EZGUI.tilingRenderer) {
-                if (EZGUI.Compatibility.PIXIVersion == 3) {
+                if (EZGUI.Compatibility.PIXIVersion >= 3) {
                     EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
                 }
                 else {
-                    if (!Compatibility.isPhaser)
+                    if (!Compatibility.isPhaser) {
                         EZGUI.tilingRenderer = new PIXI.CanvasRenderer(EZGUI.game);
+                    }
                 }
             }
             var texture;
-            if (EZGUI.Compatibility.PIXIVersion == 3) {
+            if (EZGUI.Compatibility.PIXIVersion >= 4) {
+                texture = PIXI.RenderTexture.create(width, height); //new PIXI.RenderTexture(EZGUI.tilingRenderer, width, height);
+            }
+            else if (EZGUI.Compatibility.PIXIVersion == 3) {
                 texture = new PIXI.RenderTexture(EZGUI.tilingRenderer, width, height);
             }
             else {
@@ -640,7 +666,6 @@ var EZGUI;
             }
             return texture;
         }
-
         Compatibility.createRenderTexture = createRenderTexture;
         /*
          *
@@ -648,8 +673,9 @@ var EZGUI;
          * it need to be attached to onLoadComplete of phaser's loader to copy loaded resources to PIXI.TextureCache
          */
         function fixCache(resources) {
-            if (!EZGUI.Compatibility.isPhaser24 || !this._fileList)
+            if (!EZGUI.Compatibility.isPhaser24plus || !this._fileList) {
                 return;
+            }
             for (var i = 0; i < this._fileList.length; i++) {
                 if (!resources || resources.length == 0 || resources.indexOf(this._fileList[i].key) >= 0) {
                     var tx = new PIXI.Texture(new PIXI.BaseTexture(this._fileList[i].data));
@@ -657,11 +683,17 @@ var EZGUI;
                 }
             }
         }
-
         Compatibility.fixCache = fixCache;
     })(Compatibility = EZGUI.Compatibility || (EZGUI.Compatibility = {}));
 })(EZGUI || (EZGUI = {}));
-if (EZGUI.Compatibility.PIXIVersion == 3) {
+if (EZGUI.Compatibility.PIXIVersion >= 3) {
+    //register EZGUI to the plugin Interface to get reference to the main renderer
+    function EZGUIPluginInterface(renderer) {
+        EZGUI.renderer = renderer;
+        EZGUI.tilingRenderer = renderer;
+    }
+    PIXI.CanvasRenderer.registerPlugin('EZGUI', EZGUIPluginInterface);
+    PIXI.WebGLRenderer.registerPlugin('EZGUI', EZGUIPluginInterface);
     PIXI['utils']._saidHello = true;
     //EZGUI.tilingRenderer = new PIXI.WebGLRenderer();
     //EZGUI.tilingRenderer = new PIXI.CanvasRenderer();
@@ -673,7 +705,7 @@ else {
     EZGUI.Compatibility.TilingSprite = PIXI.TilingSprite;
 }
 EZGUI.Compatibility.TilingSprite.prototype['fixPhaser24'] = function () {
-    if (EZGUI.Compatibility.isPhaser24) {
+    if (EZGUI.Compatibility.isPhaser24plus) {
         var ltexture = this.originalTexture || this.texture;
         var frame = ltexture.frame;
         var targetWidth, targetHeight;
@@ -707,8 +739,9 @@ else {
                 this._listeners[event] = [];
             }
             else {
-                if (event in this._listeners === false || typeof this._listeners[event] != 'array')
+                if (event in this._listeners === false || typeof this._listeners[event] != 'array') {
                     return;
+                }
                 this._listeners[event].splice(this._listeners[event].indexOf(fct), 1);
             }
         };
@@ -732,19 +765,19 @@ else {
         };
     }
 }
-/// <reference path="ezgui.ts" />
+/// <reference path="EZGUI.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Theme = (function () {
         function Theme(themeConfig) {
             this.themeConfig = themeConfig;
+            this.url = '';
             this._listeners = [];
             this.ready = false;
-            this.url = '';
             var _this = this;
             if (typeof themeConfig == 'string') {
                 _this.url = themeConfig;
-                EZGUI.utils.loadJSON(_this.url, function (themeConfig) {
+                EZGUI.Utils.loadJSON(_this.url, function (themeConfig) {
                     _this.themeConfig = themeConfig;
                     _this.initThemeConfig(themeConfig);
                 });
@@ -753,29 +786,32 @@ var EZGUI;
                 this.initThemeConfig(themeConfig);
             }
         }
-
         Theme.prototype.override = function (themeConfig) {
             var _theme = JSON.parse(JSON.stringify(themeConfig));
             for (var t in _theme) {
-                if (t == 'default')
+                if (t == 'default') {
                     continue;
+                }
                 var skin = _theme[t];
-                EZGUI.utils.extendJSON(skin, this._default);
+                EZGUI.Utils.extendJSON(skin, this._default);
             }
             this.parseComponents(_theme);
             for (var t in _theme) {
-                if (t == 'default')
+                if (t == 'default') {
                     continue;
+                }
                 var skin = _theme[t];
                 this._theme[t] = skin;
             }
         };
         Theme.prototype.fixLimits = function (target, source) {
             if (typeof source == 'object') {
-                if (target.width != undefined && source.maxWidth)
+                if (target.width != undefined && source.maxWidth) {
                     target.width = Math.min(target.width, source.maxWidth);
-                if (target.height != undefined && source.maxHeight)
+                }
+                if (target.height != undefined && source.maxHeight) {
                     target.height = Math.min(target.height, source.maxHeight);
+                }
                 for (var i in source) {
                     var src = source[i];
                     if (typeof target[i] == 'object') {
@@ -789,15 +825,16 @@ var EZGUI;
             this.id = this._theme.__config__ ? this._theme.__config__.name : undefined;
             this._default = this._theme['default'];
             for (var t in this._theme) {
-                if (t == 'default')
+                if (t == 'default') {
                     continue;
+                }
                 var skin = this._theme[t];
                 /*
-                 for (var i in this._default) {
-                 if (!skin[i]) skin[i] = JSON.parse(JSON.stringify(this._default[i]));
-                 }
-                 */
-                EZGUI.utils.extendJSON(skin, this._default);
+                for (var i in this._default) {
+                    if (!skin[i]) skin[i] = JSON.parse(JSON.stringify(this._default[i]));
+                }
+                */
+                EZGUI.Utils.extendJSON(skin, this._default);
             }
             this.path = this.url.substring(0, this.url.lastIndexOf('/') + 1);
             this.parseComponents(this._theme);
@@ -806,16 +843,19 @@ var EZGUI;
         Theme.prototype.parseResources = function () {
             var themeResources = this._theme.__config__.resources;
             var resources = [];
-            if (!themeResources || themeResources.length <= 0)
+            if (!themeResources || themeResources.length <= 0) {
                 return resources;
+            }
             var resToLoad = 0;
             for (var i = 0; i < themeResources.length; i++) {
                 var res = themeResources[i];
-                if (res.indexOf('http://') == 0 || res.indexOf('https://') == 0 || res.indexOf('file://') == 0 || res.indexOf('/') == 0)
+                if (res.indexOf('http://') == 0 || res.indexOf('https://') == 0 || res.indexOf('file://') == 0 || res.indexOf('/') == 0) {
                     continue;
+                }
                 //TODO : use a path normalizer here
-                if (res.indexOf('./') == 0)
+                if (res.indexOf('./') == 0) {
                     res = res.substring(2);
+                }
                 if (PIXI.loader && PIXI.loader.resources[resources[i]]) {
                 }
                 else {
@@ -826,17 +866,20 @@ var EZGUI;
         };
         Theme.prototype.parseComponents = function (theme) {
             for (var i in theme) {
-                if (i == '__config__')
+                if (i == '__config__') {
                     continue;
+                }
                 var item = theme[i];
                 for (var c = 0; c < Theme.imageComponents.length; c++) {
                     var cc = Theme.imageComponents[c];
                     for (var v = 0; v < Theme.imageVariants.length; v++) {
                         var vv = Theme.imageVariants[v];
-                        if (vv != '')
+                        if (vv != '') {
                             cc = cc + '-' + vv;
-                        if (item[cc] == undefined)
+                        }
+                        if (item[cc] == undefined) {
                             continue;
+                        }
                         if (typeof item[cc] == 'string') {
                             var str = item[cc];
                             item[cc] = this.normalizeResPath(str);
@@ -855,15 +898,14 @@ var EZGUI;
             }
         };
         Theme.prototype.normalizeResPath = function (str) {
-            if (str.indexOf('./') != 0)
+            if (str.indexOf('./') != 0) {
                 return str;
+            }
             str = str.substring(2);
             return this.path + str;
         };
         Theme.load = function (themes, cb) {
-            if (cb === void 0) {
-                cb = null;
-            }
+            if (cb === void 0) { cb = null; }
             var remaining = 0;
             for (var i = 0; i < themes.length; i++) {
                 remaining++;
@@ -878,10 +920,12 @@ var EZGUI;
         };
         //experimental Theme transparent preload
         Theme.prototype.onReady = function (cb) {
-            if (typeof cb != 'function')
+            if (typeof cb != 'function') {
                 return;
-            if (this.ready)
+            }
+            if (this.ready) {
                 cb();
+            }
             this._listeners.push(cb);
         };
         Theme.prototype.preload = function () {
@@ -890,8 +934,9 @@ var EZGUI;
                 _this.ready = true;
                 EZGUI.themes[_this.id] = _this;
                 var cb;
-                while (cb = _this._listeners.pop())
+                while (cb = _this._listeners.pop()) {
                     cb();
+                }
             };
             if (this._theme.__config__ && this._theme.__config__.resources) {
                 var resources = this.parseResources();
@@ -900,7 +945,7 @@ var EZGUI;
                 }
                 else {
                     //console.log('Theme preloading ', resources);
-                    //utils.loadJSON(_this.url, function (themeConfig) {
+                    //Utils.loadJSON(_this.url, function (themeConfig) {
                     //    _this.themeConfig = themeConfig;
                     //    _this.initThemeConfig(themeConfig);
                     //});
@@ -977,19 +1022,13 @@ var EZGUI;
                 }
                 if (PIXI.loader) {
                     for (var i = 0; i < images.length; i++) {
-                        let res = PIXI.loader.resources;
-                        if (res) {
-                            PIXI.loader.add({url: images[i], crossOrigin: crossOrigin});
-                        }
+                        PIXI.loader.add({ url: images[i], crossOrigin: crossOrigin });
                     }
                     //(<any>PIXI).loader.add(images);
                     PIXI.loader.load(cacheAtlas);
                 }
                 else {
                     var loader = new PIXI.AssetLoader(images, crossOrigin);
-                    loader.on('error', () => {
-                        console.log('Woops');
-                    });
                     loader.onComplete = cacheAtlas;
                     loader.load();
                 }
@@ -1011,7 +1050,7 @@ var EZGUI;
                     var font = atlases[i];
                     resToLoad++;
                     (function (atlasUrl) {
-                        EZGUI.utils.loadJSON(atlasUrl, function (atlasjson) {
+                        EZGUI.Utils.loadJSON(atlasUrl, function (atlasjson) {
                             images.push(_this.path + atlasjson.meta.image);
                             resToLoad--;
                             atlasData[atlasUrl] = atlasjson;
@@ -1028,7 +1067,7 @@ var EZGUI;
                     var font = fonts[i];
                     resToLoad++;
                     (function (atlasUrl) {
-                        EZGUI.utils.loadXML(atlasUrl, function (xmlfont) {
+                        EZGUI.Utils.loadXML(atlasUrl, function (xmlfont) {
                             var img = xmlfont.getElementsByTagName('page')[0].getAttribute('file');
                             var path = atlasUrl.substring(0, atlasUrl.lastIndexOf('\\') + atlasUrl.lastIndexOf('/') + 2);
                             var src = path + img;
@@ -1060,8 +1099,8 @@ var EZGUI;
             data.chars = {};
             var Rectangle;
             var BitmapText;
-            if (EZGUI.Compatibility.PIXIVersion == 3) {
-                Rectangle = PIXI.math.Rectangle;
+            if (EZGUI.Compatibility.PIXIVersion >= 3) {
+                Rectangle = PIXI.Rectangle;
                 BitmapText = PIXI.extras.BitmapText;
             }
             else {
@@ -1101,7 +1140,7 @@ var EZGUI;
         Theme.prototype.applySkin = function (settings) {
             var skinId = settings['skin'] || settings['component'];
             var skin = this._theme[skinId] || this._theme['default'];
-            EZGUI.utils.extendJSON(settings, skin);
+            EZGUI.Utils.extendJSON(settings, skin);
             this.fixLimits(settings, skin);
             return settings;
         };
@@ -1109,21 +1148,21 @@ var EZGUI;
         Theme.imageStates = ['default', 'hover', 'down', 'checked'];
         Theme.imageVariants = ['', 't', 'r', 'b', 'l', 'left', 'right', 'tl', 'tr', 'bl', 'br'];
         return Theme;
-    })();
+    }());
     EZGUI.Theme = Theme;
 })(EZGUI || (EZGUI = {}));
-/// <reference path="tween/tween.ts" />
-/// <reference path="utils/eventhandler.ts" />
-/// <reference path="compatibility.ts" />
-/// <reference path="theme.ts" />
+/// <reference path="tween/Tween.ts" />
+/// <reference path="utils/EventHandler.ts" />
+/// <reference path="Compatibility.ts" />
+/// <reference path="Theme.ts" />
 var EZGUI;
 (function (EZGUI) {
-    EZGUI.VERSION = '0.3.11 beta';
-    EZGUI.startDrag = {x: null, y: null, t: null};
+    EZGUI.VERSION = '0.3.3 beta';
+    EZGUI.startDrag = { x: null, y: null, t: null };
     EZGUI.themes = {};
     EZGUI.components = {};
     EZGUI.radioGroups = [];
-    EZGUI.EventsHelper = new EZGUI.utils.EventHandler();
+    EZGUI.EventsHelper = new EZGUI.Utils.EventHandler();
     /**
      * generic settings object
      * accepted parameters
@@ -1133,12 +1172,10 @@ var EZGUI;
         crossOrigin: false
     };
     var _components = {};
-
     function registerComponents(cpt, id) {
         id = id || cpt.name;
         _components[id] = cpt;
     }
-
     EZGUI.registerComponents = registerComponents;
     function create(settings, theme) {
         var t = settings.component || 'default';
@@ -1149,13 +1186,11 @@ var EZGUI;
         }
         return component;
     }
-
     EZGUI.create = create;
     function tween_animate() {
         requestAnimationFrame(tween_animate);
         EZGUI.Tween.update();
     }
-
     tween_animate();
     function showHeader() {
         //use https://github.com/daniellmb/console.style ?
@@ -1175,10 +1210,9 @@ var EZGUI;
             console.log(' EZGUI v' + EZGUI.VERSION + '   [We <3 HTML5] | http://ezgui.ezelia.com');
         }
     }
-
     showHeader();
 })(EZGUI || (EZGUI = {}));
-/// <reference path="ezgui.ts" />
+/// <reference path="EZGUI.ts" />
 var EZGUI;
 (function (EZGUI) {
     var MultistateSprite = (function (_super) {
@@ -1196,35 +1230,35 @@ var EZGUI;
                 }
             }
         }
-
         MultistateSprite.prototype.addState = function (id, texture) {
             this.stateTextures[id] = texture;
         };
         MultistateSprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             var sprite = this;
-            if (!sprite.stateTextures[state])
+            if (!sprite.stateTextures[state]) {
                 return;
+            }
             if (sprite.texture) {
                 sprite.texture = sprite.stateTextures[state];
             }
             else {
-                if (sprite._texture)
+                if (sprite._texture) {
                     sprite._texture = sprite.stateTextures[state];
+                }
             }
-            if (sprite._tilingTexture)
+            if (sprite._tilingTexture) {
                 sprite._tilingTexture = sprite.stateTextures[state];
+            }
         };
         return MultistateSprite;
-    })(PIXI.Sprite);
+    }(PIXI.Sprite));
     EZGUI.MultistateSprite = MultistateSprite;
 })(EZGUI || (EZGUI = {}));
-/// <reference path="ezgui.ts" />
-/// <reference path="../lib/pixi.d.ts" />
-/// <reference path="multistatesprite.ts" />
-/// <reference path="compatibility.ts" />
+/// <reference path="EZGUI.ts" />
+/// <reference path="../lib/PIXI.d.ts" />
+/// <reference path="MultistateSprite.ts" />
+/// <reference path="Compatibility.ts" />
 var EZGUI;
 (function (EZGUI) {
     var GUIObject = (function (_super) {
@@ -1234,7 +1268,6 @@ var EZGUI;
             this.container = new EZGUI.Compatibility.GUIContainer();
             this.addChild(this.container);
         }
-
         Object.defineProperty(GUIObject.prototype, "Id", {
             get: function () {
                 return this.guiID;
@@ -1275,7 +1308,7 @@ var EZGUI;
                 if (!_this.canTrigger(event, _this)) {
                     return;
                 }
-                var pos = EZGUI.utils.getRealPos(event);
+                var pos = EZGUI.Utils.getRealPos(event);
                 EZGUI.startDrag.x = pos.x;
                 EZGUI.startDrag.y = pos.y;
                 EZGUI.startDrag.t = Date.now();
@@ -1289,8 +1322,8 @@ var EZGUI;
                 }
                 var data = event.data || event;
                 _this.emit('ezgui:mouseup', event, _this);
-                var pos = EZGUI.utils.getRealPos(event);
-                if (EZGUI.utils.distance(pos.x, pos.y, EZGUI.startDrag.x, EZGUI.startDrag.y) <= 4) {
+                var pos = EZGUI.Utils.getRealPos(event);
+                if (EZGUI.Utils.distance(pos.x, pos.y, EZGUI.startDrag.x, EZGUI.startDrag.y) <= 4) {
                     _this.emit('ezgui:click', event, _this);
                     if (EZGUI.focused && _this != EZGUI.focused && EZGUI.focused.emit)
                         EZGUI.focused.emit('ezgui:blur');
@@ -1317,12 +1350,21 @@ var EZGUI;
             };
             _this.click = _this.tap = function (event) {
                 //console.log('click', _this.guiID);
-                //var pos = utils.getRealPos(event);
-                //if (utils.distance(pos.x, pos.y, _this.startDrag.x, _this.startDrag.y) > 4) return;
+                //var pos = Utils.getRealPos(event);
+                //if (Utils.distance(pos.x, pos.y, _this.startDrag.x, _this.startDrag.y) > 4) return;
                 //if (guiObj.canTrigger(event, guiObj)) guiObj.emit('ezgui:click', event);
             };
             if (_this.phaserGroup) {
                 _this.phaserGroup.inputEnabled = true;
+                //Fix priorityID otherwise, events will not trigger on children
+                if (EZGUI.Compatibility.isPhaser24plus) {
+                    for (var c in EZGUI.components) {
+                        var _this = EZGUI.components[c];
+                        if (_this.phaserGroup && _this.phaserGroup.input && _this.guiParent && _this.guiParent.phaserGroup && _this.guiParent.phaserGroup.input) {
+                            _this.phaserGroup.input.priorityID = _this.guiParent.phaserGroup.input.priorityID + 1;
+                        }
+                    }
+                }
                 _this.phaserGroup.events.onInputOver.add(function (target, event) {
                     _this._over = true;
                     //console.log('ezgui:mouseover', event);
@@ -1337,7 +1379,7 @@ var EZGUI;
                     if (!_this.canTrigger(event, _this)) {
                         return;
                     }
-                    var pos = EZGUI.utils.getRealPos(event);
+                    var pos = EZGUI.Utils.getRealPos(event);
                     EZGUI.startDrag.x = pos.x;
                     EZGUI.startDrag.y = pos.y;
                     EZGUI.startDrag.t = Date.now();
@@ -1345,7 +1387,6 @@ var EZGUI;
                     if (!_this.draggable && _this.guiParent && _this.guiParent.draggable) {
                         _this.guiParent.emit('ezgui:mousedown', event, _this);
                     }
-                    //
                     //console.log('ezgui:mousedown', event);
                 }, this);
                 _this.phaserGroup.events.onInputUp.add(function (target, event) {
@@ -1354,11 +1395,12 @@ var EZGUI;
                     //}
                     //_this.emit('ezgui:mouseup', event);
                     _this.emit('ezgui:mouseup', event, _this);
-                    var pos = EZGUI.utils.getRealPos(event);
-                    if (EZGUI.utils.distance(pos.x, pos.y, EZGUI.startDrag.x, EZGUI.startDrag.y) <= 4) {
+                    var pos = EZGUI.Utils.getRealPos(event);
+                    if (EZGUI.Utils.distance(pos.x, pos.y, EZGUI.startDrag.x, EZGUI.startDrag.y) <= 4) {
                         _this.emit('ezgui:click', event, _this);
-                        if (EZGUI.focused && _this != EZGUI.focused && EZGUI.focused.emit)
+                        if (EZGUI.focused && _this != EZGUI.focused && EZGUI.focused.emit) {
                             EZGUI.focused.emit('ezgui:blur');
+                        }
                         EZGUI.focused = _this;
                         EZGUI.focused.emit('ezgui:focus');
                     }
@@ -1398,10 +1440,12 @@ var EZGUI;
             if (child instanceof EZGUI.GUISprite) {
                 //return this.container.addChild(child);
                 child.guiParent = this;
-                if (child.phaserGroup)
+                if (child.phaserGroup) {
                     return this.container.addChild(child.phaserGroup);
-                else
+                }
+                else {
                     return this.container.addChild(child);
+                }
             }
             else {
                 return _super.prototype.addChild.call(this, child);
@@ -1410,10 +1454,12 @@ var EZGUI;
         GUIObject.prototype.removeChild = function (child) {
             if (child instanceof EZGUI.GUISprite) {
                 child.guiParent = null;
-                if (child.phaserGroup)
+                if (child.phaserGroup) {
                     return this.container.removeChild(child.phaserGroup);
-                else
+                }
+                else {
                     return this.container.removeChild(child);
+                }
             }
             else {
                 return _super.prototype.removeChild.call(this, child);
@@ -1421,49 +1467,56 @@ var EZGUI;
         };
         GUIObject.prototype.mouseInObj = function (event, guiSprite) {
             var data = event.data || event;
-            var clientpos = EZGUI.utils.getClientXY(event);
+            var clientpos = EZGUI.Utils.getClientXY(event);
             var origEvt = event;
             if (data.originalEvent && data.originalEvent.changedTouches && data.originalEvent.changedTouches.length > 0) {
                 origEvt = data.originalEvent.changedTouches[0];
             }
-            else if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
-                origEvt = data.originalEvent.touches[0];
-            }
             else {
-                if (data.originalEvent)
-                    origEvt = data.originalEvent;
+                if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
+                    origEvt = data.originalEvent.touches[0];
+                }
+                else {
+                    if (data.originalEvent) {
+                        origEvt = data.originalEvent;
+                    }
+                }
             }
             var bcr = origEvt.target.getBoundingClientRect();
             var px = clientpos.x - bcr.left;
             var py = clientpos.y - bcr.top;
-            var absPos = EZGUI.utils.getAbsPos(guiSprite);
-            if (px < absPos.x || px > absPos.x + guiSprite.width || py < absPos.y || py > absPos.y + guiSprite.height)
+            var absPos = EZGUI.Utils.getAbsPos(guiSprite);
+            if (px < absPos.x || px > absPos.x + guiSprite.width || py < absPos.y || py > absPos.y + guiSprite.height) {
                 return false;
+            }
             return true;
         };
         GUIObject.prototype.canTrigger = function (event, guiSprite) {
             var data = event.data || event;
-            var clientpos = EZGUI.utils.getClientXY(event);
+            var clientpos = EZGUI.Utils.getClientXY(event);
             var origEvt = event;
             if (data.originalEvent && data.originalEvent.changedTouches && data.originalEvent.changedTouches.length > 0) {
                 origEvt = data.originalEvent.changedTouches[0];
             }
-            else if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
-                origEvt = data.originalEvent.touches[0];
-            }
             else {
-                if (data.originalEvent)
-                    origEvt = data.originalEvent;
+                if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
+                    origEvt = data.originalEvent.touches[0];
+                }
+                else {
+                    if (data.originalEvent)
+                        origEvt = data.originalEvent;
+                }
             }
-            if (!origEvt.target.getBoundingClientRect)
+            if (!origEvt.target.getBoundingClientRect) {
                 return false;
+            }
             var bcr = origEvt.target.getBoundingClientRect();
             var px = clientpos.x - bcr.left;
             var py = clientpos.y - bcr.top;
-            //var absPos = utils.getAbsPos(guiSprite);
+            //var absPos = Utils.getAbsPos(guiSprite);
             //if (px < absPos.x || px > absPos.x + guiSprite.width || py < absPos.y || py > absPos.y + guiSprite.height) return false;
             //check if click is in visible zone
-            var masked = EZGUI.utils.isMasked(px, py, guiSprite);
+            var masked = EZGUI.Utils.isMasked(px, py, guiSprite);
             return !masked;
         };
         GUIObject.prototype.on = function (event, fn, context) {
@@ -1514,26 +1567,24 @@ var EZGUI;
                     child.off(event, fn);
             }
         };
-        GUIObject.prototype.preUpdate = function () {
-        };
-        GUIObject.prototype.update = function () {
-        };
-        GUIObject.prototype.postUpdate = function () {
-        };
+        GUIObject.prototype.preUpdate = function () { };
+        GUIObject.prototype.update = function () { };
+        GUIObject.prototype.postUpdate = function () { };
         GUIObject.prototype.destroy = function () {
             if (this.phaserGroup) {
                 this.phaserGroup.destroy();
             }
-            if (this.parent && this.parent.removeChild)
+            if (this.parent && this.parent.removeChild) {
                 this.parent.removeChild(this);
+            }
             delete EZGUI.components[this.guiID];
         };
         return GUIObject;
-    })(EZGUI.Compatibility.GUIDisplayObjectContainer);
+    }(EZGUI.Compatibility.GUIDisplayObjectContainer));
     EZGUI.GUIObject = GUIObject;
     EZGUI.registerComponents(EZGUI.GUISprite, 'default');
 })(EZGUI || (EZGUI = {}));
-/// <reference path="guiobject.ts" />
+/// <reference path="GUIObject.ts" />
 var EZGUI;
 (function (EZGUI) {
     var GUISprite = (function (_super) {
@@ -1548,10 +1599,12 @@ var EZGUI;
             //this.container = new Compatibility.GUIContainer();
             //this.addChild(this.container);
             this.userData = settings.userData;
-            if (themeId instanceof EZGUI.Theme)
+            if (themeId instanceof EZGUI.Theme) {
                 this.theme = themeId;
-            else
+            }
+            else {
                 this.theme = EZGUI.themes[themeId];
+            }
             if (!this.theme || !this.theme.ready) {
                 console.error('[EZGUI ERROR]', 'Theme is not ready, nothing to display');
                 this.theme = new EZGUI.Theme({});
@@ -1565,7 +1618,6 @@ var EZGUI;
             //this.handleEvents();
             this.rebuild();
         }
-
         Object.defineProperty(GUISprite.prototype, "text", {
             //get settings(): string {
             //    return this._settings;
@@ -1576,7 +1628,7 @@ var EZGUI;
             },
             set: function (val) {
                 if (this.textObj) {
-                    if (EZGUI.Compatibility.PIXIVersion == 3) {
+                    if (EZGUI.Compatibility.PIXIVersion >= 3) {
                         this.textObj.text = val;
                     }
                     else {
@@ -1648,37 +1700,41 @@ var EZGUI;
                 //support percentage values for width and height
                 if (typeof _settings.width == 'string') {
                     var p = this.parsePercentageValue(_settings.width);
-                    if (p != NaN)
+                    if (p != NaN) {
                         _settings.width = (this.width - padX) * p / 100;
+                    }
                 }
                 if (typeof _settings.height == 'string') {
                     var p = this.parsePercentageValue(_settings.height);
-                    if (p != NaN)
+                    if (p != NaN) {
                         _settings.height = (this.height - padY) * p / 100;
+                    }
                 }
                 if (typeof _settings.position == 'object') {
                     if (typeof _settings.position.x == 'string') {
                         var px = this.parsePercentageValue(_settings.position.x);
-                        if (px != NaN)
+                        if (px != NaN) {
                             _settings.position.x = (this.width - padX) * px / 100;
+                        }
                     }
                     if (typeof _settings.position.y == 'string') {
                         var py = this.parsePercentageValue(_settings.position.y);
-                        if (py != NaN)
+                        if (py != NaN) {
                             _settings.position.y = (this.height - padY) * py / 100;
+                        }
                     }
                 }
             }
             return _settings;
         };
         GUISprite.prototype.setDraggable = function (val) {
-            if (val === void 0) {
-                val = true;
-            }
-            if (val)
+            if (val === void 0) { val = true; }
+            if (val) {
                 this.draggable = this;
-            else
+            }
+            else {
                 this.draggable = undefined;
+            }
         };
         GUISprite.prototype.handleEvents = function () {
             var _this = this;
@@ -1712,7 +1768,7 @@ var EZGUI;
                         //guiObj.alpha = 0.9;
                         EZGUI.dragging = _this;
                         //console.log('set dragging', EZGUI.dragging.guiID);
-                        var pos = EZGUI.utils.getRealPos(event);
+                        var pos = EZGUI.Utils.getRealPos(event);
                         EZGUI.dsx = pos.x;
                         EZGUI.dsy = pos.y;
                         EZGUI.startDrag.x = pos.x;
@@ -1733,19 +1789,21 @@ var EZGUI;
                 }
                 var PhaserDrag = typeof Phaser != 'undefined' && EZGUI.dragging;
                 if (_this.draggable && EZGUI.dragging == _this || PhaserDrag) {
-                    var pos = EZGUI.utils.getRealPos(event);
+                    var pos = EZGUI.Utils.getRealPos(event);
                     var dragObg = EZGUI.dragging;
                     var draggable = EZGUI.dragging.draggable;
-                    var dpos = EZGUI.utils.getAbsPos(draggable);
+                    var dpos = EZGUI.Utils.getAbsPos(draggable);
                     if (dragObg.dragConstraint != 'y') {
                         var nextPos = draggable.position.x + pos.x - EZGUI.dsx;
-                        if (nextPos >= dragObg.dragXInterval[0] && nextPos <= dragObg.dragXInterval[1])
+                        if (nextPos >= dragObg.dragXInterval[0] && nextPos <= dragObg.dragXInterval[1]) {
                             draggable.position.x = nextPos;
+                        }
                     }
                     if (dragObg.dragConstraint != 'x') {
                         var nextPos = draggable.position.y + pos.y - EZGUI.dsy;
-                        if (nextPos >= dragObg.dragYInterval[0] && nextPos <= dragObg.dragYInterval[1])
+                        if (nextPos >= dragObg.dragYInterval[0] && nextPos <= dragObg.dragYInterval[1]) {
                             draggable.position.y = nextPos;
+                        }
                     }
                     EZGUI.dsx = pos.x;
                     EZGUI.dsy = pos.y;
@@ -1760,8 +1818,9 @@ var EZGUI;
             if (settings) {
                 this.guiID = settings.id;
                 //add reference to component
-                if (this.guiID)
+                if (this.guiID) {
                     EZGUI.components[this.guiID] = this;
+                }
                 for (var s = 0; s < EZGUI.Theme.imageStates.length; s++) {
                     var stateId = EZGUI.Theme.imageStates[s];
                     var container = new EZGUI.Compatibility.GUIContainer();
@@ -1770,7 +1829,14 @@ var EZGUI;
                         container.addChild(controls[i]);
                     }
                     var texture = EZGUI.Compatibility.createRenderTexture(settings.width, settings.height);
-                    texture.render(container);
+                    //texture.render(container);
+                    if (EZGUI.Compatibility.PIXIVersion >= 4) {
+                        EZGUI.tilingRenderer.render(container, texture);
+                    }
+                    else {
+                        texture.render(container);
+                    }
+                    //RenderTexture.render is now deprecated, please use renderer.render(displayObject, renderTexture)
                     if (!this.rootSprite) {
                         this.rootSprite = new EZGUI.MultistateSprite(texture);
                         this.addChild(this.rootSprite);
@@ -1794,8 +1860,9 @@ var EZGUI;
                     for (var i = 0; i < settings.children.length; i++) {
                         var btnObj = this.prepareChildSettings(settings.children[i]); // JSON.parse(JSON.stringify(settings.children[i]));
                         var child = this.createChild(btnObj, i);
-                        if (!child)
+                        if (!child) {
                             continue;
+                        }
                         //if (child.phaserGroup) this.container.addChild(child.phaserGroup);
                         //else this.container.addChild(child);
                         //force call original addChild to prevent conflict with local addchild
@@ -1813,7 +1880,7 @@ var EZGUI;
                 }
                 //tint color
                 if (this._settings.color) {
-                    var pixiColor = EZGUI.utils.ColorParser.parseToPixiColor(this._settings.color);
+                    var pixiColor = EZGUI.Utils.ColorParser.parseToPixiColor(this._settings.color);
                     if (pixiColor >= 0) {
                         this.rootSprite.tint = pixiColor;
                     }
@@ -1824,8 +1891,9 @@ var EZGUI;
             }
         };
         GUISprite.prototype.sortChildren = function () {
-            if (!this.container)
+            if (!this.container) {
                 return;
+            }
             var comparator = function (a, b) {
                 if (a.guiSprite)
                     a = a.guiSprite;
@@ -1846,18 +1914,19 @@ var EZGUI;
                 //var settings = this.theme.applySkin(this._settings);
                 var settings = this._settings;
                 if (EZGUI.Compatibility.BitmapText.fonts && EZGUI.Compatibility.BitmapText.fonts[settings.font.family]) {
-                    this.textObj = new EZGUI.Compatibility.BitmapText(this._settings.text, {font: settings.font.size + ' ' + settings.font.family});
-                    var pixiColor = EZGUI.utils.ColorParser.parseToPixiColor(settings.font.color);
+                    this.textObj = new EZGUI.Compatibility.BitmapText(this._settings.text, { fontSize: settings.font.size, fontFamily:settings.font.family, fill: settings.font.color });
+                    var pixiColor = EZGUI.Utils.ColorParser.parseToPixiColor(settings.font.color);
                     if (pixiColor >= 0) {
                         this.textObj.tint = pixiColor;
                         this.textObj.dirty = true;
                     }
                 }
                 else {
-                    var style = {font: settings.font.size + ' ' + settings.font.family, fill: settings.font.color};
+                    var style = { fontSize: settings.font.size, fontFamily:settings.font.family, fill: settings.font.color};
                     for (var s in settings.font) {
-                        if (!style[s])
+                        if (!style[s]) {
                             style[s] = settings.font[s];
+                        }
                     }
                     this.textObj = new PIXI.Text(this._settings.text, style);
                 }
@@ -1889,8 +1958,9 @@ var EZGUI;
             }
         };
         GUISprite.prototype.createChild = function (childSettings, order) {
-            if (!childSettings)
+            if (!childSettings) {
                 return null;
+            }
             var i = order;
             var pos = childSettings.position;
             if (typeof pos == 'string') {
@@ -1918,7 +1988,7 @@ var EZGUI;
                 }
                 var padTop = this._settings['padding-top'] || this._settings.padding || 0;
                 var padLeft = this._settings['padding-left'] || this._settings.padding || 0;
-                childSettings.position = {x: 0, y: 0};
+                childSettings.position = { x: 0, y: 0 };
                 if (pos1 == 'center') {
                     //childSettings.anchor = { x: 0.5, y: 0.5 };
                     childSettings.position.x = (this._settings.width - childSettings.width) / 2;
@@ -1950,9 +2020,7 @@ var EZGUI;
          *
          */
         GUISprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             for (var i = 0; i < this.children.length; i++) {
                 var child = this.children[i];
                 if (child instanceof EZGUI.MultistateSprite /*|| child instanceof MultistateTilingSprite*/) {
@@ -1961,44 +2029,36 @@ var EZGUI;
             }
         };
         GUISprite.prototype.animatePosTo = function (x, y, time, easing, callback) {
-            if (time === void 0) {
-                time = 1000;
-            }
-            if (easing === void 0) {
-                easing = EZGUI.Easing.Linear.None;
-            }
+            if (time === void 0) { time = 1000; }
+            if (easing === void 0) { easing = EZGUI.Easing.Linear.None; }
             easing = easing || EZGUI.Easing.Linear.None;
             if (typeof callback == 'function') {
                 var tween = new EZGUI.Tween(this.position)
-                    .to({x: x, y: y}, time)
+                    .to({ x: x, y: y }, time)
                     .easing(easing)
                     .onComplete(callback);
             }
             else {
                 var tween = new EZGUI.Tween(this.position)
-                    .to({x: x, y: y}, time)
+                    .to({ x: x, y: y }, time)
                     .easing(easing);
             }
             tween.start();
             return tween;
         };
         GUISprite.prototype.animateSizeTo = function (w, h, time, easing, callback) {
-            if (time === void 0) {
-                time = 1000;
-            }
-            if (easing === void 0) {
-                easing = EZGUI.Easing.Linear.None;
-            }
+            if (time === void 0) { time = 1000; }
+            if (easing === void 0) { easing = EZGUI.Easing.Linear.None; }
             easing = easing || EZGUI.Easing.Linear.None;
             if (typeof callback == 'function') {
                 var tween = new EZGUI.Tween(this)
-                    .to({width: w, height: h}, time)
+                    .to({ width: w, height: h }, time)
                     .easing(easing)
                     .onComplete(callback);
             }
             else {
                 var tween = new EZGUI.Tween(this)
-                    .to({width: w, height: h}, time)
+                    .to({ width: w, height: h }, time)
                     .easing(easing);
             }
             tween.start();
@@ -2010,27 +2070,30 @@ var EZGUI;
         GUISprite.prototype.getFrameConfig = function (config, state) {
             var cfg = JSON.parse(JSON.stringify(config)); //if (cfg.texture instanceof PIXI.Texture) return cfg;
             if (typeof cfg == 'string') {
-                cfg = {default: cfg};
+                cfg = { default: cfg };
             }
             var src = cfg[state] == null ? cfg['default'] : cfg[state];
             var texture;
-            if (src.trim() != '')
+            if (src.trim() != '') {
                 texture = PIXI.Texture.fromFrame(src);
+            }
             cfg.texture = texture;
             return cfg;
         };
         GUISprite.prototype.getComponentConfig = function (component, part, side, state) {
             //var ctype = this.theme[type] || this.theme['default'];
             var skin = this.theme.getSkin(component);
-            if (!skin)
+            if (!skin) {
                 return;
+            }
             var scale = (skin.scale == undefined) ? 1 : skin.scale;
             var rotation = 0;
             //get configuration, if explicit configuration is defined then use it otherwise use theme config
             //var hasSide = this.settings[component + '-' + side] || ctype[component + '-' + side];
             var cfg = this._settings[part + '-' + side] || skin[part + '-' + side] || this._settings[part] || skin[part];
-            if (!cfg)
+            if (!cfg) {
                 return;
+            }
             if (skin[part] && !skin[part + '-' + side]) {
                 switch (side) {
                     case 'tr':
@@ -2058,8 +2121,9 @@ var EZGUI;
         GUISprite.prototype.createThemeCorner = function (settings, part, side, state) {
             var component = settings.skin || settings.component || 'default';
             var cfg = this.getComponentConfig(component, part, side, state);
-            if (!cfg || !cfg.texture)
+            if (!cfg || !cfg.texture) {
                 return;
+            }
             //var ctype = this.theme[type] || this.theme['default'];
             //var skin = this.theme.getSkin(component);
             var skin = settings;
@@ -2089,18 +2153,21 @@ var EZGUI;
             }
             //needed for specific corner sides : corner-tl corner-tr corner-bl corner-br
             if (hasSide) {
-                if (sprite.position.y != 0)
+                if (sprite.position.y != 0) {
                     sprite.anchor.y = 1;
-                if (sprite.position.x != 0)
+                }
+                if (sprite.position.x != 0) {
                     sprite.anchor.x = 1;
+                }
             }
             return sprite;
         };
         GUISprite.prototype.createThemeSide = function (settings, side, state) {
             var component = settings.component;
             var cfg = this.getComponentConfig(component, side, '', state);
-            if (!cfg || !cfg.texture)
+            if (!cfg || !cfg.texture) {
                 return;
+            }
             //var sprite = new MultistateSprite(cfg.texture, cfg.textures);
             var sprite = new PIXI.Sprite(cfg.texture);
             //sprite.rotation = cfg.rotation;
@@ -2122,14 +2189,17 @@ var EZGUI;
         GUISprite.prototype.createThemeBorder = function (settings, part, side, state) {
             var component = settings.skin || settings.component || 'default';
             var cfg = this.getComponentConfig(component, part, side, state);
-            if (!cfg || !cfg.texture)
+            if (!cfg || !cfg.texture) {
                 return;
+            }
             var tlCornerCfg = this.getComponentConfig(component, 'corner', 'tl', state);
             var blCornerCfg = this.getComponentConfig(component, 'corner', 'bl', state);
-            if (!tlCornerCfg || !tlCornerCfg.texture)
+            if (!tlCornerCfg || !tlCornerCfg.texture) {
                 return;
-            if (!blCornerCfg || !blCornerCfg.texture)
+            }
+            if (!blCornerCfg || !blCornerCfg.texture) {
                 return;
+            }
             //var ctype = this.theme[type] || this.theme['default'];
             //var ctype = this.theme.getSkin(component);
             var ctype = settings;
@@ -2161,7 +2231,6 @@ var EZGUI;
             var line = new EZGUI.Compatibility.TilingSprite(cfg.texture, twidth, theight);
             //phaser 2.4 compatibility /////////////////////////////////
             line.fixPhaser24();
-            ////////////////////////////////////////////////////////////
             switch (side) {
                 case 't':
                     line.position.x = cwidth;
@@ -2211,26 +2280,26 @@ var EZGUI;
         GUISprite.prototype.createThemeTilableBackground = function (settings, state) {
             var component = settings.skin || settings.component || 'default';
             var cfg = this.getComponentConfig(component, 'bg', null, state);
-            if (!cfg || !cfg.texture)
+            if (!cfg || !cfg.texture) {
                 return;
+            }
             //cfg.bgPadding = 0;
             //var bg: any = new MultistateTilingSprite(cfg.texture, settings.width - cfg.bgPadding * 2, settings.height - cfg.bgPadding * 2, cfg.textures);
             var bg = new EZGUI.Compatibility.TilingSprite(cfg.texture, settings.width - cfg.bgPadding * 2, settings.height - cfg.bgPadding * 2);
             //phaser 2.4 compatibility /////////////////////////////////
             bg.fixPhaser24();
-            ////////////////////////////////////////////////////////////
             bg.position.x = cfg.bgPadding;
             bg.position.y = cfg.bgPadding;
             if (settings.bgTiling) {
-                if (settings.bgTiling == "x") {
+                if (settings.bgTiling === "x") {
                     bg.tileScale.y = (settings.height - cfg.bgPadding * 2) / cfg.texture.height;
                 }
                 else if (settings.bgTiling === "y") {
                     bg.tileScale.x = (settings.width - cfg.bgPadding * 2) / cfg.texture.width;
                 }
                 else if (settings.bgTiling === "xy") {
-                    bg.tileScale.x = (settings.width - cfg.bgPadding * 2) / cfg.texture.width;
                     bg.tileScale.y = (settings.height - cfg.bgPadding * 2) / cfg.texture.height;
+                    bg.tileScale.x = (settings.width - cfg.bgPadding * 2) / cfg.texture.width;
                 }
             }
             return bg;
@@ -2238,8 +2307,9 @@ var EZGUI;
         GUISprite.prototype.createThemeBackground = function (settings, state, leftSide, rightSide) {
             var component = settings.skin || settings.component || 'default';
             var cfg = this.getComponentConfig(component, 'bg', null, state);
-            if (!cfg || !cfg.texture)
+            if (!cfg || !cfg.texture) {
                 return;
+            }
             //cfg.bgPadding = 0;
             //var bg: any = new MultistateSprite(cfg.texture, cfg.textures);
             var bg = new PIXI.Sprite(cfg.texture);
@@ -2252,9 +2322,7 @@ var EZGUI;
             return bg;
         };
         GUISprite.prototype.createThemeImage = function (settings, state, imagefield) {
-            if (imagefield === void 0) {
-                imagefield = 'image';
-            }
+            if (imagefield === void 0) { imagefield = 'image'; }
             var component = settings.skin || settings.component || 'default';
             //var ctype = this.theme[type] || this.theme['default'];
             var ctype = settings; //this.theme.getSkin(component);
@@ -2273,14 +2341,16 @@ var EZGUI;
                 return [];
             //priority to image
             var img = this.createThemeImage(settings, state);
-            if (img != null)
+            if (img != null) {
                 return [img];
+            }
             var controls = [];
             var leftSide = this.createThemeSide(settings, 'left', state);
             var rightSide = this.createThemeSide(settings, 'right', state);
             var bg = this.createThemeTilableBackground(settings, state);
-            if (bg)
+            if (bg) {
                 controls.push(bg);
+            }
             //if (!leftSide && !rightSide) {
             //    var bg = this.createThemeTilableBackground(settings, state);
             //    if (bg) controls.push(bg);
@@ -2294,45 +2364,53 @@ var EZGUI;
             }
             else {
                 var tl = this.createThemeCorner(settings, 'corner', 'tl', state);
-                if (tl)
+                if (tl) {
                     controls.push(tl);
+                }
                 var bl = this.createThemeCorner(settings, 'corner', 'bl', state);
-                if (bl)
+                if (bl) {
                     controls.push(bl);
+                }
                 var lineLeft = this.createThemeBorder(settings, 'line', 'l', state);
-                if (lineLeft)
+                if (lineLeft) {
                     controls.push(lineLeft);
+                }
             }
             if (rightSide) {
                 controls.push(rightSide);
             }
             else {
                 var tr = this.createThemeCorner(settings, 'corner', 'tr', state);
-                if (tr)
+                if (tr) {
                     controls.push(tr);
+                }
                 var br = this.createThemeCorner(settings, 'corner', 'br', state);
-                if (br)
+                if (br) {
                     controls.push(br);
+                }
                 var lineRight = this.createThemeBorder(settings, 'line', 'r', state);
-                if (lineRight)
+                if (lineRight) {
                     controls.push(lineRight);
+                }
             }
             if (!leftSide && !rightSide) {
                 var lineTop = this.createThemeBorder(settings, 'line', 't', state);
-                if (lineTop)
+                if (lineTop) {
                     controls.push(lineTop);
+                }
                 var lineBottom = this.createThemeBorder(settings, 'line', 'b', state);
-                if (lineBottom)
+                if (lineBottom) {
                     controls.push(lineBottom);
+                }
             }
             return controls;
         };
         return GUISprite;
-    })(EZGUI.GUIObject);
+    }(EZGUI.GUIObject));
     EZGUI.GUISprite = GUISprite;
     EZGUI.registerComponents(GUISprite, 'default');
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -2343,16 +2421,18 @@ var EZGUI;
                 _super.call(this, settings, themeId);
                 this.settings = settings;
                 this.themeId = themeId;
-                if (settings.text)
+                if (settings.text) {
                     this.text = settings.text;
+                }
             }
-
             Object.defineProperty(Input.prototype, "text", {
                 get: function () {
-                    if (this.domInput)
+                    if (this.domInput) {
                         return this.domInput.value;
-                    if (this.textObj)
+                    }
+                    if (this.textObj) {
                         return this.textObj.text;
+                    }
                 },
                 set: function (val) {
                     if (this.domInput) {
@@ -2369,11 +2449,9 @@ var EZGUI;
                 configurable: true
             });
             Input.prototype.setTextWithCaret = function (val, event) {
-                if (event === void 0) {
-                    event = null;
-                }
+                if (event === void 0) { event = null; }
                 if (this.textObj) {
-                    if (EZGUI.Compatibility.PIXIVersion == 3) {
+                    if (EZGUI.Compatibility.PIXIVersion >= 3) {
                         this.textObj.text = val;
                     }
                     else {
@@ -2410,7 +2488,7 @@ var EZGUI;
             };
             Input.prototype.draw = function () {
                 _super.prototype.draw.call(this);
-                this.guiMask = {width: 0, height: 0};
+                this.guiMask = { width: 0, height: 0 };
                 var settings = this._settings;
                 if (settings) {
                     var padding = settings.padding || 0;
@@ -2478,11 +2556,13 @@ var EZGUI;
                     return;
                 }
                 guiObj.on('focus', function () {
-                    if (_this.focused)
+                    if (_this.focused) {
                         return;
+                    }
                     _this.focused = true;
-                    if (!_this.domInput)
+                    if (!_this.domInput) {
                         return;
+                    }
                     _this.domInput.value = _this.text;
                     _this.setCaretPosition(_this.domInput.value.length);
                     var cpos = _this.getCaretPosition();
@@ -2491,11 +2571,13 @@ var EZGUI;
                     _this.domInput.focus();
                 });
                 guiObj.on('blur', function () {
-                    if (!_this.focused)
+                    if (!_this.focused) {
                         return;
+                    }
                     _this.focused = false;
-                    if (!_this.domInput)
+                    if (!_this.domInput) {
                         return;
+                    }
                     _this.setTextWithCaret(_this.domInput.value);
                     //_this.text = _this.text.substr(0, _this.text.length - 1);
                     _this.domInput.blur();
@@ -2503,8 +2585,9 @@ var EZGUI;
             };
             Input.prototype.getCaretPosition = function () {
                 var ctrl = this.domInput;
-                if (!ctrl)
+                if (!ctrl) {
                     return 0;
+                }
                 var CaretPos = 0;
                 // IE Support
                 if (document['selection']) {
@@ -2513,14 +2596,17 @@ var EZGUI;
                     Sel.moveStart('character', -ctrl.value.length);
                     CaretPos = Sel.text.length;
                 }
-                else if (ctrl.selectionStart || ctrl.selectionStart == '0')
+                else if (ctrl.selectionStart || ctrl.selectionStart == '0') {
+                    // Firefox support
                     CaretPos = ctrl.selectionStart;
+                }
                 return (CaretPos);
             };
             Input.prototype.setCaretPosition = function (pos) {
                 var ctrl = this.domInput;
-                if (!ctrl)
+                if (!ctrl) {
                     return 0;
+                }
                 if (ctrl.setSelectionRange) {
                     ctrl.focus();
                     ctrl.setSelectionRange(pos, pos);
@@ -2534,12 +2620,12 @@ var EZGUI;
                 }
             };
             return Input;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Input = Input;
         EZGUI.registerComponents(Input, 'Input');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -2550,10 +2636,10 @@ var EZGUI;
                 _super.call(this, settings, themeId);
                 this.settings = settings;
                 this.themeId = themeId;
-                if (settings.text)
+                if (settings.text) {
                     this.text = settings.text;
+                }
             }
-
             Label.prototype.setupEvents = function () {
                 //clear events
             };
@@ -2568,8 +2654,9 @@ var EZGUI;
                 var settings = this._settings;
                 if (settings) {
                     this.guiID = settings.id;
-                    if (this.guiID)
+                    if (this.guiID) {
                         EZGUI.components[this.guiID] = this;
+                    }
                     this.position.x = settings.position.x;
                     this.position.y = settings.position.y;
                     this.rootSprite = new EZGUI.Compatibility.GUIContainer();
@@ -2577,12 +2664,12 @@ var EZGUI;
                 }
             };
             return Label;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Label = Label;
         EZGUI.registerComponents(Label, 'Label');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -2594,7 +2681,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Object.defineProperty(Slider.prototype, "value", {
                 get: function () {
                     if (this.horizontalSlide) {
@@ -2658,7 +2744,7 @@ var EZGUI;
                 var cfg = this._settings.slide;
                 cfg.component = 'Button';
                 cfg.skin = 'Slide';
-                cfg.position = {x: 0, y: 0};
+                cfg.position = { x: 0, y: 0 };
                 cfg.draggable = true;
                 //{ id: 'slide1', component: 'Button', position: { x: 0, y: 0 }, width: 30, height: this.height, draggable: true };
                 var dir = this._settings.dir;
@@ -2681,12 +2767,12 @@ var EZGUI;
                 this.container.addChild(this.slide);
             };
             return Slider;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Slider = Slider;
         EZGUI.registerComponents(Slider, 'Slider');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -2698,7 +2784,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Tabs.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
                 var _this = this;
@@ -2726,22 +2811,14 @@ var EZGUI;
                     component: 'Window',
                     transparent: true,
                     padding: 0,
-                    position: {x: 0, y: 0},
+                    position: { x: 0, y: 0 },
                     width: this._settings.width,
                     height: tabsH,
                     layout: [this._settings.children.length, 1],
                     children: []
                 };
                 for (var i = 0; i < this._settings.children.length; i++) {
-                    var child = {
-                        text: this._settings.children[i].title || '',
-                        userData: {id: i},
-                        component: 'Sprite',
-                        skin: 'Button',
-                        position: {x: 0, y: 0},
-                        width: ~~(this._settings.width / this._settings.children.length),
-                        height: tabsH
-                    };
+                    var child = { text: this._settings.children[i].title || '', userData: { id: i }, component: 'Sprite', skin: 'Button', position: { x: 0, y: 0 }, width: ~~(this._settings.width / this._settings.children.length), height: tabsH };
                     tabsCfg.children.push(child);
                 }
                 this.tabsBar = EZGUI.create(tabsCfg, this.themeId);
@@ -2801,7 +2878,7 @@ var EZGUI;
                 }
             };
             return Tabs;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Tabs = Tabs;
         EZGUI.registerComponents(Tabs, 'Tabs');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
@@ -2812,11 +2889,9 @@ var EZGUI;
     (function (Device) {
         //Code taken from https://github.com/g13n/ua.js
         var userAgent = (window.navigator && navigator.userAgent) || "";
-
         function detect(pattern) {
             return (pattern).test(userAgent);
         }
-
         /**
          * Return true if the browser is Chrome or compatible.
          *
@@ -2942,7 +3017,7 @@ var EZGUI;
         };
     })(Device = EZGUI.Device || (EZGUI.Device = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -2954,13 +3029,12 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Layout.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
             };
             Layout.prototype.draw = function () {
                 _super.prototype.draw.call(this);
-                this.guiMask = {width: 0, height: 0};
+                this.guiMask = { width: 0, height: 0 };
                 var settings = this._settings;
                 if (settings) {
                     var padding = settings.padding || 0;
@@ -2985,8 +3059,9 @@ var EZGUI;
                 this.addChild(this.container);
             };
             Layout.prototype.createChild = function (childSettings, order) {
-                if (!childSettings)
+                if (!childSettings) {
                     return null;
+                }
                 var i = order;
                 //console.log('adding ', i);
                 var padTop = this._settings['padding-top'] || this._settings.padding || 0;
@@ -3050,7 +3125,7 @@ var EZGUI;
                         pos2 = pos1;
                         pos1 = 'left';
                     }
-                    childSettings.position = {x: dx, y: dy};
+                    childSettings.position = { x: dx, y: dy };
                     switch (pos1) {
                         case 'center':
                             childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
@@ -3152,7 +3227,7 @@ var EZGUI;
                             pos2 = pos1;
                             pos1 = 'left';
                         }
-                        childSettings.position = {x: dx, y: dy};
+                        childSettings.position = { x: dx, y: dy };
                         switch (pos1) {
                             case 'center':
                                 childSettings.position.y = dy + (this._settings.height / ly) / 2 - childSettings.height / 2;
@@ -3179,10 +3254,12 @@ var EZGUI;
                     child.position.x = childSettings.position.x;
                     child.position.y = childSettings.position.y;
                     child.guiParent = this;
-                    if (child.phaserGroup)
+                    if (child.phaserGroup) {
                         return this.container.addChild(child.phaserGroup);
-                    else
+                    }
+                    else {
                         return this.container.addChild(child);
+                    }
                 }
                 else {
                     //return Compatibility.GUIDisplayObjectContainer.prototype.addChild.call(this, child, index);
@@ -3190,12 +3267,12 @@ var EZGUI;
                 }
             };
             return Layout;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Layout = Layout;
         EZGUI.registerComponents(Layout, 'Layout');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="layout.ts" />
+/// <reference path="Layout.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -3207,7 +3284,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Window.prototype.draw = function () {
                 var headerCfg = this._settings.header;
                 if (headerCfg) {
@@ -3235,9 +3311,7 @@ var EZGUI;
                 }
             };
             Window.prototype.setDraggable = function (val) {
-                if (val === void 0) {
-                    val = true;
-                }
+                if (val === void 0) { val = true; }
                 if (val) {
                     this.draggable = this;
                     if (this.titleBar)
@@ -3251,12 +3325,12 @@ var EZGUI;
                 }
             };
             return Window;
-        })(Component.Layout);
+        }(Component.Layout));
         Component.Window = Window;
         EZGUI.registerComponents(Window, 'Window');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../components/window.ts" />
+/// <reference path="../components/Window.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Kit;
@@ -3269,7 +3343,6 @@ var EZGUI;
                 this.themeId = themeId;
                 //this.parseSettings();
             }
-
             MainScreen.prototype.parseSettings = function () {
                 var txCache = EZGUI.Compatibility.PIXIVersion >= 3 ? PIXI.utils.TextureCache : PIXI.TextureCache;
                 //parse logo
@@ -3278,12 +3351,7 @@ var EZGUI;
                         if (txCache[this._settings.logo]) {
                             var tx = txCache[this._settings.logo];
                             var px = (this._settings.width - tx.width) / 2;
-                            this._settings.header = {
-                                position: {x: px, y: 0},
-                                image: this._settings.logo,
-                                height: tx.height,
-                                width: tx.width
-                            };
+                            this._settings.header = { position: { x: px, y: 0 }, image: this._settings.logo, height: tx.height, width: tx.width };
                         }
                     }
                     else {
@@ -3301,8 +3369,9 @@ var EZGUI;
                             btn.component = 'Button';
                             btn.id = this._settings.id + '-btn-' + i;
                             btn.position = btn.position || 'center';
-                            if (maxHeight < btn.height)
+                            if (maxHeight < btn.height) {
                                 maxHeight = btn.height;
+                            }
                             if (btn.event) {
                                 this.buttonsEvents[btn.id] = btn.event;
                             }
@@ -3325,7 +3394,7 @@ var EZGUI;
                 });
             };
             return MainScreen;
-        })(EZGUI.Component.Window);
+        }(EZGUI.Component.Window));
         Kit.MainScreen = MainScreen;
         EZGUI.registerComponents(MainScreen, 'MainScreen');
     })(Kit = EZGUI.Kit || (EZGUI.Kit = {}));
@@ -3354,8 +3423,8 @@ var EZGUI;
 // http://www.w3.org/TR/css3-color/
 var EZGUI;
 (function (EZGUI) {
-    var utils;
-    (function (utils) {
+    var Utils;
+    (function (Utils) {
         var ColorParser;
         (function (ColorParser) {
             var kCSSColorTable = {
@@ -3434,28 +3503,23 @@ var EZGUI;
                 "white": [255, 255, 255, 1], "whitesmoke": [245, 245, 245, 1],
                 "yellow": [255, 255, 0, 1], "yellowgreen": [154, 205, 50, 1]
             };
-
             function clamp_css_byte(i) {
                 i = Math.round(i); // Seems to be what Chrome does (vs truncation).
                 return i < 0 ? 0 : i > 255 ? 255 : i;
             }
-
             function clamp_css_float(f) {
                 return f < 0 ? 0 : f > 1 ? 1 : f;
             }
-
             function parse_css_int(str) {
                 if (str[str.length - 1] === '%')
                     return clamp_css_byte(parseFloat(str) / 100 * 255);
                 return clamp_css_byte(parseInt(str));
             }
-
             function parse_css_float(str) {
                 if (str[str.length - 1] === '%')
                     return clamp_css_float(parseFloat(str) / 100);
                 return clamp_css_float(parseFloat(str));
             }
-
             function css_hue_to_rgb(m1, m2, h) {
                 if (h < 0)
                     h += 1;
@@ -3469,7 +3533,6 @@ var EZGUI;
                     return m1 + (m2 - m1) * (2 / 3 - h) * 6;
                 return m1;
             }
-
             function parseToPixiColor(str) {
                 var rgb = parseToRGB(str);
                 if (!rgb)
@@ -3479,7 +3542,6 @@ var EZGUI;
                 intRGB = (intRGB << 8) + rgb[2];
                 return intRGB;
             }
-
             ColorParser.parseToPixiColor = parseToPixiColor;
             function parseToRGB(str) {
                 // Remove all whitespace, not compliant, but should just be more accepting.
@@ -3552,12 +3614,11 @@ var EZGUI;
                 }
                 return null;
             }
-
             ColorParser.parseToRGB = parseToRGB;
-        })(ColorParser = utils.ColorParser || (utils.ColorParser = {}));
-    })(utils = EZGUI.utils || (EZGUI.utils = {}));
+        })(ColorParser = Utils.ColorParser || (Utils.ColorParser = {}));
+    })(Utils = EZGUI.Utils || (EZGUI.Utils = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -3568,10 +3629,10 @@ var EZGUI;
                 _super.call(this, settings, themeId);
                 this.settings = settings;
                 this.themeId = themeId;
-                if (settings.text)
+                if (settings.text) {
                     this.text = settings.text;
+                }
             }
-
             Button.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
                 var guiObj = this;
@@ -3605,12 +3666,12 @@ var EZGUI;
                 });
             };
             return Button;
-        })(EZGUI.GUISprite);
+        }(EZGUI.GUISprite));
         Component.Button = Button;
         EZGUI.registerComponents(Button, 'Button');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="../guisprite.ts" />
+/// <reference path="../GUISprite.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -3622,7 +3683,6 @@ var EZGUI;
                 this.settings = settings;
                 this.themeId = themeId;
             }
-
             Object.defineProperty(Checkbox.prototype, "checked", {
                 //Getter & setter for check state
                 get: function () {
@@ -3631,13 +3691,15 @@ var EZGUI;
                 set: function (chk) {
                     if (chk) {
                         this.setState('checked');
-                        if (this._checkmark)
+                        if (this._checkmark) {
                             this._checkmark.visible = true;
+                        }
                     }
                     else {
                         this.setState('default');
-                        if (this._checkmark)
+                        if (this._checkmark) {
                             this._checkmark.visible = false;
+                        }
                     }
                     this._checked = chk;
                 },
@@ -3647,8 +3709,9 @@ var EZGUI;
             Object.defineProperty(Checkbox.prototype, "text", {
                 //Getter & setter for text vakue which need to be placed on the right
                 get: function () {
-                    if (this.textObj)
+                    if (this.textObj) {
                         return this.textObj.text;
+                    }
                 },
                 set: function (val) {
                     if (this.textObj) {
@@ -3672,23 +3735,21 @@ var EZGUI;
             });
             Checkbox.prototype.handleEvents = function () {
                 _super.prototype.handleEvents.call(this);
+                var guiObj = this;
+                var _this = this;
                 var _this = this;
                 var guiObj = this;
-                var isDown = this;
-                guiObj.on('mousedown', function () {
-                    isDown = true;
-                    guiObj.setState('down');
+                guiObj.on('mouseover', function (event) {
+                    //guiObj.alpha = 0.7;
                 });
-                guiObj.on('mouseup', function () {
-                    isDown = false;
-                    guiObj.setState('default');
-                });
-                guiObj.on('mouseover', function () {
-                    if (!isDown)
-                        guiObj.setState('hover');
-                });
+                //clear parent event
+                guiObj.off('mouseout');
                 guiObj.on('mouseout', function () {
-                    guiObj.setState('out');
+                    //prevent state clear
+                    //if (_this.checked) {
+                    //    _this.setState('checked');
+                    //}
+                    //guiObj.alpha = 1;
                 });
                 guiObj.on('click', function () {
                     _this.checked = !_this.checked;
@@ -3716,12 +3777,12 @@ var EZGUI;
                 }
             };
             return Checkbox;
-        })(Component.Button);
+        }(Component.Button));
         Component.Checkbox = Checkbox;
         EZGUI.registerComponents(Checkbox, 'Checkbox');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
 })(EZGUI || (EZGUI = {}));
-/// <reference path="checkbox.ts" />
+/// <reference path="Checkbox.ts" />
 var EZGUI;
 (function (EZGUI) {
     var Component;
@@ -3740,7 +3801,6 @@ var EZGUI;
                 if (this._settings.checked === true)
                     this.checked = true;
             }
-
             Object.defineProperty(Radio, "groups", {
                 //static groups: any = {};
                 //static selectedFrom: any = {};
@@ -3793,7 +3853,7 @@ var EZGUI;
                 _super.prototype.draw.call(this);
             };
             return Radio;
-        })(Component.Checkbox);
+        }(Component.Checkbox));
         Component.Radio = Radio;
         EZGUI.registerComponents(Radio, 'Radio');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
@@ -3810,7 +3870,6 @@ var EZGUI;
                 this.themeId = themeId;
                 //this.draghandle = this.uichildren['sbtn1'];
             }
-
             List.prototype.handleEvents = function () {
                 var _this = this;
                 var ssize;
@@ -3859,7 +3918,7 @@ var EZGUI;
                 _this.on('mouseup', function (event) {
                     if (_this.decelerationItv)
                         return;
-                    var endPos = EZGUI.utils.getRealPos(event);
+                    var endPos = EZGUI.Utils.getRealPos(event);
                     //console.log('slide end ', EZGUI.startDrag.x, EZGUI.startDrag.x, endPos);
                     _this.decelerateScroll(endPos);
                 });
@@ -3950,7 +4009,7 @@ var EZGUI;
                     if (_this.tween)
                         _this.tween.stop();
                     _this.tween = new EZGUI.Tween(_this.container.position)
-                        .to({x: nextPos}, delay)
+                        .to({ x: nextPos }, delay)
                         .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
@@ -3961,7 +4020,7 @@ var EZGUI;
                     if (_this.tween)
                         _this.tween.stop();
                     _this.tween = new EZGUI.Tween(_this.container.position)
-                        .to({y: nextPos}, delay)
+                        .to({ y: nextPos }, delay)
                         .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
@@ -3976,7 +4035,7 @@ var EZGUI;
                     if (_this.tween)
                         _this.tween.stop();
                     _this.tween = new EZGUI.Tween(_this.container.position)
-                        .to({x: nextPos}, delay)
+                        .to({ x: nextPos }, delay)
                         .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
@@ -3988,13 +4047,13 @@ var EZGUI;
                     if (_this.tween)
                         _this.tween.stop();
                     _this.tween = new EZGUI.Tween(_this.container.position)
-                        .to({y: nextPos}, delay)
+                        .to({ y: nextPos }, delay)
                         .easing(EZGUI.Easing.Cubic.Out);
                     _this.tween.start();
                 }
             };
             return List;
-        })(Component.Layout);
+        }(Component.Layout));
         Component.List = List;
         EZGUI.registerComponents(List, 'List');
     })(Component = EZGUI.Component || (EZGUI.Component = {}));
@@ -4019,32 +4078,34 @@ var EZGUI;
                 }
             }
         }
-
         MultistateTilingSprite.prototype.setState = function (state) {
-            if (state === void 0) {
-                state = 'default';
-            }
+            if (state === void 0) { state = 'default'; }
             var sprite = this;
-            if (!sprite.stateTextures[state] || state == this.currentState)
+            if (!sprite.stateTextures[state] || state == this.currentState) {
                 return;
-            if (sprite.texture == sprite.stateTextures[state])
+            }
+            if (sprite.texture == sprite.stateTextures[state]) {
                 return;
+            }
             if (sprite.texture) {
                 sprite.texture = sprite.stateTextures[state];
             }
             else {
-                if (sprite._texture)
+                if (sprite._texture) {
                     sprite._texture = sprite.stateTextures[state];
+                }
             }
-            if (sprite.tilingTexture)
+            if (sprite.tilingTexture) {
                 sprite.tilingTexture = sprite.stateTextures[state];
-            if (sprite._tilingTexture)
+            }
+            if (sprite._tilingTexture) {
                 sprite._tilingTexture = sprite.stateTextures[state];
+            }
             if (EZGUI.Compatibility.PIXIVersion == 2) {
             }
         };
         return MultistateTilingSprite;
-    })(EZGUI.Compatibility.TilingSprite);
+    }(EZGUI.Compatibility.TilingSprite));
     EZGUI.MultistateTilingSprite = MultistateTilingSprite;
 })(EZGUI || (EZGUI = {}));
 (function (root) {
@@ -4065,18 +4126,20 @@ var EZGUI;
 })(this);
 var EZGUI;
 (function (EZGUI) {
-    var utils;
-    (function (utils) {
+    var Utils;
+    (function (Utils) {
         /**
          * check if the the point defined by x and y outside a visible gui element
          *
          */
         function isMasked(x, y, obj) {
             var parent = obj.parent;
-            if (parent == null)
+            if (parent == null) {
                 return false;
-            if (!parent.worldTransform || !parent.guiMask)
+            }
+            if (!parent.worldTransform || !parent.guiMask) {
                 return isMasked(x, y, parent);
+            }
             var wratio = 1;
             var hratio = 1;
             if (EZGUI.Compatibility.isPhaser) {
@@ -4087,74 +4150,71 @@ var EZGUI;
             var ty = (parent.worldTransform.ty + parent.guiMask.y) * hratio;
             var w = parent.guiMask.width * wratio;
             var h = parent.guiMask.height * hratio;
-            if (x < tx || y < ty || x > tx + w || y > ty + h)
+            if (x < tx || y < ty || x > tx + w || y > ty + h) {
                 return true;
+            }
             return isMasked(x, y, parent);
         }
-
-        utils.isMasked = isMasked;
+        Utils.isMasked = isMasked;
         function getAbsPos(obj, from) {
-            if (from === void 0) {
-                from = null;
-            }
+            if (from === void 0) { from = null; }
             //if (EZGUI.Compatibility.PIXIVersion == 3) {
-            if (from == null)
-                from = {x: 0, y: 0};
+            if (from == null) {
+                from = { x: 0, y: 0 };
+            }
             from.x += obj.position.x;
             from.y += obj.position.y;
-            if (obj.parent != null)
+            if (obj.parent != null) {
                 return getAbsPos(obj.parent, from);
+            }
             return from;
-            //}
-            //else {
-            //return { x: obj.worldTransform.tx, y: obj.worldTransform.ty };
-            //}
         }
-
-        utils.getAbsPos = getAbsPos;
+        Utils.getAbsPos = getAbsPos;
         function getClientXY(event) {
             var data = event.data || event;
             var origEvt = event;
             if (data.originalEvent && data.originalEvent.changedTouches && data.originalEvent.changedTouches.length > 0) {
                 origEvt = data.originalEvent.changedTouches[0];
             }
-            else if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
-                origEvt = data.originalEvent.touches[0];
-            }
             else {
-                if (data.originalEvent)
-                    origEvt = data.originalEvent;
+                if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
+                    origEvt = data.originalEvent.touches[0];
+                }
+                else {
+                    if (data.originalEvent) {
+                        origEvt = data.originalEvent;
+                    }
+                }
             }
-            return {x: origEvt.clientX, y: origEvt.clientY};
+            return { x: origEvt.clientX, y: origEvt.clientY };
         }
-
-        utils.getClientXY = getClientXY;
+        Utils.getClientXY = getClientXY;
         function getRealPos(event) {
             var data = event.data || event;
             var origEvt = event;
             if (data.originalEvent && data.originalEvent.changedTouches && data.originalEvent.changedTouches.length > 0) {
                 origEvt = data.originalEvent.changedTouches[0];
             }
-            else if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
-                origEvt = data.originalEvent.touches[0];
-            }
             else {
-                if (data.originalEvent)
-                    origEvt = data.originalEvent;
+                if (data.originalEvent && data.originalEvent.touches && data.originalEvent.touches.length > 0) {
+                    origEvt = data.originalEvent.touches[0];
+                }
+                else {
+                    if (data.originalEvent) {
+                        origEvt = data.originalEvent;
+                    }
+                }
             }
             var bcr = origEvt.target.getBoundingClientRect();
             var px = origEvt.clientX - bcr.left;
             var py = origEvt.clientY - bcr.top;
-            return {x: px, y: py};
+            return { x: px, y: py };
         }
-
-        utils.getRealPos = getRealPos;
+        Utils.getRealPos = getRealPos;
         function distance(x, y, x0, y0) {
             return Math.sqrt((x -= x0) * x + (y -= y0) * y);
         }
-
-        utils.distance = distance;
-
+        Utils.distance = distance;
         function extendJSON(target, source) {
             if (typeof source == 'object') {
                 for (var i in source) {
@@ -4171,15 +4231,19 @@ var EZGUI;
                 }
             }
         }
-
-        utils.extendJSON = extendJSON;
-        function loadJSON(url, cb, crossOrigin) {
-            if (crossOrigin === void 0) {
-                crossOrigin = true;
+        Utils.extendJSON = extendJSON;
+        function getStatusCodeForUrl(url) {
+            if (url.search('file://') !== -1) {
+                return 0;
             }
+            return 200;
+        }
+        Utils.getStatusCodeForUrl = getStatusCodeForUrl;
+        function loadJSON(url, cb, crossOrigin) {
+            if (crossOrigin === void 0) { crossOrigin = true; }
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                if (xmlhttp.readyState == 4 && xmlhttp.status === getStatusCodeForUrl(xmlhttp.responseURL)) {
                     var jsonContent = JSON.parse(xmlhttp.responseText);
                     cb(jsonContent);
                 }
@@ -4187,15 +4251,12 @@ var EZGUI;
             xmlhttp.open("GET", url, crossOrigin);
             xmlhttp.send();
         }
-
-        utils.loadJSON = loadJSON;
+        Utils.loadJSON = loadJSON;
         function loadXML(url, cb, crossOrigin) {
-            if (crossOrigin === void 0) {
-                crossOrigin = true;
-            }
+            if (crossOrigin === void 0) { crossOrigin = true; }
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                if (xmlhttp.readyState == 4 && xmlhttp.status === getStatusCodeForUrl(xmlhttp.responseURL)) {
                     var xmlDoc;
                     if (window['DOMParser']) {
                         var parser = new DOMParser();
@@ -4212,8 +4273,7 @@ var EZGUI;
             xmlhttp.open("GET", url, crossOrigin);
             xmlhttp.send();
         }
-
-        utils.loadXML = loadXML;
-    })(utils = EZGUI.utils || (EZGUI.utils = {}));
+        Utils.loadXML = loadXML;
+    })(Utils = EZGUI.Utils || (EZGUI.Utils = {}));
 })(EZGUI || (EZGUI = {}));
 //# sourceMappingURL=EZGUI.js.map

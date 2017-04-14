@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Canvas Artificial Life Evolution Simulation</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
+          rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css">
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        canvas {
+            border: 1px solid #555;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-weight: normal;
+            padding: 0;
+            margin: 0;
+        }
+
+        h2 {
+            font-weight: normal;
+            font-size: 12px;
+
+        }
+
+        body {
+            text-align: center;
+            font-family: Verdana, Helvetica, sans-serif;
+            font-size: 12px;
+        }
+
+        .ex {
+            width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+    <link rel="import" href="templates/twitch-nav.html">
+</head>
+<body onLoad="start();">
+
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
+
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <h2>
+                    Evolve GameWorld
+                    <small>Funsies</small>
+                </h2>
+                <canvas id="game-container" width="800" height="800"></canvas>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+<script src="js/entities/AgentEvolve.js"></script>
+<script src="js/environments/EvolveWorld.js"></script>
+
+<script type="text/javascript">
+    /**
+     * Global world object
+     * @type {EvolveWorld}
+     */
+    var world = world || {};
+
+    /**
+     * Create existence!
+     */
+    function start() {
+        world = new EvolveWorld();
+    }
+</script>
+</body>
+</html>

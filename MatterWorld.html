@@ -2,31 +2,82 @@
 <html lang="en">
 <head>
     <title>Matter World</title>
-    <link href="css/matter-tools.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
-    <link rel="import" href="templates/twitch-nav.html">
-    <link rel="import" href="templates/js-includes.html">
+
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,500,400italic,700,700italic"/>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+    <link rel="stylesheet" type="text/css" href="https://code.getmdl.io/1.2.1/material.brown-indigo.min.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.1.0/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.1/dat.gui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p2.js/0.7.1/p2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.10.0/matter.min.js"></script>
+    <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+
+    <script>
+        var world = world || {};
+
+        function start() {
+            world = new MatterWorld();
+        }
+    </script>
+
 </head>
 <body onload="start();">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
 
-<span class="hide" tabindex="0">Hide</span>/<span class="show" tabindex="0">Show</span> Graph
-<div id="game-container"></div>
-
-<div class="rewardContainer">
-    <div id="flotreward"></div>
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
+                            data-mdl-for="menu-bottom-left">
+                            <li class="mdl-menu__item">Some Action</li>
+                            <li disabled class="mdl-menu__item">Disabled Action</li>
+                            <li class="mdl-menu__item">Yet Another Action</li>
+                        </ul>
+                        <h2 class="mdl-card__title-text">Matter World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="game-container"></div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
-<script>
-    var world = world || {};
-
-    function start() {
-        PIXI.loader.add("img/hexagon.json").load(() => {
-            world = new MatterWorld();
-            world.setViewport(100, 100);
-            datGUI(world);
-        });
-    }
-</script>
+<script src="js/lib/external/decomp.js"></script>
+<script src="js/lib/external/matter.js"></script>
+<script src="js/lib/external/gif.js"></script>
+<script src="js/lib/external/matter-tools.js"></script>
+<script src="js/lib/external/rl.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
+<script src="js/lib/ui/Dat.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/grid/Cell.js"></script>
+<script src="js/lib/grid/CellShape.js"></script>
+<script src="js/lib/MapGenerator.js"></script>
+<script src="js/lib/Maze.js"></script>
+<script src="js/lib/game/MatterPixi.js"></script>
+<script src="js/entities/Wall.js"></script>
+<script src="js/entities/PhysicalEntity.js"></script>
+<script src="js/entities/PhysicalAgent.js"></script>
 
 <script src="js/environments/MatterWorld.js"></script>
 

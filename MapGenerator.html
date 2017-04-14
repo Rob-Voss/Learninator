@@ -1,0 +1,113 @@
+<html>
+<head>
+    <script src="js/lib/MapGenerator.js"></script>
+    <title>Procedural Map Generator</title>
+</head>
+<body>
+<div>
+    <h3>Procedural Map Generator</h3>
+</div>
+<div class="row">
+    <div id="settings" class="large-4 columns">
+        <form>
+            <label for="width">Width</label>
+            <input id="width" type="number" min="0" step="1" value="20"/>
+            <label for="height">Height</label>
+            <input id="height" type="number" min="0" step="1" value="20"/>
+            <label for="zoom">Zoom</label>
+            <input id="zoom" type="number" min="0" max="1" step="0.1" value="1"/>
+            <input id="mapVisible" type="checkbox" checked="true"/>
+            <label for="mapVisible">Show map</label>
+            <input id="dataVisible" type="checkbox" checked="true"/>
+            <label for="dataVisible">Show data</label>
+            <a href="#" class="button tiny" id="exportTiledJson">Export as Tiled JSON</a>
+        </form>
+        <ul class="accordion" data-accordion="accordionGroup">
+            <li class="accordion-navigation">
+                <a href="#panel1a">Maze (Growing Tree algorithm)</a>
+                <div id="panel1a" class="content active">
+                    <form>
+                        <label for="branchrate">Branch rate</label>
+                        <input id="branchrate" type="number" min="0" step="0.1" value="0"/>
+                        <a href="#" class="button tiny" id="create">Create new map</a>
+                    </form>
+                </div>
+            </li>
+            <li class="accordion-navigation">
+                <a href="#panel2a">Cavern (4-5 Cellular Automata)</a>
+                <div id="panel2a" class="content">
+                    <form>
+                        <label for="fillrate">Initial wall ratio</label>
+                        <input id="fillrate" type="number" min="0" max="1" value="0.5"/>
+                        <label for="iterations">Number of iterations</label>
+                        <input id="iterations" type="number" min="0" value="5"/>
+                        <a href="#" class="button tiny" id="createcavern">Create new map</a>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div id="canvascontainer" class="large-8 columns end">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+<div class="row">
+    <div id="data" class="large-12 columns">
+        <form>
+            <label for="export">Exported data</label>
+            <textarea id="export" cols="80" rows="20"></textarea>
+        </form>
+    </div>
+</div>
+<script type="application/javascript">
+
+  /**
+   *
+   */
+  window.onload = function() {
+    let createButton = document.getElementById('create'),
+      createCavernButton = document.getElementById('createcavern'),
+      widthInput = document.getElementById('width'),
+      heightInput = document.getElementById('height'),
+      zoomInput = document.getElementById('zoom'),
+      exportTiledJsonButton = document.getElementById('exportTiledJson'),
+      mapVisible = document.getElementById('mapVisible'),
+      dataVisible = document.getElementById('dataVisible');
+
+    createButton.onclick = Demo.createAndDraw;
+    createCavernButton.onclick = Demo.createAndDrawCavern;
+
+    /**
+     *
+     */
+    zoomInput.onchange = function() {
+      Demo.draw(Demo.activeMap, Demo.valueAsNumber('width'), Demo.valueAsNumber('height'), Demo.valueAsNumber('zoom'));
+    };
+
+    /**
+     *
+     */
+    exportTiledJsonButton.onclick = function() {
+      let textArea = document.getElementById('export');
+      textArea.textContent = MapExport.tiledJson(Demo.activeMap, Demo.valueAsNumber('width'), Demo.valueAsNumber('height'), Demo.tileSize);
+    };
+
+    /**
+     *
+     */
+    mapVisible.onchange = function() {
+      document.getElementById('canvas').hidden = !mapVisible.checked;
+    };
+
+    /**
+     *
+     */
+    dataVisible.onchange = function() {
+      document.getElementById('data').hidden = !dataVisible.checked;
+    };
+
+    Demo.createAndDraw();
+  };
+</script>
+</body>
+</html>

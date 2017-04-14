@@ -1,0 +1,17 @@
+{
+  "name": "Learninator",
+  "version": "0.0.1",
+  "description": "Learn stuf!",
+  "scripts": {
+
+  },
+  "author": "Rob Voss",
+  "license": "MIT",
+  "repository": "https://github.com/Digerati-IO/learninator",
+  "dependencies": {
+
+  },
+  "devDependencies": {
+
+  }
+}

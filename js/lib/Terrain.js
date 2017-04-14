@@ -27,23 +27,23 @@ var rNorm = (function () {
 })();
 
 var city_counts = {
-  'shore': (12, 20),
-  'island': (5, 10),
-  'mountain': (10, 25),
-  'desert': (5, 10)
-},
-terr_counts = {
-  'shore': (3, 7),
-  'island': (2, 4),
-  'mountain': (3, 6),
-  'desert': (3, 5)
-},
-riverpercs = {
-  'shore': 5,
-  'island': 3,
-  'mountain': 8,
-  'desert': 1
-};
+    'shore': (12, 20),
+    'island': (5, 10),
+    'mountain': (10, 25),
+    'desert': (5, 10)
+  },
+  terr_counts = {
+    'shore': (3, 7),
+    'island': (2, 4),
+    'mountain': (3, 6),
+    'desert': (3, 5)
+  },
+  riverpercs = {
+    'shore': 5,
+    'island': 3,
+    'mountain': 8,
+    'desert': 1
+  };
 
 const
   /**
@@ -194,7 +194,6 @@ function generateIsland(params = paramsObject) {
 }
 
 
-
 function randomVector(scale) {
   return [scale * rNorm(), scale * rNorm()];
 }
@@ -214,7 +213,6 @@ function add() {
 
   return newVals;
 }
-
 
 
 /**

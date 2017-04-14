@@ -3040,40 +3040,30 @@ if (isNaN(tderror)) {
     RL.ESPTrainer = ESPTrainer;
 // END OF REINFORCEJS
 
-    var _Agent;
+    RL.WorkerAgent = {};
     self.onmessage = (e) => {
-        var data = e.data,
-            actionIndex;
-        if (data.cmd === 'init') {
-            importScripts('../Utility.js');
-            var returnV,
-                oEnv = JSON.parse(data.input.env, function (key, value) {
-                    if (typeof value !== 'string') {
-                        returnV = value;
-                    }
-                    if (value.substring(0, 8) === 'function') {
-                        returnV = eval('(' + value + ')');
-                    }
-                    return returnV;
-                }),
-                oOpts = JSON.parse(data.input.opts);
-        }
-        var brain = data.target.split('.');
+        let data = e.data,
+            actionIndex,
+          brain = data.target.split('.');
         switch (brain[0]) {
             // RL
             case 'RL':
                 switch (data.cmd) {
                     case 'init':
-                        _Agent = new global[brain[0]][brain[1]](oEnv, oOpts);
+                        importScripts('../Utility.js');
+                        let returnV,
+                          oEnv = Utility.Strings.parse(data.input.env),
+                          oOpts = Utility.Strings.parse(data.input.opts);
+                      RL.WorkerAgent = new global[brain[0]][brain[1]](oEnv, oOpts);
 
                         self.postMessage({
                             cmd: 'init',
                             msg: 'complete',
-                            input: _Agent.toJSON()
+                            input: RL.WorkerAgent.toJSON()
                         });
                         break;
                     case 'act':
-                        actionIndex = _Agent.act(data.input);
+                        actionIndex = RL.WorkerAgent.act(data.input);
 
                         self.postMessage({
                             cmd: 'act',
@@ -3082,39 +3072,39 @@ if (isNaN(tderror)) {
                         });
                         break;
                     case 'load':
-                        if (_Agent.brain.learning === false) {
-                            _Agent.epsilon = 0.05;
-                            _Agent.alpha = 0;
+                        if (RL.WorkerAgent.brain.learning === false) {
+                          RL.WorkerAgent.epsilon = 0.05;
+                          RL.WorkerAgent.alpha = 0;
                         }
-                        _Agent.fromJSON(JSON.parse(data.input));
+                      RL.WorkerAgent.fromJSON(JSON.parse(data.input));
 
                         self.postMessage({
                             cmd: 'load',
                             msg: 'complete',
-                            input: _Agent.toJSON()
+                            input: RL.WorkerAgent.toJSON()
                         });
                         break;
                     case 'learn':
-                        _Agent.learn(data.input);
+                      RL.WorkerAgent.learn(data.input);
 
                         self.postMessage({
                             cmd: 'learn',
                             msg: 'complete',
-                            input: _Agent.toJSON()
+                            input: RL.WorkerAgent.toJSON()
                         });
                         break;
                     case 'save':
                         self.postMessage({
                             cmd: 'save',
                             msg: 'complete',
-                            input: _Agent.toJSON()
+                            input: RL.WorkerAgent.toJSON()
                         });
                         break;
                     case 'stop':
                         self.postMessage({
                             cmd: 'stop',
                             msg: 'complete',
-                            input: _Agent.toJSON()
+                            input: RL.WorkerAgent.toJSON()
                         });
                         close(); // Terminates the worker.
                         break;

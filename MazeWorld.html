@@ -7,131 +7,276 @@
 
     <title>Maze World</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.min.css"
-          rel="stylesheet" type="text/css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"
-          type="text/css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet"
-          type="text/css">
-    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <script>
+        /**
+         * Global world object
+         * @type {GameWorld}
+         */
+        var world = world || {};
 
-    <link rel="import" href="templates/twitch-nav.html">
-    <link rel="import" href="templates/js-includes.html">
+        var goslow = function () {
+            world.stepsPerTick = 1;
+        };
+        var gonormal = function () {
+            world.stepsPerTick = 10;
+        };
+        var gofast = function () {
+            world.stepsPerTick = 25;
+        };
+
+        function solve() {
+            world.uiLayer.addChild(world.maze.drawSolution());
+        }
+
+        function newMaze() {
+            let gridOpts = {
+                        width: world.width,
+                        height: world.height,
+                        buffer: 0,
+                        size: 10,
+                        cellSize: 40,
+                        cellSpacing: 0,
+                        fill: true,
+                        closed: false,
+                        useSprite: false
+                    },
+                    grid = new Grid(null, null, gridOpts),
+                    maze = new Maze(grid.init());
+            world.walls.forEach((wall) => {
+                let idx = world.entityLayer.getChildIndex(wall.graphics);
+                world.entityLayer.removeChildAt(idx);
+                world.population.delete(wall.id);
+            });
+            let idx = world.stage.getChildIndex(world.grid.cellsContainer);
+            world.stage.removeChildAt(idx);
+            world.stage.addChild(grid.cellsContainer);
+
+            world.maze = maze;
+            world.walls = maze.walls;
+            world.grid = grid;
+
+            world.reset();
+            world.initFlot();
+            world.drawGrid();
+        }
+
+        /**
+         * Create existence!
+         */
+        function start() {
+            var cheatOpts = {
+                        id: false,
+                        name: false,
+                        angle: false,
+                        bounds: false,
+                        direction: false,
+                        gridLocation: false,
+                        position: false,
+                        brute: false,
+                        quad: false,
+                        grid: false,
+                        walls: false
+                    },
+                    options = {
+                        collision: {
+                            type: 'brute',
+                            cheats: cheatOpts
+                        },
+                        grid: {
+                            width: 600,
+                            height: 600,
+                            buffer: 0,
+                            size: 20,
+                            cellSize: 30,
+                            cellSpacing: 0,
+                            pointy: false,
+                            fill: true
+                        },
+                        render: {
+                            background: 0xFFFFFF,
+                            antialiasing: true,
+                            autoResize: false,
+                            resizable: false,
+                            transparent: false,
+                            resolution: 1,
+                            noWebGL: false,
+                            width: 600,
+                            height: 600
+                        },
+                        cheats: cheatOpts,
+                        agent: {
+                            brainType: 'RL.DQNAgent',
+                            range: 85,
+                            proximity: 85,
+                            radius: 10,
+                            numEyes: 30,
+                            numTypes: 5,
+                            numActions: 4,
+                            numProprioception: 2,
+                            worker: false,
+                            interactive: false,
+                            useSprite: false
+                        },
+                        entity: {
+                            number: 20,
+                            radius: 10,
+                            interactive: true,
+                            useSprite: false,
+                            moving: true
+                        },
+                        entityAgent: {
+                            number: 0,
+                            radius: 0,
+                            interactive: false,
+                            useSprite: false,
+                            moving: false
+                        }
+                    },
+                    grid = new Grid(null, null, options.grid),
+                    maze = new Maze(grid.init());
+            options.grid = grid;
+            options.maze = maze;
+            world = new MazeWorld([], maze.walls, options);
+
+            world.agents = [
+                new Agent(new Vec(world.grid.startCell.center.x, world.grid.startCell.center.y),
+                        {
+                            brainType: 'RL.TDAgent',
+                            cheats: world.cheats,
+                            gridLocation: world.grid.startCell,
+                            numActions: 4,
+                            numEyes: 0,
+                            numTypes: 0,
+                            numProprioception: 0,
+                            range: 0,
+                            proximity: 0,
+                            radius: 10,
+                            interactive: false,
+                            useSprite: false,
+                            worker: false,
+                            env: {
+                                allowedActions: (s) => {
+                                    return world.allowedActions(s);
+                                },
+                                getMaxNumActions: () => {
+                                    return world.getMaxNumActions();
+                                },
+                                getNumStates: () => {
+                                    return world.getNumStates();
+                                },
+                                nextStateDistribution: (s, a) => {
+                                    return world.nextStateDistribution(s, a);
+                                },
+                                randomState: () => {
+                                    return world.randomState();
+                                },
+                                reset: () => {
+                                    return world.reset();
+                                },
+                                sampleNextState: (s, a) => {
+                                    return world.sampleNextState(s, a);
+                                },
+                                startState: () => {
+                                    return world.startState();
+                                },
+                                sToX: (s) => {
+                                    return world.sToX(s);
+                                },
+                                sToY: (s) => {
+                                    return world.sToY(s);
+                                },
+                                xyToS: (x, y) => {
+                                    return world.xyToS(x, y);
+                                }
+                            }
+                        }
+                )
+            ];
+            world.addAgents();
+            world.reset();
+            world.initFlot();
+            world.drawGrid();
+        }
+
+    </script>
+
 </head>
 <body onload="start();">
-<div id="container">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-6">
-                <h2>
-                    Maze World
-                    <small>Funsies</small>
-                </h2>
-                <div id="game-container"></div>
-            </div>
-            <div class="col-md-6">
-                <div id="flotreward" style="width:600px; height: 400px;"></div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
+<div id="main-layout" class="mdl-layout mdl-js-layout">
+    <link rel="import" href="templates/mdl/topnav.html">
 
-                <button class="btn btn-primary" onclick="solve();" style="width:150px;height:50px;margin-bottom:5px;">
-                    Show Solution
-                </button>
-                <button class="btn btn-primary" onclick="newMaze();" style="width:150px;height:50px;margin-bottom:5px;">
-                    New Maze
-                </button>
-                <button class="btn btn-primary" onclick="world.agents[0].tick();"
-                        style="width:170px;height:50px;margin-bottom:5px;">
-                    Start Learning
-                </button>
-                <button class="btn btn-success" onclick="gofast();" style="width:150px;height:50px;margin-bottom:5px;">
-                    Go
-                    Fast
-                </button>
-                <button class="btn btn-success" onclick="gonormal();"
-                        style="width:150px;height:50px;margin-bottom:5px;">Go
-                    Normal
-                </button>
-                <button class="btn btn-success" onclick="goslow();" style="width:150px;height:50px;margin-bottom:5px;">
-                    Go
-                    Slow
-                </button>
+    <main class="mdl-layout__content">
+        <div id="main-content" class="page-content">
+            <div class="content-grid mdl-grid">
+                <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Maze World</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="solve();">
+                            Show Solution
+                        </button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gofast();">
+                            Go Fast
+                        </button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="gonormal();">
+                            Go Normal
+                        </button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="goslow();">
+                            Go Slow
+                        </button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="newMaze();">
+                            New Maze
+                        </button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"
+                                onclick="world.agents[0].tick();">
+                            Start Learning
+                        </button>
+                        <div id="game-container"></div>
+                    </div>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Graph</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div id="flotreward" style="width:600px; height: 400px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
-<script>
-    /**
-     * Global world object
-     * @type {World}
-     */
-    var world = world || {};
+<script src="js/lib/external/rl.js"></script>
 
-    var goslow = function () {
-        world.stepsPerTick = 1;
-    };
-    var gonormal = function () {
-        world.stepsPerTick = 10;
-    };
-    var gofast = function () {
-        world.stepsPerTick = 25;
-    };
+<script src="js/lib/Utility.js"></script>
+<script src="js/lib/Vec.js"></script>
 
-    /**
-     *
-     */
-    function solve() {
-        world.maze.solve();
-        world.maze.drawSolution();
-        world.stage.addChild(world.maze.cheatsContainer);
-        world.renderer.render(world.stage);
-    }
+<script src="js/lib/ui/Dat.js"></script>
 
-    function newMaze() {
-        let gridOpts = {
-                    width: world.width,
-                    height: world.height,
-                    buffer: 0,
-                    size: 10,
-                    cellSize: 40,
-                    cellSpacing: 0,
-                    fill: true,
-                    closed: false,
-                    useSprite: true
-                },
-                grid = new Grid(gridOpts),
-                maze = new Maze(grid.init());
-        world.walls.forEach((wall) => {
-            let idx = world.entityLayer.getChildIndex(wall.graphics);
-            world.entityLayer.removeChildAt(idx);
-            world.population.delete(wall.id);
-        });
-        let idx = world.stage.getChildIndex(world.grid.cellsContainer);
-        world.stage.removeChildAt(idx);
-        world.stage.addChild(grid.cellsContainer);
+<script src="js/lib/CollisionDetector.js"></script>
+<script src="js/lib/graphing/FlotGraph.js"></script>
+<script src="js/lib/MapGenerator.js"></script>
+<script src="js/lib/Maze.js"></script>
+<script src="js/lib/grid/Cell.js"></script>
+<script src="js/lib/grid/CellShape.js"></script>
+<script src="js/lib/grid/Grid.js"></script>
+<script src="js/lib/QuadTree.js"></script>
 
-        world.maze = maze;
-        world.walls = maze.walls;
-        world.grid = grid;
+<script src="js/lib/game/Game.js"></script>
+<script src="js/lib/game/GameObject.js"></script>
 
-        world.addWalls();
-        world.reset();
-        world.initFlot();
-        world.drawGrid();
-    }
+<script src="js/entities/Wall.js"></script>
+<script src="js/entities/Entity.js"></script>
+<script src="js/entities/Agent.js"></script>
 
-    /**
-     * Create existence!
-     */
-    function start() {
-        world = new MazeWorld();
-    }
-
-</script>
-
+<script src="js/environments/GameWorld.js"></script>
 <script src="js/environments/MazeWorld.js"></script>
 
 </body>

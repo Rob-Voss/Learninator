@@ -14,11 +14,11 @@ function datGUI (object) {
             let ty = typeof settings[go];
             if (ty === 'number') {
                 sFolder.add(settings, go).listen().name(go).onFinishChange(function(){
-                    object.draw();
+                    // object.draw();
                 }).step(0.1);
             } else if (ty !== 'object') {
                 sFolder.add(settings, go).listen().name(go).onFinishChange(function(){
-                    object.draw();
+                    // object.draw();
                 });
             } else {
                let folder = sFolder.addFolder(go.charAt(0).toUpperCase() + go.slice(1));
@@ -27,7 +27,7 @@ function datGUI (object) {
                         let typ = typeof settings[go][gp];
                         if (typ !== 'object') {
                             folder.add(settings[go], gp).listen().name(gp).onFinishChange(function(){
-                                object.draw();
+                                // object.draw();
                             });
                         }
                     }

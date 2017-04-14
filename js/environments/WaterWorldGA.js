@@ -21,7 +21,7 @@
         GATrainer = RL.GATrainer || {},
         Maze = global.Maze || {},
         Vec = global.Vec || {},
-        World = global.World || {},
+        World = global.GameWorld || {},
 
         renderOpts = {
             antialiasing: false,
