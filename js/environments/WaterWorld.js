@@ -15,19 +15,19 @@
           collision: {
             type: 'brute',
             cheats: {
-              brute: true,
-              quad: true,
-              grid: true,
-              walls: true
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
             },
           },
           grid: {
             width: 800,
             height: 800,
             buffer: 0,
-            cellSize: 800,
+            cellSize: 100,
             cellSpacing: 0,
-            size: 1,
+            size: 4,
             pointy: false,
             fill: false
           },
@@ -44,16 +44,16 @@
           },
           cheats: {
             id: true,
-            name: true,
-            angle: true,
-            bounds: true,
-            direction: true,
-            gridLocation: true,
-            position: true,
-            brute: true,
-            quad: true,
-            grid: true,
-            walls: true
+            name: false,
+            angle: false,
+            bounds: false,
+            direction: false,
+            gridLocation: false,
+            position: false,
+            brute: false,
+            quad: false,
+            grid: false,
+            walls: false
           },
           agent: {
             brainType: 'RL.DQNAgent',
@@ -66,26 +66,39 @@
             numProprioception: 2,
             worker: false,
             interactive: true,
-            useSprite: false
+            useSprite: false,
+            cheats: {
+              id: true,
+              name: false,
+              angle: false,
+              bounds: false,
+              direction: false,
+              gridLocation: false,
+              position: false,
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
+            }
           },
           entity: {
-            number: 20,
+            number: 30,
             radius: 10,
             interactive: true,
             useSprite: false,
             moving: true,
             cheats: {
-              id: true,
-              name: true,
-              angle: true,
-              bounds: true,
-              direction: true,
-              gridLocation: true,
-              position: true,
-              brute: true,
-              quad: true,
-              grid: true,
-              walls: true
+              id: false,
+              name: false,
+              angle: false,
+              bounds: false,
+              direction: false,
+              gridLocation: false,
+              position: false,
+              brute: false,
+              quad: false,
+              grid: false,
+              walls: false
             }
           },
           entityAgent: {
@@ -97,13 +110,14 @@
           }
         },
         grid = new Grid(null, null, worldOpts.grid),
-        maze = new Maze(grid.init()),
-        agents = [
+        maze = new Maze(grid.init());
+      worldOpts.agent.cheats = worldOpts.cheats;
+      let agents = [
           new Agent(new Vec(grid.cells[0].center.x, grid.cells[0].center.y), worldOpts.agent),
           new Agent(new Vec(grid.cells[0].center.x, grid.cells[0].center.y), worldOpts.agent)
         ];
       worldOpts.grid = grid;
-      // worldOpts.maze = maze;
+      worldOpts.maze = maze;
 
       super(agents, [], worldOpts);
       this.agents[0].load('zoo/wateragent.json');

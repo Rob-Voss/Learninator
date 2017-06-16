@@ -25,9 +25,9 @@
             width: 800,
             height: 800,
             buffer: 0,
-            size: 15,
-            cellSize: 30,
-            cellSpacing: 10,
+            size: 3,
+            cellSize: 6,
+            cellSpacing: 0,
             useSprite: false,
             pointy: false,
             fill: false

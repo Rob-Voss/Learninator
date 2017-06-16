@@ -35,7 +35,6 @@ class Entity {
    * @param {number|string} type - A type id (wall,nom,gnar,agent)
    * @param {Vec} position - The x, y location
    * @param {entityOpts} opts - The Entity options
-   * @param {cheatOpts} opts.cheats - The cheats to display
    * @return {Entity}
    */
   constructor(type, position, opts) {

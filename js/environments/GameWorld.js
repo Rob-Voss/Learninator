@@ -170,6 +170,9 @@ class GameWorld {
     this.simSpeed = Utility.getOpt(this.options, 'simSpeed', 1);
     this.theme = Utility.getOpt(this.options, 'theme', 'space');
     this.cheats = Utility.getOpt(this.options, 'cheats', cheatOpts);
+    this.options.agent.cheats = Utility.getOpt(this.options.agent, 'cheats', this.cheats);
+    this.options.entity.cheats = Utility.getOpt(this.options.entity, 'cheats', this.cheats);
+    this.options.entityAgent.cheats = Utility.getOpt(this.options.entityAgent, 'cheats', this.cheats);
     this.collision = Utility.getOpt(this.options, 'collision', collisionOpts);
     this.numEntities = Utility.getOpt(this.options.entity, 'number', 0);
     this.numEntityAgents = Utility.getOpt(this.options.entityAgent, 'number', 0);

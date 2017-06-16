@@ -42,7 +42,7 @@
                 (function () {
                     var script = document.createElement("script");
                     script.type = "text/javascript";
-                    script.src  = "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+                    script.src  = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
                     document.getElementsByTagName("head")[0].appendChild(script);
                     jaxrendered = true;
                 })();
@@ -60,19 +60,6 @@
             <div class="content-grid mdl-grid">
                 <div class="mdl-cell mdl-cell--8-col mdl-cell--4-col-tablet mdl-shadow--16dp">
                     <div class="mdl-card__title">
-                        <button id="menu-bottom-left"
-                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
-                            <i class="material-icons">more_vert</i>
-                        </button>
-                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
-                            Do <strong>things!</strong>
-                        </div>
-                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
-                            data-mdl-for="menu-bottom-left">
-                            <li class="mdl-menu__item">Some Action</li>
-                            <li disabled class="mdl-menu__item">Disabled Action</li>
-                            <li class="mdl-menu__item">Yet Another Action</li>
-                        </ul>
                         <h2 class="mdl-card__title-text">Water World</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
@@ -118,19 +105,6 @@ number of targets as in previous demo.
                 </div>
                 <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-shadow--16dp">
                     <div class="mdl-card__title">
-                        <button id="menu-bottom-left"
-                                class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
-                            <i class="material-icons">more_vert</i>
-                        </button>
-                        <div class="mdl-tooltip" data-mdl-for="menu-bottom-left">
-                            Do <strong>things!</strong>
-                        </div>
-                        <ul class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
-                            data-mdl-for="menu-bottom-left">
-                            <li class="mdl-menu__item">Some Action</li>
-                            <li disabled class="mdl-menu__item">Disabled Action</li>
-                            <li class="mdl-menu__item">Yet Another Action</li>
-                        </ul>
                         <h2 class="mdl-card__title-text">Graph</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
@@ -162,12 +136,11 @@ number of targets as in previous demo.
 <script src="js/lib/CollisionDetector.js"></script>
 <script src="js/lib/QuadTree.js"></script>
 <script src="js/lib/Window.js"></script>
-<script src="js/lib/MapGenerator.js"></script>
+<!--<script src="js/lib/MapGenerator.js"></script>-->
 <script src="js/lib/Maze.js"></script>
 
 <script src="js/lib/game/Game.js"></script>
 <script src="js/lib/game/GameObject.js"></script>
-<script src="js/lib/game/shape/Line.js"></script>
 
 <script src="js/entities/Wall.js"></script>
 <script src="js/entities/Entity.js"></script>

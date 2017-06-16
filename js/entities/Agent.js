@@ -1,3 +1,5 @@
+const lineColors = [0x000000, 0x00FF00, 0xFF0000, 0x0000FF, 0xFFFF00, 0xFF8000];
+
 /**
  * Eye
  *
@@ -59,30 +61,7 @@ class Eye {
 
     this.graphics.clear();
     this.graphics.moveTo(this.v1.x, this.v1.y);
-    switch (this.sensed.type) {
-      case 0:
-        // Is it wall or nothing?
-        this.graphics.lineStyle(1, 0x000000, 1);
-        break;
-      case 1:
-        // It is noms
-        this.graphics.lineStyle(1, 0x00FF00, 1);
-        break;
-      case 2:
-        // It is gnar gnar
-        this.graphics.lineStyle(1, 0xFF0000, 1);
-        break;
-      case 3:
-      case 4:
-      case 5:
-        // Is it another Agent
-        this.graphics.lineStyle(1, 0x0000FF, 1);
-        break;
-      default:
-        // Is it wall or nothing?
-        this.graphics.lineStyle(1, 0x000000, 1);
-        break;
-    }
+    this.graphics.lineStyle(1, lineColors[this.sensed.type], 1);
     this.graphics.lineTo(this.v2.x, this.v2.y);
     this.graphics.endFill();
   }
@@ -327,6 +306,7 @@ class Agent extends Entity {
           break;
         case 3:
         case 4:
+        case 5:
           // Other Agents
           this.force.x = collisionObj.target.vx;
           this.force.y = collisionObj.target.vy;
